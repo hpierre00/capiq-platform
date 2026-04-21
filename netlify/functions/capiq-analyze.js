@@ -3,7 +3,7 @@ export default async (req) => {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
-    "Content-Type": "application/json"
+    "Content-Type": "application/json",
   };
 
   if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: cors });
@@ -11,82 +11,37 @@ export default async (req) => {
 
   try {
     const apiKey = Netlify.env.get("ANTHROPIC_API_KEY");
+    if (!apiKey) return new Response(JSON.stringify({ error: "ANTHROPIC_API_KEY not configured" }), { status: 500, headers: cors });
 
-    if (!apiKey || !apiKey.trim()) {
-      return new Response(JSON.stringify({ error: "ANTHROPIC_API_KEY not configured", code: "MISSING_KEY" }), { status: 500, headers: cors });
-    }
-
-    let body;
-    try { body = await req.json(); } catch {
-      return new Response(JSON.stringify({ error: "Invalid JSON body" }), { status: 400, headers: cors });
-    }
-
+    const body = await req.json();
     const d = body.dealData || body;
 
-    const prompt = `You are an expert real estate underwriter for CapIQ, a capital intelligence platform for independent real estate investors.
+    const prompt = `You are an expert real estate underwriter for CapIQ. Analyze this deal and return ONLY a JSON object with no markdown.
 
-Analyze this deal comprehensively and return a Deal Intelligence Report as a single JSON object.
-
-DEAL DATA:
-Deal Type: ${d.dealType || d.deal_type || "N/A"}
-Property Type: ${d.propertyType || d.property_type || "N/A"}
-State: ${d.state || "N/A"}
-Location: ${d.location || "N/A"}
-Loan Amount: $${d.loanAmount || d.loan_amount || 0}
-Purchase Price: $${d.purchasePrice || d.purchase_price || 0}
-ARV: $${d.arv || 0}
-As-Is Value: $${d.asIsValue || d.as_is_value || 0}
-Rehab Budget: $${d.rehabBudget || d.rehab_budget || 0}
-Monthly Rent: $${d.monthlyRent || d.monthly_rent || 0}
-LTV: ${d.ltv || 0}%
-DSCR: ${d.dscr || "N/A"}
-Credit Score: ${d.creditScore || d.credit_score || 0}
-Investor Experience: ${d.investorExperience || d.investor_experience || "N/A"}
+Deal: ${d.dealType} | ${d.propertyType} | ${d.state} | ${d.location}
+Loan: $${d.loanAmount} | Purchase: $${d.purchasePrice} | ARV: $${d.arv}
+As-Is Value: $${d.asIsValue} | Rehab: $${d.rehabBudget} | Rent: $${d.monthlyRent}/mo
+LTV: ${d.ltv}% | DSCR: ${d.dscr} | Credit: ${d.creditScore} | Exp: ${d.investorExperience}
 Notes: ${d.notes || "None"}
 
-Return ONLY this JSON object, no markdown, no explanation:
-{
-  "fundabilityScore": <integer 0-100>,
-  "dealScore": "<Pass|Review|Reject>",
-  "humanReviewRequired": <true|false>,
-  "executiveSummary": "<3-4 sentence deal overview with key metrics>",
-  "strengthsAndRisks": "<Detailed analysis of deal strengths and risks>",
-  "lenderMatchingProfile": "<Description of ideal lender profile>",
-  "structuringRecommendations": "<Specific actionable recommendations to improve fundability>",
-  "marketContext": "<Market context for this property type, location, and current rate environment>",
-  "scoreBreakdown": "<Explanation of how LTV, DSCR, credit, and experience contributed to the score>",
-  "nextSteps": "<3-5 concrete next steps in priority order>"
-}`;
+Return exactly this JSON:
+{"fundabilityScore":0,"dealScore":"Pass","humanReviewRequired":false,"executiveSummary":"","strengthsAndRisks":"","lenderMatchingProfile":"","structuringRecommendations":"","marketContext":"","scoreBreakdown":"","nextSteps":""}`;
 
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01"
-      },
-      body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 2000,
-        messages: [{ role: "user", content: prompt }]
-      })
+      headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
+      body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 2000, messages: [{ role: "user", content: prompt }] }),
     });
 
     if (!res.ok) {
       const err = await res.text();
-      return new Response(JSON.stringify({ error: "Anthropic API error", status: res.status, details: err }), { status: 502, headers: cors });
+      return new Response(JSON.stringify({ error: "Anthropic error", detail: err }), { status: 502, headers: cors });
     }
 
     const data = await res.json();
-    const raw = data.content?.filter(b => b.type === "text")?.map(b => b.text)?.join("") || "";
+    const raw = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("");
     const cleaned = raw.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-
-    let analysis;
-    try { analysis = JSON.parse(cleaned); }
-    catch (e) {
-      return new Response(JSON.stringify({ error: "Parse error", raw: raw.substring(0, 500) }), { status: 500, headers: cors });
-    }
-
+    const analysis = JSON.parse(cleaned);
     return new Response(JSON.stringify({ success: true, analysis }), { status: 200, headers: cors });
 
   } catch (err) {
@@ -94,4 +49,4 @@ Return ONLY this JSON object, no markdown, no explanation:
   }
 };
 
-export const config = { path: "/capiq/analyze" };
+// NO config path - function responds on native /.netlify/functions/capiq-analyze

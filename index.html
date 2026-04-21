@@ -7,59 +7,23 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
 <style>
-:root {
-  --ink: #0a0c10;
-  --ink-2: #10141c;
-  --ink-3: #161b26;
-  --ink-4: #1e2535;
-  --border: rgba(255,255,255,0.07);
-  --border-bright: rgba(255,255,255,0.14);
-  --gold: #c9a84c;
-  --gold-light: #e8c96e;
-  --gold-dim: rgba(201,168,76,0.15);
-  --text: #e8e4dc;
-  --text-2: #9a9590;
-  --text-3: #5c5850;
-  --green: #3ecf8e;
-  --green-dim: rgba(62,207,142,0.12);
-  --red: #e5534b;
-  --red-dim: rgba(229,83,75,0.12);
-  --amber: #f0a429;
-  --amber-dim: rgba(240,164,41,0.12);
-  --blue: #5b9cf6;
-  --blue-dim: rgba(91,156,246,0.12);
-  --r: 6px;
-}
+:root{--ink:#0a0c10;--ink-2:#10141c;--ink-3:#161b26;--ink-4:#1e2535;--border:rgba(255,255,255,0.07);--border-bright:rgba(255,255,255,0.14);--gold:#c9a84c;--gold-light:#e8c96e;--gold-dim:rgba(201,168,76,0.15);--text:#e8e4dc;--text-2:#9a9590;--text-3:#5c5850;--green:#3ecf8e;--green-dim:rgba(62,207,142,0.12);--red:#e5534b;--red-dim:rgba(229,83,75,0.12);--amber:#f0a429;--amber-dim:rgba(240,164,41,0.12);--blue:#5b9cf6;--blue-dim:rgba(91,156,246,0.12);--r:6px}
 *{box-sizing:border-box;margin:0;padding:0}
 html{background:var(--ink);color:var(--text);font-family:'Syne',sans-serif;font-size:14px;line-height:1.6;min-height:100vh}
 body{min-height:100vh;overflow-x:hidden}
-
-/* ANIMATIONS */
 @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-@keyframes scan{0%{transform:translateY(-100%)}100%{transform:translateY(400%)}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.4}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 @keyframes spin{to{transform:rotate(360deg)}}
-@keyframes shimmer{0%{background-position:200% center}100%{background-position:-200% center}}
 .fade-up{animation:fadeUp .5s ease both}
-.fade-up-1{animation-delay:.05s}
-.fade-up-2{animation-delay:.1s}
-.fade-up-3{animation-delay:.15s}
-.fade-up-4{animation-delay:.2s}
-.fade-up-5{animation-delay:.25s}
-
-/* LAYOUT */
 .shell{display:flex;min-height:100vh}
 .sidebar{width:220px;min-height:100vh;background:var(--ink-2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100}
 .main{margin-left:220px;flex:1;min-height:100vh}
-
-/* SIDEBAR */
 .logo{padding:24px 20px 20px;border-bottom:1px solid var(--border)}
 .logo-mark{display:flex;align-items:center;gap:10px;text-decoration:none}
 .logo-icon{width:32px;height:32px;background:var(--gold);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 .logo-icon svg{width:18px;height:18px;fill:var(--ink)}
 .logo-text{font-size:16px;font-weight:700;color:var(--text);letter-spacing:-.5px}
 .logo-sub{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:.1em;text-transform:uppercase;margin-top:1px}
-
 .nav{padding:16px 12px;flex:1}
 .nav-section{margin-bottom:24px}
 .nav-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-3);padding:0 8px;margin-bottom:8px}
@@ -69,96 +33,79 @@ body{min-height:100vh;overflow-x:hidden}
 .nav-item svg{width:16px;height:16px;flex-shrink:0;opacity:.7}
 .nav-item.active svg{opacity:1}
 .nav-badge{margin-left:auto;background:var(--gold);color:var(--ink);font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;font-family:'DM Mono',monospace}
-
 .sidebar-footer{padding:16px 20px;border-top:1px solid var(--border)}
 .status-dot{display:inline-block;width:6px;height:6px;background:var(--green);border-radius:50%;margin-right:6px;animation:pulse 2s infinite}
 .status-text{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-3)}
-
-/* TOPBAR */
 .topbar{height:56px;background:var(--ink-2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:50}
 .topbar-title{font-size:15px;font-weight:600;color:var(--text)}
 .topbar-meta{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-3)}
-.topbar-right{display:flex;align-items:center;gap:16px}
 .chip{font-family:'DM Mono',monospace;font-size:10px;padding:3px 10px;border-radius:20px;letter-spacing:.06em}
 .chip-gold{background:var(--gold-dim);color:var(--gold);border:1px solid rgba(201,168,76,0.25)}
 .chip-green{background:var(--green-dim);color:var(--green);border:1px solid rgba(62,207,142,0.2)}
-
-/* CONTENT */
 .content{padding:28px}
 .page{display:none}
 .page.active{display:block}
-
-/* CARDS */
 .card{background:var(--ink-2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
 .card-header{padding:18px 20px 0;display:flex;align-items:center;justify-content:space-between}
 .card-title{font-size:13px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.06em}
 .card-body{padding:20px}
-
-/* STATS ROW */
 .stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
 .stat-card{background:var(--ink-2);border:1px solid var(--border);border-radius:10px;padding:18px 20px;position:relative;overflow:hidden}
 .stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--gold);opacity:.4}
 .stat-card.green::before{background:var(--green)}
-.stat-card.red::before{background:var(--red)}
 .stat-card.blue::before{background:var(--blue)}
 .stat-label{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px}
 .stat-value{font-size:28px;font-weight:700;color:var(--text);line-height:1;letter-spacing:-1px}
 .stat-value.gold{color:var(--gold)}
 .stat-value.green{color:var(--green)}
-.stat-value.red{color:var(--red)}
 .stat-sub{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-3);margin-top:6px}
 
-/* FORM */
+/* PILL SELECTORS */
+.pill-group{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
+.pill{padding:7px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--ink-3);color:var(--text-2);transition:all .15s;font-family:'Syne',sans-serif}
+.pill:hover{border-color:var(--border-bright);color:var(--text)}
+.pill.selected{background:var(--gold-dim);color:var(--gold);border-color:rgba(201,168,76,0.4)}
+
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
 .field{display:flex;flex-direction:column;gap:6px}
 .field-full{grid-column:1/-1}
 .label{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.1em}
 .label span{color:var(--gold);margin-left:2px}
+.label .auto-badge{font-size:9px;color:var(--green);background:var(--green-dim);padding:1px 6px;border-radius:8px;margin-left:6px;letter-spacing:.06em}
 input,select,textarea{background:var(--ink-3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:13px;padding:10px 12px;width:100%;transition:border-color .15s}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold);background:var(--ink-4)}
-select option{background:var(--ink-3)}
-textarea{resize:vertical;min-height:80px;font-family:'Syne',sans-serif;font-size:13px}
+input.auto-calc{border-color:rgba(62,207,142,0.3);background:rgba(62,207,142,0.05);color:var(--green)}
 input::placeholder{color:var(--text-3)}
-
-/* SECTION DIVIDER */
+textarea{resize:vertical;min-height:80px;font-family:'Syne',sans-serif;font-size:13px}
 .section-divider{display:flex;align-items:center;gap:12px;margin:24px 0 20px;padding-bottom:12px;border-bottom:1px solid var(--border)}
 .section-divider-label{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--gold);white-space:nowrap}
 .section-divider-line{flex:1;height:1px;background:var(--border)}
-
-/* BUTTONS */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 20px;border-radius:var(--r);font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s;text-decoration:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 20px;border-radius:var(--r);font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s}
 .btn-primary{background:var(--gold);color:var(--ink)}
 .btn-primary:hover{background:var(--gold-light)}
 .btn-primary:disabled{opacity:.4;cursor:not-allowed}
 .btn-ghost{background:transparent;color:var(--text-2);border:1px solid var(--border)}
 .btn-ghost:hover{border-color:var(--border-bright);color:var(--text);background:var(--ink-3)}
-.btn-danger{background:var(--red-dim);color:var(--red);border:1px solid rgba(229,83,75,0.2)}
 .btn-lg{padding:13px 28px;font-size:14px}
-.btn-full{width:100%}
-
-/* SPINNER */
 .spinner{width:16px;height:16px;border:2px solid rgba(0,0,0,0.2);border-top-color:var(--ink);border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
-
-/* SCORE DISPLAY */
+.loading-overlay{display:none;position:fixed;inset:0;background:rgba(10,12,16,0.85);z-index:200;flex-direction:column;align-items:center;justify-content:center;gap:16px;backdrop-filter:blur(4px)}
+.loading-overlay.show{display:flex}
+.loading-spinner{width:48px;height:48px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite}
+.loading-text{font-family:'DM Mono',monospace;font-size:12px;color:var(--text-3);letter-spacing:.1em}
 .score-ring{position:relative;width:120px;height:120px}
 .score-ring svg{transform:rotate(-90deg)}
 .score-ring-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .score-big{font-size:32px;font-weight:800;line-height:1;letter-spacing:-2px}
 .score-label{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:.1em}
-
 .verdict-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;letter-spacing:.06em}
 .verdict-pass{background:var(--green-dim);color:var(--green);border:1px solid rgba(62,207,142,0.2)}
 .verdict-review{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(240,164,41,0.2)}
 .verdict-reject{background:var(--red-dim);color:var(--red);border:1px solid rgba(229,83,75,0.2)}
-
-/* ANALYSIS SECTIONS */
 .analysis-section{margin-bottom:20px}
 .analysis-title{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--gold);margin-bottom:8px;display:flex;align-items:center;gap:8px}
 .analysis-title::after{content:'';flex:1;height:1px;background:var(--gold-dim)}
 .analysis-text{font-size:13px;line-height:1.7;color:var(--text-2)}
-
-/* DEAL TABLE */
 .deal-table{width:100%;border-collapse:collapse}
 .deal-table th{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-3);padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
 .deal-table td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-2)}
@@ -166,163 +113,83 @@ input::placeholder{color:var(--text-3)}
 .deal-table tr:hover td{background:var(--ink-3);cursor:pointer}
 .deal-table .deal-name{color:var(--text);font-weight:600}
 .deal-table .mono{font-family:'DM Mono',monospace;font-size:12px}
-
-/* LENDER GRID */
 .lender-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.lender-card{background:var(--ink-3);border:1px solid var(--border);border-radius:10px;padding:18px;transition:border-color .15s;cursor:pointer}
+.lender-card{background:var(--ink-3);border:1px solid var(--border);border-radius:10px;padding:18px;transition:border-color .15s}
 .lender-card:hover{border-color:var(--border-bright)}
-.lender-card.active{border-color:var(--gold);background:var(--gold-dim)}
 .lender-name{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
 .lender-type{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
 .lender-criteria{display:flex;flex-direction:column;gap:4px}
 .criteria-row{display:flex;justify-content:space-between;align-items:center}
 .criteria-key{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-3)}
 .criteria-val{font-family:'DM Mono',monospace;font-size:11px;color:var(--text);font-weight:500}
-
-/* LOADING STATE */
-.loading-overlay{display:none;position:fixed;inset:0;background:rgba(10,12,16,0.85);z-index:200;flex-direction:column;align-items:center;justify-content:center;gap:16px;backdrop-filter:blur(4px)}
-.loading-overlay.show{display:flex}
-.loading-spinner{width:48px;height:48px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite}
-.loading-text{font-family:'DM Mono',monospace;font-size:12px;color:var(--text-3);letter-spacing:.1em}
-.loading-sub{font-size:11px;color:var(--text-3);opacity:.6;font-family:'DM Mono',monospace}
-
-/* SCAN LINE EFFECT */
-.scan-container{position:relative;overflow:hidden}
-.scan-container::after{content:'';position:absolute;top:0;left:0;right:0;height:40px;background:linear-gradient(transparent,rgba(201,168,76,0.03),transparent);animation:scan 4s linear infinite;pointer-events:none}
-
-/* RESULT CONTAINER */
 #result-panel{display:none;margin-top:28px;animation:fadeUp .4s ease both}
 #result-panel.show{display:block}
-
-/* EMPTY STATE */
 .empty-state{text-align:center;padding:60px 20px;color:var(--text-3)}
 .empty-state svg{width:48px;height:48px;opacity:.2;margin-bottom:16px}
 .empty-state h3{font-size:16px;color:var(--text-2);margin-bottom:8px}
 .empty-state p{font-size:13px;line-height:1.6}
-
-/* TOAST */
 .toast{position:fixed;bottom:24px;right:24px;background:var(--ink-3);border:1px solid var(--border-bright);border-radius:8px;padding:12px 16px;font-size:13px;z-index:300;display:none;animation:fadeUp .3s ease both}
 .toast.show{display:flex;align-items:center;gap:10px}
 .toast.success{border-color:rgba(62,207,142,0.3);color:var(--green)}
 .toast.error{border-color:rgba(229,83,75,0.3);color:var(--red)}
-
-/* MOBILE */
-@media(max-width:768px){
-  .sidebar{width:100%;min-height:auto;position:static;flex-direction:row;flex-wrap:wrap}
-  .main{margin-left:0}
-  .stats-grid{grid-template-columns:1fr 1fr}
-  .form-grid,.form-grid-3{grid-template-columns:1fr}
-  .lender-grid{grid-template-columns:1fr}
-  .nav{display:flex;flex-wrap:wrap;gap:4px;padding:8px}
-  .nav-section{margin:0}
-  .nav-label{display:none}
-  .sidebar-footer{display:none}
-}
-
-/* DATA METRIC ROWS */
-.metric-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
-.metric-row:last-child{border-bottom:none}
-.metric-key{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-3)}
-.metric-val{font-family:'DM Mono',monospace;font-size:12px;color:var(--text);font-weight:500}
-.metric-val.good{color:var(--green)}
-.metric-val.warn{color:var(--amber)}
-.metric-val.bad{color:var(--red)}
-
-/* PROGRESS BAR */
-.progress-bar{height:4px;background:var(--ink-4);border-radius:2px;overflow:hidden;margin-top:8px}
-.progress-fill{height:100%;border-radius:2px;transition:width .8s ease}
-.progress-fill.gold{background:linear-gradient(90deg,var(--gold),var(--gold-light))}
-.progress-fill.green{background:var(--green)}
-.progress-fill.red{background:var(--red)}
-.progress-fill.amber{background:var(--amber)}
-
-/* TABS */
-.tabs{display:flex;gap:2px;background:var(--ink-3);padding:3px;border-radius:8px;margin-bottom:20px;width:fit-content}
-.tab{padding:7px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-3);transition:all .15s;border:none;background:none}
-.tab.active{background:var(--ink-2);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,0.3)}
-
-/* INTRO HERO */
 .hero{padding:40px 0 32px;margin-bottom:8px}
 .hero-eyebrow{font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.15em;color:var(--gold);margin-bottom:10px}
 .hero-title{font-family:'Instrument Serif',serif;font-size:36px;line-height:1.15;color:var(--text);margin-bottom:8px}
 .hero-title em{color:var(--gold);font-style:italic}
 .hero-sub{font-size:14px;color:var(--text-3);line-height:1.6;max-width:520px}
+.tabs{display:flex;gap:2px;background:var(--ink-3);padding:3px;border-radius:8px;margin-bottom:20px;width:fit-content}
+.tab{padding:7px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-3);transition:all .15s;border:none;background:none}
+.tab.active{background:var(--ink-2);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,0.3)}
+@media(max-width:768px){.sidebar{width:100%;min-height:auto;position:static}.main{margin-left:0}.stats-grid{grid-template-columns:1fr 1fr}.form-grid,.form-grid-3{grid-template-columns:1fr}.lender-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-
 <div class="loading-overlay" id="loading">
   <div class="loading-spinner"></div>
   <div class="loading-text">ANALYZING DEAL</div>
-  <div class="loading-sub">Running underwriting intelligence...</div>
 </div>
-
 <div class="toast" id="toast"></div>
-
 <div class="shell">
-  <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="logo">
       <a class="logo-mark" href="#">
-        <div class="logo-icon">
-          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-        </div>
-        <div>
-          <div class="logo-text">CapIQ</div>
-          <div class="logo-sub">Capital Intelligence</div>
-        </div>
+        <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+        <div><div class="logo-text">CapIQ</div><div class="logo-sub">Capital Intelligence</div></div>
       </a>
     </div>
-
     <nav class="nav">
       <div class="nav-section">
         <div class="nav-label">Platform</div>
         <button class="nav-item active" onclick="showPage('dashboard')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-          Dashboard
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard
         </button>
         <button class="nav-item" onclick="showPage('submit')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-          Submit Deal
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Submit Deal
         </button>
         <button class="nav-item" onclick="showPage('deals')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-          Deal Pipeline
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Deal Pipeline
           <span class="nav-badge" id="deal-count">0</span>
         </button>
       </div>
       <div class="nav-section">
         <div class="nav-label">Network</div>
         <button class="nav-item" onclick="showPage('lenders')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-          Lender Portal
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Lender Portal
         </button>
         <button class="nav-item" onclick="showPage('match')">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-          Match Queue
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Match Queue
         </button>
       </div>
     </nav>
-
-    <div class="sidebar-footer">
-      <div><span class="status-dot"></span><span class="status-text">API CONNECTED</span></div>
-    </div>
+    <div class="sidebar-footer"><span class="status-dot"></span><span class="status-text">API CONNECTED</span></div>
   </aside>
 
-  <!-- MAIN -->
   <main class="main">
-
     <!-- DASHBOARD -->
     <div class="page active" id="page-dashboard">
       <div class="topbar">
-        <div>
-          <div class="topbar-title">Dashboard</div>
-          <div class="topbar-meta" id="current-date"></div>
-        </div>
-        <div class="topbar-right">
-          <span class="chip chip-gold">PRE-APPLICATION LAYER</span>
-          <span class="chip chip-green">LIVE</span>
-        </div>
+        <div><div class="topbar-title">Dashboard</div><div class="topbar-meta" id="current-date"></div></div>
+        <div style="display:flex;gap:12px"><span class="chip chip-gold">PRE-APPLICATION LAYER</span><span class="chip chip-green">LIVE</span></div>
       </div>
       <div class="content">
         <div class="hero fade-up">
@@ -330,41 +197,16 @@ input::placeholder{color:var(--text-3)}
           <div class="hero-title">Know if your deal is fundable<br><em>before</em> approaching a lender.</div>
           <div class="hero-sub">CapIQ analyzes your deal against real lending criteria, scores fundability, and matches you to the right capital source — before you waste time on applications.</div>
         </div>
-
         <div class="stats-grid">
-          <div class="stat-card fade-up fade-up-1">
-            <div class="stat-label">Deals Analyzed</div>
-            <div class="stat-value gold" id="stat-total">0</div>
-            <div class="stat-sub">All time</div>
-          </div>
-          <div class="stat-card green fade-up fade-up-2">
-            <div class="stat-label">Pass Rate</div>
-            <div class="stat-value green" id="stat-pass">—</div>
-            <div class="stat-sub">Fundable deals</div>
-          </div>
-          <div class="stat-card fade-up fade-up-3">
-            <div class="stat-label">Avg Fundability</div>
-            <div class="stat-value gold" id="stat-avg">—</div>
-            <div class="stat-sub">Score /100</div>
-          </div>
-          <div class="stat-card blue fade-up fade-up-4">
-            <div class="stat-label">Active Lenders</div>
-            <div class="stat-value" id="stat-lenders">5</div>
-            <div class="stat-sub">In network</div>
-          </div>
+          <div class="stat-card fade-up"><div class="stat-label">Deals Analyzed</div><div class="stat-value gold" id="stat-total">0</div><div class="stat-sub">All time</div></div>
+          <div class="stat-card green fade-up"><div class="stat-label">Pass Rate</div><div class="stat-value green" id="stat-pass">—</div><div class="stat-sub">Fundable deals</div></div>
+          <div class="stat-card fade-up"><div class="stat-label">Avg Fundability</div><div class="stat-value gold" id="stat-avg">—</div><div class="stat-sub">Score /100</div></div>
+          <div class="stat-card blue fade-up"><div class="stat-label">Active Lenders</div><div class="stat-value">5</div><div class="stat-sub">In network</div></div>
         </div>
-
-        <div class="card fade-up fade-up-5">
-          <div class="card-header">
-            <div class="card-title">Recent Deals</div>
-            <button class="btn btn-ghost" onclick="showPage('submit')" style="padding:6px 14px;font-size:12px">+ New Deal</button>
-          </div>
+        <div class="card fade-up">
+          <div class="card-header"><div class="card-title">Recent Deals</div><button class="btn btn-ghost" onclick="showPage('submit')" style="padding:6px 14px;font-size:12px">+ New Deal</button></div>
           <div class="card-body" id="dashboard-recent">
-            <div class="empty-state">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-              <h3>No deals yet</h3>
-              <p>Submit your first deal to start<br>generating fundability intelligence.</p>
-            </div>
+            <div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><h3>No deals yet</h3><p>Submit your first deal to generate fundability intelligence.</p></div>
           </div>
         </div>
       </div>
@@ -373,172 +215,98 @@ input::placeholder{color:var(--text-3)}
     <!-- SUBMIT DEAL -->
     <div class="page" id="page-submit">
       <div class="topbar">
-        <div>
-          <div class="topbar-title">Submit Deal</div>
-          <div class="topbar-meta">AI-Powered Underwriting Analysis</div>
-        </div>
-        <div class="topbar-right">
-          <span class="chip chip-gold">STEP 1 OF 1</span>
-        </div>
+        <div><div class="topbar-title">Submit Deal</div><div class="topbar-meta">AI-Powered Underwriting Analysis</div></div>
+        <span class="chip chip-gold">STEP 1 OF 1</span>
       </div>
-      <div class="content scan-container">
+      <div class="content">
         <div class="card fade-up">
-          <div class="card-header">
-            <div class="card-title">Deal Information</div>
-          </div>
+          <div class="card-header"><div class="card-title">Deal Information</div></div>
           <div class="card-body">
 
-            <div class="section-divider">
-              <div class="section-divider-label">Investor Profile</div>
-              <div class="section-divider-line"></div>
-            </div>
+            <div class="section-divider"><div class="section-divider-label">Investor Profile</div><div class="section-divider-line"></div></div>
             <div class="form-grid">
-              <div class="field">
-                <label class="label">Investor Name <span>*</span></label>
-                <input id="f-investor-name" type="text" placeholder="John Smith">
-              </div>
-              <div class="field">
-                <label class="label">Email <span>*</span></label>
-                <input id="f-investor-email" type="email" placeholder="john@example.com">
-              </div>
-              <div class="field">
-                <label class="label">Phone</label>
-                <input id="f-investor-phone" type="tel" placeholder="(305) 555-0100">
-              </div>
-              <div class="field">
-                <label class="label">Investment Experience <span>*</span></label>
-                <select id="f-experience">
-                  <option value="">Select...</option>
-                  <option value="First Deal">First Deal</option>
-                  <option value="1-3 Deals">1–3 Deals</option>
-                  <option value="4-10 Deals">4–10 Deals</option>
-                  <option value="10+ Deals">10+ Deals</option>
-                </select>
+              <div class="field"><label class="label">Investor Name <span>*</span></label><input id="f-investor-name" type="text" placeholder="John Smith"></div>
+              <div class="field"><label class="label">Email <span>*</span></label><input id="f-investor-email" type="email" placeholder="john@example.com"></div>
+              <div class="field"><label class="label">Phone</label><input id="f-investor-phone" type="tel" placeholder="(305) 555-0100"></div>
+              <div class="field"><label class="label">Investment Experience <span>*</span></label>
+                <select id="f-experience"><option value="">Select...</option><option value="First Deal">First Deal</option><option value="1-3 Deals">1–3 Deals</option><option value="4-10 Deals">4–10 Deals</option><option value="10+ Deals">10+ Deals</option></select>
               </div>
             </div>
 
-            <div class="section-divider">
-              <div class="section-divider-label">Property Details</div>
-              <div class="section-divider-line"></div>
-            </div>
+            <div class="section-divider"><div class="section-divider-label">Property Details</div><div class="section-divider-line"></div></div>
             <div class="form-grid">
-              <div class="field field-full">
-                <label class="label">Street Address <span>*</span></label>
-                <input id="f-location" type="text" placeholder="5521 Hawkes Bluff Ave">
-              </div>
-              <div class="field">
-                <label class="label">City <span>*</span></label>
-                <input id="f-city" type="text" placeholder="Davie">
-              </div>
-              <div class="field">
-                <label class="label">State <span>*</span></label>
-                <input id="f-state" type="text" placeholder="FL" maxlength="2" style="text-transform:uppercase">
-              </div>
-              <div class="field">
-                <label class="label">Deal Type <span>*</span></label>
-                <select id="f-deal-type">
-                  <option value="">Select...</option>
-                  <option value="Fix & Flip">Fix & Flip</option>
-                  <option value="Rental">Rental / DSCR</option>
-                  <option value="Cash-Out">Cash-Out Refi</option>
-                  <option value="Bridge">Bridge</option>
-                  <option value="New Construction">New Construction</option>
-                </select>
-              </div>
-              <div class="field">
-                <label class="label">Property Type <span>*</span></label>
-                <select id="f-property-type">
-                  <option value="">Select...</option>
-                  <option value="SFR">SFR</option>
-                  <option value="Condo">Condo</option>
-                  <option value="2-4 Unit">2–4 Unit</option>
-                  <option value="Multifamily 5+">Multifamily 5+</option>
-                  <option value="Commercial">Commercial</option>
-                  <option value="Land">Land</option>
-                </select>
-              </div>
+              <div class="field field-full"><label class="label">Street Address <span>*</span></label><input id="f-location" type="text" placeholder="5521 Hawkes Bluff Ave"></div>
+              <div class="field"><label class="label">City <span>*</span></label><input id="f-city" type="text" placeholder="Davie"></div>
+              <div class="field"><label class="label">State <span>*</span></label><input id="f-state" type="text" placeholder="FL" maxlength="2" style="text-transform:uppercase"></div>
             </div>
 
-            <div class="section-divider">
-              <div class="section-divider-label">Financial Details</div>
-              <div class="section-divider-line"></div>
+            <div class="field" style="margin-top:16px">
+              <label class="label">Deal Type <span>*</span></label>
+              <div class="pill-group" id="deal-type-pills">
+                <div class="pill" onclick="selectPill('deal-type-pills','Purchase','f-deal-type')">Purchase</div>
+                <div class="pill" onclick="selectPill('deal-type-pills','Fix &amp; Flip','f-deal-type')">Fix &amp; Flip</div>
+                <div class="pill" onclick="selectPill('deal-type-pills','Rental','f-deal-type')">Rental / DSCR</div>
+                <div class="pill" onclick="selectPill('deal-type-pills','Cash-Out','f-deal-type')">Cash-Out Refi</div>
+                <div class="pill" onclick="selectPill('deal-type-pills','Bridge','f-deal-type')">Bridge</div>
+                <div class="pill" onclick="selectPill('deal-type-pills','New Construction','f-deal-type')">New Construction</div>
+              </div>
+              <input type="hidden" id="f-deal-type">
             </div>
+
+            <div class="field" style="margin-top:16px">
+              <label class="label">Property Type <span>*</span></label>
+              <div class="pill-group" id="prop-type-pills">
+                <div class="pill" onclick="selectPill('prop-type-pills','SFR','f-property-type')">SFR</div>
+                <div class="pill" onclick="selectPill('prop-type-pills','Condo','f-property-type')">Condo</div>
+                <div class="pill" onclick="selectPill('prop-type-pills','2-4 Unit','f-property-type')">2–4 Unit</div>
+                <div class="pill" onclick="selectPill('prop-type-pills','Multifamily 5+','f-property-type')">Multifamily 5+</div>
+                <div class="pill" onclick="selectPill('prop-type-pills','Commercial','f-property-type')">Commercial</div>
+                <div class="pill" onclick="selectPill('prop-type-pills','Land','f-property-type')">Land</div>
+              </div>
+              <input type="hidden" id="f-property-type">
+            </div>
+
+            <div class="section-divider" style="margin-top:24px"><div class="section-divider-label">Financial Details</div><div class="section-divider-line"></div></div>
             <div class="form-grid-3">
+              <div class="field"><label class="label">Loan Amount ($) <span>*</span></label><input id="f-loan-amount" type="number" placeholder="600000" oninput="autoCalc()"></div>
+              <div class="field" id="purchase-price-field"><label class="label">Purchase Price ($) <span>*</span></label><input id="f-purchase-price" type="number" placeholder="750000" oninput="autoCalc()"></div>
+              <div class="field"><label class="label">ARV ($)</label><input id="f-arv" type="number" placeholder="850000" oninput="autoCalc()"></div>
+              <div class="field"><label class="label">As-Is Value ($)</label><input id="f-as-is-value" type="number" placeholder="750000" oninput="autoCalc()"></div>
+              <div class="field"><label class="label">Rehab Budget ($)</label><input id="f-rehab-budget" type="number" placeholder="0"></div>
+              <div class="field"><label class="label">Monthly Rent ($)</label><input id="f-monthly-rent" type="number" placeholder="5800" oninput="autoCalc()"></div>
               <div class="field">
-                <label class="label">Loan Amount ($) <span>*</span></label>
-                <input id="f-loan-amount" type="number" placeholder="600000">
+                <label class="label">LTV (%) <span>*</span> <span class="auto-badge">AUTO</span></label>
+                <input id="f-ltv" type="number" placeholder="Auto-calculated" step="0.1" class="auto-calc" readonly>
               </div>
               <div class="field">
-                <label class="label">Purchase Price ($) <span>*</span></label>
-                <input id="f-purchase-price" type="number" placeholder="750000">
+                <label class="label">DSCR <span class="auto-badge">AUTO</span></label>
+                <input id="f-dscr" type="number" placeholder="Auto-calculated" step="0.01" class="auto-calc" readonly>
               </div>
-              <div class="field">
-                <label class="label">ARV ($)</label>
-                <input id="f-arv" type="number" placeholder="850000">
-              </div>
-              <div class="field">
-                <label class="label">As-Is Value ($)</label>
-                <input id="f-as-is-value" type="number" placeholder="750000">
-              </div>
-              <div class="field">
-                <label class="label">Rehab Budget ($)</label>
-                <input id="f-rehab-budget" type="number" placeholder="0">
-              </div>
-              <div class="field">
-                <label class="label">Monthly Rent ($)</label>
-                <input id="f-monthly-rent" type="number" placeholder="5800">
-              </div>
-              <div class="field">
-                <label class="label">LTV (%) <span>*</span></label>
-                <input id="f-ltv" type="number" placeholder="70.6" step="0.1">
-              </div>
-              <div class="field">
-                <label class="label">DSCR</label>
-                <input id="f-dscr" type="number" placeholder="1.09" step="0.01">
-              </div>
-              <div class="field">
-                <label class="label">Credit Score <span>*</span></label>
-                <input id="f-credit-score" type="number" placeholder="730">
-              </div>
+              <div class="field"><label class="label">Credit Score <span>*</span></label><input id="f-credit-score" type="number" placeholder="730"></div>
+              <div class="field"><label class="label">Monthly Payment ($)</label><input id="f-monthly-payment" type="number" placeholder="3200" oninput="autoCalc()" title="Used to calculate DSCR"></div>
             </div>
 
-            <div class="section-divider">
-              <div class="section-divider-label">Additional Context</div>
-              <div class="section-divider-line"></div>
-            </div>
-            <div class="field">
-              <label class="label">Notes</label>
-              <textarea id="f-notes" placeholder="Any additional details about the deal, borrower situation, or special circumstances..."></textarea>
-            </div>
+            <div class="section-divider"><div class="section-divider-label">Additional Context</div><div class="section-divider-line"></div></div>
+            <div class="field"><label class="label">Notes</label><textarea id="f-notes" placeholder="Any additional details about the deal, borrower situation, or special circumstances..."></textarea></div>
 
             <div style="margin-top:24px;display:flex;gap:12px;align-items:center">
               <button class="btn btn-primary btn-lg" onclick="analyzeDeal()" id="analyze-btn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
-                Analyze Deal
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>Analyze Deal
               </button>
               <button class="btn btn-ghost" onclick="clearForm()">Clear</button>
               <div id="form-error" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--red);display:none"></div>
             </div>
           </div>
         </div>
-
-        <!-- RESULT PANEL -->
-        <div id="result-panel">
-          <div id="result-content"></div>
-        </div>
+        <div id="result-panel"><div id="result-content"></div></div>
       </div>
     </div>
 
     <!-- DEAL PIPELINE -->
     <div class="page" id="page-deals">
       <div class="topbar">
-        <div>
-          <div class="topbar-title">Deal Pipeline</div>
-          <div class="topbar-meta">All submitted deals</div>
-        </div>
-        <div class="topbar-right">
-          <button class="btn btn-primary" onclick="showPage('submit')" style="padding:7px 16px;font-size:12px">+ Submit Deal</button>
-        </div>
+        <div><div class="topbar-title">Deal Pipeline</div><div class="topbar-meta">All submitted deals</div></div>
+        <button class="btn btn-primary" onclick="showPage('submit')" style="padding:7px 16px;font-size:12px">+ Submit Deal</button>
       </div>
       <div class="content">
         <div class="tabs">
@@ -547,165 +315,170 @@ input::placeholder{color:var(--text-3)}
           <button class="tab" onclick="filterDeals('Review',this)">Review</button>
           <button class="tab" onclick="filterDeals('Reject',this)">Rejected</button>
         </div>
-        <div class="card">
-          <div class="card-body" style="padding:0">
-            <div id="deals-table-wrap">
-              <div class="empty-state" style="padding:40px 20px">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                <h3>No deals yet</h3>
-                <p>Submitted deals will appear here.</p>
-              </div>
-            </div>
-          </div>
-        </div>
+        <div class="card"><div class="card-body" style="padding:0"><div id="deals-table-wrap">
+          <div class="empty-state" style="padding:40px 20px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><h3>No deals yet</h3><p>Submitted deals will appear here.</p></div>
+        </div></div></div>
       </div>
     </div>
 
     <!-- LENDER PORTAL -->
     <div class="page" id="page-lenders">
       <div class="topbar">
-        <div>
-          <div class="topbar-title">Lender Portal</div>
-          <div class="topbar-meta">Active lending partners & criteria</div>
-        </div>
-        <div class="topbar-right">
-          <span class="chip chip-green">5 ACTIVE LENDERS</span>
-        </div>
+        <div><div class="topbar-title">Lender Portal</div><div class="topbar-meta">Active lending partners</div></div>
+        <span class="chip chip-green">5 ACTIVE LENDERS</span>
       </div>
-      <div class="content">
-        <div class="lender-grid" id="lender-grid"></div>
-      </div>
+      <div class="content"><div class="lender-grid" id="lender-grid"></div></div>
     </div>
 
     <!-- MATCH QUEUE -->
     <div class="page" id="page-match">
-      <div class="topbar">
-        <div>
-          <div class="topbar-title">Match Queue</div>
-          <div class="topbar-meta">Deal-to-lender matching engine</div>
-        </div>
-      </div>
-      <div class="content">
-        <div id="match-content">
-          <div class="empty-state" style="padding:60px 0">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            <h3>No matches yet</h3>
-            <p>Analyze a deal and approved matches will appear here.</p>
-          </div>
-        </div>
-      </div>
+      <div class="topbar"><div><div class="topbar-title">Match Queue</div><div class="topbar-meta">Deal-to-lender matching</div></div></div>
+      <div class="content"><div id="match-content">
+        <div class="empty-state" style="padding:60px 0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><h3>No matches yet</h3><p>Analyze a deal and matches will appear here.</p></div>
+      </div></div>
     </div>
-
   </main>
 </div>
 
 <script>
-// ─── STATE ───────────────────────────────────────────────────────────────────
-const state = {
-  deals: JSON.parse(localStorage.getItem('capiq_deals') || '[]'),
-  currentFilter: 'all'
-};
+const state = { deals: JSON.parse(localStorage.getItem('capiq_deals') || '[]'), currentFilter: 'all' };
 
 const LENDERS = [
-  { name: 'Kiavi', type: 'Hard Money', maxLtv: 90, minDscr: 1.0, minCredit: 660, minLoan: 100000, maxLoan: 3000000, states: 'FL TX CA GA NC SC TN AZ CO OH PA NJ NY VA MD IL', loans: ['Fix & Flip','Bridge','Rental'], props: ['SFR','2-4 Unit'], tier: 'Active Partner', exp: '1+ Deals', notes: 'Up to 90% LTC on Fix & Flip. No rural.' },
-  { name: 'Visio Lending', type: 'DSCR', maxLtv: 80, minDscr: 1.0, minCredit: 680, minLoan: 75000, maxLoan: 2000000, states: 'FL TX CA GA NC SC TN AZ CO OH PA NJ VA MD IL NY', loans: ['Rental','Cash-Out'], props: ['SFR','2-4 Unit','Multifamily 5+'], tier: 'Active Partner', exp: 'None', notes: 'Cash-out max 75% LTV. Prepay 5-4-3-2-1.' },
-  { name: 'Lima One Capital', type: 'Hard Money / DSCR', maxLtv: 80, minDscr: 1.0, minCredit: 660, minLoan: 75000, maxLoan: 5000000, states: 'FL TX GA NC SC TN AZ CO OH PA NJ NY VA MD IL AL MO', loans: ['Fix & Flip','Rental','Bridge','Cash-Out'], props: ['SFR','2-4 Unit','Multifamily 5+'], tier: 'Active Partner', exp: 'None', notes: 'Full product suite. Prepay on DSCR products.' },
-  { name: 'Groundfloor', type: 'Hard Money', maxLtv: 75, minDscr: 0, minCredit: 640, minLoan: 75000, maxLoan: 2000000, states: 'FL TX GA NC SC TN AL CO PA MD VA OH MO IN', loans: ['Fix & Flip','Bridge'], props: ['SFR','2-4 Unit'], tier: 'Standard', exp: 'None', notes: 'Fix & Flip / Bridge only. Max 75% ARV. First-time investors OK.' },
-  { name: 'CoreVest Finance', type: 'DSCR', maxLtv: 75, minDscr: 1.15, minCredit: 680, minLoan: 500000, maxLoan: 5000000, states: 'FL TX CA GA NC SC TN AZ CO OH PA NJ NY VA MD IL NV WA OR', loans: ['Rental','Bridge','Cash-Out'], props: ['SFR','2-4 Unit','Multifamily 5+','Mixed Use'], tier: 'Active Partner', exp: '3+ Deals', notes: 'Portfolio & single asset. Min loan $500K. Mixed use accepted.' }
+  { name:'Kiavi', type:'Hard Money', maxLtv:90, minDscr:1.0, minCredit:660, minLoan:100000, maxLoan:3000000, states:'FL TX CA GA NC SC TN AZ CO OH PA NJ NY VA MD IL', loans:['Purchase','Fix & Flip','Bridge','Rental'], props:['SFR','2-4 Unit','Condo'], exp:'1+ Deals', notes:'Up to 90% LTC on Fix & Flip. No rural.' },
+  { name:'Visio Lending', type:'DSCR', maxLtv:80, minDscr:1.0, minCredit:680, minLoan:75000, maxLoan:2000000, states:'FL TX CA GA NC SC TN AZ CO OH PA NJ VA MD IL NY', loans:['Rental','Cash-Out'], props:['SFR','2-4 Unit','Multifamily 5+','Condo'], exp:'None', notes:'Cash-out max 75% LTV. Prepay 5-4-3-2-1.' },
+  { name:'Lima One Capital', type:'Hard Money / DSCR', maxLtv:80, minDscr:1.0, minCredit:660, minLoan:75000, maxLoan:5000000, states:'FL TX GA NC SC TN AZ CO OH PA NJ NY VA MD IL AL MO', loans:['Purchase','Fix & Flip','Rental','Bridge','Cash-Out'], props:['SFR','2-4 Unit','Multifamily 5+','Condo'], exp:'None', notes:'Full product suite. Prepay on DSCR products.' },
+  { name:'Groundfloor', type:'Hard Money', maxLtv:75, minDscr:0, minCredit:640, minLoan:75000, maxLoan:2000000, states:'FL TX GA NC SC TN AL CO PA MD VA OH MO IN', loans:['Fix & Flip','Bridge','New Construction'], props:['SFR','2-4 Unit'], exp:'None', notes:'Fix & Flip / Bridge / New Construction. Max 75% ARV.' },
+  { name:'CoreVest Finance', type:'DSCR', maxLtv:75, minDscr:1.15, minCredit:680, minLoan:500000, maxLoan:5000000, states:'FL TX CA GA NC SC TN AZ CO OH PA NJ NY VA MD IL NV WA OR', loans:['Rental','Bridge','Cash-Out'], props:['SFR','2-4 Unit','Multifamily 5+','Commercial'], exp:'3+ Deals', notes:'Portfolio & single asset. Min loan $500K.' }
 ];
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US', {weekday:'long',year:'numeric',month:'long',day:'numeric'});
-  renderLenders();
-  updateStats();
-  renderDashboardRecent();
-  renderDealsTable();
+  document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  renderLenders(); updateStats(); renderDashboardRecent(); renderDealsTable();
   document.getElementById('deal-count').textContent = state.deals.length;
 });
 
-// ─── NAVIGATION ───────────────────────────────────────────────────────────────
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(btn => {
-    if (btn.getAttribute('onclick')?.includes("'" + id + "'")) btn.classList.add('active');
-  });
-  if (id === 'match') renderMatchQueue();
+  document.querySelectorAll('.nav-item').forEach(btn => { if(btn.getAttribute('onclick')?.includes("'"+id+"'")) btn.classList.add('active'); });
+  if(id==='match') renderMatchQueue();
 }
 
-// ─── PROMPT BUILDER ───────────────────────────────────────────────────────────
-function buildPrompt(d) {
-  return `You are an expert real estate underwriter for CapIQ, a capital intelligence platform for independent real estate investors.
-
-Analyze this deal comprehensively and return a Deal Intelligence Report as a single JSON object.
-
-DEAL DATA:
-Deal Type: ${d.dealType || 'N/A'}
-Property Type: ${d.propertyType || 'N/A'}
-State: ${d.state || 'N/A'}
-Location: ${d.location || 'N/A'}
-Loan Amount: $${d.loanAmount || 0}
-Purchase Price: $${d.purchasePrice || 0}
-ARV: $${d.arv || 0}
-As-Is Value: $${d.asIsValue || 0}
-Rehab Budget: $${d.rehabBudget || 0}
-Monthly Rent: $${d.monthlyRent || 0}
-LTV: ${d.ltv || 0}%
-DSCR: ${d.dscr || 'N/A'}
-Credit Score: ${d.creditScore || 0}
-Investor Experience: ${d.investorExperience || 'N/A'}
-Notes: ${d.notes || 'None'}
-
-Return ONLY this JSON object, no markdown, no explanation:
-{
-  "fundabilityScore": <integer 0-100>,
-  "dealScore": "<Pass|Review|Reject>",
-  "humanReviewRequired": <true|false>,
-  "executiveSummary": "<3-4 sentence deal overview with key metrics>",
-  "strengthsAndRisks": "<Detailed analysis of deal strengths and risks>",
-  "lenderMatchingProfile": "<Description of ideal lender profile>",
-  "structuringRecommendations": "<Specific actionable recommendations to improve fundability>",
-  "marketContext": "<Market context for this property type, location, and current rate environment>",
-  "scoreBreakdown": "<Explanation of how LTV, DSCR, credit, and experience contributed to the score>",
-  "nextSteps": "<3-5 concrete next steps in priority order>"
-}`;
+function selectPill(groupId, value, hiddenId) {
+  document.querySelectorAll('#'+groupId+' .pill').forEach(p => p.classList.remove('selected'));
+  event.target.classList.add('selected');
+  document.getElementById(hiddenId).value = value;
+  // Show/hide purchase price based on deal type
+  if(hiddenId === 'f-deal-type') {
+    const pp = document.getElementById('purchase-price-field');
+    const ppInput = document.getElementById('f-purchase-price');
+    if(value === 'Cash-Out') {
+      pp.style.opacity = '0.4';
+      ppInput.placeholder = 'N/A for Cash-Out';
+      ppInput.removeAttribute('required');
+    } else {
+      pp.style.opacity = '1';
+      ppInput.placeholder = '750000';
+    }
+    autoCalc();
+  }
 }
 
-// ─── ANALYZE ─────────────────────────────────────────────────────────────────
-async function analyzeDeal() {
-  const required = ['f-investor-name','f-investor-email','f-experience','f-location','f-city','f-state','f-deal-type','f-property-type','f-loan-amount','f-purchase-price','f-ltv','f-credit-score'];
-  const errEl = document.getElementById('form-error');
-  for (const id of required) {
-    if (!document.getElementById(id).value.trim()) {
-      errEl.textContent = 'Please complete all required fields (marked *)';
-      errEl.style.display = 'block';
-      document.getElementById(id).focus();
-      return;
+function autoCalc() {
+  const loanAmt = parseFloat(document.getElementById('f-loan-amount').value) || 0;
+  const purchasePrice = parseFloat(document.getElementById('f-purchase-price').value) || 0;
+  const asIsValue = parseFloat(document.getElementById('f-as-is-value').value) || 0;
+  const arv = parseFloat(document.getElementById('f-arv').value) || 0;
+  const monthlyRent = parseFloat(document.getElementById('f-monthly-rent').value) || 0;
+  const monthlyPayment = parseFloat(document.getElementById('f-monthly-payment').value) || 0;
+  const dealType = document.getElementById('f-deal-type').value;
+
+  // LTV calculation
+  let ltv = 0;
+  if(loanAmt > 0) {
+    // Use ARV for Fix & Flip / New Construction, as-is or purchase for others
+    if((dealType === 'Fix & Flip' || dealType === 'New Construction') && arv > 0) {
+      ltv = (loanAmt / arv) * 100;
+    } else if(dealType === 'Cash-Out' && asIsValue > 0) {
+      ltv = (loanAmt / asIsValue) * 100;
+    } else if(purchasePrice > 0) {
+      ltv = (loanAmt / purchasePrice) * 100;
+    } else if(asIsValue > 0) {
+      ltv = (loanAmt / asIsValue) * 100;
     }
   }
-  errEl.style.display = 'none';
+  if(ltv > 0) {
+    document.getElementById('f-ltv').value = ltv.toFixed(1);
+    document.getElementById('f-ltv').classList.add('auto-calc');
+  } else {
+    document.getElementById('f-ltv').value = '';
+  }
+
+  // DSCR calculation: Monthly Rent / Monthly Payment (PITIA)
+  if(monthlyRent > 0 && monthlyPayment > 0) {
+    const dscr = monthlyRent / monthlyPayment;
+    document.getElementById('f-dscr').value = dscr.toFixed(2);
+    document.getElementById('f-dscr').classList.add('auto-calc');
+  } else if(monthlyRent > 0 && loanAmt > 0) {
+    // Estimate monthly payment at ~7% 30yr if not provided
+    const estimatedPayment = (loanAmt * 0.07) / 12;
+    const dscr = monthlyRent / estimatedPayment;
+    document.getElementById('f-dscr').value = dscr.toFixed(2);
+    document.getElementById('f-dscr').classList.add('auto-calc');
+  } else {
+    document.getElementById('f-dscr').value = '';
+  }
+}
+
+function buildPrompt(d) {
+  return `You are an expert real estate underwriter for CapIQ. Analyze this deal and return ONLY a JSON object with no markdown or explanation.
+
+DEAL: ${d.dealType} | ${d.propertyType} | ${d.state} | ${d.location}
+LOAN: $${d.loanAmount} | PURCHASE: $${d.purchasePrice||'N/A'} | ARV: $${d.arv||'N/A'}
+AS-IS VALUE: $${d.asIsValue||'N/A'} | REHAB: $${d.rehabBudget||0} | RENT: $${d.monthlyRent||0}/mo
+LTV: ${d.ltv}% | DSCR: ${d.dscr||'N/A'} | CREDIT: ${d.creditScore} | EXP: ${d.investorExperience}
+NOTES: ${d.notes||'None'}
+
+Return exactly this JSON structure with all fields filled in:
+{"fundabilityScore":0,"dealScore":"Pass","humanReviewRequired":false,"executiveSummary":"","strengthsAndRisks":"","lenderMatchingProfile":"","structuringRecommendations":"","marketContext":"","scoreBreakdown":"","nextSteps":""}`;
+}
+
+async function analyzeDeal() {
+  const dealType = document.getElementById('f-deal-type').value;
+  const propType = document.getElementById('f-property-type').value;
+  const errEl = document.getElementById('form-error');
+
+  const required = [
+    ['f-investor-name','Investor Name'],['f-investor-email','Email'],['f-experience','Experience'],
+    ['f-location','Street Address'],['f-city','City'],['f-state','State'],
+    ['f-loan-amount','Loan Amount'],['f-credit-score','Credit Score']
+  ];
+  if(!dealType) { errEl.textContent='Please select a Deal Type'; errEl.style.display='block'; return; }
+  if(!propType) { errEl.textContent='Please select a Property Type'; errEl.style.display='block'; return; }
+  for(const [id, label] of required) {
+    if(!document.getElementById(id).value.trim()) {
+      errEl.textContent = `${label} is required`; errEl.style.display='block';
+      document.getElementById(id).focus(); return;
+    }
+  }
+  errEl.style.display='none';
 
   const stateVal = document.getElementById('f-state').value.toUpperCase().trim();
   const street = document.getElementById('f-location').value.trim();
   const city = document.getElementById('f-city').value.trim();
-  const fullLocation = [street, city, stateVal].filter(Boolean).join(', ');
-
   const dealData = {
-    dealType: document.getElementById('f-deal-type').value,
-    propertyType: document.getElementById('f-property-type').value,
-    state: stateVal,
-    location: fullLocation,
-    loanAmount: parseFloat(document.getElementById('f-loan-amount').value) || 0,
-    purchasePrice: parseFloat(document.getElementById('f-purchase-price').value) || 0,
-    arv: parseFloat(document.getElementById('f-arv').value) || 0,
-    asIsValue: parseFloat(document.getElementById('f-as-is-value').value) || 0,
-    rehabBudget: parseFloat(document.getElementById('f-rehab-budget').value) || 0,
-    monthlyRent: parseFloat(document.getElementById('f-monthly-rent').value) || 0,
-    ltv: parseFloat(document.getElementById('f-ltv').value) || 0,
-    dscr: parseFloat(document.getElementById('f-dscr').value) || 0,
-    creditScore: parseFloat(document.getElementById('f-credit-score').value) || 0,
+    dealType, propertyType: propType, state: stateVal,
+    location: [street, city, stateVal].filter(Boolean).join(', '),
+    loanAmount: parseFloat(document.getElementById('f-loan-amount').value)||0,
+    purchasePrice: parseFloat(document.getElementById('f-purchase-price').value)||0,
+    arv: parseFloat(document.getElementById('f-arv').value)||0,
+    asIsValue: parseFloat(document.getElementById('f-as-is-value').value)||0,
+    rehabBudget: parseFloat(document.getElementById('f-rehab-budget').value)||0,
+    monthlyRent: parseFloat(document.getElementById('f-monthly-rent').value)||0,
+    ltv: parseFloat(document.getElementById('f-ltv').value)||0,
+    dscr: parseFloat(document.getElementById('f-dscr').value)||0,
+    creditScore: parseFloat(document.getElementById('f-credit-score').value)||0,
     investorExperience: document.getElementById('f-experience').value,
     notes: document.getElementById('f-notes').value,
     investorName: document.getElementById('f-investor-name').value,
@@ -714,217 +487,117 @@ async function analyzeDeal() {
   };
 
   const btn = document.getElementById('analyze-btn');
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Analyzing...';
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Analyzing...';
   document.getElementById('loading').classList.add('show');
 
   try {
-    // Call directly to bypass any conflicting api/* functions
-    const prompt = buildPrompt(dealData);
     const res = await fetch('/.netlify/functions/capiq-analyze', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ dealData })
     });
-
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.error || errData.detail || `Server error ${res.status}`);
+    if(!res.ok) {
+      const e = await res.json().catch(()=>({}));
+      throw new Error(e.error || e.detail || `Server error ${res.status}`);
     }
-
     const data = await res.json();
-    if (!data.success) throw new Error(data.error || 'Analysis failed');
+    if(!data.success) throw new Error(data.error || 'Analysis failed');
     const analysis = data.analysis;
-    const deal = {
-      id: Date.now(),
-      dealName: dealData.location.split(',')[0] || 'Deal ' + (state.deals.length + 1),
-      dealData,
-      analysis,
-      timestamp: new Date().toISOString(),
-      matches: matchDeal(dealData, analysis)
-    };
-
+    const deal = { id: Date.now(), dealName: street || 'Deal '+(state.deals.length+1), dealData, analysis, timestamp: new Date().toISOString(), matches: matchDeal(dealData, analysis) };
     state.deals.unshift(deal);
     localStorage.setItem('capiq_deals', JSON.stringify(state.deals));
-
     renderResult(analysis, dealData);
-    updateStats();
-    renderDashboardRecent();
-    renderDealsTable();
+    updateStats(); renderDashboardRecent(); renderDealsTable();
     document.getElementById('deal-count').textContent = state.deals.length;
     showToast('Deal analyzed successfully', 'success');
-
-  } catch (err) {
+  } catch(err) {
     showToast('Analysis failed: ' + err.message, 'error');
-    document.getElementById('result-panel').innerHTML = `<div class="card"><div class="card-body"><div style="color:var(--red);font-family:'DM Mono',monospace;font-size:12px">ERROR: ${err.message}</div></div></div>`;
+    document.getElementById('result-content').innerHTML = `<div class="card"><div class="card-body"><div style="color:var(--red);font-family:'DM Mono',monospace;font-size:12px">ERROR: ${err.message}</div></div></div>`;
     document.getElementById('result-panel').classList.add('show');
   } finally {
-    btn.disabled = false;
-    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Analyze Deal';
+    btn.disabled=false; btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Analyze Deal';
     document.getElementById('loading').classList.remove('show');
   }
 }
 
-// ─── RENDER RESULT ────────────────────────────────────────────────────────────
 function renderResult(a, d) {
-  const scoreColor = a.fundabilityScore >= 65 ? 'var(--green)' : a.fundabilityScore >= 45 ? 'var(--amber)' : 'var(--red)';
-  const circumference = 2 * Math.PI * 52;
-  const fillPct = (a.fundabilityScore / 100) * circumference;
-  const verdictClass = a.dealScore === 'Pass' ? 'verdict-pass' : a.dealScore === 'Review' ? 'verdict-review' : 'verdict-reject';
-  const verdictDot = a.dealScore === 'Pass' ? '●' : a.dealScore === 'Review' ? '◐' : '○';
-
+  const scoreColor = a.fundabilityScore>=65?'var(--green)':a.fundabilityScore>=45?'var(--amber)':'var(--red)';
+  const circumference = 2*Math.PI*52;
+  const fillPct = (a.fundabilityScore/100)*circumference;
+  const vc = a.dealScore==='Pass'?'verdict-pass':a.dealScore==='Review'?'verdict-review':'verdict-reject';
+  const dot = a.dealScore==='Pass'?'●':a.dealScore==='Review'?'◐':'○';
   const matches = matchDeal(d, a);
-  const matchesHtml = matches.length > 0
-    ? matches.slice(0,3).map(m => `
-      <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
-        <div>
-          <div style="font-size:13px;font-weight:600;color:var(--text)">${m.name}</div>
-          <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text-3)">${m.type}</div>
-        </div>
-        <div style="text-align:right">
-          <div style="font-family:'DM Mono',monospace;font-size:14px;font-weight:600;color:var(--gold)">${m.score}</div>
-          <div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-3)">MATCH SCORE</div>
-        </div>
-      </div>`).join('')
-    : '<div style="font-size:13px;color:var(--text-3);padding:16px 0">No qualifying lender matches found for this deal structure.</div>';
+  const matchesHtml = matches.length>0 ? matches.slice(0,3).map(m=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div><div style="font-size:13px;font-weight:600;color:var(--text)">${m.name}</div><div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text-3)">${m.type}</div></div>
+      <div style="text-align:right"><div style="font-family:'DM Mono',monospace;font-size:14px;font-weight:600;color:var(--gold)">${m.score}</div><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-3)">MATCH SCORE</div></div>
+    </div>`).join('') : '<div style="font-size:13px;color:var(--text-3);padding:16px 0">No qualifying lender matches found.</div>';
 
-  const html = `
+  document.getElementById('result-content').innerHTML = `
     <div class="card" style="margin-bottom:16px">
-      <div class="card-header">
-        <div class="card-title">Deal Intelligence Report</div>
-        <span class="verdict-badge ${verdictClass}">${verdictDot} ${a.dealScore.toUpperCase()}</span>
-      </div>
+      <div class="card-header"><div class="card-title">Deal Intelligence Report</div><span class="verdict-badge ${vc}">${dot} ${a.dealScore.toUpperCase()}</span></div>
       <div class="card-body">
         <div style="display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:start">
           <div style="text-align:center">
             <div class="score-ring">
-              <svg width="120" height="120" viewBox="0 0 120 120">
-                <circle cx="60" cy="60" r="52" fill="none" stroke="var(--ink-4)" stroke-width="8"/>
-                <circle cx="60" cy="60" r="52" fill="none" stroke="${scoreColor}" stroke-width="8"
-                  stroke-dasharray="${fillPct} ${circumference}" stroke-linecap="round"
-                  style="transition:stroke-dasharray 1s ease"/>
-              </svg>
-              <div class="score-ring-num">
-                <div class="score-big" style="color:${scoreColor}">${a.fundabilityScore}</div>
-                <div class="score-label">Fundability</div>
-              </div>
+              <svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" fill="none" stroke="var(--ink-4)" stroke-width="8"/><circle cx="60" cy="60" r="52" fill="none" stroke="${scoreColor}" stroke-width="8" stroke-dasharray="${fillPct} ${circumference}" stroke-linecap="round"/></svg>
+              <div class="score-ring-num"><div class="score-big" style="color:${scoreColor}">${a.fundabilityScore}</div><div class="score-label">Fundability</div></div>
             </div>
-            ${a.humanReviewRequired ? '<div style="margin-top:8px;font-family:\'DM Mono\',monospace;font-size:10px;color:var(--amber);text-align:center">⚠ REVIEW REQUIRED</div>' : ''}
+            ${a.humanReviewRequired?'<div style="margin-top:8px;font-family:\'DM Mono\',monospace;font-size:10px;color:var(--amber)">⚠ REVIEW REQUIRED</div>':''}
           </div>
           <div>
-            <div class="analysis-section">
-              <div class="analysis-title">Executive Summary</div>
-              <div class="analysis-text">${a.executiveSummary}</div>
-            </div>
-            <div class="analysis-section">
-              <div class="analysis-title">Score Breakdown</div>
-              <div class="analysis-text">${a.scoreBreakdown}</div>
-            </div>
+            <div class="analysis-section"><div class="analysis-title">Executive Summary</div><div class="analysis-text">${a.executiveSummary}</div></div>
+            <div class="analysis-section"><div class="analysis-title">Score Breakdown</div><div class="analysis-text">${a.scoreBreakdown}</div></div>
           </div>
         </div>
       </div>
     </div>
-
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-      <div class="card">
-        <div class="card-header"><div class="card-title">Strengths & Risks</div></div>
-        <div class="card-body">
-          <div class="analysis-text">${a.strengthsAndRisks}</div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-header"><div class="card-title">Market Context</div></div>
-        <div class="card-body">
-          <div class="analysis-text">${a.marketContext}</div>
-        </div>
-      </div>
+      <div class="card"><div class="card-header"><div class="card-title">Strengths &amp; Risks</div></div><div class="card-body"><div class="analysis-text">${a.strengthsAndRisks}</div></div></div>
+      <div class="card"><div class="card-header"><div class="card-title">Market Context</div></div><div class="card-body"><div class="analysis-text">${a.marketContext}</div></div></div>
     </div>
-
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-      <div class="card">
-        <div class="card-header"><div class="card-title">Structuring Recommendations</div></div>
-        <div class="card-body">
-          <div class="analysis-text">${a.structuringRecommendations}</div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-header"><div class="card-title">Next Steps</div></div>
-        <div class="card-body">
-          <div class="analysis-text">${a.nextSteps}</div>
-        </div>
-      </div>
+      <div class="card"><div class="card-header"><div class="card-title">Structuring Recommendations</div></div><div class="card-body"><div class="analysis-text">${a.structuringRecommendations}</div></div></div>
+      <div class="card"><div class="card-header"><div class="card-title">Next Steps</div></div><div class="card-body"><div class="analysis-text">${a.nextSteps}</div></div></div>
     </div>
-
     <div class="card">
-      <div class="card-header">
-        <div class="card-title">Lender Matches</div>
-        <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text-3)">${matches.length} qualifying lenders</div>
-      </div>
-      <div class="card-body">
-        <div style="font-size:13px;color:var(--text-2);margin-bottom:12px">${a.lenderMatchingProfile}</div>
-        ${matchesHtml}
-        ${matches.length > 0 ? `<div style="margin-top:14px"><button class="btn btn-ghost btn-full" onclick="showPage('match')">View Full Match Queue →</button></div>` : ''}
-      </div>
+      <div class="card-header"><div class="card-title">Lender Matches</div><div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text-3)">${matches.length} qualifying</div></div>
+      <div class="card-body"><div style="font-size:13px;color:var(--text-2);margin-bottom:12px">${a.lenderMatchingProfile}</div>${matchesHtml}${matches.length>0?'<div style="margin-top:14px"><button class="btn btn-ghost" style="width:100%" onclick="showPage(\'match\')">View Full Match Queue →</button></div>':''}</div>
     </div>`;
-
-  document.getElementById('result-content').innerHTML = html;
   document.getElementById('result-panel').classList.add('show');
-  document.getElementById('result-panel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.getElementById('result-panel').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-// ─── MATCH ENGINE ─────────────────────────────────────────────────────────────
 function matchDeal(d, a) {
   return LENDERS.map(l => {
-    if (d.creditScore < l.minCredit) return null;
-    if (d.loanAmount < l.minLoan || d.loanAmount > l.maxLoan) return null;
-
-    // Land and New Construction have very limited lender matches — only hard money
-    const isLand = d.propertyType === 'Land';
-    const isNewConstruction = d.dealType === 'New Construction';
-    if ((isLand || isNewConstruction) && l.type !== 'Hard Money' && l.type !== 'Hard Money / DSCR') return null;
-
+    if(d.creditScore < l.minCredit) return null;
+    if(d.loanAmount < l.minLoan || d.loanAmount > l.maxLoan) return null;
+    const isLand = d.propertyType==='Land';
+    const isNewConst = d.dealType==='New Construction';
+    if((isLand||isNewConst) && l.type!=='Hard Money' && l.type!=='Hard Money / DSCR') return null;
     let score = 0;
-    const dealType = d.dealType || '';
-    const propType = d.propertyType || '';
-
-    // Loan type match — handle Rental/DSCR variant and New Construction
-    const normalizedDealType = dealType.toLowerCase().replace(' / dscr', '').replace('rental', 'rental');
-    if (l.loans.some(lt => {
-      const ltl = lt.toLowerCase();
-      return dealType.toLowerCase().includes(ltl) || ltl.includes(normalizedDealType) ||
-        (dealType === 'New Construction' && ltl.includes('fix')) ||
-        (dealType === 'Rental / DSCR' && ltl.includes('dscr'));
-    })) score += 25;
-
-    if (l.states.includes(d.state?.toUpperCase())) score += 25;
-    if (d.ltv <= l.maxLtv) score += 15;
-
-    // Property type match — Condo maps to SFR for most lenders
-    const normalizedProp = propType === 'Condo' ? 'SFR' : propType;
-    if (l.props.includes(propType) || l.props.includes(normalizedProp)) score += 10;
-
-    if (!l.minDscr || d.dscr >= l.minDscr) score += 5;
-    if (d.loanAmount >= l.minLoan && d.loanAmount <= l.maxLoan) score += 20;
-
-    if (score < 50) return null;
-    return { name: l.name, type: l.type, score, notes: l.notes };
-  }).filter(Boolean).sort((a,b) => b.score - a.score);
+    if(l.loans.some(lt => d.dealType.toLowerCase().includes(lt.toLowerCase()) || lt.toLowerCase().includes(d.dealType.toLowerCase()))) score+=25;
+    if(l.states.includes(d.state?.toUpperCase())) score+=25;
+    if(d.ltv<=l.maxLtv) score+=15;
+    const np = d.propertyType==='Condo'?'SFR':d.propertyType;
+    if(l.props.includes(d.propertyType)||l.props.includes(np)) score+=10;
+    if(!l.minDscr||d.dscr>=l.minDscr) score+=5;
+    if(d.loanAmount>=l.minLoan&&d.loanAmount<=l.maxLoan) score+=20;
+    if(score<50) return null;
+    return {name:l.name, type:l.type, score, notes:l.notes};
+  }).filter(Boolean).sort((a,b)=>b.score-a.score);
 }
 
-// ─── RENDER FUNCTIONS ─────────────────────────────────────────────────────────
 function renderLenders() {
-  const grid = document.getElementById('lender-grid');
-  grid.innerHTML = LENDERS.map(l => `
+  document.getElementById('lender-grid').innerHTML = LENDERS.map(l=>`
     <div class="lender-card">
-      <div class="lender-name">${l.name}</div>
-      <div class="lender-type">${l.type} · ${l.tier}</div>
+      <div class="lender-name">${l.name}</div><div class="lender-type">${l.type}</div>
       <div class="lender-criteria">
         <div class="criteria-row"><span class="criteria-key">Max LTV</span><span class="criteria-val">${l.maxLtv}%</span></div>
-        <div class="criteria-row"><span class="criteria-key">Min DSCR</span><span class="criteria-val">${l.minDscr || 'N/A'}</span></div>
+        <div class="criteria-row"><span class="criteria-key">Min DSCR</span><span class="criteria-val">${l.minDscr||'N/A'}</span></div>
         <div class="criteria-row"><span class="criteria-key">Min Credit</span><span class="criteria-val">${l.minCredit}</span></div>
         <div class="criteria-row"><span class="criteria-key">Loan Range</span><span class="criteria-val">$${(l.minLoan/1000).toFixed(0)}K–$${(l.maxLoan/1000000).toFixed(1)}M</span></div>
         <div class="criteria-row"><span class="criteria-key">Experience</span><span class="criteria-val">${l.exp}</span></div>
-        <div class="criteria-row"><span class="criteria-key">States</span><span class="criteria-val">${l.states.split(' ').length} states</span></div>
       </div>
       <div style="margin-top:10px;font-size:11px;color:var(--text-3);line-height:1.5">${l.notes}</div>
     </div>`).join('');
@@ -933,170 +606,86 @@ function renderLenders() {
 function updateStats() {
   const deals = state.deals;
   document.getElementById('stat-total').textContent = deals.length;
-  if (deals.length) {
-    const passed = deals.filter(d => d.analysis?.dealScore === 'Pass').length;
-    document.getElementById('stat-pass').textContent = Math.round(passed/deals.length*100) + '%';
-    const avg = deals.reduce((s,d) => s + (d.analysis?.fundabilityScore||0), 0) / deals.length;
+  if(deals.length) {
+    const passed = deals.filter(d=>d.analysis?.dealScore==='Pass').length;
+    document.getElementById('stat-pass').textContent = Math.round(passed/deals.length*100)+'%';
+    const avg = deals.reduce((s,d)=>s+(d.analysis?.fundabilityScore||0),0)/deals.length;
     document.getElementById('stat-avg').textContent = Math.round(avg);
-  } else {
-    document.getElementById('stat-pass').textContent = '—';
-    document.getElementById('stat-avg').textContent = '—';
   }
 }
 
 function renderDashboardRecent() {
   const el = document.getElementById('dashboard-recent');
-  if (!state.deals.length) {
-    el.innerHTML = `<div class="empty-state">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-      <h3>No deals yet</h3>
-      <p>Submit your first deal to start generating fundability intelligence.</p>
-    </div>`;
-    return;
-  }
-  const recent = state.deals.slice(0,5);
-  el.innerHTML = `<table class="deal-table" style="width:100%">
-    <thead><tr>
-      <th>Deal</th><th>Type</th><th>LTV</th><th>Score</th><th>Verdict</th><th>Date</th>
-    </tr></thead>
-    <tbody>
-      ${recent.map(d => {
-        const vc = d.analysis?.dealScore === 'Pass' ? 'verdict-pass' : d.analysis?.dealScore === 'Review' ? 'verdict-review' : 'verdict-reject';
-        return `<tr onclick="viewDeal(${d.id})">
-          <td class="deal-name">${d.dealName}</td>
-          <td class="mono">${d.dealData.dealType||'—'}</td>
-          <td class="mono">${d.dealData.ltv||'—'}%</td>
-          <td class="mono" style="color:var(--gold)">${d.analysis?.fundabilityScore||'—'}</td>
-          <td><span class="verdict-badge ${vc}" style="font-size:10px;padding:3px 10px">${d.analysis?.dealScore||'—'}</span></td>
-          <td class="mono" style="color:var(--text-3)">${new Date(d.timestamp).toLocaleDateString()}</td>
-        </tr>`;
-      }).join('')}
-    </tbody>
-  </table>`;
+  if(!state.deals.length) { el.innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><h3>No deals yet</h3><p>Submit your first deal to generate fundability intelligence.</p></div>'; return; }
+  el.innerHTML=`<table class="deal-table"><thead><tr><th>Deal</th><th>Type</th><th>LTV</th><th>Score</th><th>Verdict</th><th>Date</th></tr></thead><tbody>${state.deals.slice(0,5).map(d=>{const vc=d.analysis?.dealScore==='Pass'?'verdict-pass':d.analysis?.dealScore==='Review'?'verdict-review':'verdict-reject';return`<tr onclick="viewDeal(${d.id})"><td class="deal-name">${d.dealName}</td><td class="mono">${d.dealData.dealType||'—'}</td><td class="mono">${d.dealData.ltv||'—'}%</td><td class="mono" style="color:var(--gold)">${d.analysis?.fundabilityScore||'—'}</td><td><span class="verdict-badge ${vc}" style="font-size:10px;padding:3px 10px">${d.analysis?.dealScore||'—'}</span></td><td class="mono" style="color:var(--text-3)">${new Date(d.timestamp).toLocaleDateString()}</td></tr>`;}).join('')}</tbody></table>`;
 }
 
 function renderDealsTable(filter) {
-  const f = filter || state.currentFilter;
-  const deals = f === 'all' ? state.deals : state.deals.filter(d => d.analysis?.dealScore === f);
-  const wrap = document.getElementById('deals-table-wrap');
-  if (!deals.length) {
-    wrap.innerHTML = `<div class="empty-state" style="padding:40px 20px">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-      <h3>No deals</h3><p>No deals match this filter.</p></div>`;
-    return;
-  }
-  wrap.innerHTML = `<table class="deal-table">
-    <thead><tr>
-      <th>Address</th><th>Investor</th><th>Deal Type</th><th>Loan Amt</th><th>LTV</th><th>DSCR</th><th>Credit</th><th>Score</th><th>Verdict</th><th>Matches</th>
-    </tr></thead>
-    <tbody>
-      ${deals.map(d => {
-        const vc = d.analysis?.dealScore==='Pass'?'verdict-pass':d.analysis?.dealScore==='Review'?'verdict-review':'verdict-reject';
-        return `<tr onclick="viewDeal(${d.id})">
-          <td class="deal-name">${d.dealName}</td>
-          <td>${d.dealData.investorName||'—'}</td>
-          <td class="mono">${d.dealData.dealType||'—'}</td>
-          <td class="mono">$${(d.dealData.loanAmount||0).toLocaleString()}</td>
-          <td class="mono">${d.dealData.ltv||'—'}%</td>
-          <td class="mono">${d.dealData.dscr||'—'}</td>
-          <td class="mono">${d.dealData.creditScore||'—'}</td>
-          <td class="mono" style="color:var(--gold);font-weight:600">${d.analysis?.fundabilityScore||'—'}</td>
-          <td><span class="verdict-badge ${vc}" style="font-size:10px;padding:3px 10px">${d.analysis?.dealScore||'—'}</span></td>
-          <td class="mono">${d.matches?.length||0}</td>
-        </tr>`;
-      }).join('')}
-    </tbody>
-  </table>`;
+  const f=filter||state.currentFilter;
+  const deals=f==='all'?state.deals:state.deals.filter(d=>d.analysis?.dealScore===f);
+  const wrap=document.getElementById('deals-table-wrap');
+  if(!deals.length){wrap.innerHTML='<div class="empty-state" style="padding:40px 20px"><h3>No deals</h3><p>No deals match this filter.</p></div>';return;}
+  wrap.innerHTML=`<table class="deal-table"><thead><tr><th>Address</th><th>Investor</th><th>Type</th><th>Loan</th><th>LTV</th><th>Score</th><th>Verdict</th></tr></thead><tbody>${deals.map(d=>{const vc=d.analysis?.dealScore==='Pass'?'verdict-pass':d.analysis?.dealScore==='Review'?'verdict-review':'verdict-reject';return`<tr onclick="viewDeal(${d.id})"><td class="deal-name">${d.dealName}</td><td>${d.dealData.investorName||'—'}</td><td class="mono">${d.dealData.dealType||'—'}</td><td class="mono">$${(d.dealData.loanAmount||0).toLocaleString()}</td><td class="mono">${d.dealData.ltv||'—'}%</td><td class="mono" style="color:var(--gold);font-weight:600">${d.analysis?.fundabilityScore||'—'}</td><td><span class="verdict-badge ${vc}" style="font-size:10px;padding:3px 10px">${d.analysis?.dealScore||'—'}</span></td></tr>`;}).join('')}</tbody></table>`;
 }
 
-function filterDeals(filter, btn) {
-  state.currentFilter = filter;
-  document.querySelectorAll('#page-deals .tab').forEach(t => t.classList.remove('active'));
+function filterDeals(f, btn) {
+  state.currentFilter=f;
+  document.querySelectorAll('#page-deals .tab').forEach(t=>t.classList.remove('active'));
   btn.classList.add('active');
-  renderDealsTable(filter);
+  renderDealsTable(f);
 }
 
 function renderMatchQueue() {
-  const el = document.getElementById('match-content');
-  const allMatches = state.deals.flatMap(d =>
-    (d.matches||[]).map(m => ({ ...m, deal: d.dealName, dealScore: d.analysis?.dealScore, fundScore: d.analysis?.fundabilityScore, dealId: d.id }))
-  );
-  if (!allMatches.length) {
-    el.innerHTML = `<div class="empty-state" style="padding:60px 0">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-      <h3>No matches yet</h3><p>Analyze a deal and approved matches will appear here.</p></div>`;
-    return;
-  }
-  el.innerHTML = `<div class="card"><div class="card-body" style="padding:0">
-    <table class="deal-table">
-      <thead><tr><th>Deal</th><th>Lender</th><th>Lender Type</th><th>Match Score</th><th>Deal Score</th><th>Notes</th></tr></thead>
-      <tbody>
-        ${allMatches.map(m => {
-          const sc = m.score >= 80 ? 'var(--green)' : m.score >= 60 ? 'var(--gold)' : 'var(--amber)';
-          return `<tr>
-            <td class="deal-name">${m.deal}</td>
-            <td>${m.name}</td>
-            <td class="mono">${m.type}</td>
-            <td class="mono" style="color:${sc};font-weight:600">${m.score}</td>
-            <td><span class="verdict-badge ${m.dealScore==='Pass'?'verdict-pass':m.dealScore==='Review'?'verdict-review':'verdict-reject'}" style="font-size:10px;padding:3px 10px">${m.dealScore}</span></td>
-            <td style="font-size:11px;color:var(--text-3)">${m.notes}</td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>
-  </div></div>`;
+  const el=document.getElementById('match-content');
+  const allMatches=state.deals.flatMap(d=>(d.matches||[]).map(m=>({...m,deal:d.dealName,dealScore:d.analysis?.dealScore,fundScore:d.analysis?.fundabilityScore})));
+  if(!allMatches.length){el.innerHTML='<div class="empty-state" style="padding:60px 0"><h3>No matches yet</h3><p>Analyze a deal and matches will appear here.</p></div>';return;}
+  el.innerHTML=`<div class="card"><div class="card-body" style="padding:0"><table class="deal-table"><thead><tr><th>Deal</th><th>Lender</th><th>Type</th><th>Match Score</th><th>Verdict</th></tr></thead><tbody>${allMatches.map(m=>{const sc=m.score>=80?'var(--green)':m.score>=60?'var(--gold)':'var(--amber)';return`<tr><td class="deal-name">${m.deal}</td><td>${m.name}</td><td class="mono">${m.type}</td><td class="mono" style="color:${sc};font-weight:600">${m.score}</td><td><span class="verdict-badge ${m.dealScore==='Pass'?'verdict-pass':m.dealScore==='Review'?'verdict-review':'verdict-reject'}" style="font-size:10px;padding:3px 10px">${m.dealScore}</span></td></tr>`;}).join('')}</tbody></table></div></div>`;
 }
 
 function viewDeal(id) {
-  const deal = state.deals.find(d => d.id === id);
-  if (!deal) return;
+  const deal=state.deals.find(d=>d.id===id); if(!deal) return;
   showPage('submit');
-  // Parse location back into street and city
-  const locParts = (deal.dealData.location || '').split(', ');
-  const street = locParts[0] || '';
-  const city = locParts.length > 2 ? locParts[1] : (locParts.length === 2 ? '' : locParts[1] || '');
-  const fields = {
-    'f-investor-name': deal.dealData.investorName,
-    'f-investor-email': deal.dealData.investorEmail,
-    'f-investor-phone': deal.dealData.investorPhone,
-    'f-experience': deal.dealData.investorExperience,
-    'f-location': street,
-    'f-city': city,
-    'f-state': deal.dealData.state,
-    'f-deal-type': deal.dealData.dealType,
-    'f-property-type': deal.dealData.propertyType,
-    'f-loan-amount': deal.dealData.loanAmount,
-    'f-purchase-price': deal.dealData.purchasePrice,
-    'f-arv': deal.dealData.arv,
-    'f-as-is-value': deal.dealData.asIsValue,
-    'f-rehab-budget': deal.dealData.rehabBudget,
-    'f-monthly-rent': deal.dealData.monthlyRent,
-    'f-ltv': deal.dealData.ltv,
-    'f-dscr': deal.dealData.dscr,
-    'f-credit-score': deal.dealData.creditScore,
-    'f-notes': deal.dealData.notes
-  };
-  Object.entries(fields).forEach(([id, val]) => {
-    const el = document.getElementById(id);
-    if (el && val) el.value = val;
-  });
-  if (deal.analysis) renderResult(deal.analysis, deal.dealData);
+  const locParts=(deal.dealData.location||'').split(', ');
+  document.getElementById('f-location').value=locParts[0]||'';
+  document.getElementById('f-city').value=locParts.length>2?locParts[1]:'';
+  document.getElementById('f-state').value=deal.dealData.state||'';
+  document.getElementById('f-investor-name').value=deal.dealData.investorName||'';
+  document.getElementById('f-investor-email').value=deal.dealData.investorEmail||'';
+  document.getElementById('f-investor-phone').value=deal.dealData.investorPhone||'';
+  document.getElementById('f-experience').value=deal.dealData.investorExperience||'';
+  document.getElementById('f-loan-amount').value=deal.dealData.loanAmount||'';
+  document.getElementById('f-purchase-price').value=deal.dealData.purchasePrice||'';
+  document.getElementById('f-arv').value=deal.dealData.arv||'';
+  document.getElementById('f-as-is-value').value=deal.dealData.asIsValue||'';
+  document.getElementById('f-rehab-budget').value=deal.dealData.rehabBudget||'';
+  document.getElementById('f-monthly-rent').value=deal.dealData.monthlyRent||'';
+  document.getElementById('f-credit-score').value=deal.dealData.creditScore||'';
+  document.getElementById('f-notes').value=deal.dealData.notes||'';
+  // Restore pill selections
+  document.querySelectorAll('#deal-type-pills .pill').forEach(p=>{ if(p.textContent.trim()===deal.dealData.dealType||p.getAttribute('onclick')?.includes(deal.dealData.dealType)) p.classList.add('selected'); });
+  document.querySelectorAll('#prop-type-pills .pill').forEach(p=>{ if(p.getAttribute('onclick')?.includes(deal.dealData.propertyType)) p.classList.add('selected'); });
+  document.getElementById('f-deal-type').value=deal.dealData.dealType||'';
+  document.getElementById('f-property-type').value=deal.dealData.propertyType||'';
+  if(deal.analysis) renderResult(deal.analysis, deal.dealData);
 }
 
 function clearForm() {
-  ['f-investor-name','f-investor-email','f-investor-phone','f-location','f-city','f-notes','f-arv','f-as-is-value','f-rehab-budget','f-monthly-rent','f-dscr','f-loan-amount','f-purchase-price','f-ltv','f-credit-score','f-state'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-  ['f-experience','f-deal-type','f-property-type'].forEach(id => { const el = document.getElementById(id); if(el) el.selectedIndex = 0; });
+  ['f-investor-name','f-investor-email','f-investor-phone','f-location','f-city','f-notes','f-arv','f-as-is-value','f-rehab-budget','f-monthly-rent','f-loan-amount','f-purchase-price','f-monthly-payment','f-credit-score','f-state'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('f-experience').selectedIndex=0;
+  document.getElementById('f-ltv').value='';
+  document.getElementById('f-dscr').value='';
+  document.getElementById('f-deal-type').value='';
+  document.getElementById('f-property-type').value='';
+  document.querySelectorAll('.pill').forEach(p=>p.classList.remove('selected'));
   document.getElementById('result-panel').classList.remove('show');
-  document.getElementById('form-error').style.display = 'none';
+  document.getElementById('form-error').style.display='none';
 }
 
 function showToast(msg, type) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = 'toast show ' + type;
-  setTimeout(() => t.classList.remove('show'), 3500);
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='toast show '+type;
+  setTimeout(()=>t.classList.remove('show'), 3500);
 }
 </script>
 </body>
 </html>
-<!-- CapIQ v1.1 - Git connected Tue Apr 21 19:44:04 UTC 2026 -->
