@@ -354,6 +354,20 @@ textarea{resize:vertical;min-height:90px;line-height:1.6}
                 <input id="f-street-number" type="text" placeholder="5521" oninput="buildAddress()">
               </div>
               <div class="field">
+                <label class="label">Direction</label>
+                <select id="f-street-dir" onchange="buildAddress()">
+                  <option value="">None</option>
+                  <option value="N">N</option>
+                  <option value="S">S</option>
+                  <option value="E">E</option>
+                  <option value="W">W</option>
+                  <option value="NE">NE</option>
+                  <option value="NW">NW</option>
+                  <option value="SE">SE</option>
+                  <option value="SW">SW</option>
+                </select>
+              </div>
+              <div class="field">
                 <label class="label">Street Name <span class="req">*</span></label>
                 <input id="f-street-name" type="text" placeholder="Hawkes Bluff" oninput="buildAddress()">
               </div>
@@ -363,19 +377,28 @@ textarea{resize:vertical;min-height:90px;line-height:1.6}
                   <option value="">Select...</option>
                   <option value="Ave">Ave</option>
                   <option value="Blvd">Blvd</option>
+                  <option value="Cir">Cir</option>
                   <option value="Ct">Ct</option>
                   <option value="Dr">Dr</option>
+                  <option value="Hwy">Hwy</option>
                   <option value="Ln">Ln</option>
+                  <option value="Loop">Loop</option>
+                  <option value="Pkwy">Pkwy</option>
                   <option value="Pl">Pl</option>
                   <option value="Rd">Rd</option>
                   <option value="St">St</option>
                   <option value="Ter">Ter</option>
+                  <option value="Trl">Trl</option>
                   <option value="Way">Way</option>
                 </select>
               </div>
               <div class="field">
                 <label class="label">Unit / Suite</label>
                 <input id="f-unit" type="text" placeholder="Apt 2B" oninput="buildAddress()">
+              </div>
+              <div class="field">
+                <label class="label">Zip Code</label>
+                <input id="f-zip" type="text" placeholder="33331" maxlength="10" oninput="buildAddress()">
               </div>
             </div>
             <div class="form-grid">
@@ -536,11 +559,15 @@ function selectPill(groupId, value, hiddenId) {
 
 function buildAddress() {
   const num = document.getElementById('f-street-number').value.trim();
+  const dir = document.getElementById('f-street-dir').value;
   const name = document.getElementById('f-street-name').value.trim();
   const type = document.getElementById('f-street-type').value;
   const unit = document.getElementById('f-unit').value.trim();
-  const street = [num, name, type].filter(Boolean).join(' ');
-  document.getElementById('f-location').value = unit ? street + ' ' + unit : street;
+  const zip = document.getElementById('f-zip').value.trim();
+  const street = [num, dir, name, type].filter(Boolean).join(' ');
+  const withUnit = unit ? street + ' ' + unit : street;
+  const withZip = zip ? withUnit + ' ' + zip : withUnit;
+  document.getElementById('f-location').value = withZip;
 }
 
 function autoCalc() {
@@ -730,6 +757,7 @@ function renderResult(a, d) {
 }
 
 function matchDeal(d,a) {
+  if(!d||!d.dealType) return [];
   return LENDERS.map(l=>{
     if(d.creditScore<l.minCredit||d.loanAmount<l.minLoan||d.loanAmount>l.maxLoan) return null;
     if((d.propertyType==='Land'||d.dealType==='New Construction')&&l.type!=='Hard Money'&&l.type!=='Hard Money / DSCR') return null;
@@ -742,7 +770,7 @@ function matchDeal(d,a) {
     if(!l.minDscr||d.dscr>=l.minDscr) score+=5;
     if(d.loanAmount>=l.minLoan&&d.loanAmount<=l.maxLoan) score+=20;
     if(score<50) return null;
-    return {name:l.name,type:l.type,score,notes:l.notes};
+    return {name:l.name,type:l.type,score,notes:l.notes,dealScore:a?.dealScore||'—'};
   }).filter(Boolean).sort((a,b)=>b.score-a.score);
 }
 
@@ -828,8 +856,9 @@ function viewDeal(id) {
 }
 
 function clearForm() {
-  ['f-first-name','f-last-name','f-investor-email','f-investor-phone','f-street-number','f-street-name','f-unit','f-city','f-notes','f-arv','f-as-is-value','f-rehab-budget','f-monthly-rent','f-loan-amount','f-purchase-price','f-credit-score','f-state','f-location'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['f-first-name','f-last-name','f-investor-email','f-investor-phone','f-street-number','f-street-name','f-unit','f-zip','f-city','f-notes','f-arv','f-as-is-value','f-rehab-budget','f-monthly-rent','f-loan-amount','f-purchase-price','f-credit-score','f-state','f-location'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('f-street-type').selectedIndex=0;
+  document.getElementById('f-street-dir').selectedIndex=0;
   document.getElementById('f-rate').value='7.0';
   document.getElementById('f-term').value='30';
   document.getElementById('f-ltv').value='';
@@ -851,4 +880,3 @@ function showToast(msg,type) {
 </script>
 </body>
 </html>
-<!-- notion sync enabled Tue Apr 21 22:18:29 UTC 2026 -->
