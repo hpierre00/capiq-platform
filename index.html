@@ -246,7 +246,8 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
   <div class="loading-card">
     <div class="loading-spinner"></div>
     <div class="loading-title">Analyzing Deal</div>
-    <div class="loading-sub">Running underwriting intelligence...</div>
+    <div class="loading-sub" id="loading-msg">Reviewing deal structure...</div>
+    <div style="margin-top:12px;font-size:11px;color:var(--text-4)">This typically takes 10–20 seconds</div>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -356,6 +357,28 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
               </div>
             </div>
 
+            <div class="section-divider"><div class="section-divider-label">Deal Type</div><div class="section-divider-line"></div></div>
+            <div class="pill-group" id="deal-type-pills">
+              <div class="pill" onclick="selectPill('deal-type-pills','Purchase','f-deal-type')">Purchase</div>
+              <div class="pill" onclick="selectPill('deal-type-pills','Fix & Flip','f-deal-type')">Fix &amp; Flip</div>
+              <div class="pill" onclick="selectPill('deal-type-pills','Rental','f-deal-type')">Rental / DSCR</div>
+              <div class="pill" onclick="selectPill('deal-type-pills','Cash-Out','f-deal-type')">Cash-Out Refi</div>
+              <div class="pill" onclick="selectPill('deal-type-pills','Bridge','f-deal-type')">Bridge</div>
+              <div class="pill" onclick="selectPill('deal-type-pills','New Construction','f-deal-type')">New Construction</div>
+            </div>
+            <input type="hidden" id="f-deal-type">
+
+            <div class="section-divider"><div class="section-divider-label">Property Type</div><div class="section-divider-line"></div></div>
+            <div class="pill-group" id="prop-type-pills">
+              <div class="pill" onclick="selectPill('prop-type-pills','SFR','f-property-type')">SFR</div>
+              <div class="pill" onclick="selectPill('prop-type-pills','Condo','f-property-type')">Condo</div>
+              <div class="pill" onclick="selectPill('prop-type-pills','2-4 Unit','f-property-type')">2–4 Unit</div>
+              <div class="pill" onclick="selectPill('prop-type-pills','Multifamily 5+','f-property-type')">Multifamily 5+</div>
+              <div class="pill" onclick="selectPill('prop-type-pills','Commercial','f-property-type')">Commercial</div>
+              <div class="pill" onclick="selectPill('prop-type-pills','Land','f-property-type')">Land</div>
+            </div>
+            <input type="hidden" id="f-property-type">
+
             <div class="section-divider"><div class="section-divider-label">Property Address</div><div class="section-divider-line"></div></div>
             <div class="field field-full" style="margin-bottom:16px">
               <label class="label">Search Address <span class="req">*</span></label>
@@ -398,9 +421,9 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
                   <option value="Way">Way</option>
                 </select>
               </div>
-              <div class="field">
-                <label class="label">Unit / Suite</label>
-                <input id="f-unit" type="text" placeholder="Apt 2B" oninput="buildAddress()">
+              <div class="field" id="unit-field">
+                <label class="label">Unit / Suite <span class="req" id="unit-req" style="display:none">*</span> <span id="unit-hint" style="font-size:10px;color:var(--amber);display:none">Required for Condo</span></label>
+                <input id="f-unit" type="text" placeholder="Apt 2B or Unit 101" oninput="buildAddress()">
               </div>
               <div class="field">
                 <label class="label">Zip Code</label>
@@ -413,33 +436,11 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
             </div>
             <input type="hidden" id="f-location">
 
-            <div class="section-divider"><div class="section-divider-label">Deal Type</div><div class="section-divider-line"></div></div>
-            <div class="pill-group" id="deal-type-pills">
-              <div class="pill" onclick="selectPill('deal-type-pills','Purchase','f-deal-type')">Purchase</div>
-              <div class="pill" onclick="selectPill('deal-type-pills','Fix & Flip','f-deal-type')">Fix &amp; Flip</div>
-              <div class="pill" onclick="selectPill('deal-type-pills','Rental','f-deal-type')">Rental / DSCR</div>
-              <div class="pill" onclick="selectPill('deal-type-pills','Cash-Out','f-deal-type')">Cash-Out Refi</div>
-              <div class="pill" onclick="selectPill('deal-type-pills','Bridge','f-deal-type')">Bridge</div>
-              <div class="pill" onclick="selectPill('deal-type-pills','New Construction','f-deal-type')">New Construction</div>
-            </div>
-            <input type="hidden" id="f-deal-type">
-
-            <div class="section-divider"><div class="section-divider-label">Property Type</div><div class="section-divider-line"></div></div>
-            <div class="pill-group" id="prop-type-pills">
-              <div class="pill" onclick="selectPill('prop-type-pills','SFR','f-property-type')">SFR</div>
-              <div class="pill" onclick="selectPill('prop-type-pills','Condo','f-property-type')">Condo</div>
-              <div class="pill" onclick="selectPill('prop-type-pills','2-4 Unit','f-property-type')">2–4 Unit</div>
-              <div class="pill" onclick="selectPill('prop-type-pills','Multifamily 5+','f-property-type')">Multifamily 5+</div>
-              <div class="pill" onclick="selectPill('prop-type-pills','Commercial','f-property-type')">Commercial</div>
-              <div class="pill" onclick="selectPill('prop-type-pills','Land','f-property-type')">Land</div>
-            </div>
-            <input type="hidden" id="f-property-type">
-
             <div class="section-divider"><div class="section-divider-label">Financial Details</div><div class="section-divider-line"></div></div>
             <div class="form-grid-3" style="margin-bottom:14px">
               <div class="field"><label class="label">Loan Amount ($) <span class="req">*</span></label><input id="f-loan-amount" type="number" placeholder="600000" oninput="autoCalc()"></div>
               <div class="field" id="purchase-price-field"><label class="label">Purchase Price ($) <span class="req" id="pp-req">*</span></label><input id="f-purchase-price" type="number" placeholder="750000" oninput="autoCalc()"></div>
-              <div class="field"><label class="label">ARV ($)</label><input id="f-arv" type="number" placeholder="850000" oninput="autoCalc()"></div>
+              <div class="field"><label class="label">ARV ($) <span class="req">*</span></label><input id="f-arv" type="number" placeholder="850000" oninput="autoCalc()"></div>
               <div class="field"><label class="label">As-Is Value ($)</label><input id="f-as-is-value" type="number" placeholder="750000" oninput="autoCalc()"></div>
               <div class="field"><label class="label">Rehab Budget ($) <span class="req" id="rehab-req" style="display:none">*</span> <span id="rehab-hint" style="font-size:10px;color:var(--amber);display:none">Required for Fix &amp; Flip</span></label><input id="f-rehab-budget" type="number" placeholder="0"></div>
               <div class="field"><label class="label">Monthly Rent ($) <span class="req" id="rent-req" style="display:none">*</span> <span id="rent-hint" style="font-size:10px;color:var(--amber);display:none">Required for Rental/DSCR</span></label><input id="f-monthly-rent" type="number" placeholder="5800" oninput="autoCalc()"></div>
@@ -551,29 +552,39 @@ function selectPill(groupId, value, hiddenId) {
   document.querySelectorAll('#'+groupId+' .pill').forEach(p=>p.classList.remove('selected'));
   event.target.classList.add('selected');
   document.getElementById(hiddenId).value = value;
+
   if(hiddenId==='f-deal-type') {
     const isCashOut = value==='Cash-Out';
     const isFlip = value==='Fix & Flip';
     const isRental = value==='Rental';
     const isNewConst = value==='New Construction';
-    // Purchase price
     const ppField = document.getElementById('purchase-price-field');
-    const ppReq = document.getElementById('pp-req');
     ppField.style.opacity = isCashOut ? '0.5' : '1';
-    ppReq.style.display = isCashOut ? 'none' : 'inline';
-    if(isCashOut) document.getElementById('f-purchase-price').placeholder='N/A for Cash-Out Refi';
-    else document.getElementById('f-purchase-price').placeholder='750000';
-    // Rehab budget — required for Fix & Flip and New Construction
+    document.getElementById('pp-req').style.display = isCashOut ? 'none' : 'inline';
+    document.getElementById('f-purchase-price').placeholder = isCashOut ? 'N/A for Cash-Out Refi' : '750000';
     const rehabReq = document.getElementById('rehab-req');
     const rehabHint = document.getElementById('rehab-hint');
-    if(isFlip||isNewConst) { rehabReq.style.display='inline'; rehabHint.style.display='inline'; }
-    else { rehabReq.style.display='none'; rehabHint.style.display='none'; }
-    // Monthly rent — required for Rental/DSCR
+    rehabReq.style.display = (isFlip||isNewConst) ? 'inline' : 'none';
+    rehabHint.style.display = (isFlip||isNewConst) ? 'inline' : 'none';
     const rentReq = document.getElementById('rent-req');
     const rentHint = document.getElementById('rent-hint');
-    if(isRental) { rentReq.style.display='inline'; rentHint.style.display='inline'; }
-    else { rentReq.style.display='none'; rentHint.style.display='none'; }
+    rentReq.style.display = isRental ? 'inline' : 'none';
+    rentHint.style.display = isRental ? 'inline' : 'none';
     autoCalc();
+  }
+
+  if(hiddenId==='f-property-type') {
+    const isCondo = value==='Condo';
+    const unitReq = document.getElementById('unit-req');
+    const unitHint = document.getElementById('unit-hint');
+    if(unitReq) unitReq.style.display = isCondo ? 'inline' : 'none';
+    if(unitHint) unitHint.style.display = isCondo ? 'inline' : 'none';
+    // Highlight unit field
+    const unitInput = document.getElementById('f-unit');
+    if(unitInput) {
+      unitInput.placeholder = isCondo ? 'Required: Unit 101 or Apt 2B' : 'Apt 2B (optional)';
+      unitInput.style.borderColor = isCondo ? 'var(--amber)' : '';
+    }
   }
 }
 
@@ -734,19 +745,34 @@ async function analyzeDeal() {
   const propType = document.getElementById('f-property-type').value;
   const exp = document.getElementById('f-experience').value;
 
-  if(!document.getElementById('f-first-name').value.trim()){errEl.textContent='First name is required';errEl.style.display='block';return;}
-  if(!document.getElementById('f-last-name').value.trim()){errEl.textContent='Last name is required';errEl.style.display='block';return;}
-  if(!document.getElementById('f-investor-email').value.trim()){errEl.textContent='Email is required';errEl.style.display='block';return;}
-  if(!exp){errEl.textContent='Please select your investment experience';errEl.style.display='block';return;}
-  if(!document.getElementById('f-street-number').value.trim()){errEl.textContent='Street number is required';errEl.style.display='block';return;}
-  if(!document.getElementById('f-street-name').value.trim()){errEl.textContent='Street name is required';errEl.style.display='block';return;}
+  if(!document.getElementById('f-first-name').value.trim()){errEl.textContent='First name is required';errEl.style.display='block';document.getElementById('f-first-name').focus();return;}
+  if(!document.getElementById('f-last-name').value.trim()){errEl.textContent='Last name is required';errEl.style.display='block';document.getElementById('f-last-name').focus();return;}
+
+  // Email validation
+  const emailVal = document.getElementById('f-investor-email').value.trim();
+  if(!emailVal){errEl.textContent='Email address is required';errEl.style.display='block';document.getElementById('f-investor-email').focus();return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)){errEl.textContent='Please enter a valid email address (e.g. john@gmail.com)';errEl.style.display='block';document.getElementById('f-investor-email').focus();return;}
+
+  // Phone validation (if entered)
+  const phoneVal = document.getElementById('f-investor-phone').value.trim();
+  if(phoneVal && !/^[\d\s\(\)\-\+\.]{7,15}$/.test(phoneVal)){errEl.textContent='Please enter a valid phone number';errEl.style.display='block';document.getElementById('f-investor-phone').focus();return;}
+
+  if(!exp){errEl.textContent='Please select your investment experience';errEl.style.display='block';document.getElementById('exp-pills').scrollIntoView({behavior:'smooth',block:'center'});return;}
+  if(!dealType){errEl.textContent='Please select a Deal Type';errEl.style.display='block';document.getElementById('deal-type-pills').scrollIntoView({behavior:'smooth',block:'center'});return;}
+  if(!propType){errEl.textContent='Please select a Property Type';errEl.style.display='block';document.getElementById('prop-type-pills').scrollIntoView({behavior:'smooth',block:'center'});return;}
+  if(!document.getElementById('f-street-number').value.trim()){errEl.textContent='Street number is required';errEl.style.display='block';document.getElementById('f-street-number').focus();return;}
+  if(!document.getElementById('f-street-name').value.trim()){errEl.textContent='Street name is required';errEl.style.display='block';document.getElementById('f-street-name').focus();return;}
   if(!document.getElementById('f-street-type').value){errEl.textContent='Street type is required';errEl.style.display='block';return;}
-  if(!document.getElementById('f-city').value.trim()){errEl.textContent='City is required';errEl.style.display='block';return;}
-  if(!document.getElementById('f-state').value.trim()){errEl.textContent='State is required';errEl.style.display='block';return;}
-  if(!dealType){errEl.textContent='Please select a Deal Type — scroll up to select';errEl.style.display='block';document.getElementById('deal-type-pills').scrollIntoView({behavior:'smooth',block:'center'});return;}
-  if(!propType){errEl.textContent='Please select a Property Type';errEl.style.display='block';return;}
-  if(!document.getElementById('f-loan-amount').value){errEl.textContent='Loan amount is required';errEl.style.display='block';return;}
-  if(!document.getElementById('f-credit-score').value){errEl.textContent='Credit score is required';errEl.style.display='block';return;}
+  if(!document.getElementById('f-city').value.trim()){errEl.textContent='City is required';errEl.style.display='block';document.getElementById('f-city').focus();return;}
+  if(!document.getElementById('f-state').value.trim()){errEl.textContent='State is required';errEl.style.display='block';document.getElementById('f-state').focus();return;}
+
+  // Condo requires unit number
+  if(propType==='Condo'&&!document.getElementById('f-unit').value.trim()){errEl.textContent='Unit number is required for Condo properties';errEl.style.display='block';document.getElementById('f-unit').focus();return;}
+
+  if(!document.getElementById('f-loan-amount').value){errEl.textContent='Loan amount is required';errEl.style.display='block';document.getElementById('f-loan-amount').focus();return;}
+  if(!document.getElementById('f-arv').value){errEl.textContent='ARV (After Repair Value) is required';errEl.style.display='block';document.getElementById('f-arv').focus();return;}
+  if(!document.getElementById('f-credit-score').value){errEl.textContent='Credit score is required';errEl.style.display='block';document.getElementById('f-credit-score').focus();return;}
+
   // Conditional required fields
   if((dealType==='Fix & Flip'||dealType==='New Construction')&&!document.getElementById('f-rehab-budget').value){
     errEl.textContent='Rehab Budget is required for Fix & Flip and New Construction';errEl.style.display='block';
@@ -787,6 +813,23 @@ async function analyzeDeal() {
   btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Analyzing...';
   document.getElementById('loading').classList.add('show');
 
+  // Animated progress messages to show activity during analysis
+  const msgs = [
+    'Reviewing deal structure...',
+    'Running underwriting analysis...',
+    'Scoring fundability metrics...',
+    'Evaluating lender criteria...',
+    'Generating intelligence report...',
+    'Matching to lender network...',
+    'Finalizing recommendations...'
+  ];
+  let msgIdx = 0;
+  const loadingSub = document.querySelector('.loading-sub');
+  const msgInterval = setInterval(() => {
+    msgIdx = (msgIdx + 1) % msgs.length;
+    if(loadingSub) loadingSub.textContent = msgs[msgIdx];
+  }, 2500);
+
   try {
     const res = await fetch('/.netlify/functions/capiq-analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dealData})});
     if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error||e.detail||`Error ${res.status}`);}
@@ -815,6 +858,8 @@ async function analyzeDeal() {
     document.getElementById('result-content').innerHTML=`<div class="card"><div class="card-body"><p style="color:var(--red);font-size:13px;font-weight:500">Error: ${err.message}</p></div></div>`;
     document.getElementById('result-panel').classList.add('show');
   } finally {
+    clearInterval(msgInterval);
+    if(loadingSub) loadingSub.textContent = 'Running underwriting intelligence...';
     btn.disabled=false; btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Analyze Deal';
     document.getElementById('loading').classList.remove('show');
   }
