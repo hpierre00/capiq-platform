@@ -5,150 +5,243 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CapIQ — Capital Intelligence Platform</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
-:root{--ink:#0a0c10;--ink-2:#10141c;--ink-3:#161b26;--ink-4:#1e2535;--border:rgba(255,255,255,0.07);--border-bright:rgba(255,255,255,0.14);--gold:#c9a84c;--gold-light:#e8c96e;--gold-dim:rgba(201,168,76,0.15);--text:#e8e4dc;--text-2:#9a9590;--text-3:#5c5850;--green:#3ecf8e;--green-dim:rgba(62,207,142,0.12);--red:#e5534b;--red-dim:rgba(229,83,75,0.12);--amber:#f0a429;--amber-dim:rgba(240,164,41,0.12);--blue:#5b9cf6;--blue-dim:rgba(91,156,246,0.12);--r:6px}
+:root {
+  --navy: #0f2240;
+  --navy-2: #1a3355;
+  --teal: #0e7490;
+  --teal-light: #0891b2;
+  --teal-dim: rgba(14,116,144,0.08);
+  --teal-border: rgba(14,116,144,0.2);
+  --gold: #b45309;
+  --gold-light: #d97706;
+  --gold-dim: rgba(180,83,9,0.08);
+  --bg: #f8fafc;
+  --bg-2: #ffffff;
+  --bg-3: #f1f5f9;
+  --bg-4: #e2e8f0;
+  --border: #e2e8f0;
+  --border-dark: #cbd5e1;
+  --text: #0f172a;
+  --text-2: #334155;
+  --text-3: #64748b;
+  --text-4: #94a3b8;
+  --green: #059669;
+  --green-dim: rgba(5,150,105,0.08);
+  --green-border: rgba(5,150,105,0.2);
+  --red: #dc2626;
+  --red-dim: rgba(220,38,38,0.08);
+  --amber: #d97706;
+  --amber-dim: rgba(217,119,6,0.08);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+  --r: 8px;
+}
 *{box-sizing:border-box;margin:0;padding:0}
-html{background:var(--ink);color:var(--text);font-family:'Syne',sans-serif;font-size:14px;line-height:1.6;min-height:100vh}
+html{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;line-height:1.6;min-height:100vh}
 body{min-height:100vh;overflow-x:hidden}
-@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
 @keyframes spin{to{transform:rotate(360deg)}}
-.fade-up{animation:fadeUp .5s ease both}
+.fade-up{animation:fadeUp .4s ease both}
+
+/* LAYOUT */
 .shell{display:flex;min-height:100vh}
-.sidebar{width:220px;min-height:100vh;background:var(--ink-2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100}
-.main{margin-left:220px;flex:1;min-height:100vh}
-.logo{padding:24px 20px 20px;border-bottom:1px solid var(--border)}
-.logo-mark{display:flex;align-items:center;gap:10px;text-decoration:none}
-.logo-icon{width:32px;height:32px;background:var(--gold);border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.logo-icon svg{width:18px;height:18px;fill:var(--ink)}
-.logo-text{font-size:16px;font-weight:700;color:var(--text);letter-spacing:-.5px}
-.logo-sub{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-3);letter-spacing:.1em;text-transform:uppercase;margin-top:1px}
+.sidebar{width:240px;min-height:100vh;background:var(--navy);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100}
+.main{margin-left:240px;flex:1;min-height:100vh;background:var(--bg)}
+
+/* SIDEBAR */
+.logo{padding:24px 20px;border-bottom:1px solid rgba(255,255,255,0.08)}
+.logo-mark{display:flex;align-items:center;gap:12px;text-decoration:none}
+.logo-icon{width:36px;height:36px;background:var(--teal);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-icon svg{width:20px;height:20px;fill:white}
+.logo-text{font-size:17px;font-weight:700;color:white;letter-spacing:-.4px}
+.logo-sub{font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);letter-spacing:.12em;text-transform:uppercase;margin-top:1px}
 .nav{padding:16px 12px;flex:1}
-.nav-section{margin-bottom:24px}
-.nav-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--text-3);padding:0 8px;margin-bottom:8px}
-.nav-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--r);color:var(--text-2);cursor:pointer;transition:all .15s;margin-bottom:2px;font-size:13px;font-weight:500;border:none;background:none;width:100%;text-align:left}
-.nav-item:hover{background:var(--ink-3);color:var(--text)}
-.nav-item.active{background:var(--gold-dim);color:var(--gold);border:1px solid rgba(201,168,76,0.2)}
-.nav-item svg{width:16px;height:16px;flex-shrink:0;opacity:.7}
-.nav-item.active svg{opacity:1}
-.nav-badge{margin-left:auto;background:var(--gold);color:var(--ink);font-size:10px;font-weight:700;padding:1px 6px;border-radius:10px;font-family:'DM Mono',monospace}
-.sidebar-footer{padding:16px 20px;border-top:1px solid var(--border)}
-.status-dot{display:inline-block;width:6px;height:6px;background:var(--green);border-radius:50%;margin-right:6px;animation:pulse 2s infinite}
-.status-text{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-3)}
-.topbar{height:56px;background:var(--ink-2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:50}
-.topbar-title{font-size:15px;font-weight:600;color:var(--text)}
-.topbar-meta{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-3)}
-.chip{font-family:'DM Mono',monospace;font-size:10px;padding:3px 10px;border-radius:20px;letter-spacing:.06em}
-.chip-gold{background:var(--gold-dim);color:var(--gold);border:1px solid rgba(201,168,76,0.25)}
-.chip-green{background:var(--green-dim);color:var(--green);border:1px solid rgba(62,207,142,0.2)}
-.content{padding:28px}
+.nav-section{margin-bottom:28px}
+.nav-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,0.3);padding:0 8px;margin-bottom:6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:6px;color:rgba(255,255,255,0.55);cursor:pointer;transition:all .15s;margin-bottom:1px;font-size:13px;font-weight:500;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.85)}
+.nav-item.active{background:rgba(14,116,144,0.3);color:white;border-left:2px solid var(--teal-light)}
+.nav-item svg{width:15px;height:15px;flex-shrink:0}
+.nav-badge{margin-left:auto;background:var(--teal);color:white;font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px;font-family:'DM Mono',monospace}
+.sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.08)}
+.status-dot{display:inline-block;width:6px;height:6px;background:#10b981;border-radius:50%;margin-right:6px;animation:pulse 2s infinite}
+.status-text{font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.35)}
+
+/* TOPBAR */
+.topbar{height:60px;background:var(--bg-2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 32px;position:sticky;top:0;z-index:50;box-shadow:var(--shadow-sm)}
+.topbar-title{font-size:16px;font-weight:600;color:var(--text)}
+.topbar-meta{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-4);margin-top:1px}
+.chip{font-family:'DM Mono',monospace;font-size:10px;padding:3px 10px;border-radius:4px;letter-spacing:.06em;font-weight:500}
+.chip-teal{background:var(--teal-dim);color:var(--teal);border:1px solid var(--teal-border)}
+.chip-green{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border)}
+
+/* CONTENT */
+.content{padding:32px}
 .page{display:none}
 .page.active{display:block}
-.card{background:var(--ink-2);border:1px solid var(--border);border-radius:10px;overflow:hidden}
-.card-header{padding:18px 20px 0;display:flex;align-items:center;justify-content:space-between}
-.card-title{font-size:13px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.06em}
-.card-body{padding:20px}
-.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
-.stat-card{background:var(--ink-2);border:1px solid var(--border);border-radius:10px;padding:18px 20px;position:relative;overflow:hidden}
-.stat-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--gold);opacity:.4}
-.stat-card.green::before{background:var(--green)}
-.stat-card.blue::before{background:var(--blue)}
-.stat-label{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px}
+
+/* CARDS */
+.card{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow)}
+.card-header{padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:13px;font-weight:600;color:var(--text);letter-spacing:.01em}
+.card-body{padding:24px}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+.stat-card{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r);padding:20px 24px;box-shadow:var(--shadow)}
+.stat-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.stat-label{font-size:12px;font-weight:500;color:var(--text-3)}
+.stat-icon{width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center}
+.stat-icon.teal{background:var(--teal-dim)}
+.stat-icon.green{background:var(--green-dim)}
 .stat-value{font-size:28px;font-weight:700;color:var(--text);line-height:1;letter-spacing:-1px}
-.stat-value.gold{color:var(--gold)}
+.stat-value.teal{color:var(--teal)}
 .stat-value.green{color:var(--green)}
-.stat-sub{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-3);margin-top:6px}
+.stat-sub{font-size:11px;color:var(--text-4);margin-top:4px}
 
 /* PILL SELECTORS */
-.pill-group{display:flex;flex-wrap:wrap;gap:8px;margin-top:4px}
-.pill{padding:7px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border);background:var(--ink-3);color:var(--text-2);transition:all .15s;font-family:'Syne',sans-serif}
-.pill:hover{border-color:var(--border-bright);color:var(--text)}
-.pill.selected{background:var(--gold-dim);color:var(--gold);border-color:rgba(201,168,76,0.4)}
+.pill-group{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.pill{padding:7px 16px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border-dark);background:var(--bg-3);color:var(--text-2);transition:all .15s;font-family:'Inter',sans-serif}
+.pill:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-dim)}
+.pill.selected{background:var(--teal-dim);color:var(--teal);border-color:var(--teal);font-weight:600}
 
+/* FORM */
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
-.field{display:flex;flex-direction:column;gap:6px}
+.form-grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px}
+.field{display:flex;flex-direction:column;gap:5px}
 .field-full{grid-column:1/-1}
-.label{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.1em}
-.label span{color:var(--gold);margin-left:2px}
-.label .auto-badge{font-size:9px;color:var(--green);background:var(--green-dim);padding:1px 6px;border-radius:8px;margin-left:6px;letter-spacing:.06em}
-input,select,textarea{background:var(--ink-3);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:'DM Mono',monospace;font-size:13px;padding:10px 12px;width:100%;transition:border-color .15s}
-input:focus,select:focus,textarea:focus{outline:none;border-color:var(--gold);background:var(--ink-4)}
-input.auto-calc{border-color:rgba(62,207,142,0.3);background:rgba(62,207,142,0.05);color:var(--green)}
-input::placeholder{color:var(--text-3)}
-textarea{resize:vertical;min-height:80px;font-family:'Syne',sans-serif;font-size:13px}
-.section-divider{display:flex;align-items:center;gap:12px;margin:24px 0 20px;padding-bottom:12px;border-bottom:1px solid var(--border)}
-.section-divider-label{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--gold);white-space:nowrap}
+.label{font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px}
+.label .req{color:var(--red);font-size:11px}
+.label .auto-badge{font-size:9px;color:var(--green);background:var(--green-dim);padding:1px 6px;border-radius:4px;letter-spacing:.04em;border:1px solid var(--green-border)}
+input,select,textarea{background:var(--bg-2);border:1px solid var(--border-dark);border-radius:6px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:9px 12px;width:100%;transition:all .15s;box-shadow:var(--shadow-sm)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(14,116,144,0.1)}
+input.auto-calc{border-color:var(--green-border);background:var(--green-dim);color:var(--green);font-weight:600}
+input.auto-calc:focus{box-shadow:0 0 0 3px rgba(5,150,105,0.1)}
+input::placeholder,textarea::placeholder{color:var(--text-4)}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+textarea{resize:vertical;min-height:90px;line-height:1.6}
+
+/* ADDRESS FIELDS */
+.address-row{display:grid;grid-template-columns:120px 1fr;gap:8px}
+.address-unit{display:grid;grid-template-columns:1fr 80px;gap:8px}
+
+/* SECTION DIVIDER */
+.section-divider{display:flex;align-items:center;gap:14px;margin:28px 0 20px}
+.section-divider-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--teal);white-space:nowrap}
 .section-divider-line{flex:1;height:1px;background:var(--border)}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 20px;border-radius:var(--r);font-family:'Syne',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s}
-.btn-primary{background:var(--gold);color:var(--ink)}
-.btn-primary:hover{background:var(--gold-light)}
-.btn-primary:disabled{opacity:.4;cursor:not-allowed}
-.btn-ghost{background:transparent;color:var(--text-2);border:1px solid var(--border)}
-.btn-ghost:hover{border-color:var(--border-bright);color:var(--text);background:var(--ink-3)}
-.btn-lg{padding:13px 28px;font-size:14px}
-.spinner{width:16px;height:16px;border:2px solid rgba(0,0,0,0.2);border-top-color:var(--ink);border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
-.loading-overlay{display:none;position:fixed;inset:0;background:rgba(10,12,16,0.85);z-index:200;flex-direction:column;align-items:center;justify-content:center;gap:16px;backdrop-filter:blur(4px)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 20px;border-radius:6px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s}
+.btn-primary{background:var(--teal);color:white;box-shadow:0 1px 2px rgba(14,116,144,0.3)}
+.btn-primary:hover{background:var(--teal-light)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-ghost{background:transparent;color:var(--text-2);border:1px solid var(--border-dark)}
+.btn-ghost:hover{border-color:var(--border-dark);color:var(--text);background:var(--bg-3)}
+.btn-lg{padding:12px 28px;font-size:14px}
+.spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+
+/* LOADING */
+.loading-overlay{display:none;position:fixed;inset:0;background:rgba(15,34,64,0.6);z-index:200;flex-direction:column;align-items:center;justify-content:center;gap:16px;backdrop-filter:blur(4px)}
 .loading-overlay.show{display:flex}
-.loading-spinner{width:48px;height:48px;border:2px solid var(--border);border-top-color:var(--gold);border-radius:50%;animation:spin 1s linear infinite}
-.loading-text{font-family:'DM Mono',monospace;font-size:12px;color:var(--text-3);letter-spacing:.1em}
+.loading-card{background:white;border-radius:12px;padding:32px 40px;text-align:center;box-shadow:var(--shadow-md)}
+.loading-spinner{width:40px;height:40px;border:3px solid var(--bg-4);border-top-color:var(--teal);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px}
+.loading-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
+.loading-sub{font-size:12px;color:var(--text-4)}
+
+/* SCORE RING */
 .score-ring{position:relative;width:120px;height:120px}
 .score-ring svg{transform:rotate(-90deg)}
 .score-ring-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
 .score-big{font-size:32px;font-weight:800;line-height:1;letter-spacing:-2px}
-.score-label{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-3);text-transform:uppercase;letter-spacing:.1em}
-.verdict-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:20px;font-family:'DM Mono',monospace;font-size:11px;font-weight:500;letter-spacing:.06em}
-.verdict-pass{background:var(--green-dim);color:var(--green);border:1px solid rgba(62,207,142,0.2)}
-.verdict-review{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(240,164,41,0.2)}
-.verdict-reject{background:var(--red-dim);color:var(--red);border:1px solid rgba(229,83,75,0.2)}
+.score-label{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-4);text-transform:uppercase;letter-spacing:.1em}
+
+/* VERDICT */
+.verdict-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:4px;font-family:'DM Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.06em}
+.verdict-pass{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border)}
+.verdict-review{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(217,119,6,0.2)}
+.verdict-reject{background:var(--red-dim);color:var(--red);border:1px solid rgba(220,38,38,0.2)}
+
+/* ANALYSIS */
 .analysis-section{margin-bottom:20px}
-.analysis-title{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--gold);margin-bottom:8px;display:flex;align-items:center;gap:8px}
-.analysis-title::after{content:'';flex:1;height:1px;background:var(--gold-dim)}
-.analysis-text{font-size:13px;line-height:1.7;color:var(--text-2)}
+.analysis-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--teal);margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.analysis-title::after{content:'';flex:1;height:1px;background:var(--teal-border)}
+.analysis-text{font-size:13px;line-height:1.75;color:var(--text-2)}
+
+/* TABLES */
 .deal-table{width:100%;border-collapse:collapse}
-.deal-table th{font-family:'DM Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--text-3);padding:10px 14px;text-align:left;border-bottom:1px solid var(--border)}
-.deal-table td{padding:12px 14px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-2)}
+.deal-table th{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);padding:10px 16px;text-align:left;border-bottom:1px solid var(--border);background:var(--bg-3)}
+.deal-table td{padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-2)}
 .deal-table tr:last-child td{border-bottom:none}
-.deal-table tr:hover td{background:var(--ink-3);cursor:pointer}
+.deal-table tr:hover td{background:var(--bg-3);cursor:pointer}
 .deal-table .deal-name{color:var(--text);font-weight:600}
 .deal-table .mono{font-family:'DM Mono',monospace;font-size:12px}
-.lender-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
-.lender-card{background:var(--ink-3);border:1px solid var(--border);border-radius:10px;padding:18px;transition:border-color .15s}
-.lender-card:hover{border-color:var(--border-bright)}
-.lender-name{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
-.lender-type{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:12px}
-.lender-criteria{display:flex;flex-direction:column;gap:4px}
-.criteria-row{display:flex;justify-content:space-between;align-items:center}
-.criteria-key{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-3)}
-.criteria-val{font-family:'DM Mono',monospace;font-size:11px;color:var(--text);font-weight:500}
+
+/* LENDERS */
+.lender-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.lender-card{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r);padding:20px;box-shadow:var(--shadow);transition:box-shadow .15s}
+.lender-card:hover{box-shadow:var(--shadow-md)}
+.lender-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px}
+.lender-name{font-size:14px;font-weight:700;color:var(--text)}
+.lender-tier{font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px;background:var(--teal-dim);color:var(--teal);border:1px solid var(--teal-border);font-family:'DM Mono',monospace}
+.lender-type{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px}
+.lender-criteria{display:flex;flex-direction:column;gap:5px}
+.criteria-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border)}
+.criteria-row:last-child{border-bottom:none}
+.criteria-key{font-size:11px;color:var(--text-3)}
+.criteria-val{font-family:'DM Mono',monospace;font-size:11px;color:var(--text);font-weight:600}
+
+/* RESULT */
 #result-panel{display:none;margin-top:28px;animation:fadeUp .4s ease both}
 #result-panel.show{display:block}
-.empty-state{text-align:center;padding:60px 20px;color:var(--text-3)}
-.empty-state svg{width:48px;height:48px;opacity:.2;margin-bottom:16px}
-.empty-state h3{font-size:16px;color:var(--text-2);margin-bottom:8px}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-4)}
+.empty-state svg{width:40px;height:40px;opacity:.3;margin:0 auto 16px;display:block}
+.empty-state h3{font-size:15px;font-weight:600;color:var(--text-3);margin-bottom:6px}
 .empty-state p{font-size:13px;line-height:1.6}
-.toast{position:fixed;bottom:24px;right:24px;background:var(--ink-3);border:1px solid var(--border-bright);border-radius:8px;padding:12px 16px;font-size:13px;z-index:300;display:none;animation:fadeUp .3s ease both}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;font-size:13px;z-index:300;display:none;box-shadow:var(--shadow-md)}
 .toast.show{display:flex;align-items:center;gap:10px}
-.toast.success{border-color:rgba(62,207,142,0.3);color:var(--green)}
-.toast.error{border-color:rgba(229,83,75,0.3);color:var(--red)}
-.hero{padding:40px 0 32px;margin-bottom:8px}
-.hero-eyebrow{font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.15em;color:var(--gold);margin-bottom:10px}
-.hero-title{font-family:'Instrument Serif',serif;font-size:36px;line-height:1.15;color:var(--text);margin-bottom:8px}
-.hero-title em{color:var(--gold);font-style:italic}
-.hero-sub{font-size:14px;color:var(--text-3);line-height:1.6;max-width:520px}
-.tabs{display:flex;gap:2px;background:var(--ink-3);padding:3px;border-radius:8px;margin-bottom:20px;width:fit-content}
-.tab{padding:7px 16px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;color:var(--text-3);transition:all .15s;border:none;background:none}
-.tab.active{background:var(--ink-2);color:var(--text);box-shadow:0 1px 3px rgba(0,0,0,0.3)}
-@media(max-width:768px){.sidebar{width:100%;min-height:auto;position:static}.main{margin-left:0}.stats-grid{grid-template-columns:1fr 1fr}.form-grid,.form-grid-3{grid-template-columns:1fr}.lender-grid{grid-template-columns:1fr}}
+.toast.success{border-color:var(--green-border);color:var(--green)}
+.toast.error{border-color:rgba(220,38,38,0.2);color:var(--red)}
+
+/* HERO */
+.hero{padding:32px 0 28px}
+.hero-eyebrow{font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.15em;color:var(--teal);margin-bottom:8px}
+.hero-title{font-size:32px;font-weight:700;line-height:1.2;color:var(--text);margin-bottom:8px;letter-spacing:-.5px}
+.hero-title em{color:var(--teal);font-style:normal}
+.hero-sub{font-size:14px;color:var(--text-3);line-height:1.65;max-width:540px}
+
+/* TABS */
+.tabs{display:flex;gap:1px;background:var(--bg-4);padding:3px;border-radius:6px;margin-bottom:20px;width:fit-content}
+.tab{padding:6px 16px;border-radius:5px;font-size:12px;font-weight:500;cursor:pointer;color:var(--text-3);transition:all .15s;border:none;background:none}
+.tab.active{background:white;color:var(--text);box-shadow:var(--shadow-sm);font-weight:600}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:24px 0}
+
+/* FORM ERROR */
+.form-error-msg{font-size:12px;color:var(--red);font-weight:500}
+
+@media(max-width:768px){.sidebar{width:100%;min-height:auto;position:static}.main{margin-left:0}.stats-grid{grid-template-columns:1fr 1fr}.form-grid,.form-grid-3,.form-grid-4{grid-template-columns:1fr}.lender-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <div class="loading-overlay" id="loading">
-  <div class="loading-spinner"></div>
-  <div class="loading-text">ANALYZING DEAL</div>
+  <div class="loading-card">
+    <div class="loading-spinner"></div>
+    <div class="loading-title">Analyzing Deal</div>
+    <div class="loading-sub">Running underwriting intelligence...</div>
+  </div>
 </div>
 <div class="toast" id="toast"></div>
+
 <div class="shell">
   <aside class="sidebar">
     <div class="logo">
@@ -181,7 +274,7 @@ textarea{resize:vertical;min-height:80px;font-family:'Syne',sans-serif;font-size
         </button>
       </div>
     </nav>
-    <div class="sidebar-footer"><span class="status-dot"></span><span class="status-text">API CONNECTED</span></div>
+    <div class="sidebar-footer"><span class="status-dot"></span><span class="status-text">SYSTEM ACTIVE</span></div>
   </aside>
 
   <main class="main">
@@ -189,22 +282,34 @@ textarea{resize:vertical;min-height:80px;font-family:'Syne',sans-serif;font-size
     <div class="page active" id="page-dashboard">
       <div class="topbar">
         <div><div class="topbar-title">Dashboard</div><div class="topbar-meta" id="current-date"></div></div>
-        <div style="display:flex;gap:12px"><span class="chip chip-gold">PRE-APPLICATION LAYER</span><span class="chip chip-green">LIVE</span></div>
+        <div style="display:flex;gap:10px;align-items:center"><span class="chip chip-teal">PRE-APPLICATION INTELLIGENCE</span><span class="chip chip-green">● LIVE</span></div>
       </div>
       <div class="content">
         <div class="hero fade-up">
           <div class="hero-eyebrow">Capital Intelligence Platform</div>
           <div class="hero-title">Know if your deal is fundable<br><em>before</em> approaching a lender.</div>
-          <div class="hero-sub">CapIQ analyzes your deal against real lending criteria, scores fundability, and matches you to the right capital source — before you waste time on applications.</div>
+          <div class="hero-sub">CapIQ analyzes deals against real lending criteria, scores fundability, and matches investors to the right capital source — before wasting time on applications.</div>
         </div>
         <div class="stats-grid">
-          <div class="stat-card fade-up"><div class="stat-label">Deals Analyzed</div><div class="stat-value gold" id="stat-total">0</div><div class="stat-sub">All time</div></div>
-          <div class="stat-card green fade-up"><div class="stat-label">Pass Rate</div><div class="stat-value green" id="stat-pass">—</div><div class="stat-sub">Fundable deals</div></div>
-          <div class="stat-card fade-up"><div class="stat-label">Avg Fundability</div><div class="stat-value gold" id="stat-avg">—</div><div class="stat-sub">Score /100</div></div>
-          <div class="stat-card blue fade-up"><div class="stat-label">Active Lenders</div><div class="stat-value">5</div><div class="stat-sub">In network</div></div>
+          <div class="stat-card fade-up">
+            <div class="stat-top"><span class="stat-label">Deals Analyzed</span><div class="stat-icon teal"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div></div>
+            <div class="stat-value teal" id="stat-total">0</div><div class="stat-sub">All time</div>
+          </div>
+          <div class="stat-card green fade-up">
+            <div class="stat-top"><span class="stat-label">Pass Rate</span><div class="stat-icon green"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div></div>
+            <div class="stat-value green" id="stat-pass">—</div><div class="stat-sub">Fundable deals</div>
+          </div>
+          <div class="stat-card fade-up">
+            <div class="stat-top"><span class="stat-label">Avg Fundability</span><div class="stat-icon teal"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div></div>
+            <div class="stat-value teal" id="stat-avg">—</div><div class="stat-sub">Score /100</div>
+          </div>
+          <div class="stat-card fade-up">
+            <div class="stat-top"><span class="stat-label">Active Lenders</span><div class="stat-icon teal"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div></div>
+            <div class="stat-value teal">5</div><div class="stat-sub">In network</div>
+          </div>
         </div>
         <div class="card fade-up">
-          <div class="card-header"><div class="card-title">Recent Deals</div><button class="btn btn-ghost" onclick="showPage('submit')" style="padding:6px 14px;font-size:12px">+ New Deal</button></div>
+          <div class="card-header"><div class="card-title">Recent Deal Activity</div><button class="btn btn-ghost" onclick="showPage('submit')" style="padding:6px 14px;font-size:12px">+ Submit Deal</button></div>
           <div class="card-body" id="dashboard-recent">
             <div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><h3>No deals yet</h3><p>Submit your first deal to generate fundability intelligence.</p></div>
           </div>
@@ -216,74 +321,122 @@ textarea{resize:vertical;min-height:80px;font-family:'Syne',sans-serif;font-size
     <div class="page" id="page-submit">
       <div class="topbar">
         <div><div class="topbar-title">Submit Deal</div><div class="topbar-meta">AI-Powered Underwriting Analysis</div></div>
-        <span class="chip chip-gold">STEP 1 OF 1</span>
+        <span class="chip chip-teal">STEP 1 OF 1</span>
       </div>
       <div class="content">
         <div class="card fade-up">
-          <div class="card-header"><div class="card-title">Deal Information</div></div>
+          <div class="card-header"><div class="card-title">Deal Intake Form</div></div>
           <div class="card-body">
 
             <div class="section-divider"><div class="section-divider-label">Investor Profile</div><div class="section-divider-line"></div></div>
-            <div class="form-grid">
-              <div class="field"><label class="label">Investor Name <span>*</span></label><input id="f-investor-name" type="text" placeholder="John Smith"></div>
-              <div class="field"><label class="label">Email <span>*</span></label><input id="f-investor-email" type="email" placeholder="john@example.com"></div>
-              <div class="field"><label class="label">Phone</label><input id="f-investor-phone" type="tel" placeholder="(305) 555-0100"></div>
-              <div class="field"><label class="label">Investment Experience <span>*</span></label>
-                <select id="f-experience"><option value="">Select...</option><option value="First Deal">First Deal</option><option value="1-3 Deals">1–3 Deals</option><option value="4-10 Deals">4–10 Deals</option><option value="10+ Deals">10+ Deals</option></select>
-              </div>
-            </div>
-
-            <div class="section-divider"><div class="section-divider-label">Property Details</div><div class="section-divider-line"></div></div>
-            <div class="form-grid">
-              <div class="field field-full"><label class="label">Street Address <span>*</span></label><input id="f-location" type="text" placeholder="5521 Hawkes Bluff Ave"></div>
-              <div class="field"><label class="label">City <span>*</span></label><input id="f-city" type="text" placeholder="Davie"></div>
-              <div class="field"><label class="label">State <span>*</span></label><input id="f-state" type="text" placeholder="FL" maxlength="2" style="text-transform:uppercase"></div>
-            </div>
-
-            <div class="field" style="margin-top:16px">
-              <label class="label">Deal Type <span>*</span></label>
-              <div class="pill-group" id="deal-type-pills">
-                <div class="pill" onclick="selectPill('deal-type-pills','Purchase','f-deal-type')">Purchase</div>
-                <div class="pill" onclick="selectPill('deal-type-pills','Fix &amp; Flip','f-deal-type')">Fix &amp; Flip</div>
-                <div class="pill" onclick="selectPill('deal-type-pills','Rental','f-deal-type')">Rental / DSCR</div>
-                <div class="pill" onclick="selectPill('deal-type-pills','Cash-Out','f-deal-type')">Cash-Out Refi</div>
-                <div class="pill" onclick="selectPill('deal-type-pills','Bridge','f-deal-type')">Bridge</div>
-                <div class="pill" onclick="selectPill('deal-type-pills','New Construction','f-deal-type')">New Construction</div>
-              </div>
-              <input type="hidden" id="f-deal-type">
-            </div>
-
-            <div class="field" style="margin-top:16px">
-              <label class="label">Property Type <span>*</span></label>
-              <div class="pill-group" id="prop-type-pills">
-                <div class="pill" onclick="selectPill('prop-type-pills','SFR','f-property-type')">SFR</div>
-                <div class="pill" onclick="selectPill('prop-type-pills','Condo','f-property-type')">Condo</div>
-                <div class="pill" onclick="selectPill('prop-type-pills','2-4 Unit','f-property-type')">2–4 Unit</div>
-                <div class="pill" onclick="selectPill('prop-type-pills','Multifamily 5+','f-property-type')">Multifamily 5+</div>
-                <div class="pill" onclick="selectPill('prop-type-pills','Commercial','f-property-type')">Commercial</div>
-                <div class="pill" onclick="selectPill('prop-type-pills','Land','f-property-type')">Land</div>
-              </div>
-              <input type="hidden" id="f-property-type">
-            </div>
-
-            <div class="section-divider" style="margin-top:24px"><div class="section-divider-label">Financial Details</div><div class="section-divider-line"></div></div>
             <div class="form-grid-3">
-              <div class="field"><label class="label">Loan Amount ($) <span>*</span></label><input id="f-loan-amount" type="number" placeholder="600000" oninput="autoCalc()"></div>
-              <div class="field" id="purchase-price-field"><label class="label">Purchase Price ($) <span>*</span></label><input id="f-purchase-price" type="number" placeholder="750000" oninput="autoCalc()"></div>
+              <div class="field"><label class="label">First Name <span class="req">*</span></label><input id="f-first-name" type="text" placeholder="John"></div>
+              <div class="field"><label class="label">Last Name <span class="req">*</span></label><input id="f-last-name" type="text" placeholder="Smith"></div>
+              <div class="field"><label class="label">Email <span class="req">*</span></label><input id="f-investor-email" type="email" placeholder="john@example.com"></div>
+              <div class="field"><label class="label">Phone</label><input id="f-investor-phone" type="tel" placeholder="(305) 555-0100"></div>
+              <div class="field field-full">
+                <label class="label">Investment Experience <span class="req">*</span></label>
+                <div class="pill-group" id="exp-pills">
+                  <div class="pill" onclick="selectPill('exp-pills','First Deal','f-experience')">First Deal</div>
+                  <div class="pill" onclick="selectPill('exp-pills','1-3 Deals','f-experience')">1–3 Deals</div>
+                  <div class="pill" onclick="selectPill('exp-pills','4-10 Deals','f-experience')">4–10 Deals</div>
+                  <div class="pill" onclick="selectPill('exp-pills','10-20 Deals','f-experience')">10–20 Deals</div>
+                  <div class="pill" onclick="selectPill('exp-pills','20+ Deals','f-experience')">20+ Deals</div>
+                </div>
+                <input type="hidden" id="f-experience">
+              </div>
+            </div>
+
+            <div class="section-divider"><div class="section-divider-label">Property Address</div><div class="section-divider-line"></div></div>
+            <div class="form-grid" style="margin-bottom:12px">
+              <div class="field">
+                <label class="label">Street Number <span class="req">*</span></label>
+                <input id="f-street-number" type="text" placeholder="5521" oninput="buildAddress()">
+              </div>
+              <div class="field">
+                <label class="label">Street Name <span class="req">*</span></label>
+                <input id="f-street-name" type="text" placeholder="Hawkes Bluff" oninput="buildAddress()">
+              </div>
+              <div class="field">
+                <label class="label">Street Type <span class="req">*</span></label>
+                <select id="f-street-type" onchange="buildAddress()">
+                  <option value="">Select...</option>
+                  <option value="Ave">Ave</option>
+                  <option value="Blvd">Blvd</option>
+                  <option value="Ct">Ct</option>
+                  <option value="Dr">Dr</option>
+                  <option value="Ln">Ln</option>
+                  <option value="Pl">Pl</option>
+                  <option value="Rd">Rd</option>
+                  <option value="St">St</option>
+                  <option value="Ter">Ter</option>
+                  <option value="Way">Way</option>
+                </select>
+              </div>
+              <div class="field">
+                <label class="label">Unit / Suite</label>
+                <input id="f-unit" type="text" placeholder="Apt 2B" oninput="buildAddress()">
+              </div>
+            </div>
+            <div class="form-grid">
+              <div class="field"><label class="label">City <span class="req">*</span></label><input id="f-city" type="text" placeholder="Davie"></div>
+              <div class="field"><label class="label">State <span class="req">*</span></label><input id="f-state" type="text" placeholder="FL" maxlength="2" style="text-transform:uppercase"></div>
+            </div>
+            <input type="hidden" id="f-location">
+
+            <div class="section-divider"><div class="section-divider-label">Deal Type</div><div class="section-divider-line"></div></div>
+            <div class="pill-group" id="deal-type-pills">
+              <div class="pill" onclick="selectPill('deal-type-pills','Purchase','f-deal-type')">Purchase</div>
+              <div class="pill" onclick="selectPill('deal-type-pills','Fix & Flip','f-deal-type')">Fix &amp; Flip</div>
+              <div class="pill" onclick="selectPill('deal-type-pills','Rental','f-deal-type')">Rental / DSCR</div>
+              <div class="pill" onclick="selectPill('deal-type-pills','Cash-Out','f-deal-type')">Cash-Out Refi</div>
+              <div class="pill" onclick="selectPill('deal-type-pills','Bridge','f-deal-type')">Bridge</div>
+              <div class="pill" onclick="selectPill('deal-type-pills','New Construction','f-deal-type')">New Construction</div>
+            </div>
+            <input type="hidden" id="f-deal-type">
+
+            <div class="section-divider"><div class="section-divider-label">Property Type</div><div class="section-divider-line"></div></div>
+            <div class="pill-group" id="prop-type-pills">
+              <div class="pill" onclick="selectPill('prop-type-pills','SFR','f-property-type')">SFR</div>
+              <div class="pill" onclick="selectPill('prop-type-pills','Condo','f-property-type')">Condo</div>
+              <div class="pill" onclick="selectPill('prop-type-pills','2-4 Unit','f-property-type')">2–4 Unit</div>
+              <div class="pill" onclick="selectPill('prop-type-pills','Multifamily 5+','f-property-type')">Multifamily 5+</div>
+              <div class="pill" onclick="selectPill('prop-type-pills','Commercial','f-property-type')">Commercial</div>
+              <div class="pill" onclick="selectPill('prop-type-pills','Land','f-property-type')">Land</div>
+            </div>
+            <input type="hidden" id="f-property-type">
+
+            <div class="section-divider"><div class="section-divider-label">Financial Details</div><div class="section-divider-line"></div></div>
+            <div class="form-grid-3" style="margin-bottom:14px">
+              <div class="field"><label class="label">Loan Amount ($) <span class="req">*</span></label><input id="f-loan-amount" type="number" placeholder="600000" oninput="autoCalc()"></div>
+              <div class="field" id="purchase-price-field"><label class="label">Purchase Price ($) <span class="req" id="pp-req">*</span></label><input id="f-purchase-price" type="number" placeholder="750000" oninput="autoCalc()"></div>
               <div class="field"><label class="label">ARV ($)</label><input id="f-arv" type="number" placeholder="850000" oninput="autoCalc()"></div>
               <div class="field"><label class="label">As-Is Value ($)</label><input id="f-as-is-value" type="number" placeholder="750000" oninput="autoCalc()"></div>
               <div class="field"><label class="label">Rehab Budget ($)</label><input id="f-rehab-budget" type="number" placeholder="0"></div>
               <div class="field"><label class="label">Monthly Rent ($)</label><input id="f-monthly-rent" type="number" placeholder="5800" oninput="autoCalc()"></div>
+            </div>
+            <div class="form-grid-3">
               <div class="field">
-                <label class="label">LTV (%) <span>*</span> <span class="auto-badge">AUTO</span></label>
-                <input id="f-ltv" type="number" placeholder="Auto-calculated" step="0.1" class="auto-calc" readonly>
+                <label class="label">LTV (%) <span class="req">*</span> <span class="auto-badge">AUTO-CALC</span></label>
+                <input id="f-ltv" type="number" placeholder="Auto-calculated from above" step="0.1" class="auto-calc" readonly>
               </div>
               <div class="field">
-                <label class="label">DSCR <span class="auto-badge">AUTO</span></label>
+                <label class="label">DSCR <span class="auto-badge">AUTO-CALC</span></label>
                 <input id="f-dscr" type="number" placeholder="Auto-calculated" step="0.01" class="auto-calc" readonly>
               </div>
-              <div class="field"><label class="label">Credit Score <span>*</span></label><input id="f-credit-score" type="number" placeholder="730"></div>
-              <div class="field"><label class="label">Monthly Payment ($)</label><input id="f-monthly-payment" type="number" placeholder="3200" oninput="autoCalc()" title="Used to calculate DSCR"></div>
+              <div class="field"><label class="label">Credit Score <span class="req">*</span></label><input id="f-credit-score" type="number" placeholder="730"></div>
+              <div class="field">
+                <label class="label">Interest Rate (%) <span class="auto-badge">FOR DSCR</span></label>
+                <input id="f-rate" type="number" placeholder="7.0" step="0.1" value="7.0" oninput="autoCalc()">
+              </div>
+              <div class="field">
+                <label class="label">Loan Term (yrs) <span class="auto-badge">FOR DSCR</span></label>
+                <input id="f-term" type="number" placeholder="30" value="30" oninput="autoCalc()">
+              </div>
+              <div class="field">
+                <label class="label">Monthly Payment ($) <span class="auto-badge">AUTO-CALC</span></label>
+                <input id="f-monthly-payment" type="number" placeholder="Auto-calculated" class="auto-calc" readonly>
+              </div>
             </div>
 
             <div class="section-divider"><div class="section-divider-label">Additional Context</div><div class="section-divider-line"></div></div>
@@ -291,10 +444,10 @@ textarea{resize:vertical;min-height:80px;font-family:'Syne',sans-serif;font-size
 
             <div style="margin-top:24px;display:flex;gap:12px;align-items:center">
               <button class="btn btn-primary btn-lg" onclick="analyzeDeal()" id="analyze-btn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>Analyze Deal
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>Analyze Deal
               </button>
-              <button class="btn btn-ghost" onclick="clearForm()">Clear</button>
-              <div id="form-error" style="font-family:'DM Mono',monospace;font-size:11px;color:var(--red);display:none"></div>
+              <button class="btn btn-ghost" onclick="clearForm()">Clear Form</button>
+              <div id="form-error" class="form-error-msg" style="display:none"></div>
             </div>
           </div>
         </div>
@@ -306,49 +459,49 @@ textarea{resize:vertical;min-height:80px;font-family:'Syne',sans-serif;font-size
     <div class="page" id="page-deals">
       <div class="topbar">
         <div><div class="topbar-title">Deal Pipeline</div><div class="topbar-meta">All submitted deals</div></div>
-        <button class="btn btn-primary" onclick="showPage('submit')" style="padding:7px 16px;font-size:12px">+ Submit Deal</button>
+        <button class="btn btn-primary" onclick="showPage('submit')" style="padding:8px 16px;font-size:12px">+ Submit Deal</button>
       </div>
       <div class="content">
         <div class="tabs">
-          <button class="tab active" onclick="filterDeals('all',this)">All</button>
+          <button class="tab active" onclick="filterDeals('all',this)">All Deals</button>
           <button class="tab" onclick="filterDeals('Pass',this)">Passed</button>
-          <button class="tab" onclick="filterDeals('Review',this)">Review</button>
+          <button class="tab" onclick="filterDeals('Review',this)">Needs Review</button>
           <button class="tab" onclick="filterDeals('Reject',this)">Rejected</button>
         </div>
-        <div class="card"><div class="card-body" style="padding:0"><div id="deals-table-wrap">
-          <div class="empty-state" style="padding:40px 20px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><h3>No deals yet</h3><p>Submitted deals will appear here.</p></div>
-        </div></div></div>
+        <div class="card"><div style="padding:0" id="deals-table-wrap">
+          <div class="empty-state"><h3>No deals yet</h3><p>Submitted deals will appear here.</p></div>
+        </div></div>
       </div>
     </div>
 
     <!-- LENDER PORTAL -->
     <div class="page" id="page-lenders">
       <div class="topbar">
-        <div><div class="topbar-title">Lender Portal</div><div class="topbar-meta">Active lending partners</div></div>
-        <span class="chip chip-green">5 ACTIVE LENDERS</span>
+        <div><div class="topbar-title">Lender Portal</div><div class="topbar-meta">Active lending partners &amp; criteria</div></div>
+        <span class="chip chip-green">● 5 ACTIVE LENDERS</span>
       </div>
       <div class="content"><div class="lender-grid" id="lender-grid"></div></div>
     </div>
 
     <!-- MATCH QUEUE -->
     <div class="page" id="page-match">
-      <div class="topbar"><div><div class="topbar-title">Match Queue</div><div class="topbar-meta">Deal-to-lender matching</div></div></div>
+      <div class="topbar"><div><div class="topbar-title">Match Queue</div><div class="topbar-meta">Deal-to-lender matching engine</div></div></div>
       <div class="content"><div id="match-content">
-        <div class="empty-state" style="padding:60px 0"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><h3>No matches yet</h3><p>Analyze a deal and matches will appear here.</p></div>
+        <div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><h3>No matches yet</h3><p>Analyze a deal and matches will appear here.</p></div>
       </div></div>
     </div>
   </main>
 </div>
 
 <script>
-const state = { deals: JSON.parse(localStorage.getItem('capiq_deals') || '[]'), currentFilter: 'all' };
+const state = { deals: JSON.parse(localStorage.getItem('capiq_deals')||'[]'), currentFilter:'all' };
 
 const LENDERS = [
-  { name:'Kiavi', type:'Hard Money', maxLtv:90, minDscr:1.0, minCredit:660, minLoan:100000, maxLoan:3000000, states:'FL TX CA GA NC SC TN AZ CO OH PA NJ NY VA MD IL', loans:['Purchase','Fix & Flip','Bridge','Rental'], props:['SFR','2-4 Unit','Condo'], exp:'1+ Deals', notes:'Up to 90% LTC on Fix & Flip. No rural.' },
-  { name:'Visio Lending', type:'DSCR', maxLtv:80, minDscr:1.0, minCredit:680, minLoan:75000, maxLoan:2000000, states:'FL TX CA GA NC SC TN AZ CO OH PA NJ VA MD IL NY', loans:['Rental','Cash-Out'], props:['SFR','2-4 Unit','Multifamily 5+','Condo'], exp:'None', notes:'Cash-out max 75% LTV. Prepay 5-4-3-2-1.' },
-  { name:'Lima One Capital', type:'Hard Money / DSCR', maxLtv:80, minDscr:1.0, minCredit:660, minLoan:75000, maxLoan:5000000, states:'FL TX GA NC SC TN AZ CO OH PA NJ NY VA MD IL AL MO', loans:['Purchase','Fix & Flip','Rental','Bridge','Cash-Out'], props:['SFR','2-4 Unit','Multifamily 5+','Condo'], exp:'None', notes:'Full product suite. Prepay on DSCR products.' },
-  { name:'Groundfloor', type:'Hard Money', maxLtv:75, minDscr:0, minCredit:640, minLoan:75000, maxLoan:2000000, states:'FL TX GA NC SC TN AL CO PA MD VA OH MO IN', loans:['Fix & Flip','Bridge','New Construction'], props:['SFR','2-4 Unit'], exp:'None', notes:'Fix & Flip / Bridge / New Construction. Max 75% ARV.' },
-  { name:'CoreVest Finance', type:'DSCR', maxLtv:75, minDscr:1.15, minCredit:680, minLoan:500000, maxLoan:5000000, states:'FL TX CA GA NC SC TN AZ CO OH PA NJ NY VA MD IL NV WA OR', loans:['Rental','Bridge','Cash-Out'], props:['SFR','2-4 Unit','Multifamily 5+','Commercial'], exp:'3+ Deals', notes:'Portfolio & single asset. Min loan $500K.' }
+  {name:'Kiavi',type:'Hard Money',maxLtv:90,minDscr:1.0,minCredit:660,minLoan:100000,maxLoan:3000000,states:'FL TX CA GA NC SC TN AZ CO OH PA NJ NY VA MD IL',loans:['Purchase','Fix & Flip','Bridge','Rental'],props:['SFR','2-4 Unit','Condo'],tier:'Active Partner',notes:'Up to 90% LTC on Fix & Flip. No rural properties.'},
+  {name:'Visio Lending',type:'DSCR',maxLtv:80,minDscr:1.0,minCredit:680,minLoan:75000,maxLoan:2000000,states:'FL TX CA GA NC SC TN AZ CO OH PA NJ VA MD IL NY',loans:['Rental','Cash-Out'],props:['SFR','2-4 Unit','Multifamily 5+','Condo'],tier:'Active Partner',notes:'Cash-out max 75% LTV. Prepayment penalty 5-4-3-2-1.'},
+  {name:'Lima One Capital',type:'Hard Money / DSCR',maxLtv:80,minDscr:1.0,minCredit:660,minLoan:75000,maxLoan:5000000,states:'FL TX GA NC SC TN AZ CO OH PA NJ NY VA MD IL AL MO',loans:['Purchase','Fix & Flip','Rental','Bridge','Cash-Out'],props:['SFR','2-4 Unit','Multifamily 5+','Condo'],tier:'Active Partner',notes:'Full product suite. Prepay applies on DSCR loans.'},
+  {name:'Groundfloor',type:'Hard Money',maxLtv:75,minDscr:0,minCredit:640,minLoan:75000,maxLoan:2000000,states:'FL TX GA NC SC TN AL CO PA MD VA OH MO IN',loans:['Fix & Flip','Bridge','New Construction'],props:['SFR','2-4 Unit'],tier:'Standard',notes:'Fix & Flip, Bridge, New Construction only. Max 75% ARV.'},
+  {name:'CoreVest Finance',type:'DSCR',maxLtv:75,minDscr:1.15,minCredit:680,minLoan:500000,maxLoan:5000000,states:'FL TX CA GA NC SC TN AZ CO OH PA NJ NY VA MD IL NV WA OR',loans:['Rental','Bridge','Cash-Out'],props:['SFR','2-4 Unit','Multifamily 5+','Commercial'],tier:'Active Partner',notes:'Portfolio & single-asset. Min loan $500K. Mixed use accepted.'}
 ];
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -358,192 +511,187 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function showPage(id) {
-  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.getElementById('page-' + id).classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(btn => { if(btn.getAttribute('onclick')?.includes("'"+id+"'")) btn.classList.add('active'); });
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(btn=>{ if(btn.getAttribute('onclick')?.includes("'"+id+"'")) btn.classList.add('active'); });
   if(id==='match') renderMatchQueue();
 }
 
 function selectPill(groupId, value, hiddenId) {
-  document.querySelectorAll('#'+groupId+' .pill').forEach(p => p.classList.remove('selected'));
+  document.querySelectorAll('#'+groupId+' .pill').forEach(p=>p.classList.remove('selected'));
   event.target.classList.add('selected');
   document.getElementById(hiddenId).value = value;
-  // Show/hide purchase price based on deal type
-  if(hiddenId === 'f-deal-type') {
-    const pp = document.getElementById('purchase-price-field');
-    const ppInput = document.getElementById('f-purchase-price');
-    if(value === 'Cash-Out') {
-      pp.style.opacity = '0.4';
-      ppInput.placeholder = 'N/A for Cash-Out';
-      ppInput.removeAttribute('required');
-    } else {
-      pp.style.opacity = '1';
-      ppInput.placeholder = '750000';
-    }
+  if(hiddenId==='f-deal-type') {
+    const isCashOut = value==='Cash-Out';
+    const ppField = document.getElementById('purchase-price-field');
+    const ppReq = document.getElementById('pp-req');
+    ppField.style.opacity = isCashOut ? '0.5' : '1';
+    ppReq.style.display = isCashOut ? 'none' : 'inline';
+    if(isCashOut) document.getElementById('f-purchase-price').placeholder = 'N/A for Cash-Out Refi';
+    else document.getElementById('f-purchase-price').placeholder = '750000';
     autoCalc();
   }
 }
 
+function buildAddress() {
+  const num = document.getElementById('f-street-number').value.trim();
+  const name = document.getElementById('f-street-name').value.trim();
+  const type = document.getElementById('f-street-type').value;
+  const unit = document.getElementById('f-unit').value.trim();
+  const parts = [num, name, type].filter(Boolean).join(' ');
+  const full = unit ? parts + ', ' + unit : parts;
+  document.getElementById('f-location').value = full;
+}
+
 function autoCalc() {
-  const loanAmt = parseFloat(document.getElementById('f-loan-amount').value) || 0;
-  const purchasePrice = parseFloat(document.getElementById('f-purchase-price').value) || 0;
-  const asIsValue = parseFloat(document.getElementById('f-as-is-value').value) || 0;
-  const arv = parseFloat(document.getElementById('f-arv').value) || 0;
-  const monthlyRent = parseFloat(document.getElementById('f-monthly-rent').value) || 0;
-  const monthlyPayment = parseFloat(document.getElementById('f-monthly-payment').value) || 0;
+  const loan = parseFloat(document.getElementById('f-loan-amount').value)||0;
+  const purchase = parseFloat(document.getElementById('f-purchase-price').value)||0;
+  const asIs = parseFloat(document.getElementById('f-as-is-value').value)||0;
+  const arv = parseFloat(document.getElementById('f-arv').value)||0;
+  const rent = parseFloat(document.getElementById('f-monthly-rent').value)||0;
+  const rate = parseFloat(document.getElementById('f-rate').value)||7.0;
+  const term = parseFloat(document.getElementById('f-term').value)||30;
   const dealType = document.getElementById('f-deal-type').value;
 
-  // LTV calculation
-  let ltv = 0;
-  if(loanAmt > 0) {
-    // Use ARV for Fix & Flip / New Construction, as-is or purchase for others
-    if((dealType === 'Fix & Flip' || dealType === 'New Construction') && arv > 0) {
-      ltv = (loanAmt / arv) * 100;
-    } else if(dealType === 'Cash-Out' && asIsValue > 0) {
-      ltv = (loanAmt / asIsValue) * 100;
-    } else if(purchasePrice > 0) {
-      ltv = (loanAmt / purchasePrice) * 100;
-    } else if(asIsValue > 0) {
-      ltv = (loanAmt / asIsValue) * 100;
-    }
+  // AUTO-CALC LTV
+  let ltv = 0, ltvBase = 0;
+  if(loan > 0) {
+    if((dealType==='Fix & Flip'||dealType==='New Construction') && arv>0) ltvBase=arv;
+    else if(dealType==='Cash-Out' && asIs>0) ltvBase=asIs;
+    else if(purchase>0) ltvBase=purchase;
+    else if(asIs>0) ltvBase=asIs;
+    else if(arv>0) ltvBase=arv;
+    if(ltvBase>0) ltv=(loan/ltvBase)*100;
   }
-  if(ltv > 0) {
-    document.getElementById('f-ltv').value = ltv.toFixed(1);
-    document.getElementById('f-ltv').classList.add('auto-calc');
-  } else {
-    document.getElementById('f-ltv').value = '';
-  }
+  const ltvEl = document.getElementById('f-ltv');
+  ltvEl.value = ltv>0 ? ltv.toFixed(1) : '';
 
-  // DSCR calculation: Monthly Rent / Monthly Payment (PITIA)
-  if(monthlyRent > 0 && monthlyPayment > 0) {
-    const dscr = monthlyRent / monthlyPayment;
-    document.getElementById('f-dscr').value = dscr.toFixed(2);
-    document.getElementById('f-dscr').classList.add('auto-calc');
-  } else if(monthlyRent > 0 && loanAmt > 0) {
-    // Estimate monthly payment at ~7% 30yr if not provided
-    const estimatedPayment = (loanAmt * 0.07) / 12;
-    const dscr = monthlyRent / estimatedPayment;
-    document.getElementById('f-dscr').value = dscr.toFixed(2);
-    document.getElementById('f-dscr').classList.add('auto-calc');
-  } else {
-    document.getElementById('f-dscr').value = '';
+  // AUTO-CALC Monthly Payment (principal + interest only)
+  let payment = 0;
+  if(loan>0 && rate>0 && term>0) {
+    const r = (rate/100)/12;
+    const n = term*12;
+    payment = loan * (r * Math.pow(1+r,n)) / (Math.pow(1+r,n)-1);
   }
+  const payEl = document.getElementById('f-monthly-payment');
+  payEl.value = payment>0 ? Math.round(payment) : '';
+
+  // AUTO-CALC DSCR
+  let dscr = 0;
+  if(rent>0 && payment>0) dscr = rent/payment;
+  const dscrEl = document.getElementById('f-dscr');
+  dscrEl.value = dscr>0 ? dscr.toFixed(2) : '';
 }
 
 function buildPrompt(d) {
-  return `You are an expert real estate underwriter for CapIQ. Analyze this deal and return ONLY a JSON object with no markdown or explanation.
+  return `You are an expert real estate underwriter for CapIQ. Analyze this deal and return ONLY valid JSON, no markdown.
 
 DEAL: ${d.dealType} | ${d.propertyType} | ${d.state} | ${d.location}
-LOAN: $${d.loanAmount} | PURCHASE: $${d.purchasePrice||'N/A'} | ARV: $${d.arv||'N/A'}
-AS-IS VALUE: $${d.asIsValue||'N/A'} | REHAB: $${d.rehabBudget||0} | RENT: $${d.monthlyRent||0}/mo
+LOAN: $${d.loanAmount} | PURCHASE: $${d.purchasePrice||'N/A'} | ARV: $${d.arv||'N/A'} | AS-IS: $${d.asIsValue||'N/A'}
+REHAB: $${d.rehabBudget||0} | RENT: $${d.monthlyRent||0}/mo | PAYMENT: $${d.monthlyPayment||'N/A'}/mo
 LTV: ${d.ltv}% | DSCR: ${d.dscr||'N/A'} | CREDIT: ${d.creditScore} | EXP: ${d.investorExperience}
 NOTES: ${d.notes||'None'}
 
-Return exactly this JSON structure with all fields filled in:
+Return this exact JSON with all string fields filled with detailed analysis (2-4 sentences each):
 {"fundabilityScore":0,"dealScore":"Pass","humanReviewRequired":false,"executiveSummary":"","strengthsAndRisks":"","lenderMatchingProfile":"","structuringRecommendations":"","marketContext":"","scoreBreakdown":"","nextSteps":""}`;
 }
 
 async function analyzeDeal() {
+  const errEl = document.getElementById('form-error');
   const dealType = document.getElementById('f-deal-type').value;
   const propType = document.getElementById('f-property-type').value;
-  const errEl = document.getElementById('form-error');
+  const exp = document.getElementById('f-experience').value;
 
-  const required = [
-    ['f-investor-name','Investor Name'],['f-investor-email','Email'],['f-experience','Experience'],
-    ['f-location','Street Address'],['f-city','City'],['f-state','State'],
-    ['f-loan-amount','Loan Amount'],['f-credit-score','Credit Score']
-  ];
-  if(!dealType) { errEl.textContent='Please select a Deal Type'; errEl.style.display='block'; return; }
-  if(!propType) { errEl.textContent='Please select a Property Type'; errEl.style.display='block'; return; }
-  for(const [id, label] of required) {
-    if(!document.getElementById(id).value.trim()) {
-      errEl.textContent = `${label} is required`; errEl.style.display='block';
-      document.getElementById(id).focus(); return;
-    }
-  }
+  if(!document.getElementById('f-first-name').value.trim()){errEl.textContent='First name is required';errEl.style.display='block';return;}
+  if(!document.getElementById('f-last-name').value.trim()){errEl.textContent='Last name is required';errEl.style.display='block';return;}
+  if(!document.getElementById('f-investor-email').value.trim()){errEl.textContent='Email is required';errEl.style.display='block';return;}
+  if(!exp){errEl.textContent='Please select your investment experience';errEl.style.display='block';return;}
+  if(!document.getElementById('f-street-number').value.trim()){errEl.textContent='Street number is required';errEl.style.display='block';return;}
+  if(!document.getElementById('f-street-name').value.trim()){errEl.textContent='Street name is required';errEl.style.display='block';return;}
+  if(!document.getElementById('f-street-type').value){errEl.textContent='Street type is required';errEl.style.display='block';return;}
+  if(!document.getElementById('f-city').value.trim()){errEl.textContent='City is required';errEl.style.display='block';return;}
+  if(!document.getElementById('f-state').value.trim()){errEl.textContent='State is required';errEl.style.display='block';return;}
+  if(!dealType){errEl.textContent='Please select a Deal Type';errEl.style.display='block';return;}
+  if(!propType){errEl.textContent='Please select a Property Type';errEl.style.display='block';return;}
+  if(!document.getElementById('f-loan-amount').value){errEl.textContent='Loan amount is required';errEl.style.display='block';return;}
+  if(!document.getElementById('f-credit-score').value){errEl.textContent='Credit score is required';errEl.style.display='block';return;}
   errEl.style.display='none';
 
-  const stateVal = document.getElementById('f-state').value.toUpperCase().trim();
-  const street = document.getElementById('f-location').value.trim();
+  buildAddress();
   const city = document.getElementById('f-city').value.trim();
+  const stateVal = document.getElementById('f-state').value.toUpperCase().trim();
+  const streetAddr = document.getElementById('f-location').value;
+  const fullLocation = [streetAddr, city, stateVal].filter(Boolean).join(', ');
+
   const dealData = {
-    dealType, propertyType: propType, state: stateVal,
-    location: [street, city, stateVal].filter(Boolean).join(', '),
-    loanAmount: parseFloat(document.getElementById('f-loan-amount').value)||0,
-    purchasePrice: parseFloat(document.getElementById('f-purchase-price').value)||0,
-    arv: parseFloat(document.getElementById('f-arv').value)||0,
-    asIsValue: parseFloat(document.getElementById('f-as-is-value').value)||0,
-    rehabBudget: parseFloat(document.getElementById('f-rehab-budget').value)||0,
-    monthlyRent: parseFloat(document.getElementById('f-monthly-rent').value)||0,
-    ltv: parseFloat(document.getElementById('f-ltv').value)||0,
-    dscr: parseFloat(document.getElementById('f-dscr').value)||0,
-    creditScore: parseFloat(document.getElementById('f-credit-score').value)||0,
-    investorExperience: document.getElementById('f-experience').value,
-    notes: document.getElementById('f-notes').value,
-    investorName: document.getElementById('f-investor-name').value,
-    investorEmail: document.getElementById('f-investor-email').value,
-    investorPhone: document.getElementById('f-investor-phone').value
+    dealType, propertyType:propType, state:stateVal, location:fullLocation,
+    loanAmount:parseFloat(document.getElementById('f-loan-amount').value)||0,
+    purchasePrice:parseFloat(document.getElementById('f-purchase-price').value)||0,
+    arv:parseFloat(document.getElementById('f-arv').value)||0,
+    asIsValue:parseFloat(document.getElementById('f-as-is-value').value)||0,
+    rehabBudget:parseFloat(document.getElementById('f-rehab-budget').value)||0,
+    monthlyRent:parseFloat(document.getElementById('f-monthly-rent').value)||0,
+    monthlyPayment:parseFloat(document.getElementById('f-monthly-payment').value)||0,
+    ltv:parseFloat(document.getElementById('f-ltv').value)||0,
+    dscr:parseFloat(document.getElementById('f-dscr').value)||0,
+    creditScore:parseFloat(document.getElementById('f-credit-score').value)||0,
+    investorExperience:exp,
+    notes:document.getElementById('f-notes').value,
+    investorName:document.getElementById('f-first-name').value.trim()+' '+document.getElementById('f-last-name').value.trim(),
+    investorEmail:document.getElementById('f-investor-email').value,
+    investorPhone:document.getElementById('f-investor-phone').value
   };
 
   const btn = document.getElementById('analyze-btn');
-  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Analyzing...';
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Analyzing...';
   document.getElementById('loading').classList.add('show');
 
   try {
-    const res = await fetch('/.netlify/functions/capiq-analyze', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ dealData })
-    });
-    if(!res.ok) {
-      const e = await res.json().catch(()=>({}));
-      throw new Error(e.error || e.detail || `Server error ${res.status}`);
-    }
+    const res = await fetch('/.netlify/functions/capiq-analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dealData})});
+    if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error||e.detail||`Error ${res.status}`);}
     const data = await res.json();
-    if(!data.success) throw new Error(data.error || 'Analysis failed');
+    if(!data.success) throw new Error(data.error||'Analysis failed');
     const analysis = data.analysis;
-    const deal = { id: Date.now(), dealName: street || 'Deal '+(state.deals.length+1), dealData, analysis, timestamp: new Date().toISOString(), matches: matchDeal(dealData, analysis) };
+    const deal = {id:Date.now(),dealName:streetAddr||'Deal '+(state.deals.length+1),dealData,analysis,timestamp:new Date().toISOString(),matches:matchDeal(dealData,analysis)};
     state.deals.unshift(deal);
-    localStorage.setItem('capiq_deals', JSON.stringify(state.deals));
-    renderResult(analysis, dealData);
+    localStorage.setItem('capiq_deals',JSON.stringify(state.deals));
+    renderResult(analysis,dealData);
     updateStats(); renderDashboardRecent(); renderDealsTable();
-    document.getElementById('deal-count').textContent = state.deals.length;
-    showToast('Deal analyzed successfully', 'success');
+    document.getElementById('deal-count').textContent=state.deals.length;
+    showToast('Deal analyzed successfully','success');
   } catch(err) {
-    showToast('Analysis failed: ' + err.message, 'error');
-    document.getElementById('result-content').innerHTML = `<div class="card"><div class="card-body"><div style="color:var(--red);font-family:'DM Mono',monospace;font-size:12px">ERROR: ${err.message}</div></div></div>`;
+    showToast('Analysis failed: '+err.message,'error');
+    document.getElementById('result-content').innerHTML=`<div class="card"><div class="card-body"><p style="color:var(--red);font-size:13px;font-weight:500">Error: ${err.message}</p></div></div>`;
     document.getElementById('result-panel').classList.add('show');
   } finally {
-    btn.disabled=false; btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Analyze Deal';
+    btn.disabled=false; btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Analyze Deal';
     document.getElementById('loading').classList.remove('show');
   }
 }
 
 function renderResult(a, d) {
-  const scoreColor = a.fundabilityScore>=65?'var(--green)':a.fundabilityScore>=45?'var(--amber)':'var(--red)';
-  const circumference = 2*Math.PI*52;
-  const fillPct = (a.fundabilityScore/100)*circumference;
+  const sc = a.fundabilityScore>=65?'var(--green)':a.fundabilityScore>=45?'var(--amber)':'var(--red)';
+  const circ = 2*Math.PI*52, fill=(a.fundabilityScore/100)*circ;
   const vc = a.dealScore==='Pass'?'verdict-pass':a.dealScore==='Review'?'verdict-review':'verdict-reject';
-  const dot = a.dealScore==='Pass'?'●':a.dealScore==='Review'?'◐':'○';
-  const matches = matchDeal(d, a);
-  const matchesHtml = matches.length>0 ? matches.slice(0,3).map(m=>`
-    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
-      <div><div style="font-size:13px;font-weight:600;color:var(--text)">${m.name}</div><div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text-3)">${m.type}</div></div>
-      <div style="text-align:right"><div style="font-family:'DM Mono',monospace;font-size:14px;font-weight:600;color:var(--gold)">${m.score}</div><div style="font-family:'DM Mono',monospace;font-size:9px;color:var(--text-3)">MATCH SCORE</div></div>
-    </div>`).join('') : '<div style="font-size:13px;color:var(--text-3);padding:16px 0">No qualifying lender matches found.</div>';
+  const matches = matchDeal(d,a);
+  const mHtml = matches.length>0?matches.slice(0,3).map(m=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)">
+      <div><div style="font-size:13px;font-weight:600;color:var(--text)">${m.name}</div><div style="font-size:11px;color:var(--text-4);margin-top:2px">${m.type}</div></div>
+      <div style="text-align:right"><div style="font-family:'DM Mono',monospace;font-size:16px;font-weight:700;color:var(--teal)">${m.score}</div><div style="font-size:10px;color:var(--text-4)">MATCH SCORE</div></div>
+    </div>`).join(''):'<p style="font-size:13px;color:var(--text-3);padding:16px 0">No qualifying lender matches found for this deal structure.</p>';
 
   document.getElementById('result-content').innerHTML = `
     <div class="card" style="margin-bottom:16px">
-      <div class="card-header"><div class="card-title">Deal Intelligence Report</div><span class="verdict-badge ${vc}">${dot} ${a.dealScore.toUpperCase()}</span></div>
+      <div class="card-header"><div class="card-title">Deal Intelligence Report</div><span class="verdict-badge ${vc}">● ${a.dealScore.toUpperCase()}</span></div>
       <div class="card-body">
-        <div style="display:grid;grid-template-columns:auto 1fr;gap:28px;align-items:start">
+        <div style="display:grid;grid-template-columns:140px 1fr;gap:32px;align-items:start">
           <div style="text-align:center">
             <div class="score-ring">
-              <svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" fill="none" stroke="var(--ink-4)" stroke-width="8"/><circle cx="60" cy="60" r="52" fill="none" stroke="${scoreColor}" stroke-width="8" stroke-dasharray="${fillPct} ${circumference}" stroke-linecap="round"/></svg>
-              <div class="score-ring-num"><div class="score-big" style="color:${scoreColor}">${a.fundabilityScore}</div><div class="score-label">Fundability</div></div>
+              <svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" fill="none" stroke="var(--bg-4)" stroke-width="8"/><circle cx="60" cy="60" r="52" fill="none" stroke="${sc}" stroke-width="8" stroke-dasharray="${fill} ${circ}" stroke-linecap="round"/></svg>
+              <div class="score-ring-num"><div class="score-big" style="color:${sc}">${a.fundabilityScore}</div><div class="score-label">Fundability</div></div>
             </div>
-            ${a.humanReviewRequired?'<div style="margin-top:8px;font-family:\'DM Mono\',monospace;font-size:10px;color:var(--amber)">⚠ REVIEW REQUIRED</div>':''}
+            ${a.humanReviewRequired?'<div style="margin-top:10px;font-size:11px;color:var(--amber);font-weight:600;background:var(--amber-dim);padding:4px 10px;border-radius:4px;border:1px solid rgba(217,119,6,0.2)">⚠ REVIEW REQUIRED</div>':''}
           </div>
           <div>
             <div class="analysis-section"><div class="analysis-title">Executive Summary</div><div class="analysis-text">${a.executiveSummary}</div></div>
@@ -561,130 +709,135 @@ function renderResult(a, d) {
       <div class="card"><div class="card-header"><div class="card-title">Next Steps</div></div><div class="card-body"><div class="analysis-text">${a.nextSteps}</div></div></div>
     </div>
     <div class="card">
-      <div class="card-header"><div class="card-title">Lender Matches</div><div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text-3)">${matches.length} qualifying</div></div>
-      <div class="card-body"><div style="font-size:13px;color:var(--text-2);margin-bottom:12px">${a.lenderMatchingProfile}</div>${matchesHtml}${matches.length>0?'<div style="margin-top:14px"><button class="btn btn-ghost" style="width:100%" onclick="showPage(\'match\')">View Full Match Queue →</button></div>':''}</div>
+      <div class="card-header"><div class="card-title">Lender Matches</div><span style="font-size:12px;color:var(--text-4)">${matches.length} qualifying lenders</span></div>
+      <div class="card-body">
+        <p style="font-size:13px;color:var(--text-2);margin-bottom:12px">${a.lenderMatchingProfile}</p>
+        ${mHtml}
+        ${matches.length>0?'<div style="margin-top:16px"><button class="btn btn-ghost" style="width:100%" onclick="showPage(\'match\')">View Full Match Queue →</button></div>':''}
+      </div>
     </div>`;
   document.getElementById('result-panel').classList.add('show');
   document.getElementById('result-panel').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
-function matchDeal(d, a) {
-  return LENDERS.map(l => {
-    if(d.creditScore < l.minCredit) return null;
-    if(d.loanAmount < l.minLoan || d.loanAmount > l.maxLoan) return null;
-    const isLand = d.propertyType==='Land';
-    const isNewConst = d.dealType==='New Construction';
-    if((isLand||isNewConst) && l.type!=='Hard Money' && l.type!=='Hard Money / DSCR') return null;
-    let score = 0;
-    if(l.loans.some(lt => d.dealType.toLowerCase().includes(lt.toLowerCase()) || lt.toLowerCase().includes(d.dealType.toLowerCase()))) score+=25;
+function matchDeal(d,a) {
+  return LENDERS.map(l=>{
+    if(d.creditScore<l.minCredit||d.loanAmount<l.minLoan||d.loanAmount>l.maxLoan) return null;
+    if((d.propertyType==='Land'||d.dealType==='New Construction')&&l.type!=='Hard Money'&&l.type!=='Hard Money / DSCR') return null;
+    let score=0;
+    if(l.loans.some(lt=>d.dealType.toLowerCase().includes(lt.toLowerCase())||lt.toLowerCase().includes(d.dealType.toLowerCase()))) score+=25;
     if(l.states.includes(d.state?.toUpperCase())) score+=25;
     if(d.ltv<=l.maxLtv) score+=15;
-    const np = d.propertyType==='Condo'?'SFR':d.propertyType;
+    const np=d.propertyType==='Condo'?'SFR':d.propertyType;
     if(l.props.includes(d.propertyType)||l.props.includes(np)) score+=10;
     if(!l.minDscr||d.dscr>=l.minDscr) score+=5;
     if(d.loanAmount>=l.minLoan&&d.loanAmount<=l.maxLoan) score+=20;
     if(score<50) return null;
-    return {name:l.name, type:l.type, score, notes:l.notes};
+    return {name:l.name,type:l.type,score,notes:l.notes};
   }).filter(Boolean).sort((a,b)=>b.score-a.score);
 }
 
 function renderLenders() {
-  document.getElementById('lender-grid').innerHTML = LENDERS.map(l=>`
+  document.getElementById('lender-grid').innerHTML=LENDERS.map(l=>`
     <div class="lender-card">
-      <div class="lender-name">${l.name}</div><div class="lender-type">${l.type}</div>
+      <div class="lender-header"><div class="lender-name">${l.name}</div><span class="lender-tier">${l.tier}</span></div>
+      <div class="lender-type">${l.type}</div>
       <div class="lender-criteria">
         <div class="criteria-row"><span class="criteria-key">Max LTV</span><span class="criteria-val">${l.maxLtv}%</span></div>
         <div class="criteria-row"><span class="criteria-key">Min DSCR</span><span class="criteria-val">${l.minDscr||'N/A'}</span></div>
         <div class="criteria-row"><span class="criteria-key">Min Credit</span><span class="criteria-val">${l.minCredit}</span></div>
-        <div class="criteria-row"><span class="criteria-key">Loan Range</span><span class="criteria-val">$${(l.minLoan/1000).toFixed(0)}K–$${(l.maxLoan/1000000).toFixed(1)}M</span></div>
-        <div class="criteria-row"><span class="criteria-key">Experience</span><span class="criteria-val">${l.exp}</span></div>
+        <div class="criteria-row"><span class="criteria-key">Loan Range</span><span class="criteria-val">$${(l.minLoan/1000).toFixed(0)}K – $${(l.maxLoan/1000000).toFixed(1)}M</span></div>
       </div>
-      <div style="margin-top:10px;font-size:11px;color:var(--text-3);line-height:1.5">${l.notes}</div>
+      <div style="margin-top:12px;font-size:11px;color:var(--text-3);line-height:1.5">${l.notes}</div>
     </div>`).join('');
 }
 
 function updateStats() {
-  const deals = state.deals;
-  document.getElementById('stat-total').textContent = deals.length;
-  if(deals.length) {
-    const passed = deals.filter(d=>d.analysis?.dealScore==='Pass').length;
-    document.getElementById('stat-pass').textContent = Math.round(passed/deals.length*100)+'%';
-    const avg = deals.reduce((s,d)=>s+(d.analysis?.fundabilityScore||0),0)/deals.length;
-    document.getElementById('stat-avg').textContent = Math.round(avg);
+  const d=state.deals;
+  document.getElementById('stat-total').textContent=d.length;
+  if(d.length){
+    const p=d.filter(x=>x.analysis?.dealScore==='Pass').length;
+    document.getElementById('stat-pass').textContent=Math.round(p/d.length*100)+'%';
+    document.getElementById('stat-avg').textContent=Math.round(d.reduce((s,x)=>s+(x.analysis?.fundabilityScore||0),0)/d.length);
   }
 }
 
 function renderDashboardRecent() {
-  const el = document.getElementById('dashboard-recent');
-  if(!state.deals.length) { el.innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><h3>No deals yet</h3><p>Submit your first deal to generate fundability intelligence.</p></div>'; return; }
-  el.innerHTML=`<table class="deal-table"><thead><tr><th>Deal</th><th>Type</th><th>LTV</th><th>Score</th><th>Verdict</th><th>Date</th></tr></thead><tbody>${state.deals.slice(0,5).map(d=>{const vc=d.analysis?.dealScore==='Pass'?'verdict-pass':d.analysis?.dealScore==='Review'?'verdict-review':'verdict-reject';return`<tr onclick="viewDeal(${d.id})"><td class="deal-name">${d.dealName}</td><td class="mono">${d.dealData.dealType||'—'}</td><td class="mono">${d.dealData.ltv||'—'}%</td><td class="mono" style="color:var(--gold)">${d.analysis?.fundabilityScore||'—'}</td><td><span class="verdict-badge ${vc}" style="font-size:10px;padding:3px 10px">${d.analysis?.dealScore||'—'}</span></td><td class="mono" style="color:var(--text-3)">${new Date(d.timestamp).toLocaleDateString()}</td></tr>`;}).join('')}</tbody></table>`;
+  const el=document.getElementById('dashboard-recent');
+  if(!state.deals.length){el.innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><h3>No deals yet</h3><p>Submit your first deal to generate fundability intelligence.</p></div>';return;}
+  el.innerHTML=`<table class="deal-table"><thead><tr><th>Deal</th><th>Type</th><th>LTV</th><th>Score</th><th>Verdict</th><th>Date</th></tr></thead><tbody>${state.deals.slice(0,5).map(d=>{const vc=d.analysis?.dealScore==='Pass'?'verdict-pass':d.analysis?.dealScore==='Review'?'verdict-review':'verdict-reject';return`<tr onclick="viewDeal(${d.id})"><td class="deal-name">${d.dealName}</td><td class="mono">${d.dealData.dealType||'—'}</td><td class="mono">${d.dealData.ltv||'—'}%</td><td class="mono" style="color:var(--teal);font-weight:600">${d.analysis?.fundabilityScore||'—'}</td><td><span class="verdict-badge ${vc}" style="font-size:10px;padding:3px 10px">${d.analysis?.dealScore||'—'}</span></td><td class="mono" style="color:var(--text-4)">${new Date(d.timestamp).toLocaleDateString()}</td></tr>`;}).join('')}</tbody></table>`;
 }
 
-function renderDealsTable(filter) {
-  const f=filter||state.currentFilter;
+function renderDealsTable(f) {
+  f=f||state.currentFilter;
   const deals=f==='all'?state.deals:state.deals.filter(d=>d.analysis?.dealScore===f);
-  const wrap=document.getElementById('deals-table-wrap');
-  if(!deals.length){wrap.innerHTML='<div class="empty-state" style="padding:40px 20px"><h3>No deals</h3><p>No deals match this filter.</p></div>';return;}
-  wrap.innerHTML=`<table class="deal-table"><thead><tr><th>Address</th><th>Investor</th><th>Type</th><th>Loan</th><th>LTV</th><th>Score</th><th>Verdict</th></tr></thead><tbody>${deals.map(d=>{const vc=d.analysis?.dealScore==='Pass'?'verdict-pass':d.analysis?.dealScore==='Review'?'verdict-review':'verdict-reject';return`<tr onclick="viewDeal(${d.id})"><td class="deal-name">${d.dealName}</td><td>${d.dealData.investorName||'—'}</td><td class="mono">${d.dealData.dealType||'—'}</td><td class="mono">$${(d.dealData.loanAmount||0).toLocaleString()}</td><td class="mono">${d.dealData.ltv||'—'}%</td><td class="mono" style="color:var(--gold);font-weight:600">${d.analysis?.fundabilityScore||'—'}</td><td><span class="verdict-badge ${vc}" style="font-size:10px;padding:3px 10px">${d.analysis?.dealScore||'—'}</span></td></tr>`;}).join('')}</tbody></table>`;
+  const w=document.getElementById('deals-table-wrap');
+  if(!deals.length){w.innerHTML='<div class="empty-state"><h3>No deals</h3><p>No deals match this filter.</p></div>';return;}
+  w.innerHTML=`<table class="deal-table"><thead><tr><th>Address</th><th>Investor</th><th>Type</th><th>Loan</th><th>LTV</th><th>Score</th><th>Verdict</th></tr></thead><tbody>${deals.map(d=>{const vc=d.analysis?.dealScore==='Pass'?'verdict-pass':d.analysis?.dealScore==='Review'?'verdict-review':'verdict-reject';return`<tr onclick="viewDeal(${d.id})"><td class="deal-name">${d.dealName}</td><td>${d.dealData.investorName||'—'}</td><td class="mono">${d.dealData.dealType||'—'}</td><td class="mono">$${(d.dealData.loanAmount||0).toLocaleString()}</td><td class="mono">${d.dealData.ltv||'—'}%</td><td class="mono" style="color:var(--teal);font-weight:600">${d.analysis?.fundabilityScore||'—'}</td><td><span class="verdict-badge ${vc}" style="font-size:10px;padding:3px 10px">${d.analysis?.dealScore||'—'}</span></td></tr>`;}).join('')}</tbody></table>`;
 }
 
-function filterDeals(f, btn) {
+function filterDeals(f,btn) {
   state.currentFilter=f;
   document.querySelectorAll('#page-deals .tab').forEach(t=>t.classList.remove('active'));
-  btn.classList.add('active');
-  renderDealsTable(f);
+  btn.classList.add('active'); renderDealsTable(f);
 }
 
 function renderMatchQueue() {
   const el=document.getElementById('match-content');
-  const allMatches=state.deals.flatMap(d=>(d.matches||[]).map(m=>({...m,deal:d.dealName,dealScore:d.analysis?.dealScore,fundScore:d.analysis?.fundabilityScore})));
-  if(!allMatches.length){el.innerHTML='<div class="empty-state" style="padding:60px 0"><h3>No matches yet</h3><p>Analyze a deal and matches will appear here.</p></div>';return;}
-  el.innerHTML=`<div class="card"><div class="card-body" style="padding:0"><table class="deal-table"><thead><tr><th>Deal</th><th>Lender</th><th>Type</th><th>Match Score</th><th>Verdict</th></tr></thead><tbody>${allMatches.map(m=>{const sc=m.score>=80?'var(--green)':m.score>=60?'var(--gold)':'var(--amber)';return`<tr><td class="deal-name">${m.deal}</td><td>${m.name}</td><td class="mono">${m.type}</td><td class="mono" style="color:${sc};font-weight:600">${m.score}</td><td><span class="verdict-badge ${m.dealScore==='Pass'?'verdict-pass':m.dealScore==='Review'?'verdict-review':'verdict-reject'}" style="font-size:10px;padding:3px 10px">${m.dealScore}</span></td></tr>`;}).join('')}</tbody></table></div></div>`;
+  const m=state.deals.flatMap(d=>(d.matches||[]).map(x=>({...x,deal:d.dealName,dealScore:d.analysis?.dealScore})));
+  if(!m.length){el.innerHTML='<div class="empty-state"><h3>No matches yet</h3><p>Analyze a deal and matches will appear here.</p></div>';return;}
+  el.innerHTML=`<div class="card"><div style="padding:0"><table class="deal-table"><thead><tr><th>Deal</th><th>Lender</th><th>Type</th><th>Match Score</th><th>Verdict</th></tr></thead><tbody>${m.map(x=>{const sc=x.score>=80?'var(--green)':x.score>=60?'var(--teal)':'var(--amber)';return`<tr><td class="deal-name">${x.deal}</td><td>${x.name}</td><td class="mono">${x.type}</td><td class="mono" style="color:${sc};font-weight:700">${x.score}</td><td><span class="verdict-badge ${x.dealScore==='Pass'?'verdict-pass':x.dealScore==='Review'?'verdict-review':'verdict-reject'}" style="font-size:10px;padding:3px 10px">${x.dealScore}</span></td></tr>`;}).join('')}</tbody></table></div></div>`;
 }
 
 function viewDeal(id) {
   const deal=state.deals.find(d=>d.id===id); if(!deal) return;
   showPage('submit');
-  const locParts=(deal.dealData.location||'').split(', ');
-  document.getElementById('f-location').value=locParts[0]||'';
-  document.getElementById('f-city').value=locParts.length>2?locParts[1]:'';
-  document.getElementById('f-state').value=deal.dealData.state||'';
-  document.getElementById('f-investor-name').value=deal.dealData.investorName||'';
-  document.getElementById('f-investor-email').value=deal.dealData.investorEmail||'';
-  document.getElementById('f-investor-phone').value=deal.dealData.investorPhone||'';
-  document.getElementById('f-experience').value=deal.dealData.investorExperience||'';
-  document.getElementById('f-loan-amount').value=deal.dealData.loanAmount||'';
-  document.getElementById('f-purchase-price').value=deal.dealData.purchasePrice||'';
-  document.getElementById('f-arv').value=deal.dealData.arv||'';
-  document.getElementById('f-as-is-value').value=deal.dealData.asIsValue||'';
-  document.getElementById('f-rehab-budget').value=deal.dealData.rehabBudget||'';
-  document.getElementById('f-monthly-rent').value=deal.dealData.monthlyRent||'';
-  document.getElementById('f-credit-score').value=deal.dealData.creditScore||'';
-  document.getElementById('f-notes').value=deal.dealData.notes||'';
-  // Restore pill selections
-  document.querySelectorAll('#deal-type-pills .pill').forEach(p=>{ if(p.textContent.trim()===deal.dealData.dealType||p.getAttribute('onclick')?.includes(deal.dealData.dealType)) p.classList.add('selected'); });
-  document.querySelectorAll('#prop-type-pills .pill').forEach(p=>{ if(p.getAttribute('onclick')?.includes(deal.dealData.propertyType)) p.classList.add('selected'); });
-  document.getElementById('f-deal-type').value=deal.dealData.dealType||'';
-  document.getElementById('f-property-type').value=deal.dealData.propertyType||'';
-  if(deal.analysis) renderResult(deal.analysis, deal.dealData);
+  const d=deal.dealData;
+  const nameParts=(d.investorName||'').split(' ');
+  document.getElementById('f-first-name').value=nameParts[0]||'';
+  document.getElementById('f-last-name').value=nameParts.slice(1).join(' ')||'';
+  document.getElementById('f-investor-email').value=d.investorEmail||'';
+  document.getElementById('f-investor-phone').value=d.investorPhone||'';
+  document.getElementById('f-city').value=d.location?.split(',')[1]?.trim()||'';
+  document.getElementById('f-state').value=d.state||'';
+  document.getElementById('f-loan-amount').value=d.loanAmount||'';
+  document.getElementById('f-purchase-price').value=d.purchasePrice||'';
+  document.getElementById('f-arv').value=d.arv||'';
+  document.getElementById('f-as-is-value').value=d.asIsValue||'';
+  document.getElementById('f-rehab-budget').value=d.rehabBudget||'';
+  document.getElementById('f-monthly-rent').value=d.monthlyRent||'';
+  document.getElementById('f-credit-score').value=d.creditScore||'';
+  document.getElementById('f-notes').value=d.notes||'';
+  document.querySelectorAll('#exp-pills .pill').forEach(p=>{if(p.getAttribute('onclick')?.includes(d.investorExperience)) p.classList.add('selected');});
+  document.getElementById('f-experience').value=d.investorExperience||'';
+  document.querySelectorAll('#deal-type-pills .pill').forEach(p=>{if(p.getAttribute('onclick')?.includes(d.dealType)) p.classList.add('selected');});
+  document.getElementById('f-deal-type').value=d.dealType||'';
+  document.querySelectorAll('#prop-type-pills .pill').forEach(p=>{if(p.getAttribute('onclick')?.includes(d.propertyType)) p.classList.add('selected');});
+  document.getElementById('f-property-type').value=d.propertyType||'';
+  autoCalc();
+  if(deal.analysis) renderResult(deal.analysis,d);
 }
 
 function clearForm() {
-  ['f-investor-name','f-investor-email','f-investor-phone','f-location','f-city','f-notes','f-arv','f-as-is-value','f-rehab-budget','f-monthly-rent','f-loan-amount','f-purchase-price','f-monthly-payment','f-credit-score','f-state'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('f-experience').selectedIndex=0;
+  ['f-first-name','f-last-name','f-investor-email','f-investor-phone','f-street-number','f-street-name','f-unit','f-city','f-notes','f-arv','f-as-is-value','f-rehab-budget','f-monthly-rent','f-loan-amount','f-purchase-price','f-credit-score','f-state','f-location'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('f-street-type').selectedIndex=0;
+  document.getElementById('f-rate').value='7.0';
+  document.getElementById('f-term').value='30';
   document.getElementById('f-ltv').value='';
   document.getElementById('f-dscr').value='';
+  document.getElementById('f-monthly-payment').value='';
   document.getElementById('f-deal-type').value='';
   document.getElementById('f-property-type').value='';
+  document.getElementById('f-experience').value='';
   document.querySelectorAll('.pill').forEach(p=>p.classList.remove('selected'));
   document.getElementById('result-panel').classList.remove('show');
   document.getElementById('form-error').style.display='none';
 }
 
-function showToast(msg, type) {
+function showToast(msg,type) {
   const t=document.getElementById('toast');
   t.textContent=msg; t.className='toast show '+type;
-  setTimeout(()=>t.classList.remove('show'), 3500);
+  setTimeout(()=>t.classList.remove('show'),3500);
 }
 </script>
 </body>
