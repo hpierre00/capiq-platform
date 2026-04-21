@@ -659,6 +659,16 @@ async function analyzeDeal() {
     updateStats(); renderDashboardRecent(); renderDealsTable();
     document.getElementById('deal-count').textContent=state.deals.length;
     showToast('Deal analyzed successfully','success');
+
+    // Sync to Notion CRM in background (non-blocking)
+    fetch('/.netlify/functions/notion-sync', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({dealData, analysis})
+    }).then(r => r.json()).then(r => {
+      if(r.success) console.log('Synced to Notion:', r.notionUrl);
+      else console.warn('Notion sync failed:', r.error);
+    }).catch(e => console.warn('Notion sync error:', e.message));
   } catch(err) {
     showToast('Analysis failed: '+err.message,'error');
     document.getElementById('result-content').innerHTML=`<div class="card"><div class="card-body"><p style="color:var(--red);font-size:13px;font-weight:500">Error: ${err.message}</p></div></div>`;
