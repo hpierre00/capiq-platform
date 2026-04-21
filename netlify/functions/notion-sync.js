@@ -17,7 +17,12 @@ export default async (req) => {
     if (!notionKey) return new Response(JSON.stringify({ error: "NOTION_API_KEY not configured" }), { status: 500, headers: cors });
 
     const body = await req.json();
-    const { dealData: d, analysis: a } = body;
+    const d = body.dealData || body.d || {};
+    const a = body.analysis || body.a || {};
+
+    // Safe accessor
+    const safe = (val) => val || '';
+    const safeNum = (val) => parseFloat(val) || null;
 
     // Map deal type to Notion's existing select options
     const dealTypeMap = {

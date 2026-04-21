@@ -524,7 +524,18 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
 </div>
 
 <script>
-const state = { deals: JSON.parse(localStorage.getItem('capiq_deals')||'[]'), currentFilter:'all' };
+const STORAGE_VERSION = 'v3';
+const stored = localStorage.getItem('capiq_deals');
+const storedVersion = localStorage.getItem('capiq_version');
+let initialDeals = [];
+if(stored && storedVersion === STORAGE_VERSION) {
+  try { initialDeals = JSON.parse(stored).filter(d => d && d.dealData && d.analysis); } catch(e) { initialDeals = []; }
+} else {
+  // Clear incompatible old data
+  localStorage.removeItem('capiq_deals');
+  localStorage.setItem('capiq_version', STORAGE_VERSION);
+}
+const state = { deals: initialDeals, currentFilter:'all' };
 
 const LENDERS = [
   {name:'Kiavi',type:'Hard Money',maxLtv:90,minDscr:1.0,minCredit:660,minLoan:100000,maxLoan:3000000,states:'FL TX CA GA NC SC TN AZ CO OH PA NJ NY VA MD IL',loans:['Purchase','Fix & Flip','Bridge','Rental'],props:['SFR','2-4 Unit','Condo'],tier:'Active Partner',notes:'Up to 90% LTC on Fix & Flip. No rural properties.'},
@@ -839,6 +850,7 @@ async function analyzeDeal() {
     const deal = {id:Date.now(),dealName:streetAddr||'Deal '+(state.deals.length+1),dealData,analysis,timestamp:new Date().toISOString(),matches:matchDeal(dealData,analysis)};
     state.deals.unshift(deal);
     localStorage.setItem('capiq_deals',JSON.stringify(state.deals));
+    localStorage.setItem('capiq_version', STORAGE_VERSION);
     renderResult(analysis,dealData);
     updateStats(); renderDashboardRecent(); renderDealsTable();
     document.getElementById('deal-count').textContent=state.deals.length;
