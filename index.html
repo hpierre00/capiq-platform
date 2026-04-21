@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>CapIQ — Capital Intelligence Platform</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap">
 <style>
 :root {
   --navy: #0f2240;
@@ -228,6 +228,15 @@ textarea{resize:vertical;min-height:90px;line-height:1.6}
 
 /* FORM ERROR */
 .form-error-msg{font-size:12px;color:var(--red);font-weight:500}
+.autocomplete-wrap{position:relative}
+.autocomplete-list{position:absolute;top:100%;left:0;right:0;background:white;border:1px solid var(--border-dark);border-top:none;border-radius:0 0 6px 6px;box-shadow:var(--shadow-md);z-index:200;max-height:220px;overflow-y:auto}
+.autocomplete-item{padding:10px 12px;font-size:13px;cursor:pointer;color:var(--text-2);border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:8px}
+.autocomplete-item:last-child{border-bottom:none}
+.autocomplete-item:hover,.autocomplete-item.active{background:var(--teal-dim);color:var(--teal)}
+.autocomplete-main{font-weight:500}
+.autocomplete-sub{font-size:11px;color:var(--text-4)}
+input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 
 @media(max-width:768px){.sidebar{width:100%;min-height:auto;position:static}.main{margin-left:0}.stats-grid{grid-template-columns:1fr 1fr}.form-grid,.form-grid-3,.form-grid-4{grid-template-columns:1fr}.lender-grid{grid-template-columns:1fr}}
 </style>
@@ -348,6 +357,14 @@ textarea{resize:vertical;min-height:90px;line-height:1.6}
             </div>
 
             <div class="section-divider"><div class="section-divider-label">Property Address</div><div class="section-divider-line"></div></div>
+            <div class="field field-full" style="margin-bottom:16px">
+              <label class="label">Search Address <span class="req">*</span></label>
+              <div class="autocomplete-wrap">
+                <input id="f-address-search" type="text" placeholder="Start typing address e.g. 5521 Hawkes..." autocomplete="off" oninput="addressSearch(this.value)" onkeydown="addressKeyNav(event)">
+                <div class="autocomplete-list" id="address-suggestions" style="display:none"></div>
+              </div>
+              <div style="font-size:11px;color:var(--text-4);margin-top:4px">Type to search — select from suggestions to auto-fill all fields below</div>
+            </div>
             <div class="form-grid" style="margin-bottom:12px">
               <div class="field">
                 <label class="label">Street Number <span class="req">*</span></label>
@@ -357,14 +374,10 @@ textarea{resize:vertical;min-height:90px;line-height:1.6}
                 <label class="label">Direction</label>
                 <select id="f-street-dir" onchange="buildAddress()">
                   <option value="">None</option>
-                  <option value="N">N</option>
-                  <option value="S">S</option>
-                  <option value="E">E</option>
-                  <option value="W">W</option>
-                  <option value="NE">NE</option>
-                  <option value="NW">NW</option>
-                  <option value="SE">SE</option>
-                  <option value="SW">SW</option>
+                  <option value="N">N</option><option value="S">S</option>
+                  <option value="E">E</option><option value="W">W</option>
+                  <option value="NE">NE</option><option value="NW">NW</option>
+                  <option value="SE">SE</option><option value="SW">SW</option>
                 </select>
               </div>
               <div class="field">
@@ -375,20 +388,13 @@ textarea{resize:vertical;min-height:90px;line-height:1.6}
                 <label class="label">Street Type <span class="req">*</span></label>
                 <select id="f-street-type" onchange="buildAddress()">
                   <option value="">Select...</option>
-                  <option value="Ave">Ave</option>
-                  <option value="Blvd">Blvd</option>
-                  <option value="Cir">Cir</option>
-                  <option value="Ct">Ct</option>
-                  <option value="Dr">Dr</option>
-                  <option value="Hwy">Hwy</option>
-                  <option value="Ln">Ln</option>
-                  <option value="Loop">Loop</option>
-                  <option value="Pkwy">Pkwy</option>
-                  <option value="Pl">Pl</option>
-                  <option value="Rd">Rd</option>
-                  <option value="St">St</option>
-                  <option value="Ter">Ter</option>
-                  <option value="Trl">Trl</option>
+                  <option value="Ave">Ave</option><option value="Blvd">Blvd</option>
+                  <option value="Cir">Cir</option><option value="Ct">Ct</option>
+                  <option value="Dr">Dr</option><option value="Hwy">Hwy</option>
+                  <option value="Ln">Ln</option><option value="Loop">Loop</option>
+                  <option value="Pkwy">Pkwy</option><option value="Pl">Pl</option>
+                  <option value="Rd">Rd</option><option value="St">St</option>
+                  <option value="Ter">Ter</option><option value="Trl">Trl</option>
                   <option value="Way">Way</option>
                 </select>
               </div>
@@ -435,8 +441,8 @@ textarea{resize:vertical;min-height:90px;line-height:1.6}
               <div class="field" id="purchase-price-field"><label class="label">Purchase Price ($) <span class="req" id="pp-req">*</span></label><input id="f-purchase-price" type="number" placeholder="750000" oninput="autoCalc()"></div>
               <div class="field"><label class="label">ARV ($)</label><input id="f-arv" type="number" placeholder="850000" oninput="autoCalc()"></div>
               <div class="field"><label class="label">As-Is Value ($)</label><input id="f-as-is-value" type="number" placeholder="750000" oninput="autoCalc()"></div>
-              <div class="field"><label class="label">Rehab Budget ($)</label><input id="f-rehab-budget" type="number" placeholder="0"></div>
-              <div class="field"><label class="label">Monthly Rent ($)</label><input id="f-monthly-rent" type="number" placeholder="5800" oninput="autoCalc()"></div>
+              <div class="field"><label class="label">Rehab Budget ($) <span class="req" id="rehab-req" style="display:none">*</span> <span id="rehab-hint" style="font-size:10px;color:var(--amber);display:none">Required for Fix &amp; Flip</span></label><input id="f-rehab-budget" type="number" placeholder="0"></div>
+              <div class="field"><label class="label">Monthly Rent ($) <span class="req" id="rent-req" style="display:none">*</span> <span id="rent-hint" style="font-size:10px;color:var(--amber);display:none">Required for Rental/DSCR</span></label><input id="f-monthly-rent" type="number" placeholder="5800" oninput="autoCalc()"></div>
             </div>
             <div class="form-grid-3">
               <div class="field">
@@ -547,15 +553,114 @@ function selectPill(groupId, value, hiddenId) {
   document.getElementById(hiddenId).value = value;
   if(hiddenId==='f-deal-type') {
     const isCashOut = value==='Cash-Out';
+    const isFlip = value==='Fix & Flip';
+    const isRental = value==='Rental';
+    const isNewConst = value==='New Construction';
+    // Purchase price
     const ppField = document.getElementById('purchase-price-field');
     const ppReq = document.getElementById('pp-req');
     ppField.style.opacity = isCashOut ? '0.5' : '1';
     ppReq.style.display = isCashOut ? 'none' : 'inline';
-    if(isCashOut) document.getElementById('f-purchase-price').placeholder = 'N/A for Cash-Out Refi';
-    else document.getElementById('f-purchase-price').placeholder = '750000';
+    if(isCashOut) document.getElementById('f-purchase-price').placeholder='N/A for Cash-Out Refi';
+    else document.getElementById('f-purchase-price').placeholder='750000';
+    // Rehab budget — required for Fix & Flip and New Construction
+    const rehabReq = document.getElementById('rehab-req');
+    const rehabHint = document.getElementById('rehab-hint');
+    if(isFlip||isNewConst) { rehabReq.style.display='inline'; rehabHint.style.display='inline'; }
+    else { rehabReq.style.display='none'; rehabHint.style.display='none'; }
+    // Monthly rent — required for Rental/DSCR
+    const rentReq = document.getElementById('rent-req');
+    const rentHint = document.getElementById('rent-hint');
+    if(isRental) { rentReq.style.display='inline'; rentHint.style.display='inline'; }
+    else { rentReq.style.display='none'; rentHint.style.display='none'; }
     autoCalc();
   }
 }
+
+// ─── ADDRESS AUTOCOMPLETE ─────────────────────────────────────────────────────
+let _acTimer = null, _acIndex = -1, _acResults = [];
+
+async function addressSearch(val) {
+  clearTimeout(_acTimer);
+  const list = document.getElementById('address-suggestions');
+  if(!val || val.length < 4) { list.style.display='none'; return; }
+  _acTimer = setTimeout(async () => {
+    try {
+      // Use Nominatim (OpenStreetMap) — free, no API key needed
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val)}&format=json&addressdetails=1&countrycodes=us&limit=6`,
+        {headers:{'Accept-Language':'en-US'}});
+      _acResults = await res.json();
+      if(!_acResults.length) { list.style.display='none'; return; }
+      _acIndex = -1;
+      list.innerHTML = _acResults.map((r,i) => {
+        const main = r.address?.house_number ? `${r.address.house_number} ${r.address.road||''}`.trim() : (r.address?.road || r.display_name.split(',')[0]);
+        const sub = [r.address?.city||r.address?.town||r.address?.village, r.address?.state, r.address?.postcode].filter(Boolean).join(', ');
+        return `<div class="autocomplete-item" onclick="selectAddress(${i})" onmouseover="setAcIndex(${i})">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <div><div class="autocomplete-main">${main}</div><div class="autocomplete-sub">${sub}</div></div>
+        </div>`;
+      }).join('');
+      list.style.display='block';
+    } catch(e) { list.style.display='none'; }
+  }, 350);
+}
+
+function setAcIndex(i) { _acIndex = i; }
+
+function addressKeyNav(e) {
+  const items = document.querySelectorAll('.autocomplete-item');
+  if(e.key==='ArrowDown') { _acIndex=Math.min(_acIndex+1,items.length-1); items.forEach((el,i)=>el.classList.toggle('active',i===_acIndex)); e.preventDefault(); }
+  else if(e.key==='ArrowUp') { _acIndex=Math.max(_acIndex-1,0); items.forEach((el,i)=>el.classList.toggle('active',i===_acIndex)); e.preventDefault(); }
+  else if(e.key==='Enter' && _acIndex>=0) { selectAddress(_acIndex); e.preventDefault(); }
+  else if(e.key==='Escape') { document.getElementById('address-suggestions').style.display='none'; }
+}
+
+function selectAddress(i) {
+  const r = _acResults[i];
+  if(!r) return;
+  const addr = r.address || {};
+  const num = addr.house_number || '';
+  const road = addr.road || '';
+  const city = addr.city || addr.town || addr.village || addr.municipality || '';
+  const state = addr.state || '';
+  const zip = addr.postcode || '';
+
+  // Parse road into name + type
+  const streetTypes = {avenue:'Ave',boulevard:'Blvd',circle:'Cir',court:'Ct',drive:'Dr',highway:'Hwy',lane:'Ln',loop:'Loop',parkway:'Pkwy',place:'Pl',road:'Rd',street:'St',terrace:'Ter',trail:'Trl',way:'Way',ave:'Ave',blvd:'Blvd',dr:'Dr',ln:'Ln',pkwy:'Pkwy',rd:'Rd',st:'St'};
+  const roadParts = road.split(' ');
+  let streetType = '', streetName = road;
+  const lastWord = roadParts[roadParts.length-1]?.toLowerCase();
+  if(streetTypes[lastWord]) { streetType = streetTypes[lastWord]; streetName = roadParts.slice(0,-1).join(' '); }
+
+  // Check for direction prefix
+  const dirs = ['N','S','E','W','NE','NW','SE','SW'];
+  let dir = '';
+  const firstWord = streetName.split(' ')[0]?.toUpperCase();
+  if(dirs.includes(firstWord)) { dir = firstWord; streetName = streetName.split(' ').slice(1).join(' '); }
+
+  // Populate fields
+  document.getElementById('f-street-number').value = num;
+  document.getElementById('f-street-name').value = streetName;
+  document.getElementById('f-city').value = city;
+  document.getElementById('f-state').value = state.substring(0,2).toUpperCase();
+  document.getElementById('f-zip').value = zip;
+  document.getElementById('f-address-search').value = r.display_name.split(',').slice(0,3).join(',');
+  if(streetType) {
+    const sel = document.getElementById('f-street-type');
+    for(let o of sel.options) { if(o.value===streetType) { sel.value=streetType; break; } }
+  }
+  if(dir) {
+    const sel = document.getElementById('f-street-dir');
+    for(let o of sel.options) { if(o.value===dir) { sel.value=dir; break; } }
+  }
+  document.getElementById('address-suggestions').style.display='none';
+  buildAddress();
+}
+
+// Close autocomplete on outside click
+document.addEventListener('click', e => {
+  if(!e.target.closest('.autocomplete-wrap')) document.getElementById('address-suggestions').style.display='none';
+});
 
 function buildAddress() {
   const num = document.getElementById('f-street-number').value.trim();
@@ -638,10 +743,19 @@ async function analyzeDeal() {
   if(!document.getElementById('f-street-type').value){errEl.textContent='Street type is required';errEl.style.display='block';return;}
   if(!document.getElementById('f-city').value.trim()){errEl.textContent='City is required';errEl.style.display='block';return;}
   if(!document.getElementById('f-state').value.trim()){errEl.textContent='State is required';errEl.style.display='block';return;}
-  if(!dealType){errEl.textContent='Please select a Deal Type';errEl.style.display='block';return;}
+  if(!dealType){errEl.textContent='Please select a Deal Type — scroll up to select';errEl.style.display='block';document.getElementById('deal-type-pills').scrollIntoView({behavior:'smooth',block:'center'});return;}
   if(!propType){errEl.textContent='Please select a Property Type';errEl.style.display='block';return;}
   if(!document.getElementById('f-loan-amount').value){errEl.textContent='Loan amount is required';errEl.style.display='block';return;}
   if(!document.getElementById('f-credit-score').value){errEl.textContent='Credit score is required';errEl.style.display='block';return;}
+  // Conditional required fields
+  if((dealType==='Fix & Flip'||dealType==='New Construction')&&!document.getElementById('f-rehab-budget').value){
+    errEl.textContent='Rehab Budget is required for Fix & Flip and New Construction';errEl.style.display='block';
+    document.getElementById('f-rehab-budget').focus();return;
+  }
+  if(dealType==='Rental'&&!document.getElementById('f-monthly-rent').value){
+    errEl.textContent='Monthly Rent is required for Rental / DSCR deals';errEl.style.display='block';
+    document.getElementById('f-monthly-rent').focus();return;
+  }
   errEl.style.display='none';
 
   buildAddress();
@@ -856,7 +970,7 @@ function viewDeal(id) {
 }
 
 function clearForm() {
-  ['f-first-name','f-last-name','f-investor-email','f-investor-phone','f-street-number','f-street-name','f-unit','f-zip','f-city','f-notes','f-arv','f-as-is-value','f-rehab-budget','f-monthly-rent','f-loan-amount','f-purchase-price','f-credit-score','f-state','f-location'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  ['f-first-name','f-last-name','f-investor-email','f-investor-phone','f-address-search','f-street-number','f-street-name','f-unit','f-zip','f-city','f-notes','f-arv','f-as-is-value','f-rehab-budget','f-monthly-rent','f-loan-amount','f-purchase-price','f-credit-score','f-state','f-location'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   document.getElementById('f-street-type').selectedIndex=0;
   document.getElementById('f-street-dir').selectedIndex=0;
   document.getElementById('f-rate').value='7.0';
