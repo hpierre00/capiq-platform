@@ -539,9 +539,8 @@ function buildAddress() {
   const name = document.getElementById('f-street-name').value.trim();
   const type = document.getElementById('f-street-type').value;
   const unit = document.getElementById('f-unit').value.trim();
-  const parts = [num, name, type].filter(Boolean).join(' ');
-  const full = unit ? parts + ', ' + unit : parts;
-  document.getElementById('f-location').value = full;
+  const street = [num, name, type].filter(Boolean).join(' ');
+  document.getElementById('f-location').value = unit ? street + ' ' + unit : street;
 }
 
 function autoCalc() {
@@ -842,4 +841,3 @@ function showToast(msg,type) {
 </script>
 </body>
 </html>
-<!-- deploy trigger Tue Apr 21 21:46:00 UTC 2026 -->
