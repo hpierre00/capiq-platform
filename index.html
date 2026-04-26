@@ -763,11 +763,15 @@ function updateUsageUI(access) {
   }
 }
 
+const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/aFa7sM7Aa7LWglb5Qo3VC00';
+
 async function startCheckout() {
   const session = getSession();
   if (!session?.token) { showAuthScreen(); return; }
   const btn = document.getElementById('checkout-btn');
   btn.disabled = true; btn.textContent = 'Redirecting to checkout...';
+
+  // Try server-side checkout (links Stripe customer to investor record)
   try {
     const res = await fetch(STRIPE_FN, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -778,9 +782,14 @@ async function startCheckout() {
       })
     });
     const data = await res.json();
-    if (data.checkoutUrl) { window.location.href = data.checkoutUrl; }
-    else { showToast(data.error || 'Checkout failed', 'error'); btn.disabled = false; btn.textContent = 'Upgrade to Pro — $97/month'; }
-  } catch (e) { showToast('Connection error', 'error'); btn.disabled = false; btn.textContent = 'Upgrade to Pro — $97/month'; }
+    if (data.checkoutUrl) { window.location.href = data.checkoutUrl; return; }
+  } catch (e) { /* fall through */ }
+
+  // Fallback: Stripe payment link with prefilled email
+  const email = session.investor?.email || '';
+  const invId = session.investor?.id || '';
+  const url = `${STRIPE_PAYMENT_LINK}?prefilled_email=${encodeURIComponent(email)}&client_reference_id=${encodeURIComponent(invId)}`;
+  window.location.href = url;
 }
 
 async function openBillingPortal() {
@@ -802,7 +811,30 @@ function closeUpgradeModal() {
 // Check for ?upgraded=true after Stripe redirect
 if (window.location.search.includes('upgraded=true')) {
   window.history.replaceState({}, '', window.location.pathname);
-  setTimeout(() => showToast('Welcome to CapIQ Pro! Your account has been upgraded.', 'success'), 1000);
+  // Poll for plan upgrade (webhook will update Supabase)
+  let polls = 0;
+  const pollForUpgrade = setInterval(async () => {
+    polls++;
+    const session = getSession();
+    if (!session?.token) { clearInterval(pollForUpgrade); return; }
+    try {
+      const res = await fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ action: 'verify', token: session.token })
+      });
+      const data = await res.json();
+      if (data.valid && data.investor?.plan === 'pro') {
+        clearInterval(pollForUpgrade);
+        setSession(session.token, data.investor);
+        updateSidebarUser(data.investor);
+        updateUsageUI({ plan: 'pro', canAnalyze: true, remaining: -1 });
+        showToast('Welcome to CapIQ Pro! Unlimited analyses unlocked.', 'success');
+      } else if (polls >= 10) {
+        clearInterval(pollForUpgrade);
+        showToast('Payment received! Your account will upgrade shortly.', 'success');
+      }
+    } catch { clearInterval(pollForUpgrade); }
+  }, 3000);
 }
 
 function logout() {
