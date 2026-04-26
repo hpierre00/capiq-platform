@@ -265,6 +265,26 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
 .auth-forgot{font-size:12px;color:var(--teal);cursor:pointer;text-align:right;display:block;margin-top:4px}
 .auth-forgot:hover{text-decoration:underline}
 .plan-badge{display:inline-flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:10px;padding:3px 10px;border-radius:4px;background:var(--teal-dim);color:var(--teal);border:1px solid var(--teal-border);font-weight:600}
+.plan-badge.pro{background:rgba(180,83,9,0.1);color:var(--gold);border-color:rgba(180,83,9,0.3)}
+/* UPGRADE MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,34,64,0.7);z-index:400;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-overlay.show{display:flex}
+.modal-box{background:white;border-radius:14px;width:100%;max-width:480px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.25)}
+.modal-header{background:var(--navy);padding:28px 32px;text-align:center}
+.modal-header h2{font-size:22px;font-weight:700;color:white;margin-bottom:6px}
+.modal-header p{font-size:13px;color:rgba(255,255,255,0.6)}
+.modal-body{padding:28px 32px}
+.plan-compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+.plan-card{border:1px solid var(--border);border-radius:10px;padding:18px;text-align:center}
+.plan-card.featured{border-color:var(--teal);background:var(--teal-dim)}
+.plan-card-name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);margin-bottom:8px}
+.plan-card.featured .plan-card-name{color:var(--teal)}
+.plan-card-price{font-size:28px;font-weight:800;color:var(--text);letter-spacing:-1px;line-height:1}
+.plan-card-price span{font-size:13px;font-weight:400;color:var(--text-4)}
+.plan-card-features{font-size:12px;color:var(--text-3);margin-top:10px;line-height:1.7}
+.usage-bar{background:var(--bg-4);border-radius:6px;height:6px;overflow:hidden;margin-top:6px}
+.usage-bar-fill{height:100%;border-radius:6px;background:var(--teal);transition:width .4s ease}
+.usage-bar-fill.danger{background:var(--red)}
 @media(max-width:768px){.sidebar{width:100%;min-height:auto;position:static}.main{margin-left:0}.stats-grid{grid-template-columns:1fr 1fr}.form-grid,.form-grid-3,.form-grid-4{grid-template-columns:1fr}.lender-grid{grid-template-columns:1fr}}
 </style>
 </head>
@@ -322,6 +342,36 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
       <div class="auth-field"><label class="auth-label">Email</label><input class="auth-input" id="auth-email-reset" type="email" placeholder="john@example.com"></div>
       <button class="auth-btn" onclick="doReset()">Send Reset Link</button>
       <div class="auth-divider"><span style="cursor:pointer;color:var(--teal)" onclick="switchAuthTab('login')">← Back to sign in</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- UPGRADE MODAL -->
+<div class="modal-overlay" id="upgrade-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>You've used your free analyses</h2>
+      <p>Upgrade to CapIQ Pro for unlimited deal intelligence</p>
+    </div>
+    <div class="modal-body">
+      <div class="plan-compare">
+        <div class="plan-card">
+          <div class="plan-card-name">Free</div>
+          <div class="plan-card-price">$0<span>/mo</span></div>
+          <div class="plan-card-features">3 analyses/month<br>Basic lender matching<br>Deal pipeline</div>
+        </div>
+        <div class="plan-card featured">
+          <div class="plan-card-name">Pro ✦</div>
+          <div class="plan-card-price">$97<span>/mo</span></div>
+          <div class="plan-card-features">Unlimited analyses<br>Full lender network<br>Priority matching<br>Deal history</div>
+        </div>
+      </div>
+      <button class="auth-btn" onclick="startCheckout()" id="checkout-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Upgrade to Pro — $97/month
+      </button>
+      <div style="text-align:center;margin-top:12px;font-size:12px;color:var(--text-4)">Cancel anytime. Instant access. No contracts.</div>
+      <div style="text-align:center;margin-top:10px"><span style="font-size:12px;color:var(--teal);cursor:pointer" onclick="closeUpgradeModal()">← Stay on free plan</span></div>
     </div>
   </div>
 </div>
@@ -414,7 +464,13 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
     <div class="page" id="page-submit">
       <div class="topbar">
         <div><div class="topbar-title">Submit Deal</div><div class="topbar-meta">AI-Powered Underwriting Analysis</div></div>
-        <span class="chip chip-teal">STEP 1 OF 1</span>
+        <div style="display:flex;align-items:center;gap:14px">
+          <div id="usage-indicator" style="display:none;text-align:right">
+            <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text-3)" id="usage-label">0 / 3 used</div>
+            <div class="usage-bar" style="width:80px;margin-top:4px"><div class="usage-bar-fill" id="usage-fill" style="width:0%"></div></div>
+          </div>
+          <span class="chip chip-teal">STEP 1 OF 1</span>
+        </div>
       </div>
       <div class="content">
         <div class="card fade-up">
@@ -649,6 +705,8 @@ function onAuthSuccess(token, investor) {
   setSession(token, investor);
   hideAuthScreen();
   updateSidebarUser(investor);
+  // Check access and update usage UI
+  checkAccess().then(access => updateUsageUI(access));
   // Auto-fill investor profile fields if empty
   if (investor.name) {
     const parts = investor.name.split(' ');
@@ -668,6 +726,83 @@ function updateSidebarUser(investor) {
   if (nameEl) nameEl.textContent = investor.name || investor.email.split('@')[0];
   if (emailEl) emailEl.textContent = investor.email;
   if (planEl) planEl.textContent = (investor.plan || 'starter').toUpperCase();
+}
+
+// ─── STRIPE PAYWALL ──────────────────────────────────────────────────────────
+const STRIPE_FN = 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-stripe';
+
+async function checkAccess() {
+  const session = getSession();
+  if (!session?.token) return { canAnalyze: false, plan: 'free', remaining: 0 };
+  try {
+    const res = await fetch(STRIPE_FN, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'check_access', token: session.token })
+    });
+    return await res.json();
+  } catch { return { canAnalyze: true, plan: 'starter', remaining: 3 }; } // fail open
+}
+
+function updateUsageUI(access) {
+  const indicator = document.getElementById('usage-indicator');
+  const label = document.getElementById('usage-label');
+  const fill = document.getElementById('usage-fill');
+  const planEl = document.getElementById('sidebar-plan');
+  if (!indicator) return;
+  if (access.plan === 'pro') {
+    indicator.style.display = 'none';
+    if (planEl) { planEl.textContent = 'PRO'; planEl.classList.add('pro'); }
+  } else {
+    indicator.style.display = 'block';
+    const used = access.used || 0;
+    const pct = Math.min((used / access.limit) * 100, 100);
+    label.textContent = `${used} / ${access.limit} analyses used`;
+    fill.style.width = pct + '%';
+    if (pct >= 100) fill.classList.add('danger');
+    if (planEl) planEl.textContent = 'STARTER';
+  }
+}
+
+async function startCheckout() {
+  const session = getSession();
+  if (!session?.token) { showAuthScreen(); return; }
+  const btn = document.getElementById('checkout-btn');
+  btn.disabled = true; btn.textContent = 'Redirecting to checkout...';
+  try {
+    const res = await fetch(STRIPE_FN, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'create_checkout', token: session.token,
+        successUrl: window.location.origin + '/?upgraded=true',
+        cancelUrl: window.location.origin + '/'
+      })
+    });
+    const data = await res.json();
+    if (data.checkoutUrl) { window.location.href = data.checkoutUrl; }
+    else { showToast(data.error || 'Checkout failed', 'error'); btn.disabled = false; btn.textContent = 'Upgrade to Pro — $97/month'; }
+  } catch (e) { showToast('Connection error', 'error'); btn.disabled = false; btn.textContent = 'Upgrade to Pro — $97/month'; }
+}
+
+async function openBillingPortal() {
+  const session = getSession();
+  if (!session?.token) return;
+  const res = await fetch(STRIPE_FN, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'create_portal', token: session.token })
+  });
+  const data = await res.json();
+  if (data.portalUrl) window.location.href = data.portalUrl;
+  else showToast(data.error || 'Could not open billing portal', 'error');
+}
+
+function closeUpgradeModal() {
+  document.getElementById('upgrade-modal').classList.remove('show');
+}
+
+// Check for ?upgraded=true after Stripe redirect
+if (window.location.search.includes('upgraded=true')) {
+  window.history.replaceState({}, '', window.location.pathname);
+  setTimeout(() => showToast('Welcome to CapIQ Pro! Your account has been upgraded.', 'success'), 1000);
 }
 
 function logout() {
@@ -976,6 +1111,14 @@ Return this exact JSON with all string fields filled with detailed analysis (2-4
 }
 
 async function analyzeDeal() {
+  // Paywall check first — before any validation
+  const access = await checkAccess();
+  updateUsageUI(access);
+  if (!access.canAnalyze) {
+    document.getElementById('upgrade-modal').classList.add('show');
+    return;
+  }
+
   const errEl = document.getElementById('form-error');
   const dealType = document.getElementById('f-deal-type').value;
   const propType = document.getElementById('f-property-type').value;
