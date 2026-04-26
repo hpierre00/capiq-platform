@@ -1741,12 +1741,6 @@ function lenderLogout() {
   showToast('Signed out of lender portal', 'success');
 }
 
-function lenderLogout() {
-  clearLenderSession();
-  lenderMatches = [];
-  showLenderLogin();
-}
-
 function showToast(msg,type) {
   const t=document.getElementById('toast');
   t.textContent=msg; t.className='toast show '+type;
