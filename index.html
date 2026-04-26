@@ -624,7 +624,7 @@ function initAuth() {
   const session = getSession();
   if (!session || !session.token) { showAuthScreen(); return; }
   // Verify token is still valid
-  fetch('/.netlify/functions/capiq-auth', {
+  fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'verify', token: session.token })
@@ -697,7 +697,7 @@ async function doAuth() {
   if (!email || !password) { showAuthError('Please enter your email and password.'); return; }
   btn.disabled = true; btn.textContent = 'Signing in...';
   try {
-    const res = await fetch('/.netlify/functions/capiq-auth', {
+    const res = await fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'login', email, password })
     });
@@ -720,7 +720,7 @@ async function doSignup() {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showAuthError('Please enter a valid email address.'); return; }
   btn.disabled = true; btn.textContent = 'Creating account...';
   try {
-    const res = await fetch('/.netlify/functions/capiq-auth', {
+    const res = await fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'signup', email, password, name: `${firstName} ${lastName}`.trim(), phone })
     });
@@ -734,7 +734,7 @@ async function doSignup() {
 async function doReset() {
   const email = document.getElementById('auth-email-reset').value.trim();
   if (!email) { showAuthError('Please enter your email.'); return; }
-  await fetch('/.netlify/functions/capiq-auth', {
+  await fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'reset_request', email })
   });
@@ -1093,6 +1093,14 @@ async function analyzeDeal() {
 
     // Sync to Supabase in background (non-blocking)
     const supabaseMatches = deal.matches || [];
+    const session = getSession();
+    // Increment usage counter
+    if (session?.token) {
+      fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ action: 'increment_usage', token: session.token })
+      }).catch(() => {});
+    }
     fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-save-deal', {
       method: 'POST',
       headers: {'Content-Type':'application/json'},
@@ -1100,7 +1108,6 @@ async function analyzeDeal() {
     }).then(r => r.json()).then(r => {
       if(r.success) {
         console.log('Synced to Supabase:', r.dealCode);
-        // Show deal code on result panel if available
         const dcEl = document.getElementById('deal-code-badge');
         if(dcEl) { dcEl.textContent = r.dealCode; dcEl.style.display = 'inline-flex'; }
       } else console.warn('Supabase sync failed:', r.error);
