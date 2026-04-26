@@ -865,6 +865,21 @@ async function analyzeDeal() {
       if(r.success) console.log('Synced to Notion:', r.notionUrl);
       else console.warn('Notion sync failed:', r.error);
     }).catch(e => console.warn('Notion sync error:', e.message));
+
+    // Sync to Supabase in background (non-blocking)
+    const supabaseMatches = deal.matches || [];
+    fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-save-deal', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ dealData, analysis, lenderMatches: supabaseMatches })
+    }).then(r => r.json()).then(r => {
+      if(r.success) {
+        console.log('Synced to Supabase:', r.dealCode);
+        // Show deal code on result panel if available
+        const dcEl = document.getElementById('deal-code-badge');
+        if(dcEl) { dcEl.textContent = r.dealCode; dcEl.style.display = 'inline-flex'; }
+      } else console.warn('Supabase sync failed:', r.error);
+    }).catch(e => console.warn('Supabase sync error:', e.message));
   } catch(err) {
     showToast('Analysis failed: '+err.message,'error');
     document.getElementById('result-content').innerHTML=`<div class="card"><div class="card-body"><p style="color:var(--red);font-size:13px;font-weight:500">Error: ${err.message}</p></div></div>`;
@@ -890,7 +905,7 @@ function renderResult(a, d) {
 
   document.getElementById('result-content').innerHTML = `
     <div class="card" style="margin-bottom:16px">
-      <div class="card-header"><div class="card-title">Deal Intelligence Report</div><span class="verdict-badge ${vc}">● ${a.dealScore.toUpperCase()}</span></div>
+      <div class="card-header"><div class="card-title">Deal Intelligence Report</div><div style="display:flex;align-items:center;gap:10px"><span id="deal-code-badge" style="display:none;font-family:'DM Mono',monospace;font-size:11px;background:var(--teal-dim);color:var(--teal);border:1px solid var(--teal-border);padding:3px 10px;border-radius:4px"></span><span class="verdict-badge ${vc}">● ${a.dealScore.toUpperCase()}</span></div></div>
       <div class="card-body">
         <div style="display:grid;grid-template-columns:140px 1fr;gap:32px;align-items:start">
           <div style="text-align:center">
