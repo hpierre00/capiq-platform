@@ -238,6 +238,33 @@ textarea{resize:vertical;min-height:90px;line-height:1.6}
 input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 
+/* AUTH SCREEN */
+.auth-screen{display:none;position:fixed;inset:0;background:var(--navy);z-index:500;align-items:center;justify-content:center}
+.auth-screen.show{display:flex}
+.auth-box{background:white;border-radius:12px;width:100%;max-width:420px;padding:40px;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.auth-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px}
+.auth-logo-icon{width:40px;height:40px;background:var(--teal);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.auth-logo-icon svg{width:22px;height:22px;fill:white}
+.auth-logo-text{font-size:20px;font-weight:700;color:var(--text)}
+.auth-logo-sub{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-4);letter-spacing:.1em;text-transform:uppercase}
+.auth-title{font-size:22px;font-weight:700;color:var(--text);margin-bottom:6px}
+.auth-sub{font-size:13px;color:var(--text-3);margin-bottom:28px;line-height:1.5}
+.auth-tabs{display:flex;gap:1px;background:var(--bg-4);padding:3px;border-radius:6px;margin-bottom:24px}
+.auth-tab{flex:1;padding:8px;border-radius:5px;font-size:13px;font-weight:500;cursor:pointer;color:var(--text-3);transition:all .15s;border:none;background:none;text-align:center}
+.auth-tab.active{background:white;color:var(--text);box-shadow:var(--shadow-sm);font-weight:600}
+.auth-field{margin-bottom:16px}
+.auth-label{font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px}
+.auth-input{width:100%;padding:10px 12px;border:1px solid var(--border-dark);border-radius:6px;font-size:13px;font-family:'Inter',sans-serif;color:var(--text);background:var(--bg-2);transition:border-color .15s}
+.auth-input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(14,116,144,0.1)}
+.auth-btn{width:100%;padding:12px;background:var(--teal);color:white;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:8px;font-family:'Inter',sans-serif;margin-top:8px}
+.auth-btn:hover{background:var(--teal-light)}
+.auth-btn:disabled{opacity:.5;cursor:not-allowed}
+.auth-error{font-size:12px;color:var(--red);background:var(--red-dim);border:1px solid rgba(220,38,38,0.15);border-radius:6px;padding:10px 12px;margin-bottom:16px;display:none}
+.auth-error.show{display:block}
+.auth-divider{text-align:center;font-size:12px;color:var(--text-4);margin:16px 0}
+.auth-forgot{font-size:12px;color:var(--teal);cursor:pointer;text-align:right;display:block;margin-top:4px}
+.auth-forgot:hover{text-decoration:underline}
+.plan-badge{display:inline-flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:10px;padding:3px 10px;border-radius:4px;background:var(--teal-dim);color:var(--teal);border:1px solid var(--teal-border);font-weight:600}
 @media(max-width:768px){.sidebar{width:100%;min-height:auto;position:static}.main{margin-left:0}.stats-grid{grid-template-columns:1fr 1fr}.form-grid,.form-grid-3,.form-grid-4{grid-template-columns:1fr}.lender-grid{grid-template-columns:1fr}}
 </style>
 </head>
@@ -251,6 +278,53 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
   </div>
 </div>
 <div class="toast" id="toast"></div>
+
+<!-- AUTH SCREEN -->
+<div class="auth-screen" id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="auth-logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+      <div><div class="auth-logo-text">CapIQ</div><div class="auth-logo-sub">Capital Intelligence</div></div>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Sign In</button>
+      <button class="auth-tab" id="tab-signup" onclick="switchAuthTab('signup')">Create Account</button>
+    </div>
+    <div class="auth-error" id="auth-error"></div>
+
+    <!-- LOGIN FORM -->
+    <div id="form-login">
+      <div class="auth-field"><label class="auth-label">Email</label><input class="auth-input" id="auth-email" type="email" placeholder="john@example.com" onkeydown="if(event.key==='Enter')doAuth()"></div>
+      <div class="auth-field"><label class="auth-label">Password</label><input class="auth-input" id="auth-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doAuth()"><span class="auth-forgot" onclick="switchAuthTab('reset')">Forgot password?</span></div>
+      <button class="auth-btn" id="auth-btn" onclick="doAuth()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>Sign In
+      </button>
+    </div>
+
+    <!-- SIGNUP FORM -->
+    <div id="form-signup" style="display:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="auth-field"><label class="auth-label">First Name</label><input class="auth-input" id="auth-firstname" type="text" placeholder="John"></div>
+        <div class="auth-field"><label class="auth-label">Last Name</label><input class="auth-input" id="auth-lastname" type="text" placeholder="Smith"></div>
+      </div>
+      <div class="auth-field"><label class="auth-label">Email</label><input class="auth-input" id="auth-email-signup" type="email" placeholder="john@example.com"></div>
+      <div class="auth-field"><label class="auth-label">Phone</label><input class="auth-input" id="auth-phone-signup" type="tel" placeholder="(305) 555-0100"></div>
+      <div class="auth-field"><label class="auth-label">Password</label><input class="auth-input" id="auth-password-signup" type="password" placeholder="Min 8 characters"></div>
+      <button class="auth-btn" id="auth-btn-signup" onclick="doSignup()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8zM19 8v6M22 11h-6"/></svg>Create Account
+      </button>
+      <div class="auth-divider">Free to start — no credit card required</div>
+    </div>
+
+    <!-- RESET FORM -->
+    <div id="form-reset" style="display:none">
+      <p style="font-size:13px;color:var(--text-3);margin-bottom:20px">Enter your email and we'll send a reset link.</p>
+      <div class="auth-field"><label class="auth-label">Email</label><input class="auth-input" id="auth-email-reset" type="email" placeholder="john@example.com"></div>
+      <button class="auth-btn" onclick="doReset()">Send Reset Link</button>
+      <div class="auth-divider"><span style="cursor:pointer;color:var(--teal)" onclick="switchAuthTab('login')">← Back to sign in</span></div>
+    </div>
+  </div>
+</div>
 
 <div class="shell">
   <aside class="sidebar">
@@ -284,7 +358,16 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
         </button>
       </div>
     </nav>
-    <div class="sidebar-footer"><span class="status-dot"></span><span class="status-text">SYSTEM ACTIVE</span></div>
+    <div class="sidebar-footer">
+      <div style="margin-bottom:10px">
+        <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.8)" id="sidebar-name">Loading...</div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px" id="sidebar-email"></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span class="plan-badge" id="sidebar-plan">STARTER</span>
+        <button onclick="logout()" style="background:none;border:none;cursor:pointer;font-size:11px;color:rgba(255,255,255,0.35);font-family:'DM Mono',monospace;letter-spacing:.06em">SIGN OUT</button>
+      </div>
+    </div>
   </aside>
 
   <main class="main">
@@ -524,6 +607,147 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
 </div>
 
 <script>
+// ─── AUTH SYSTEM ─────────────────────────────────────────────────────────────
+const AUTH_KEY = 'capiq_session';
+
+function getSession() {
+  try { return JSON.parse(localStorage.getItem(AUTH_KEY) || 'null'); } catch { return null; }
+}
+function setSession(token, investor) {
+  localStorage.setItem(AUTH_KEY, JSON.stringify({ token, investor }));
+}
+function clearSession() {
+  localStorage.removeItem(AUTH_KEY);
+}
+
+function initAuth() {
+  const session = getSession();
+  if (!session || !session.token) { showAuthScreen(); return; }
+  // Verify token is still valid
+  fetch('/.netlify/functions/capiq-auth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'verify', token: session.token })
+  }).then(r => r.json()).then(r => {
+    if (r.valid) { onAuthSuccess(session.token, r.investor || session.investor); }
+    else { clearSession(); showAuthScreen(); }
+  }).catch(() => {
+    // If auth check fails (network), use cached session
+    if (session.investor) onAuthSuccess(session.token, session.investor);
+    else showAuthScreen();
+  });
+}
+
+function showAuthScreen() {
+  document.getElementById('auth-screen').classList.add('show');
+}
+function hideAuthScreen() {
+  document.getElementById('auth-screen').classList.remove('show');
+}
+
+function onAuthSuccess(token, investor) {
+  setSession(token, investor);
+  hideAuthScreen();
+  updateSidebarUser(investor);
+  // Auto-fill investor profile fields if empty
+  if (investor.name) {
+    const parts = investor.name.split(' ');
+    const fn = document.getElementById('f-first-name');
+    const ln = document.getElementById('f-last-name');
+    if (fn && !fn.value) fn.value = parts[0] || '';
+    if (ln && !ln.value) ln.value = parts.slice(1).join(' ') || '';
+  }
+  const emailEl = document.getElementById('f-investor-email');
+  if (emailEl && !emailEl.value && investor.email) emailEl.value = investor.email;
+}
+
+function updateSidebarUser(investor) {
+  const nameEl = document.getElementById('sidebar-name');
+  const emailEl = document.getElementById('sidebar-email');
+  const planEl = document.getElementById('sidebar-plan');
+  if (nameEl) nameEl.textContent = investor.name || investor.email.split('@')[0];
+  if (emailEl) emailEl.textContent = investor.email;
+  if (planEl) planEl.textContent = (investor.plan || 'starter').toUpperCase();
+}
+
+function logout() {
+  clearSession();
+  document.getElementById('f-first-name').value = '';
+  document.getElementById('f-last-name').value = '';
+  document.getElementById('f-investor-email').value = '';
+  switchAuthTab('login');
+  showAuthScreen();
+}
+
+function switchAuthTab(tab) {
+  document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('form-signup').style.display = tab === 'signup' ? 'block' : 'none';
+  document.getElementById('form-reset').style.display = tab === 'reset' ? 'block' : 'none';
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  const activeTab = document.getElementById('tab-' + tab);
+  if (activeTab) activeTab.classList.add('active');
+  document.getElementById('auth-error').classList.remove('show');
+}
+
+async function doAuth() {
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const btn = document.getElementById('auth-btn');
+  const errEl = document.getElementById('auth-error');
+  if (!email || !password) { showAuthError('Please enter your email and password.'); return; }
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  try {
+    const res = await fetch('/.netlify/functions/capiq-auth', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'login', email, password })
+    });
+    const data = await res.json();
+    if (data.success) { onAuthSuccess(data.token, data.investor); }
+    else showAuthError(data.error || 'Sign in failed.');
+  } catch (e) { showAuthError('Connection error. Please try again.'); }
+  finally { btn.disabled = false; btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>Sign In'; }
+}
+
+async function doSignup() {
+  const firstName = document.getElementById('auth-firstname').value.trim();
+  const lastName = document.getElementById('auth-lastname').value.trim();
+  const email = document.getElementById('auth-email-signup').value.trim();
+  const phone = document.getElementById('auth-phone-signup').value.trim();
+  const password = document.getElementById('auth-password-signup').value;
+  const btn = document.getElementById('auth-btn-signup');
+  if (!firstName || !email || !password) { showAuthError('First name, email, and password are required.'); return; }
+  if (password.length < 8) { showAuthError('Password must be at least 8 characters.'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showAuthError('Please enter a valid email address.'); return; }
+  btn.disabled = true; btn.textContent = 'Creating account...';
+  try {
+    const res = await fetch('/.netlify/functions/capiq-auth', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'signup', email, password, name: `${firstName} ${lastName}`.trim(), phone })
+    });
+    const data = await res.json();
+    if (data.success) { onAuthSuccess(data.token, data.investor); showToast('Welcome to CapIQ!', 'success'); }
+    else showAuthError(data.error || 'Signup failed.');
+  } catch (e) { showAuthError('Connection error. Please try again.'); }
+  finally { btn.disabled = false; btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8zM19 8v6M22 11h-6"/></svg>Create Account'; }
+}
+
+async function doReset() {
+  const email = document.getElementById('auth-email-reset').value.trim();
+  if (!email) { showAuthError('Please enter your email.'); return; }
+  await fetch('/.netlify/functions/capiq-auth', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'reset_request', email })
+  });
+  showAuthError('If an account exists, a reset link has been sent.');
+  document.getElementById('auth-error').style.color = 'var(--green)';
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg; el.classList.add('show');
+  el.style.color = '';
+}
+
 const STORAGE_VERSION = 'v3';
 const stored = localStorage.getItem('capiq_deals');
 const storedVersion = localStorage.getItem('capiq_version');
@@ -549,6 +773,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   renderLenders(); updateStats(); renderDashboardRecent(); renderDealsTable();
   document.getElementById('deal-count').textContent = state.deals.length;
+  initAuth(); // Check session and show auth screen if not logged in
 });
 
 function showPage(id) {
