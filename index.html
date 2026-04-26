@@ -646,10 +646,71 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
     <!-- LENDER PORTAL -->
     <div class="page" id="page-lenders">
       <div class="topbar">
-        <div><div class="topbar-title">Lender Portal</div><div class="topbar-meta">Active lending partners &amp; criteria</div></div>
-        <span class="chip chip-green">● 5 ACTIVE LENDERS</span>
+        <div><div class="topbar-title">Lender Portal</div><div class="topbar-meta">Deal matching &amp; pipeline management</div></div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span id="lender-user-badge" style="display:none;font-family:'DM Mono',monospace;font-size:11px;color:var(--teal)"></span>
+          <button id="lender-logout-btn" onclick="lenderLogout()" style="display:none" class="btn btn-ghost" style="padding:6px 12px;font-size:11px">Sign Out</button>
+          <span class="chip chip-green">● LIVE</span>
+        </div>
       </div>
-      <div class="content"><div class="lender-grid" id="lender-grid"></div></div>
+      <div class="content">
+
+        <!-- LENDER LOGIN SCREEN -->
+        <div id="lender-login-screen">
+          <div style="max-width:420px;margin:40px auto">
+            <div class="card">
+              <div style="background:var(--navy);padding:28px 32px;text-align:center;border-radius:10px 10px 0 0">
+                <div style="font-size:18px;font-weight:700;color:white;margin-bottom:4px">Lender Portal</div>
+                <div style="font-size:12px;color:rgba(255,255,255,0.5)">Sign in to view matched deals</div>
+              </div>
+              <div class="card-body">
+                <div id="lender-login-error" style="display:none;font-size:12px;color:var(--red);background:var(--red-dim);border:1px solid rgba(220,38,38,0.15);border-radius:6px;padding:10px;margin-bottom:16px"></div>
+                <div class="field" style="margin-bottom:14px"><label class="label">Email</label><input class="auth-input" id="lender-email" type="email" placeholder="portal@yourlender.com" onkeydown="if(event.key==='Enter')lenderLogin()"></div>
+                <div class="field" style="margin-bottom:20px"><label class="label">Password</label><input class="auth-input" id="lender-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')lenderLogin()"></div>
+                <button class="auth-btn" id="lender-login-btn" onclick="lenderLogin()">Sign In to Lender Portal</button>
+                <div style="margin-top:16px;padding:12px;background:var(--bg-3);border-radius:6px;font-size:11px;color:var(--text-4);text-align:center;font-family:'DM Mono',monospace">
+                  DEMO: portal@coastalcapital.com / demo123<br>portal@summitbridge.com / demo123<br>portal@flexlend.com / demo123
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LENDER DASHBOARD (shown after login) -->
+        <div id="lender-dashboard" style="display:none">
+          <!-- Lender stats -->
+          <div class="stats-grid" style="margin-bottom:24px">
+            <div class="stat-card"><div class="stat-top"><span class="stat-label">Matched Deals</span><div class="stat-icon teal"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div></div><div class="stat-value teal" id="lp-stat-total">—</div><div class="stat-sub">In pipeline</div></div>
+            <div class="stat-card green"><div class="stat-top"><span class="stat-label">Interested</span><div class="stat-icon green"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div></div><div class="stat-value green" id="lp-stat-interested">—</div><div class="stat-sub">Flagged interested</div></div>
+            <div class="stat-card"><div class="stat-top"><span class="stat-label">Avg Score</span><div class="stat-icon teal"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div></div><div class="stat-value teal" id="lp-stat-avg">—</div><div class="stat-sub">Fundability avg</div></div>
+            <div class="stat-card"><div class="stat-top"><span class="stat-label">Term Sheets</span><div class="stat-icon teal"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div></div><div class="stat-value teal" id="lp-stat-term">—</div><div class="stat-sub">Issued</div></div>
+          </div>
+
+          <!-- Filter tabs -->
+          <div class="tabs" style="margin-bottom:20px">
+            <button class="tab active" onclick="filterLenderDeals('all',this)">All Deals</button>
+            <button class="tab" onclick="filterLenderDeals('pending',this)">New</button>
+            <button class="tab" onclick="filterLenderDeals('interested',this)">Interested</button>
+            <button class="tab" onclick="filterLenderDeals('term_sheet_issued',this)">Term Sheet</button>
+            <button class="tab" onclick="filterLenderDeals('not_interested',this)">Passed</button>
+          </div>
+
+          <!-- Deal cards -->
+          <div id="lender-deals-grid" style="display:grid;grid-template-columns:1fr;gap:16px"></div>
+        </div>
+
+        <!-- Deal detail modal -->
+        <div class="modal-overlay" id="lender-deal-modal">
+          <div class="modal-box" style="max-width:620px">
+            <div style="background:var(--navy);padding:20px 24px;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center">
+              <div style="color:white;font-size:15px;font-weight:600" id="modal-deal-title">Deal Details</div>
+              <span onclick="document.getElementById('lender-deal-modal').classList.remove('show')" style="color:rgba(255,255,255,0.5);cursor:pointer;font-size:18px">×</span>
+            </div>
+            <div class="modal-body" id="modal-deal-body"></div>
+          </div>
+        </div>
+
+      </div>
     </div>
 
     <!-- MATCH QUEUE -->
@@ -949,6 +1010,7 @@ function showPage(id) {
   document.getElementById('page-'+id).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(btn=>{ if(btn.getAttribute('onclick')?.includes("'"+id+"'")) btn.classList.add('active'); });
   if(id==='match') renderMatchQueue();
+  if(id==='lenders') initLenderPortal();
 }
 
 function selectPill(groupId, value, hiddenId) {
@@ -1463,6 +1525,226 @@ function clearForm() {
   document.querySelectorAll('.pill').forEach(p=>p.classList.remove('selected'));
   document.getElementById('result-panel').classList.remove('show');
   document.getElementById('form-error').style.display='none';
+}
+
+// ─── LENDER PORTAL ───────────────────────────────────────────────────────────
+const LENDER_FN = 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-lender-portal';
+const LENDER_SESSION_KEY = 'capiq_lender_session';
+let lenderMatches = [];
+let lenderFilter = 'all';
+
+function getLenderSession() {
+  try { return JSON.parse(localStorage.getItem(LENDER_SESSION_KEY) || 'null'); } catch { return null; }
+}
+function setLenderSession(token, user) {
+  localStorage.setItem(LENDER_SESSION_KEY, JSON.stringify({ token, user }));
+}
+function clearLenderSession() {
+  localStorage.removeItem(LENDER_SESSION_KEY);
+}
+
+async function initLenderPortal() {
+  const session = getLenderSession();
+  if (!session?.token) { showLenderLogin(); return; }
+  try {
+    const res = await fetch(LENDER_FN, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'verify', token: session.token })
+    });
+    const data = await res.json();
+    if (data.valid) { onLenderAuth(session.token, data.user); }
+    else { clearLenderSession(); showLenderLogin(); }
+  } catch { if (session.user) onLenderAuth(session.token, session.user); else showLenderLogin(); }
+}
+
+function showLenderLogin() {
+  document.getElementById('lender-login-screen').style.display = 'block';
+  document.getElementById('lender-dashboard').style.display = 'none';
+  document.getElementById('lender-user-badge').style.display = 'none';
+  document.getElementById('lender-logout-btn').style.display = 'none';
+}
+
+async function lenderLogin() {
+  const email = document.getElementById('lender-email').value.trim();
+  const password = document.getElementById('lender-password').value;
+  const btn = document.getElementById('lender-login-btn');
+  const errEl = document.getElementById('lender-login-error');
+  if (!email || !password) { errEl.textContent = 'Email and password required.'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  try {
+    const res = await fetch(LENDER_FN, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'login', email, password })
+    });
+    const data = await res.json();
+    if (data.success) { errEl.style.display = 'none'; onLenderAuth(data.token, data.user); }
+    else { errEl.textContent = data.error || 'Sign in failed.'; errEl.style.display = 'block'; }
+  } catch { errEl.textContent = 'Connection error.'; errEl.style.display = 'block'; }
+  finally { btn.disabled = false; btn.textContent = 'Sign In to Lender Portal'; }
+}
+
+async function onLenderAuth(token, user) {
+  setLenderSession(token, user);
+  document.getElementById('lender-login-screen').style.display = 'none';
+  document.getElementById('lender-dashboard').style.display = 'block';
+  document.getElementById('lender-user-badge').style.display = 'inline';
+  document.getElementById('lender-user-badge').textContent = (user.name || user.email) + ' · ' + (user.lender?.lender_name || '');
+  document.getElementById('lender-logout-btn').style.display = 'inline-flex';
+  await loadLenderDeals(token);
+}
+
+async function loadLenderDeals(token) {
+  const session = getLenderSession();
+  const tok = token || session?.token;
+  if (!tok) return;
+  try {
+    const res = await fetch(LENDER_FN, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'get_deals', token: tok })
+    });
+    const data = await res.json();
+    if (data.success) {
+      lenderMatches = data.matches || [];
+      renderLenderStats();
+      renderLenderDeals();
+    }
+  } catch (e) { console.warn('Failed to load lender deals:', e.message); }
+}
+
+function renderLenderStats() {
+  const total = lenderMatches.length;
+  const interested = lenderMatches.filter(m => m.interest_level === 'interested' || m.interest_level === 'term_sheet_issued').length;
+  const termSheet = lenderMatches.filter(m => m.interest_level === 'term_sheet_issued').length;
+  const scores = lenderMatches.map(m => m.deal_scores?.total_fundability_score || 0).filter(s => s > 0);
+  const avg = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+  document.getElementById('lp-stat-total').textContent = total;
+  document.getElementById('lp-stat-interested').textContent = interested;
+  document.getElementById('lp-stat-avg').textContent = avg || '—';
+  document.getElementById('lp-stat-term').textContent = termSheet;
+}
+
+function filterLenderDeals(filter, btn) {
+  lenderFilter = filter;
+  document.querySelectorAll('#page-lenders .tab').forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderLenderDeals();
+}
+
+function renderLenderDeals() {
+  const grid = document.getElementById('lender-deals-grid');
+  const filtered = lenderFilter === 'all' ? lenderMatches : lenderMatches.filter(m => m.interest_level === lenderFilter);
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="empty-state"><h3>No deals in this category</h3><p>Matched deals will appear here as investors submit for analysis.</p></div>';
+    return;
+  }
+  grid.innerHTML = filtered.map(m => {
+    const d = m.deal_submissions || {};
+    const s = m.deal_scores || {};
+    const score = s.total_fundability_score || 0;
+    const scoreColor = score >= 65 ? 'var(--green)' : score >= 45 ? 'var(--amber)' : 'var(--red)';
+    const band = s.score_band || 'pending';
+    const bandColor = band === 'strong' ? 'var(--green)' : band === 'conditional' ? 'var(--amber)' : 'var(--red)';
+    const interest = m.interest_level || 'pending';
+    const interestColors = { pending: 'var(--text-4)', interested: 'var(--green)', not_interested: 'var(--red)', term_sheet_issued: 'var(--teal)', closed: 'var(--navy)' };
+    const interestLabels = { pending: 'New', interested: 'Interested', not_interested: 'Passed', term_sheet_issued: 'Term Sheet Issued', closed: 'Closed' };
+    const borrower = d.borrowers || {};
+    return `
+      <div class="card" style="cursor:pointer" onclick="openDealModal('${m.id}')">
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start">
+            <div>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                <div style="font-size:15px;font-weight:700;color:var(--text)">${d.property_address || 'Undisclosed Address'}</div>
+                <span style="font-family:'DM Mono',monospace;font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(14,116,144,0.1);color:var(--teal);border:1px solid var(--teal-border)">${(d.deal_type||'').replace('_',' ').toUpperCase()}</span>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(4,auto);gap:20px;margin-bottom:12px">
+                <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase">Loan</div><div style="font-size:13px;font-weight:600;color:var(--text)">$${((d.requested_loan_amount||0)/1000).toFixed(0)}K</div></div>
+                <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase">LTV</div><div style="font-size:13px;font-weight:600;color:var(--text)">${d.requested_ltv||'—'}%</div></div>
+                <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase">State</div><div style="font-size:13px;font-weight:600;color:var(--text)">${d.state||'—'}</div></div>
+                <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase">Asset</div><div style="font-size:13px;font-weight:600;color:var(--text)">${(d.asset_type||'—').replace('_',' ').toUpperCase()}</div></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px">
+                <div style="font-size:12px;color:var(--text-3)">Borrower: <span style="color:var(--text);font-weight:500">${borrower.borrower_name||'Anonymous'}</span></div>
+                <div style="font-size:12px;color:var(--text-3)">FICO: <span style="color:var(--text);font-weight:500">${borrower.fico||'—'}</span></div>
+                <div style="font-size:12px;color:var(--text-3)">Experience: <span style="color:var(--text);font-weight:500">${borrower.experience_level||'—'}</span></div>
+              </div>
+            </div>
+            <div style="text-align:center;min-width:100px">
+              <div style="font-size:32px;font-weight:800;color:${scoreColor};line-height:1;letter-spacing:-2px">${score}</div>
+              <div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;margin:2px 0">FUNDABILITY</div>
+              <div style="font-size:10px;font-weight:600;color:${bandColor};text-transform:uppercase">${band}</div>
+              <div style="margin-top:10px;font-size:11px;font-weight:600;color:${interestColors[interest]}">${interestLabels[interest]||interest}</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+            <button class="btn btn-ghost" style="flex:1;font-size:12px;padding:7px" onclick="event.stopPropagation();setInterest('${m.id}','interested')">✓ Interested</button>
+            <button class="btn btn-ghost" style="flex:1;font-size:12px;padding:7px" onclick="event.stopPropagation();setInterest('${m.id}','term_sheet_issued')">📄 Term Sheet</button>
+            <button class="btn btn-ghost" style="flex:1;font-size:12px;padding:7px;color:var(--red)" onclick="event.stopPropagation();setInterest('${m.id}','not_interested')">✗ Pass</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function setInterest(matchId, status) {
+  const session = getLenderSession();
+  if (!session?.token) return;
+  await fetch(LENDER_FN, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'update_match', token: session.token, matchId, status })
+  });
+  // Update local state
+  const m = lenderMatches.find(x => x.id === matchId);
+  if (m) m.interest_level = status;
+  renderLenderStats(); renderLenderDeals();
+  showToast('Deal status updated', 'success');
+}
+
+function openDealModal(matchId) {
+  const m = lenderMatches.find(x => x.id === matchId);
+  if (!m) return;
+  const d = m.deal_submissions || {};
+  const s = m.deal_scores || {};
+  const borrower = d.borrowers || {};
+  const rationaleItems = (() => { try { return JSON.parse(s.rationale_json || '[]'); } catch { return []; } })();
+  const summary = rationaleItems.find(r => r.section === 'executive_summary')?.text || '';
+  const recs = rationaleItems.find(r => r.section === 'structuring')?.text || '';
+  const next = rationaleItems.find(r => r.section === 'next_steps')?.text || '';
+  const flags = (() => { try { return JSON.parse(s.risk_flags_json || '[]'); } catch { return []; } })();
+
+  document.getElementById('modal-deal-title').textContent = d.property_address || 'Deal Details';
+  document.getElementById('modal-deal-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
+      <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">Loan Amount</div><div style="font-size:16px;font-weight:700;color:var(--text)">$${((d.requested_loan_amount||0)).toLocaleString()}</div></div>
+      <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">Fundability Score</div><div style="font-size:16px;font-weight:700;color:var(--teal)">${s.total_fundability_score||'—'} / 100</div></div>
+      <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">LTV</div><div style="font-size:14px;font-weight:600;color:var(--text)">${d.requested_ltv||'—'}%</div></div>
+      <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">DSCR</div><div style="font-size:14px;font-weight:600;color:var(--text)">${d.dscr||'—'}</div></div>
+      <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">ARV</div><div style="font-size:14px;font-weight:600;color:var(--text)">$${((d.arv||0)).toLocaleString()}</div></div>
+      <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">Rehab Budget</div><div style="font-size:14px;font-weight:600;color:var(--text)">$${((d.rehab_budget||0)).toLocaleString()}</div></div>
+    </div>
+    <div style="margin-bottom:14px;padding:12px;background:var(--bg-3);border-radius:6px">
+      <div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:6px">Borrower Profile</div>
+      <div style="font-size:13px;color:var(--text-2)"><strong>${borrower.borrower_name||'Anonymous'}</strong> · FICO ${borrower.fico||'—'} · ${borrower.experience_level||'—'} experience · ${borrower.experience_count||0} deals completed</div>
+    </div>
+    ${flags.length ? `<div style="margin-bottom:14px"><div style="font-size:10px;color:var(--red);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:6px">Risk Flags</div>${flags.map(f=>`<div style="font-size:12px;color:var(--red);margin-bottom:3px">⚠ ${f.flag?.replace(/_/g,' ')} (${f.severity})</div>`).join('')}</div>` : ''}
+    ${summary ? `<div style="margin-bottom:14px"><div style="font-size:10px;color:var(--teal);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:6px">AI Summary</div><div style="font-size:13px;color:var(--text-2);line-height:1.6">${summary}</div></div>` : ''}
+    ${recs ? `<div style="margin-bottom:14px"><div style="font-size:10px;color:var(--teal);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:6px">Structuring Notes</div><div style="font-size:13px;color:var(--text-2);line-height:1.6">${recs}</div></div>` : ''}
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-primary" style="flex:1" onclick="setInterest('${matchId}','interested');document.getElementById('lender-deal-modal').classList.remove('show')">✓ Mark Interested</button>
+      <button class="btn btn-ghost" style="flex:1" onclick="setInterest('${matchId}','term_sheet_issued');document.getElementById('lender-deal-modal').classList.remove('show')">📄 Issue Term Sheet</button>
+    </div>`;
+  document.getElementById('lender-deal-modal').classList.add('show');
+}
+
+function lenderLogout() {
+  clearLenderSession(); lenderMatches = []; showLenderLogin();
+  showToast('Signed out of lender portal', 'success');
+}
+
+function lenderLogout() {
+  clearLenderSession();
+  lenderMatches = [];
+  showLenderLogin();
 }
 
 function showToast(msg,type) {
