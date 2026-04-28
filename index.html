@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CapIQ — Capital Intelligence Platform</title>
+<title>Underlytix — Capital Intelligence Platform</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap">
 <style>
@@ -304,7 +304,7 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
   <div class="auth-box">
     <div class="auth-logo">
       <div class="auth-logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
-      <div><div class="auth-logo-text">CapIQ</div><div class="auth-logo-sub">Capital Intelligence</div></div>
+      <div><div class="auth-logo-text">Underlytix</div><div class="auth-logo-sub">Capital Intelligence</div></div>
     </div>
     <div class="auth-tabs">
       <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Sign In</button>
@@ -351,7 +351,7 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
   <div class="modal-box">
     <div class="modal-header">
       <h2>You've used your free analyses</h2>
-      <p>Upgrade to CapIQ Pro for unlimited deal intelligence</p>
+      <p>Upgrade to Underlytix Pro for unlimited deal intelligence</p>
     </div>
     <div class="modal-body">
       <div class="plan-compare">
@@ -381,7 +381,7 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
     <div class="logo">
       <a class="logo-mark" href="#">
         <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
-        <div><div class="logo-text">CapIQ</div><div class="logo-sub">Capital Intelligence</div></div>
+        <div><div class="logo-text">Underlytix</div><div class="logo-sub">Capital Intelligence</div></div>
       </a>
     </div>
     <nav class="nav">
@@ -431,7 +431,7 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
         <div class="hero fade-up">
           <div class="hero-eyebrow">Capital Intelligence Platform</div>
           <div class="hero-title">Know if your deal is fundable<br><em>before</em> approaching a lender.</div>
-          <div class="hero-sub">CapIQ analyzes deals against real lending criteria, scores fundability, and matches investors to the right capital source — before wasting time on applications.</div>
+          <div class="hero-sub">Underlytix analyzes deals against real lending criteria, scores fundability, and matches investors to the right capital source — before wasting time on applications.</div>
         </div>
         <div class="stats-grid">
           <div class="stat-card fade-up">
@@ -889,7 +889,7 @@ if (window.location.search.includes('upgraded=true')) {
         setSession(session.token, data.investor);
         updateSidebarUser(data.investor);
         updateUsageUI({ plan: 'pro', canAnalyze: true, remaining: -1 });
-        showToast('Welcome to CapIQ Pro! Unlimited analyses unlocked.', 'success');
+        showToast('Welcome to Underlytix Pro! Unlimited analyses unlocked.', 'success');
       } else if (polls >= 10) {
         clearInterval(pollForUpgrade);
         showToast('Payment received! Your account will upgrade shortly.', 'success');
@@ -953,7 +953,7 @@ async function doSignup() {
       body: JSON.stringify({ action: 'signup', email, password, name: `${firstName} ${lastName}`.trim(), phone })
     });
     const data = await res.json();
-    if (data.success) { onAuthSuccess(data.token, data.investor); showToast('Welcome to CapIQ!', 'success'); }
+    if (data.success) { onAuthSuccess(data.token, data.investor); showToast('Welcome to Underlytix!', 'success'); }
     else showAuthError(data.error || 'Signup failed.');
   } catch (e) { showAuthError('Connection error. Please try again.'); }
   finally { btn.disabled = false; btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8zM19 8v6M22 11h-6"/></svg>Create Account'; }
@@ -1192,7 +1192,7 @@ function autoCalc() {
 }
 
 function buildPrompt(d) {
-  return `You are an expert real estate underwriter for CapIQ. Analyze this deal and return ONLY valid JSON, no markdown.
+  return `You are an expert real estate underwriter for Underlytix. Analyze this deal and return ONLY valid JSON, no markdown.
 
 DEAL: ${d.dealType} | ${d.propertyType} | ${d.state} | ${d.location}
 LOAN: $${d.loanAmount} | PURCHASE: $${d.purchasePrice||'N/A'} | ARV: $${d.arv||'N/A'} | AS-IS: $${d.asIsValue||'N/A'}

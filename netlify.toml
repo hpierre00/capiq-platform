@@ -2,6 +2,28 @@
   publish = "."
   functions = "netlify/functions"
 
+# CTCReady.com → underlytix.com with UTM tracking (campaign redirect)
+# This rule fires when the host is ctcready.com
+[[redirects]]
+  from = "https://ctcready.com/*"
+  to = "https://underlytix.com/?utm_source=ctcready&utm_medium=direct&utm_campaign=ctcready_brand"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://www.ctcready.com/*"
+  to = "https://underlytix.com/?utm_source=ctcready&utm_medium=direct&utm_campaign=ctcready_brand"
+  status = 301
+  force = true
+
+# www.underlytix.com → underlytix.com canonical
+[[redirects]]
+  from = "https://www.underlytix.com/*"
+  to = "https://underlytix.com/:splat"
+  status = 301
+  force = true
+
+# SPA fallback
 [[redirects]]
   from = "/*"
   to = "/index.html"
