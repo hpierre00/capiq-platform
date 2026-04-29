@@ -643,6 +643,48 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
       </div>
     </div>
 
+
+    <!-- LENDER SIGNUP MODAL -->
+    <div class="modal-overlay" id="lender-signup-modal" style="z-index:9998">
+      <div class="modal-box" style="max-width:520px">
+        <div style="background:var(--navy);padding:20px 24px;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center">
+          <div style="color:white;font-size:15px;font-weight:700">Lender Portal — Create Account</div>
+          <span onclick="document.getElementById('lender-signup-modal').classList.remove('show')" style="color:rgba(255,255,255,0.5);cursor:pointer;font-size:20px">×</span>
+        </div>
+        <div class="modal-body">
+          <p style="font-size:13px;color:var(--text-3);margin:0 0 20px">14-day free trial. No credit card required. $297/month after trial.</p>
+          <div id="lender-signup-error" style="display:none;font-size:12px;color:var(--red);background:var(--red-dim);border:1px solid rgba(220,38,38,0.15);border-radius:6px;padding:10px;margin-bottom:16px"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+            <div class="field"><label class="label">Company Name</label><input class="input" id="ls-company" type="text" placeholder="Coastal Capital Partners"></div>
+            <div class="field"><label class="label">Your Name</label><input class="input" id="ls-contact" type="text" placeholder="Jane Smith"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+            <div class="field"><label class="label">Work Email</label><input class="input" id="ls-email" type="email" placeholder="jane@yourlender.com"></div>
+            <div class="field"><label class="label">Phone</label><input class="input" id="ls-phone" type="tel" placeholder="(305) 555-0100"></div>
+          </div>
+          <div class="field" style="margin-bottom:14px"><label class="label">Password</label><input class="input" id="ls-password" type="password" placeholder="Min 8 characters"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+            <div class="field"><label class="label">Lender Type</label>
+              <select class="input" id="ls-type" style="appearance:auto">
+                <option value="hard_money">Hard Money</option>
+                <option value="dscr">DSCR</option>
+                <option value="non_qm">Non-QM</option>
+                <option value="bridge">Bridge</option>
+                <option value="construction">Construction</option>
+              </select>
+            </div>
+            <div class="field"><label class="label">Primary State</label><input class="input" id="ls-state" type="text" placeholder="FL"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
+            <div class="field"><label class="label">Min Loan ($)</label><input class="input" id="ls-min-loan" type="number" placeholder="100000"></div>
+            <div class="field"><label class="label">Max Loan ($)</label><input class="input" id="ls-max-loan" type="number" placeholder="5000000"></div>
+          </div>
+          <button class="btn btn-primary" id="ls-btn" onclick="lenderSignup()" style="width:100%;justify-content:center">Start 14-Day Free Trial</button>
+          <p style="font-size:11px;color:var(--text-4);margin:12px 0 0;text-align:center">Already have an account? <span onclick="document.getElementById('lender-signup-modal').classList.remove('show')" style="color:var(--teal);cursor:pointer">Sign in to the portal</span></p>
+        </div>
+      </div>
+    </div>
+
     <!-- ADMIN DASHBOARD MODAL -->
     <div class="modal-overlay" id="admin-modal" style="z-index:9999">
       <div class="modal-box" style="max-width:800px;max-height:85vh;overflow-y:auto">
@@ -695,6 +737,10 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
                 <button class="auth-btn" id="lender-login-btn" onclick="lenderLogin()">Sign In to Lender Portal</button>
                 <div style="margin-top:16px;padding:12px;background:var(--bg-3);border-radius:6px;font-size:11px;color:var(--text-4);text-align:center;font-family:'DM Mono',monospace">
                   DEMO: portal@coastalcapital.com / demo123<br>portal@summitbridge.com / demo123<br>portal@flexlend.com / demo123
+                </div>
+                <div style="margin-top:16px;text-align:center">
+                  <span style="font-size:12px;color:var(--text-4)">New lender? </span>
+                  <span onclick="showLenderSignup()" style="font-size:12px;color:var(--teal);cursor:pointer;font-weight:600">Start your 14-day free trial →</span>
                 </div>
               </div>
             </div>
@@ -1003,10 +1049,18 @@ async function doSignup() {
 async function doReset() {
   const email = document.getElementById('auth-email-reset').value.trim();
   if (!email) { showAuthError('Please enter your email.'); return; }
-  await fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth', {
+  const resetRes = await fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'reset_request', email })
   });
+  const resetData = await resetRes.json();
+  // Fire reset email via Netlify (non-blocking)
+  if (resetData.success && resetData.resetToken) {
+    fetch('/.netlify/functions/send-reset-email', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ email, resetToken: resetData.resetToken })
+    }).catch(() => {});
+  }
   showAuthError('If an account exists, a reset link has been sent.');
   document.getElementById('auth-error').style.color = 'var(--green)';
 }
@@ -1828,6 +1882,42 @@ function openDealModal(matchId) {
 function lenderLogout() {
   clearLenderSession(); lenderMatches = []; showLenderLogin();
   showToast('Signed out of lender portal', 'success');
+}
+
+function showLenderSignup() {
+  document.getElementById('lender-signup-modal').classList.add('show');
+}
+
+async function lenderSignup() {
+  const company = document.getElementById('ls-company').value.trim();
+  const contact = document.getElementById('ls-contact').value.trim();
+  const email = document.getElementById('ls-email').value.trim();
+  const phone = document.getElementById('ls-phone').value.trim();
+  const password = document.getElementById('ls-password').value;
+  const lenderType = document.getElementById('ls-type').value;
+  const state = document.getElementById('ls-state').value.trim().toUpperCase();
+  const minLoan = document.getElementById('ls-min-loan').value;
+  const maxLoan = document.getElementById('ls-max-loan').value;
+  const errEl = document.getElementById('lender-signup-error');
+  const btn = document.getElementById('ls-btn');
+  if (!company || !contact || !email || !password) { errEl.textContent = 'All required fields must be filled.'; errEl.style.display = 'block'; return; }
+  if (password.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Creating account...';
+  try {
+    const res = await fetch('/.netlify/functions/lender-signup', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ companyName: company, contactName: contact, email, phone, password, lenderType, states: state ? [state] : ['FL'], minLoan, maxLoan })
+    });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('lender-signup-modal').classList.remove('show');
+      showToast('Account created! Check your email to get started.', 'success');
+      // Auto-fill login fields
+      document.getElementById('lender-email').value = email;
+      showPage('lenders');
+    } else { errEl.textContent = data.error || 'Signup failed.'; errEl.style.display = 'block'; }
+  } catch(e) { errEl.textContent = 'Connection error.'; errEl.style.display = 'block'; }
+  finally { btn.disabled = false; btn.textContent = 'Start 14-Day Free Trial'; }
 }
 
 function showAdminPanel() {
