@@ -643,6 +643,31 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
       </div>
     </div>
 
+    <!-- ADMIN DASHBOARD MODAL -->
+    <div class="modal-overlay" id="admin-modal" style="z-index:9999">
+      <div class="modal-box" style="max-width:800px;max-height:85vh;overflow-y:auto">
+        <div style="background:var(--navy);padding:20px 24px;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1">
+          <div style="color:white;font-size:15px;font-weight:700;letter-spacing:-0.3px">UNDERLYTIX — OPERATOR DASHBOARD</div>
+          <span onclick="document.getElementById('admin-modal').classList.remove('show')" style="color:rgba(255,255,255,0.5);cursor:pointer;font-size:20px">×</span>
+        </div>
+        <div class="modal-body">
+          <div id="admin-login-section">
+            <div style="margin-bottom:16px;font-size:13px;color:var(--text-3)">Platform operator access only.</div>
+            <div class="field" style="margin-bottom:14px"><label class="label">Admin Password</label><input class="input" id="admin-secret-input" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')loadAdminData()"></div>
+            <button class="btn btn-primary" onclick="loadAdminData()">Access Dashboard</button>
+          </div>
+          <div id="admin-data-section" style="display:none">
+            <div class="stats-grid" style="margin-bottom:24px" id="admin-stats-grid"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+              <div class="card"><div class="card-body" id="admin-state-breakdown"></div></div>
+              <div class="card"><div class="card-body" id="admin-type-breakdown"></div></div>
+            </div>
+            <div class="card"><div class="card-body"><div class="label" style="margin-bottom:12px">Recent Investors</div><div id="admin-investors-table"></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- LENDER PORTAL -->
     <div class="page" id="page-lenders">
       <div class="topbar">
@@ -890,6 +915,14 @@ if (window.location.search.includes('upgraded=true')) {
         updateSidebarUser(data.investor);
         updateUsageUI({ plan: 'pro', canAnalyze: true, remaining: -1 });
         showToast('Welcome to Underlytix Pro! Unlimited analyses unlocked.', 'success');
+        // Fire upgrade confirmation email
+        const sessUpg = getSession();
+        if (sessUpg?.investor?.email) {
+          fetch('/.netlify/functions/resend-email', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ type: 'upgrade_confirm', to: sessUpg.investor.email, name: sessUpg.investor.name || '' })
+          }).catch(() => {});
+        }
       } else if (polls >= 10) {
         clearInterval(pollForUpgrade);
         showToast('Payment received! Your account will upgrade shortly.', 'success');
@@ -953,7 +986,15 @@ async function doSignup() {
       body: JSON.stringify({ action: 'signup', email, password, name: `${firstName} ${lastName}`.trim(), phone })
     });
     const data = await res.json();
-    if (data.success) { onAuthSuccess(data.token, data.investor); showToast('Welcome to Underlytix!', 'success'); }
+    if (data.success) {
+      onAuthSuccess(data.token, data.investor);
+      showToast('Welcome to Underlytix!', 'success');
+      // Fire welcome email (non-blocking)
+      fetch('/.netlify/functions/resend-email', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ type: 'welcome', to: email, name: firstName })
+      }).catch(() => {});
+    }
     else showAuthError(data.error || 'Signup failed.');
   } catch (e) { showAuthError('Connection error. Please try again.'); }
   finally { btn.disabled = false; btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8zM19 8v6M22 11h-6"/></svg>Create Account'; }
@@ -1304,7 +1345,15 @@ async function analyzeDeal() {
   }, 2500);
 
   try {
-    const res = await fetch('/.netlify/functions/capiq-analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dealData})});
+    // Enrich dealData with session info for email notifications
+const sessionForEmail = getSession();
+const enrichedDealData = {
+  ...dealData,
+  investorEmail: sessionForEmail?.investor?.email || '',
+  investorName: sessionForEmail?.investor?.name || '',
+  dealCode: 'DL-' + Math.random().toString(36).substr(2, 8).toUpperCase(),
+};
+const res = await fetch('/.netlify/functions/capiq-analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dealData: enrichedDealData})});
     if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error||e.detail||`Error ${res.status}`);}
     const data = await res.json();
     if(!data.success) throw new Error(data.error||'Analysis failed');
@@ -1593,6 +1642,26 @@ async function onLenderAuth(token, user) {
   await loadLenderDeals(token);
 }
 
+async function lenderStartCheckout() {
+  const session = getLenderSession();
+  if (!session?.token) return;
+  try {
+    const res = await fetch(LENDER_FN, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'create_checkout', token: session.token, successUrl: window.location.origin + '/?lender_upgraded=true', cancelUrl: window.location.origin + '/' })
+    });
+    const data = await res.json();
+    if (data.checkoutUrl) window.location.href = data.checkoutUrl;
+    else showToast(data.error || 'Could not start checkout', 'error');
+  } catch(e) { showToast('Connection error', 'error'); }
+}
+
+// Check for lender upgrade redirect
+if (window.location.search.includes('lender_upgraded=true')) {
+  window.history.replaceState({}, '', window.location.pathname);
+  setTimeout(() => showToast('Lender access activated! Welcome aboard.', 'success'), 1000);
+}
+
 async function loadLenderDeals(token) {
   const session = getLenderSession();
   const tok = token || session?.token;
@@ -1607,6 +1676,26 @@ async function loadLenderDeals(token) {
       lenderMatches = data.matches || [];
       renderLenderStats();
       renderLenderDeals();
+    } else if (data.requiresUpgrade) {
+      // Show upgrade wall
+      const grid = document.getElementById('lender-deals-grid');
+      if (grid) grid.innerHTML = `
+        <div class="card" style="max-width:500px;margin:40px auto;text-align:center">
+          <div style="background:var(--navy);padding:28px;border-radius:10px 10px 0 0">
+            <div style="font-size:20px;font-weight:700;color:white;margin-bottom:8px">Access Pre-Screened Deal Flow</div>
+            <div style="font-size:13px;color:rgba(255,255,255,0.5)">Your trial has ended</div>
+          </div>
+          <div class="card-body" style="text-align:left">
+            <p style="color:var(--text-2);font-size:14px;margin-bottom:20px">Subscribe to continue receiving qualified investor deals matched to your lending criteria.</p>
+            <ul style="list-style:none;padding:0;margin:0 0 24px;display:flex;flex-direction:column;gap:8px">
+              <li style="font-size:13px;color:var(--text-2)">✓ Pre-screened borrower profiles</li>
+              <li style="font-size:13px;color:var(--text-2)">✓ AI fundability scores on every deal</li>
+              <li style="font-size:13px;color:var(--text-2)">✓ Matched to your exact lending criteria</li>
+              <li style="font-size:13px;color:var(--text-2)">✓ One-click Interest / Term Sheet / Pass workflow</li>
+            </ul>
+            <button class="btn btn-primary" onclick="lenderStartCheckout()" style="width:100%;justify-content:center">Subscribe — $297/month</button>
+          </div>
+        </div>`;
     }
   } catch (e) { console.warn('Failed to load lender deals:', e.message); }
 }
@@ -1739,6 +1828,40 @@ function openDealModal(matchId) {
 function lenderLogout() {
   clearLenderSession(); lenderMatches = []; showLenderLogin();
   showToast('Signed out of lender portal', 'success');
+}
+
+function showAdminPanel() {
+  document.getElementById('admin-modal').classList.add('show');
+}
+
+async function loadAdminData() {
+  const secret = document.getElementById('admin-secret-input').value;
+  if (!secret) return;
+  try {
+    const res = await fetch('/.netlify/functions/admin-dashboard', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ secret })
+    });
+    const data = await res.json();
+    if (!data.success) { alert(data.error || 'Unauthorized'); return; }
+    document.getElementById('admin-login-section').style.display = 'none';
+    document.getElementById('admin-data-section').style.display = 'block';
+    const s = data.summary;
+    document.getElementById('admin-stats-grid').innerHTML = `
+      <div class="stat-card"><div class="stat-top"><span class="stat-label">Total Investors</span></div><div class="stat-value teal">${s.totalInvestors}</div><div class="stat-sub">${s.proInvestors} Pro / ${s.starterInvestors} Free</div></div>
+      <div class="stat-card green"><div class="stat-top"><span class="stat-label">Investor MRR</span></div><div class="stat-value green">$${s.estimatedMRR.toLocaleString()}</div><div class="stat-sub">$97/month × ${s.proInvestors} Pro</div></div>
+      <div class="stat-card"><div class="stat-top"><span class="stat-label">Total Deals</span></div><div class="stat-value teal">${s.totalDeals}</div><div class="stat-sub">${s.totalAnalysesThisMonth} analyses this month</div></div>
+      <div class="stat-card"><div class="stat-top"><span class="stat-label">Lender Activity</span></div><div class="stat-value teal">${s.interestedMatches}</div><div class="stat-sub">${s.termSheets} term sheets • ${s.totalMatches} total matches</div></div>
+      <div class="stat-card green"><div class="stat-top"><span class="stat-label">Lender MRR</span></div><div class="stat-value green">$${s.estimatedLenderMRR.toLocaleString()}</div><div class="stat-sub">$297/month × ${s.activeLenderUsers} active</div></div>
+      <div class="stat-card"><div class="stat-top"><span class="stat-label">Total MRR</span></div><div class="stat-value teal">$${(s.estimatedMRR + s.estimatedLenderMRR).toLocaleString()}</div><div class="stat-sub">Combined revenue</div></div>
+    `;
+    const stateRows = Object.entries(data.stateBreakdown).sort((a,b)=>b[1]-a[1]).map(([st,n])=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;border-bottom:1px solid var(--border)"><span style="color:var(--text-2)">${st}</span><span style="font-weight:600;color:var(--teal)">${n}</span></div>`).join('');
+    document.getElementById('admin-state-breakdown').innerHTML = '<div class="label" style="margin-bottom:8px">Deal Volume by State</div>' + stateRows;
+    const typeRows = Object.entries(data.dealTypeBreakdown).sort((a,b)=>b[1]-a[1]).map(([t,n])=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;border-bottom:1px solid var(--border)"><span style="color:var(--text-2)">${t}</span><span style="font-weight:600;color:var(--teal)">${n}</span></div>`).join('');
+    document.getElementById('admin-type-breakdown').innerHTML = '<div class="label" style="margin-bottom:8px">Deal Volume by Type</div>' + typeRows;
+    const invRows = (data.recentInvestors||[]).map(i=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:12px;border-bottom:1px solid var(--border)"><div><div style="font-weight:500;color:var(--text-2)">${i.email}</div><div style="color:var(--text-4);font-size:11px">${new Date(i.created_at).toLocaleDateString()}</div></div><span class="chip ${i.plan==='pro'?'chip-green':'chip-gray'}">${i.plan?.toUpperCase()}</span></div>`).join('');
+    document.getElementById('admin-investors-table').innerHTML = invRows;
+  } catch(e) { alert('Error: ' + e.message); }
 }
 
 function showToast(msg,type) {

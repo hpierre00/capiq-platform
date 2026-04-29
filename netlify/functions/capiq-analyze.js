@@ -16,7 +16,7 @@ export default async (req) => {
     const body = await req.json();
     const d = body.dealData || body;
 
-    const prompt = `You are an expert real estate underwriter for CapIQ. Analyze this deal and return ONLY a JSON object with no markdown.
+    const prompt = `You are an expert real estate underwriter for Underlytix. Analyze this deal and return ONLY a JSON object with no markdown.
 
 Deal: ${d.dealType} | ${d.propertyType} | ${d.state} | ${d.location}
 Loan: $${d.loanAmount} | Purchase: $${d.purchasePrice} | ARV: $${d.arv}
@@ -42,11 +42,30 @@ Return exactly this JSON:
     const raw = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("");
     const cleaned = raw.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
     const analysis = JSON.parse(cleaned);
+
+    // Fire analysis_complete email in background (non-blocking)
+    if (d.investorEmail && d.dealCode) {
+      const baseUrl = Netlify.env.get("SITE_URL") || "https://underlytix.com";
+      fetch(`${baseUrl}/.netlify/functions/resend-email`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "analysis_complete",
+          to: d.investorEmail,
+          name: d.investorName || "",
+          data: {
+            fundabilityScore: analysis.fundabilityScore,
+            scoreBand: analysis.dealScore,
+            executiveSummary: analysis.executiveSummary,
+            dealCode: d.dealCode,
+          },
+        }),
+      }).catch(() => {}); // fire and forget
+    }
+
     return new Response(JSON.stringify({ success: true, analysis }), { status: 200, headers: cors });
 
   } catch (err) {
     return new Response(JSON.stringify({ error: "Server error", message: err.message }), { status: 500, headers: cors });
   }
 };
-
-// NO config path - function responds on native /.netlify/functions/capiq-analyze
