@@ -417,6 +417,9 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
         <span class="plan-badge" id="sidebar-plan">STARTER</span>
         <button onclick="logout()" style="background:none;border:none;cursor:pointer;font-size:11px;color:rgba(255,255,255,0.35);font-family:'DM Mono',monospace;letter-spacing:.06em">SIGN OUT</button>
       </div>
+      <div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)">
+        <button onclick="showAdminPanel()" style="background:none;border:none;cursor:pointer;font-size:10px;color:rgba(255,255,255,0.2);font-family:'DM Mono',monospace;letter-spacing:.06em;padding:0">⚙ ADMIN</button>
+      </div>
     </div>
   </aside>
 
@@ -716,6 +719,7 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
         <div><div class="topbar-title">Lender Portal</div><div class="topbar-meta">Deal matching &amp; pipeline management</div></div>
         <div style="display:flex;gap:10px;align-items:center">
           <span id="lender-user-badge" style="display:none;font-family:'DM Mono',monospace;font-size:11px;color:var(--teal)"></span>
+          <button id="lender-billing-btn" onclick="lenderStartCheckout()" style="display:none" class="btn btn-primary" style="padding:6px 14px;font-size:11px">Manage Billing</button>
           <button id="lender-logout-btn" onclick="lenderLogout()" style="display:none" class="btn btn-ghost" style="padding:6px 12px;font-size:11px">Sign Out</button>
           <span class="chip chip-green">● LIVE</span>
         </div>
@@ -1665,6 +1669,7 @@ function showLenderLogin() {
   document.getElementById('lender-dashboard').style.display = 'none';
   document.getElementById('lender-user-badge').style.display = 'none';
   document.getElementById('lender-logout-btn').style.display = 'none';
+  document.getElementById('lender-billing-btn').style.display = 'none';
 }
 
 async function lenderLogin() {
