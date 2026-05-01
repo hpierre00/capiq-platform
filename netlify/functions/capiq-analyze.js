@@ -63,6 +63,14 @@ Return exactly this JSON:
       }).catch(() => {}); // fire and forget
     }
 
+    // Fire Notion sync in background (non-blocking)
+    const baseUrl = Netlify.env.get("SITE_URL") || "https://underlytix.com";
+    fetch(`${baseUrl}/.netlify/functions/notion-sync`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ dealData: d, analysis }),
+    }).catch(() => {});
+
     return new Response(JSON.stringify({ success: true, analysis }), { status: 200, headers: cors });
 
   } catch (err) {
