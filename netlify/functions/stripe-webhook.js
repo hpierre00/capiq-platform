@@ -82,6 +82,44 @@ export default async (req) => {
       }
     }
 
+    // Handle lender subscription events
+    const lenderUserId = meta.lender_user_id;
+    if ((type === 'checkout.session.completed' || type === 'invoice.payment_succeeded') && lenderUserId) {
+      // Upgrade lender plan in Supabase
+      const lenderLookup = await fetch(`${SUPABASE_URL}/rest/v1/lender_users?id=eq.${lenderUserId}&select=id,email,full_name,lender_profiles(lender_name)`, { headers });
+      const lenderRows = await lenderLookup.json();
+      if (lenderRows.length > 0) {
+        await fetch(`${SUPABASE_URL}/rest/v1/lender_users?id=eq.${lenderUserId}`, {
+          method: 'PATCH', headers,
+          body: JSON.stringify({ plan: 'active', stripe_customer_id: customerId, stripe_subscription_id: obj.subscription || obj.id }),
+        });
+        const lenderRow = lenderRows[0];
+        // Fire Notion CRM sync — mark as Closed Won
+        const baseUrl = 'https://underlytix.com';
+        fetch(`${baseUrl}/.netlify/functions/notion-lender-sync`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            event: 'lender_closed',
+            lender: { email: lenderRow.email, name: lenderRow.full_name, companyName: lenderRow.lender_profiles?.lender_name, planAmount: 297 }
+          }),
+        }).catch(() => {});
+        console.log(`Upgraded lender ${lenderUserId} to active`);
+      }
+    }
+
+    // Handle lender subscription cancellation
+    if ((type === 'customer.subscription.deleted') && customerId) {
+      const lenderLookup = await fetch(`${SUPABASE_URL}/rest/v1/lender_users?stripe_customer_id=eq.${customerId}&select=id`, { headers });
+      const lenderRows = await lenderLookup.json();
+      if (lenderRows.length > 0) {
+        await fetch(`${SUPABASE_URL}/rest/v1/lender_users?id=eq.${lenderRows[0].id}`, {
+          method: 'PATCH', headers,
+          body: JSON.stringify({ plan: 'cancelled' }),
+        });
+        console.log(`Cancelled lender ${lenderRows[0].id}`);
+      }
+    }
+
     return new Response(JSON.stringify({ received: true }), { status: 200, headers: cors });
   } catch (err) {
     console.error('Webhook error:', err.message);

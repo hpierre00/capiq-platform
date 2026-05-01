@@ -22,6 +22,28 @@ export default async (req) => {
 
     const data = await res.json();
 
+    // If signup succeeded, fire Notion CRM sync + welcome email + admin notification
+    if (data.success) {
+      const baseUrl = "https://underlytix.com";
+      fetch(`${baseUrl}/.netlify/functions/notion-lender-sync`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event: "lender_signup",
+          lender: {
+            companyName: body.companyName,
+            contactName: body.contactName,
+            email: body.email,
+            phone: body.phone,
+            lenderType: body.lenderType,
+            states: body.states,
+            minLoan: body.minLoan,
+            maxLoan: body.maxLoan,
+          }
+        }),
+      }).catch(() => {});
+    }
+
     // If signup succeeded, fire welcome email + admin notification via Resend
     if (data.success) {
       const RESEND_API_KEY = Netlify.env.get("RESEND_API_KEY") || "";

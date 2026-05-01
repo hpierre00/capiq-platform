@@ -1846,6 +1846,25 @@ async function setInterest(matchId, status) {
   if (m) m.interest_level = status;
   renderLenderStats(); renderLenderDeals();
   showToast('Deal status updated', 'success');
+  // Fire Notion Match Queue sync for interest/term_sheet (non-blocking)
+  if (status === 'interested' || status === 'term_sheet_issued') {
+    const deal = m?.deals;
+    fetch('/.netlify/functions/notion-lender-sync', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        event: 'lender_interest',
+        lender: { name: session?.user?.lender?.lender_name || session?.user?.name || '' },
+        deal: {
+          address: deal?.full_address || deal?.city || '',
+          dealType: deal?.deal_type || '',
+          loanAmount: deal?.requested_loan_amount,
+          state: deal?.state || '',
+          score: m?.deal_scores?.total_fundability_score,
+          interestLevel: status,
+        }
+      })
+    }).catch(() => {});
+  }
 }
 
 function openDealModal(matchId) {
