@@ -1,6 +1,5 @@
-// Syncs a analyzed deal to Notion Deal Pipeline
+// Syncs an analyzed deal to Notion Deal Pipeline
 // Called after successful AI analysis
-
 export default async (req) => {
   const cors = {
     "Access-Control-Allow-Origin": "*",
@@ -8,7 +7,6 @@ export default async (req) => {
     "Access-Control-Allow-Headers": "Content-Type",
     "Content-Type": "application/json",
   };
-
   if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: cors });
   if (req.method !== "POST") return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: cors });
 
@@ -20,21 +18,18 @@ export default async (req) => {
     const d = body.dealData || body.d || {};
     const a = body.analysis || body.a || {};
 
-    // Safe accessor
-    const safe = (val) => val || '';
-    const safeNum = (val) => parseFloat(val) || null;
-
-    // Map deal type to Notion's existing select options
+    // Deal Pipeline schema exact field mapping
     const dealTypeMap = {
-      'Purchase': 'Fix & Flip',       // closest match - will add Purchase option separately
+      'Purchase': 'Fix & Flip',
       'Fix & Flip': 'Fix & Flip',
       'Rental': 'Rental / DSCR',
+      'Rental/DSCR': 'Rental / DSCR',
       'Cash-Out': 'Cash-Out',
+      'Cash-Out Refi': 'Cash-Out',
       'Bridge': 'Bridge',
-      'New Construction': 'Fix & Flip', // closest match
+      'New Construction': 'Fix & Flip',
     };
 
-    // Map property type to Notion options
     const propTypeMap = {
       'SFR': 'SFR',
       'Condo': 'SFR',
@@ -44,7 +39,6 @@ export default async (req) => {
       'Land': 'Commercial',
     };
 
-    // Map experience to Notion options
     const expMap = {
       'First Deal': 'First Deal',
       '1-3 Deals': '1-3 Deals',
@@ -53,55 +47,58 @@ export default async (req) => {
       '20+ Deals': '10+ Deals',
     };
 
-    const notionPage = {
-      parent: { database_id: "13f04922-6d68-45f1-839c-9a572bf079ad" },
-      properties: {
-        "Deal Name": { title: [{ text: { content: d.location || 'Untitled Deal' } }] },
-        "Investor Name": { rich_text: [{ text: { content: d.investorName || '' } }] },
-        "Investor Email": { email: d.investorEmail || null },
-        "Investor Phone": { rich_text: [{ text: { content: d.investorPhone || '' } }] },
-        "Investor Experience": d.investorExperience ? { select: { name: expMap[d.investorExperience] || '1-3 Deals' } } : undefined,
-        "Deal Type": d.dealType ? { select: { name: dealTypeMap[d.dealType] || 'Fix & Flip' } } : undefined,
-        "Property Type": d.propertyType ? { select: { name: propTypeMap[d.propertyType] || 'SFR' } } : undefined,
-        "Location": { rich_text: [{ text: { content: d.location || '' } }] },
-        "State": { rich_text: [{ text: { content: d.state || '' } }] },
-        "Loan Amount": d.loanAmount ? { number: d.loanAmount } : undefined,
-        "Purchase Price": d.purchasePrice ? { number: d.purchasePrice } : undefined,
-        "ARV": d.arv ? { number: d.arv } : undefined,
-        "As-Is Value": d.asIsValue ? { number: d.asIsValue } : undefined,
-        "Rehab Budget": d.rehabBudget ? { number: d.rehabBudget } : undefined,
-        "Monthly Rent": d.monthlyRent ? { number: d.monthlyRent } : undefined,
-        "LTV": d.ltv ? { number: d.ltv } : undefined,
-        "DSCR": d.dscr ? { number: d.dscr } : undefined,
-        "Credit Score": d.creditScore ? { number: d.creditScore } : undefined,
-        "Notes": d.notes ? { rich_text: [{ text: { content: d.notes } }] } : undefined,
-        "Fundability Score": a.fundabilityScore ? { number: a.fundabilityScore } : undefined,
-        "Deal Score": a.dealScore ? { select: { name: a.dealScore } } : undefined,
-        "Human Review Required": { checkbox: a.humanReviewRequired || false },
-        "AI Analysis": { rich_text: [{ text: { content: [a.executiveSummary, a.strengthsAndRisks, a.structuringRecommendations, a.nextSteps].filter(Boolean).join('\n\n').slice(0, 2000) } }] },
-        "Score Breakdown": { rich_text: [{ text: { content: (a.scoreBreakdown || '').slice(0, 2000) } }] },
-        "Status": { select: { name: "New" } },
-        "Intake Date": { date: { start: new Date().toISOString().split('T')[0] } },
-      }
+    // Deal Score: Pass/Review/Reject
+    const scoreToGrade = (score) => {
+      if (!score) return 'Review';
+      if (score >= 70) return 'Pass';
+      if (score >= 45) return 'Review';
+      return 'Reject';
     };
 
-    // Remove undefined properties
-    Object.keys(notionPage.properties).forEach(k => {
-      if (notionPage.properties[k] === undefined) delete notionPage.properties[k];
-    });
+    const dealName = d.location || d.fullAddress || `${d.dealType || 'Deal'} — ${d.state || ''}`;
+
+    const props = {
+      "Deal Name": { title: [{ text: { content: dealName } }] },
+      "Investor Name": { rich_text: [{ text: { content: d.investorName || '' } }] },
+      "Investor Email": { email: d.investorEmail || null },
+      "Investor Phone": { rich_text: [{ text: { content: d.investorPhone || '' } }] },
+      "Status": { select: { name: "Matched" } },
+      "Human Review Required": { checkbox: a.humanReviewRequired || false },
+      "date:Intake Date:start": new Date().toISOString().split("T")[0],
+    };
+
+    if (d.investorExperience) props["Investor Experience"] = { select: { name: expMap[d.investorExperience] || '1-3 Deals' } };
+    if (d.dealType) props["Deal Type"] = { select: { name: dealTypeMap[d.dealType] || 'Fix & Flip' } };
+    if (d.propertyType) props["Property Type"] = { select: { name: propTypeMap[d.propertyType] || 'SFR' } };
+    if (d.location) props["Location"] = { rich_text: [{ text: { content: d.location } }] };
+    if (d.state) props["State"] = { rich_text: [{ text: { content: d.state } }] };
+    if (d.loanAmount) props["Loan Amount"] = { number: parseFloat(d.loanAmount) };
+    if (d.purchasePrice) props["Purchase Price"] = { number: parseFloat(d.purchasePrice) };
+    if (d.arv) props["ARV"] = { number: parseFloat(d.arv) };
+    if (d.asIsValue) props["As-Is Value"] = { number: parseFloat(d.asIsValue) };
+    if (d.rehabBudget) props["Rehab Budget"] = { number: parseFloat(d.rehabBudget) };
+    if (d.monthlyRent) props["Monthly Rent"] = { number: parseFloat(d.monthlyRent) };
+    if (d.ltv) props["LTV"] = { number: parseFloat(d.ltv) };
+    if (d.dscr) props["DSCR"] = { number: parseFloat(d.dscr) };
+    if (d.creditScore) props["Credit Score"] = { number: parseFloat(d.creditScore) };
+    if (d.notes) props["Notes"] = { rich_text: [{ text: { content: d.notes.slice(0, 2000) } }] };
+    if (a.fundabilityScore) {
+      props["Fundability Score"] = { number: a.fundabilityScore };
+      props["Deal Score"] = { select: { name: scoreToGrade(a.fundabilityScore) } };
+    }
+    const aiText = [a.executiveSummary, a.strengthsAndRisks, a.structuringRecommendations, a.nextSteps].filter(Boolean).join('\n\n').slice(0, 2000);
+    if (aiText) props["AI Analysis"] = { rich_text: [{ text: { content: aiText } }] };
+    if (a.scoreBreakdown) props["Score Breakdown"] = { rich_text: [{ text: { content: a.scoreBreakdown.slice(0, 2000) } }] };
 
     const res = await fetch("https://api.notion.com/v1/pages", {
       method: "POST",
-      headers: {
-        "Authorization": `Bearer ${notionKey}`,
-        "Notion-Version": "2022-06-28",
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(notionPage),
+      headers: { "Authorization": `Bearer ${notionKey}`, "Notion-Version": "2022-06-28", "Content-Type": "application/json" },
+      body: JSON.stringify({ parent: { database_id: "13f04922-6d68-45f1-839c-9a572bf079ad" }, properties: props }),
     });
 
     if (!res.ok) {
       const err = await res.json();
+      console.error("Notion API error:", JSON.stringify(err));
       return new Response(JSON.stringify({ error: "Notion API error", detail: err }), { status: 502, headers: cors });
     }
 
@@ -109,6 +106,7 @@ export default async (req) => {
     return new Response(JSON.stringify({ success: true, notionPageId: page.id, notionUrl: page.url }), { status: 200, headers: cors });
 
   } catch (err) {
+    console.error("notion-sync error:", err.message);
     return new Response(JSON.stringify({ error: "Server error", message: err.message }), { status: 500, headers: cors });
   }
 };

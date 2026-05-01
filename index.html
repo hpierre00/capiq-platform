@@ -696,6 +696,17 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
           <span onclick="document.getElementById('admin-modal').classList.remove('show')" style="color:rgba(255,255,255,0.5);cursor:pointer;font-size:20px">×</span>
         </div>
         <div class="modal-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px">
+            <a href="https://app.notion.com/p/8f18aa1aa23741bbb7078202f2dc2e25" target="_blank" style="display:flex;align-items:center;gap:8px;background:var(--bg-3);border:1px solid var(--border);border-radius:8px;padding:12px;text-decoration:none;color:var(--text-2);font-size:12px;font-weight:600;transition:border-color .15s" onmouseover="this.style.borderColor='var(--teal)'" onmouseout="this.style.borderColor='var(--border)'">
+              <span style="font-size:18px">📋</span><div><div style="color:var(--text-1)">Deal Pipeline</div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace">Notion CRM</div></div>
+            </a>
+            <a href="https://app.notion.com/p/95cf92bf015f4f1191b11938fc2bef0f" target="_blank" style="display:flex;align-items:center;gap:8px;background:var(--bg-3);border:1px solid var(--border);border-radius:8px;padding:12px;text-decoration:none;color:var(--text-2);font-size:12px;font-weight:600;transition:border-color .15s" onmouseover="this.style.borderColor='var(--teal)'" onmouseout="this.style.borderColor='var(--border)'">
+              <span style="font-size:18px">🏦</span><div><div style="color:var(--text-1)">Lender Pipeline</div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace">Notion CRM</div></div>
+            </a>
+            <a href="https://app.notion.com/p/ffa19a8309614699a62c32ef4a0638b0" target="_blank" style="display:flex;align-items:center;gap:8px;background:var(--bg-3);border:1px solid var(--border);border-radius:8px;padding:12px;text-decoration:none;color:var(--text-2);font-size:12px;font-weight:600;transition:border-color .15s" onmouseover="this.style.borderColor='var(--teal)'" onmouseout="this.style.borderColor='var(--border)'">
+              <span style="font-size:18px">🔗</span><div><div style="color:var(--text-1)">Match Queue</div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace">Notion CRM</div></div>
+            </a>
+          </div>
           <div id="admin-login-section">
             <div style="margin-bottom:16px;font-size:13px;color:var(--text-3)">Platform operator access only.</div>
             <div class="field" style="margin-bottom:14px"><label class="label">Admin Password</label><input class="input" id="admin-secret-input" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')loadAdminData()"></div>
