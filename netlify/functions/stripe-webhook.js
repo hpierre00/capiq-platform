@@ -5,6 +5,38 @@ export default async (req) => {
 
   try {
     const body = await req.text();
+    const WEBHOOK_SECRET = Netlify.env.get('STRIPE_WEBHOOK_SECRET') || '';
+    
+    // Verify Stripe signature if secret is configured
+    if (WEBHOOK_SECRET) {
+      const sig = req.headers.get('stripe-signature');
+      if (!sig) return new Response(JSON.stringify({ error: 'Missing signature' }), { status: 400, headers: cors });
+      
+      // Stripe signature verification
+      const parts = sig.split(',').reduce((acc, part) => {
+        const [k, v] = part.split('=');
+        acc[k] = v;
+        return acc;
+      }, {});
+      const timestamp = parts.t;
+      const sigHash = parts.v1;
+      const payload = `${timestamp}.${body}`;
+      
+      // HMAC-SHA256 verification
+      const encoder = new TextEncoder();
+      const keyData = encoder.encode(WEBHOOK_SECRET);
+      const msgData = encoder.encode(payload);
+      const cryptoKey = await crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
+      const sigBytes = new Uint8Array(sigHash.match(/.{2}/g).map(b => parseInt(b, 16)));
+      const valid = await crypto.subtle.verify('HMAC', cryptoKey, sigBytes, msgData);
+      
+      if (!valid) return new Response(JSON.stringify({ error: 'Invalid signature' }), { status: 400, headers: cors });
+      
+      // Check timestamp not older than 5 minutes
+      const age = Math.floor(Date.now() / 1000) - parseInt(timestamp);
+      if (age > 300) return new Response(JSON.stringify({ error: 'Webhook timestamp too old' }), { status: 400, headers: cors });
+    }
+    
     const event = JSON.parse(body);
     const type = event.type;
     const obj = event.data?.object || {};
