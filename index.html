@@ -378,6 +378,7 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
     <div class="auth-tabs">
       <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Sign In</button>
       <button class="auth-tab" id="tab-signup" onclick="switchAuthTab('signup')">Create Account</button>
+      <button class="auth-tab" id="tab-realtor" onclick="switchAuthTab('realtor')" style="color:var(--teal)">Realtor</button>
     </div>
     <div class="auth-error" id="auth-error"></div>
 
@@ -411,6 +412,45 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
       <div class="auth-field"><label class="auth-label">Email</label><input class="auth-input" id="auth-email-reset" type="email" placeholder="john@example.com"></div>
       <button class="auth-btn" onclick="doReset()">Send Reset Link</button>
       <div class="auth-divider"><span style="cursor:pointer;color:var(--teal)" onclick="switchAuthTab('login')">← Back to sign in</span></div>
+    </div>
+
+    <!-- REALTOR LOGIN FORM -->
+    <div id="form-realtor" style="display:none">
+      <div style="text-align:center;margin-bottom:16px">
+        <div style="font-size:24px;margin-bottom:6px">🏠</div>
+        <div style="font-size:12px;color:var(--text-4)">Sign in as a licensed real estate agent</div>
+      </div>
+      <div class="auth-field"><label class="auth-label">Email</label><input class="auth-input" id="realtor-auth-email" type="email" placeholder="you@brokerage.com" onkeydown="if(event.key==='Enter')doRealtorAuth()"></div>
+      <div class="auth-field"><label class="auth-label">Password</label><input class="auth-input" id="realtor-auth-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doRealtorAuth()"></div>
+      <button class="auth-btn" id="realtor-auth-btn" onclick="doRealtorAuth()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Sign In as Realtor
+      </button>
+      <div class="auth-divider">
+        No account? <span style="color:var(--teal);cursor:pointer" onclick="showRealtorSignupFromAuth()">Create free realtor account →</span>
+      </div>
+    </div>
+
+    <!-- REALTOR SIGNUP FORM (in auth screen) -->
+    <div id="form-realtor-signup" style="display:none">
+      <div style="text-align:center;margin-bottom:14px">
+        <div style="font-size:12px;color:var(--text-4)">14-day free trial · $49/month after · No credit card required</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="auth-field"><label class="auth-label">Full Name</label><input class="auth-input" id="ras-name" type="text" placeholder="Jane Smith"></div>
+        <div class="auth-field"><label class="auth-label">Phone</label><input class="auth-input" id="ras-phone" type="tel" placeholder="(305) 555-0100"></div>
+      </div>
+      <div class="auth-field"><label class="auth-label">Work Email</label><input class="auth-input" id="ras-email" type="email" placeholder="jane@brokerage.com"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="auth-field"><label class="auth-label">License #</label><input class="auth-input" id="ras-license" type="text" placeholder="SL3456789"></div>
+        <div class="auth-field"><label class="auth-label">Brokerage</label><input class="auth-input" id="ras-brokerage" type="text" placeholder="EXP Realty"></div>
+      </div>
+      <div class="auth-field"><label class="auth-label">Password</label><input class="auth-input" id="ras-password" type="password" placeholder="Min 8 characters"></div>
+      <button class="auth-btn" id="ras-btn" onclick="doRealtorSignupFromAuth()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Start Free Trial
+      </button>
+      <div class="auth-divider"><span style="cursor:pointer;color:var(--teal)" onclick="switchAuthTab('realtor')">← Back to realtor sign in</span></div>
     </div>
   </div>
 </div>
@@ -1074,13 +1114,78 @@ function logout() {
 }
 
 function switchAuthTab(tab) {
-  document.getElementById('form-login').style.display = tab === 'login' ? 'block' : 'none';
-  document.getElementById('form-signup').style.display = tab === 'signup' ? 'block' : 'none';
-  document.getElementById('form-reset').style.display = tab === 'reset' ? 'block' : 'none';
+  ['login','signup','reset','realtor','realtor-signup'].forEach(t => {
+    const el = document.getElementById('form-' + t);
+    if (el) el.style.display = t === tab ? 'block' : 'none';
+  });
   document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
   const activeTab = document.getElementById('tab-' + tab);
   if (activeTab) activeTab.classList.add('active');
   document.getElementById('auth-error').classList.remove('show');
+}
+
+function showRealtorSignupFromAuth() {
+  switchAuthTab('realtor-signup');
+}
+
+async function doRealtorAuth() {
+  const email = document.getElementById('realtor-auth-email').value.trim();
+  const password = document.getElementById('realtor-auth-password').value;
+  const btn = document.getElementById('realtor-auth-btn');
+  const errEl = document.getElementById('auth-error');
+  if (!email || !password) { showAuthError('Email and password required.'); return; }
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  try {
+    const res = await fetch(REALTOR_AUTH_FN, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'login', email, password })
+    });
+    const data = await res.json();
+    if (data.success) {
+      // Realtor logged in — show realtor interface inside the app
+      localStorage.setItem('capiq_realtor_mode', 'true');
+      document.getElementById('auth-screen').classList.remove('show');
+      document.getElementById('app-shell').style.display = 'none';
+      document.getElementById('realtor-standalone').style.display = 'flex';
+      onRealtorStandaloneAuth(data.token, data.realtor);
+    } else {
+      showAuthError(data.error || 'Invalid credentials.');
+    }
+  } catch(e) { showAuthError('Connection error. Please try again.'); }
+  finally { btn.disabled = false; btn.textContent = 'Sign In as Realtor'; }
+}
+
+async function doRealtorSignupFromAuth() {
+  const name = document.getElementById('ras-name').value.trim();
+  const phone = document.getElementById('ras-phone').value.trim();
+  const email = document.getElementById('ras-email').value.trim();
+  const license = document.getElementById('ras-license').value.trim();
+  const brokerage = document.getElementById('ras-brokerage').value.trim();
+  const password = document.getElementById('ras-password').value;
+  const btn = document.getElementById('ras-btn');
+  if (!name || !email || !password) { showAuthError('Name, email, and password are required.'); return; }
+  if (password.length < 8) { showAuthError('Password must be at least 8 characters.'); return; }
+  btn.disabled = true; btn.textContent = 'Creating account...';
+  try {
+    const res = await fetch(REALTOR_AUTH_FN, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'signup', email, password, fullName: name, phone, licenseNumber: license, brokerage, state: 'FL' })
+    });
+    const data = await res.json();
+    if (data.success) {
+      localStorage.setItem('capiq_realtor_mode', 'true');
+      document.getElementById('auth-screen').classList.remove('show');
+      document.getElementById('app-shell').style.display = 'none';
+      document.getElementById('realtor-standalone').style.display = 'flex';
+      onRealtorStandaloneAuth(data.token, data.realtor);
+      // Fire welcome email
+      fetch('/.netlify/functions/resend-email', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ type: 'welcome', to: email, name })
+      }).catch(()=>{});
+    } else { showAuthError(data.error || 'Signup failed.'); }
+  } catch(e) { showAuthError('Connection error. Please try again.'); }
+  finally { btn.disabled = false; btn.textContent = 'Start Free Trial'; }
 }
 
 async function doAuth() {
@@ -1184,20 +1289,30 @@ document.addEventListener('DOMContentLoaded', () => {
   renderLenders(); updateStats(); renderDashboardRecent(); renderDealsTable();
   document.getElementById('deal-count').textContent = state.deals.length;
 
-  // Check if this is a realtor-mode entry (underlytix.com/?mode=realtor)
+  // Check for returning realtor session OR realtor mode URL param
   const urlParams = new URLSearchParams(window.location.search);
-  const isRealtorMode = urlParams.get('mode') === 'realtor' || localStorage.getItem('capiq_realtor_mode') === 'true';
+  const urlRealtorMode = urlParams.get('mode') === 'realtor';
+  const storedRealtorMode = localStorage.getItem('capiq_realtor_mode') === 'true';
+  const rsess = getRealtorSession();
 
-  if (isRealtorMode) {
-    localStorage.setItem('capiq_realtor_mode', 'true');
-    // Hide investor app shell, show realtor standalone mode
+  if (urlRealtorMode || storedRealtorMode || rsess?.realtor) {
+    // Realtor mode — hide investor shell, show realtor interface
+    if (urlRealtorMode) localStorage.setItem('capiq_realtor_mode', 'true');
     document.getElementById('app-shell').style.display = 'none';
     document.getElementById('realtor-standalone').style.display = 'flex';
-    const rsess = getRealtorSession();
     if (rsess?.realtor) {
-      onRealtorAuth(rsess.token, rsess.realtor);
-      showRealtorStandaloneDashboard();
+      // Has cached session — show dashboard immediately
+      onRealtorStandaloneAuth(rsess.token, rsess.realtor);
+      // Verify in background
+      fetch(REALTOR_AUTH_FN, {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ action: 'verify', token: rsess.token })
+      }).then(r => r.json()).then(d => {
+        if (!d.valid) { clearRealtorSession(); localStorage.removeItem('capiq_realtor_mode'); location.reload(); }
+        else if (d.realtor) onRealtorStandaloneAuth(rsess.token, d.realtor);
+      }).catch(() => {});
     } else {
+      // No session — show realtor standalone login (not the investor auth screen)
       showRealtorStandaloneLogin();
     }
   } else {
@@ -2461,7 +2576,11 @@ async function realtorStandaloneLogin() {
 
 function realtorStandaloneLogout() {
   clearRealtorSession();
-  showRealtorStandaloneLogin();
+  localStorage.removeItem('capiq_realtor_mode');
+  // Show the main auth screen so they can log in as investor or realtor
+  document.getElementById('realtor-standalone').style.display = 'none';
+  document.getElementById('app-shell').style.display = 'flex';
+  document.getElementById('auth-screen').classList.add('show');
   showToast('Signed out', 'success');
 }
 
