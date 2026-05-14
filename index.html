@@ -406,6 +406,9 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
         <button class="nav-item" onclick="showPage('match')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Match Queue
         </button>
+        <button class="nav-item" onclick="showRealtorMode()" style="background:linear-gradient(135deg,rgba(0,191,165,0.15),rgba(0,191,165,0.05));border:1px solid rgba(0,191,165,0.2)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg><span style="color:var(--teal)">Realtor Portal</span>
+        </button>
       </div>
     </nav>
     <div class="sidebar-footer">
@@ -1121,6 +1124,7 @@ function showPage(id) {
   document.querySelectorAll('.nav-item').forEach(btn=>{ if(btn.getAttribute('onclick')?.includes("'"+id+"'")) btn.classList.add('active'); });
   if(id==='match') renderMatchQueue();
   if(id==='lenders') initLenderPortal();
+  if(id==='realtor') { const sess=getRealtorSession(); if(sess?.token) verifyRealtorSession(sess.token); else showRealtorLoginScreen(); }
 }
 
 function selectPill(groupId, value, hiddenId) {
@@ -1989,11 +1993,419 @@ async function loadAdminData() {
   } catch(e) { alert('Error: ' + e.message); }
 }
 
+
+// ─── REALTOR PORTAL ────────────────────────────────────────────────────────
+
+const REALTOR_AUTH_FN = 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-realtor-auth';
+const REALTOR_PREQUAL_FN = '/.netlify/functions/realtor-prequal';
+
+let realtorSession = null;
+let prequaMessages = [];
+let currentPrequal = null;
+
+function getRealtorSession() {
+  if (realtorSession) return realtorSession;
+  try { realtorSession = JSON.parse(localStorage.getItem('capiq_realtor_session')); } catch(e) {}
+  return realtorSession;
+}
+
+function setRealtorSession(token, realtor) {
+  realtorSession = { token, realtor };
+  localStorage.setItem('capiq_realtor_session', JSON.stringify(realtorSession));
+}
+
+function clearRealtorSession() {
+  realtorSession = null;
+  localStorage.removeItem('capiq_realtor_session');
+}
+
+function showRealtorMode() {
+  showPage('realtor');
+  const sess = getRealtorSession();
+  if (sess?.token) {
+    verifyRealtorSession(sess.token);
+  }
+}
+
+async function verifyRealtorSession(token) {
+  const sess = getRealtorSession();
+  if (sess?.realtor) {
+    onRealtorAuth(sess.token, sess.realtor);
+  }
+  try {
+    const res = await fetch(REALTOR_AUTH_FN, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'verify', token })
+    });
+    const data = await res.json();
+    if (data.valid) onRealtorAuth(token, data.realtor);
+    else { clearRealtorSession(); showRealtorLoginScreen(); }
+  } catch(e) { if (!sess?.realtor) showRealtorLoginScreen(); }
+}
+
+function onRealtorAuth(token, realtor) {
+  setRealtorSession(token, realtor);
+  document.getElementById('realtor-login-screen').style.display = 'none';
+  document.getElementById('realtor-dashboard').style.display = 'block';
+  document.getElementById('realtor-user-badge').style.display = 'block';
+  document.getElementById('realtor-user-badge').textContent = realtor.name || realtor.email;
+  document.getElementById('realtor-logout-btn').style.display = 'block';
+  document.getElementById('realtor-billing-btn').style.display = 'block';
+  document.getElementById('realtor-prequal-count').textContent = realtor.prequals_this_month || 0;
+  const plan = realtor.plan || 'trial';
+  document.getElementById('realtor-plan-display').textContent = plan === 'active' ? 'Pro' : plan === 'trial' ? 'Trial' : plan;
+  const trialEnd = realtor.trial_ends_at ? new Date(realtor.trial_ends_at).toLocaleDateString() : '';
+  document.getElementById('realtor-trial-sub').textContent = plan === 'trial' ? `Trial ends ${trialEnd}` : plan === 'active' ? '$49/month' : '';
+  loadRealtorHistory();
+}
+
+function showRealtorLoginScreen() {
+  document.getElementById('realtor-login-screen').style.display = 'block';
+  document.getElementById('realtor-dashboard').style.display = 'none';
+  document.getElementById('realtor-user-badge').style.display = 'none';
+  document.getElementById('realtor-logout-btn').style.display = 'none';
+  document.getElementById('realtor-billing-btn').style.display = 'none';
+}
+
+async function realtorLogin() {
+  const email = document.getElementById('realtor-email').value.trim();
+  const password = document.getElementById('realtor-password').value;
+  const errEl = document.getElementById('realtor-login-error');
+  const btn = document.getElementById('realtor-login-btn');
+  errEl.style.display = 'none';
+  if (!email || !password) { errEl.textContent = 'Email and password required.'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  try {
+    const res = await fetch(REALTOR_AUTH_FN, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'login', email, password })
+    });
+    const data = await res.json();
+    if (data.success) onRealtorAuth(data.token, data.realtor);
+    else { errEl.textContent = data.error || 'Sign in failed.'; errEl.style.display = 'block'; }
+  } catch(e) { errEl.textContent = 'Connection error.'; errEl.style.display = 'block'; }
+  finally { btn.disabled = false; btn.textContent = 'Sign In'; }
+}
+
+function showRealtorSignup() {
+  document.getElementById('realtor-signup-modal').classList.add('show');
+}
+
+async function realtorSignup() {
+  const name = document.getElementById('rs-name').value.trim();
+  const phone = document.getElementById('rs-phone').value.trim();
+  const email = document.getElementById('rs-email').value.trim();
+  const license = document.getElementById('rs-license').value.trim();
+  const brokerage = document.getElementById('rs-brokerage').value.trim();
+  const state = document.getElementById('rs-state').value;
+  const password = document.getElementById('rs-password').value;
+  const errEl = document.getElementById('realtor-signup-error');
+  const btn = document.getElementById('rs-btn');
+  errEl.style.display = 'none';
+  if (!name || !email || !password) { errEl.textContent = 'Name, email, and password are required.'; errEl.style.display = 'block'; return; }
+  if (password.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Creating account...';
+  try {
+    const res = await fetch(REALTOR_AUTH_FN, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'signup', email, password, fullName: name, phone, licenseNumber: license, brokerage, state })
+    });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('realtor-signup-modal').classList.remove('show');
+      onRealtorAuth(data.token, data.realtor);
+      showToast('Welcome to Underlytix Realtor Portal!', 'success');
+      // Fire welcome email
+      fetch('/.netlify/functions/resend-email', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ type: 'welcome', to: email, name })
+      }).catch(()=>{});
+    } else { errEl.textContent = data.error || 'Signup failed.'; errEl.style.display = 'block'; }
+  } catch(e) { errEl.textContent = 'Connection error.'; errEl.style.display = 'block'; }
+  finally { btn.disabled = false; btn.textContent = 'Start Free Trial'; }
+}
+
+function realtorLogout() {
+  clearRealtorSession();
+  showRealtorLoginScreen();
+  showToast('Signed out', 'success');
+}
+
+function realtorCheckout() {
+  showToast('Billing coming soon — contact support@underlytix.com', 'success');
+}
+
+async function loadRealtorHistory() {
+  const sess = getRealtorSession();
+  if (!sess?.token) return;
+  try {
+    const res = await fetch(REALTOR_PREQUAL_FN, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'history', token: sess.token })
+    });
+    const data = await res.json();
+    if (data.success && data.history?.length > 0) {
+      const container = document.getElementById('realtor-prequal-history-preview');
+      const resultColors = { likely_qualifies: 'chip-green', borderline: 'chip-yellow', unlikely: 'chip-red', needs_review: 'chip-gray' };
+      const resultLabels = { likely_qualifies: 'Likely Qualifies', borderline: 'Borderline', unlikely: 'Unlikely', needs_review: 'Needs Review' };
+      container.innerHTML = `<div class="label" style="margin-bottom:10px">Recent Prequals</div>` +
+        data.history.slice(0, 5).map(p => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:var(--text-1)">${p.client_name || 'Client'}</div>
+              <div style="font-size:11px;color:var(--text-4)">${p.loan_type || '—'} · ${p.state || '—'} · ${new Date(p.created_at).toLocaleDateString()}</div>
+            </div>
+            <span class="chip ${resultColors[p.prequal_result] || 'chip-gray'}">${resultLabels[p.prequal_result] || p.prequal_result || '—'}</span>
+          </div>`).join('');
+    }
+  } catch(e) { /* silent fail */ }
+}
+
+// ── Prequal Chat ────────────────────────────────────────────────────────────
+
+function startNewPrequal() {
+  prequaMessages = [];
+  currentPrequal = null;
+  const messagesEl = document.getElementById('prequal-chat-messages');
+  messagesEl.innerHTML = `<div class="chat-msg assistant" style="background:var(--bg-3);border-radius:12px;padding:14px 16px;font-size:14px;color:var(--text-2);max-width:90%;line-height:1.6">
+    Hi! Tell me about your client. You can start with something like: <em>"I have a buyer looking at a $350k home in Tampa, puts down 20%, W-2 income around $7k/month, credit around 700, no major debts."</em>
+  </div>`;
+  document.getElementById('prequal-result-banner').style.display = 'none';
+  document.getElementById('prequal-save-btn').style.display = 'none';
+  document.getElementById('prequal-input').value = '';
+  document.getElementById('prequal-chat-modal').classList.add('show');
+}
+
+function closePrequalChat() {
+  document.getElementById('prequal-chat-modal').classList.remove('show');
+}
+
+function appendChatMessage(role, text) {
+  const el = document.getElementById('prequal-chat-messages');
+  const isAssistant = role === 'assistant';
+  const div = document.createElement('div');
+  div.style.cssText = `background:${isAssistant ? 'var(--bg-3)' : 'rgba(0,191,165,0.1)'};border-radius:12px;padding:14px 16px;font-size:14px;color:var(--text-2);max-width:90%;line-height:1.6;align-self:${isAssistant ? 'flex-start' : 'flex-end'};margin-left:${isAssistant ? '0' : 'auto'}`;
+  div.textContent = text;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+async function sendPrequal() {
+  const input = document.getElementById('prequal-input');
+  const text = input.value.trim();
+  if (!text) return;
+
+  input.value = '';
+  appendChatMessage('user', text);
+  prequaMessages.push({ role: 'user', content: text });
+
+  const btn = document.getElementById('prequal-send-btn');
+  btn.disabled = true; btn.textContent = '...';
+
+  // Add typing indicator
+  const typingEl = document.getElementById('prequal-chat-messages');
+  const typingDiv = document.createElement('div');
+  typingDiv.id = 'typing-indicator';
+  typingDiv.style.cssText = 'background:var(--bg-3);border-radius:12px;padding:14px 16px;font-size:14px;color:var(--text-4);max-width:90%';
+  typingDiv.textContent = 'Analyzing...';
+  typingEl.appendChild(typingDiv);
+  typingEl.scrollTop = typingEl.scrollHeight;
+
+  try {
+    const res = await fetch(REALTOR_PREQUAL_FN, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'chat', messages: prequaMessages })
+    });
+    const data = await res.json();
+
+    // Remove typing indicator
+    document.getElementById('typing-indicator')?.remove();
+
+    if (data.success) {
+      prequaMessages.push({ role: 'assistant', content: data.message });
+      appendChatMessage('assistant', data.message);
+
+      // If prequal result is ready, show result banner
+      if (data.prequal?.ready || data.prequal?.result) {
+        currentPrequal = data.prequal;
+        const resultColors = { likely_qualifies: '#00bfa5', borderline: '#f59e0b', unlikely: '#ef4444', needs_review: '#6b7280' };
+        const resultLabels = { likely_qualifies: '✓ Likely Qualifies', borderline: '⚠ Borderline', unlikely: '✗ Unlikely to Qualify', needs_review: '? Needs Review' };
+        const banner = document.getElementById('prequal-result-banner');
+        banner.style.display = 'block';
+        banner.innerHTML = `
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div>
+              <div style="font-size:13px;font-weight:700;color:${resultColors[data.prequal.result]||'var(--teal)'};margin-bottom:4px">${resultLabels[data.prequal.result]||data.prequal.result}</div>
+              <div style="font-size:12px;color:var(--text-3)">${data.prequal.loanType?.toUpperCase()||'—'} · Max $${data.prequal.maxLoanAmount?.toLocaleString()||'—'} · DTI ${data.prequal.backEndDTI||'—'}%</div>
+              ${data.prequal.riskFlags?.length ? `<div style="font-size:11px;color:var(--red);margin-top:4px">⚠ ${data.prequal.riskFlags.join(' · ')}</div>` : ''}
+            </div>
+            <div style="font-size:10px;color:var(--text-4);text-align:right;line-height:1.4">Based on<br>provided data</div>
+          </div>`;
+        document.getElementById('prequal-save-btn').style.display = 'block';
+      }
+    } else {
+      document.getElementById('typing-indicator')?.remove();
+      appendChatMessage('assistant', 'Sorry, something went wrong. Please try again.');
+    }
+  } catch(e) {
+    document.getElementById('typing-indicator')?.remove();
+    appendChatMessage('assistant', 'Connection error. Please try again.');
+  } finally { btn.disabled = false; btn.textContent = 'Send'; }
+}
+
+async function savePrequal() {
+  const sess = getRealtorSession();
+  if (!sess?.token || !currentPrequal) return;
+  const clientName = prompt('Client name or reference (optional):') || 'Client';
+  try {
+    const res = await fetch(REALTOR_PREQUAL_FN, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        action: 'save', token: sess.token,
+        clientData: { clientName, prequal: currentPrequal, messages: prequaMessages }
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Prequal saved to your pipeline', 'success');
+      document.getElementById('prequal-save-btn').textContent = '✓ Saved';
+      document.getElementById('prequal-save-btn').disabled = true;
+      loadRealtorHistory();
+      // Update count
+      const countEl = document.getElementById('realtor-prequal-count');
+      countEl.textContent = parseInt(countEl.textContent || 0) + 1;
+    }
+  } catch(e) { showToast('Save failed', 'error'); }
+}
+
+// Initialize realtor session on page load if on realtor page
+if (window.location.hash === '#realtor') showRealtorMode();
+
 function showToast(msg,type) {
   const t=document.getElementById('toast');
   t.textContent=msg; t.className='toast show '+type;
   setTimeout(()=>t.classList.remove('show'),3500);
 }
 </script>
+
+    <!-- REALTOR PORTAL PAGE -->
+    <div class="page" id="page-realtor">
+      <div class="topbar">
+        <div><div class="topbar-title">Realtor Portal</div><div class="topbar-meta">Client prequalification — anytime, any day</div></div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span id="realtor-user-badge" style="display:none;font-family:'DM Mono',monospace;font-size:11px;color:var(--teal)"></span>
+          <button id="realtor-billing-btn" onclick="realtorCheckout()" style="display:none" class="btn btn-primary" style="font-size:11px">Manage Billing</button>
+          <button id="realtor-logout-btn" onclick="realtorLogout()" style="display:none" class="btn btn-ghost" style="font-size:11px">Sign Out</button>
+          <span class="chip chip-green">● LIVE</span>
+        </div>
+      </div>
+      <div class="content">
+
+        <!-- LOGIN SCREEN -->
+        <div id="realtor-login-screen">
+          <div style="max-width:420px;margin:40px auto">
+            <div class="card">
+              <div style="background:var(--navy);padding:28px;border-radius:10px 10px 0 0;text-align:center">
+                <div style="font-size:28px;margin-bottom:8px">🏠</div>
+                <div style="font-size:18px;font-weight:700;color:white;margin-bottom:6px">Realtor Portal</div>
+                <div style="font-size:12px;color:rgba(255,255,255,0.5)">Client prequalification, anytime</div>
+              </div>
+              <div class="card-body">
+                <div id="realtor-login-error" style="display:none;font-size:12px;color:var(--red);background:var(--red-dim);border:1px solid rgba(220,38,38,0.15);border-radius:6px;padding:10px;margin-bottom:16px"></div>
+                <div class="field" style="margin-bottom:14px"><label class="label">Email</label><input class="input" id="realtor-email" type="email" placeholder="you@brokerage.com"></div>
+                <div class="field" style="margin-bottom:20px"><label class="label">Password</label><input class="input" id="realtor-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')realtorLogin()"></div>
+                <button class="btn btn-primary" id="realtor-login-btn" onclick="realtorLogin()" style="width:100%;justify-content:center">Sign In</button>
+                <div style="margin-top:16px;text-align:center">
+                  <span style="font-size:12px;color:var(--text-4)">New here? </span>
+                  <span onclick="showRealtorSignup()" style="font-size:12px;color:var(--teal);cursor:pointer;font-weight:600">Create free account →</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PREQUAL DASHBOARD -->
+        <div id="realtor-dashboard" style="display:none">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:24px">
+            <div class="stat-card"><div class="stat-top"><span class="stat-label">Prequals This Month</span></div><div class="stat-value teal" id="realtor-prequal-count">0</div><div class="stat-sub">Client assessments</div></div>
+            <div class="stat-card"><div class="stat-top"><span class="stat-label">Plan</span></div><div class="stat-value teal" id="realtor-plan-display">Trial</div><div class="stat-sub" id="realtor-trial-sub">14-day free trial</div></div>
+            <div class="stat-card"><div class="stat-top"><span class="stat-label">Available</span></div><div class="stat-value teal">24/7</div><div class="stat-sub">Friday midnight. Saturday 8pm. Always.</div></div>
+          </div>
+
+          <!-- START PREQUAL -->
+          <div class="card" style="margin-bottom:24px">
+            <div class="card-body">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+                <div><div style="font-size:15px;font-weight:700;color:var(--text-1)">New Client Prequalification</div><div style="font-size:12px;color:var(--text-4);margin-top:2px">Just describe your client's situation — I'll handle the rest</div></div>
+                <button class="btn btn-primary" onclick="startNewPrequal()">+ New Prequal</button>
+              </div>
+              <div id="realtor-prequal-history-preview"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REALTOR SIGNUP MODAL -->
+    <div class="modal-overlay" id="realtor-signup-modal">
+      <div class="modal-box" style="max-width:520px">
+        <div style="background:var(--navy);padding:20px 24px;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center">
+          <div style="color:white;font-size:15px;font-weight:700">Realtor Portal — Create Account</div>
+          <span onclick="document.getElementById('realtor-signup-modal').classList.remove('show')" style="color:rgba(255,255,255,0.5);cursor:pointer;font-size:20px">×</span>
+        </div>
+        <div class="modal-body">
+          <p style="font-size:13px;color:var(--text-3);margin:0 0 20px">14-day free trial. $49/month after. Unlimited client prequalifications.</p>
+          <div id="realtor-signup-error" style="display:none;font-size:12px;color:var(--red);background:var(--red-dim);border:1px solid rgba(220,38,38,0.15);border-radius:6px;padding:10px;margin-bottom:16px"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+            <div class="field"><label class="label">Full Name</label><input class="input" id="rs-name" type="text" placeholder="Jane Smith"></div>
+            <div class="field"><label class="label">Phone</label><input class="input" id="rs-phone" type="tel" placeholder="(305) 555-0100"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+            <div class="field"><label class="label">Email</label><input class="input" id="rs-email" type="email" placeholder="jane@brokerage.com"></div>
+            <div class="field"><label class="label">License Number</label><input class="input" id="rs-license" type="text" placeholder="SL3456789"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+            <div class="field"><label class="label">Brokerage</label><input class="input" id="rs-brokerage" type="text" placeholder="EXP Realty"></div>
+            <div class="field"><label class="label">State</label>
+              <select class="input" id="rs-state" style="appearance:auto">
+                <option value="FL">Florida</option><option value="TX">Texas</option><option value="CA">California</option><option value="GA">Georgia</option><option value="NY">New York</option><option value="NC">North Carolina</option><option value="OH">Ohio</option><option value="AZ">Arizona</option><option value="CO">Colorado</option><option value="NV">Nevada</option>
+              </select>
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:20px"><label class="label">Password</label><input class="input" id="rs-password" type="password" placeholder="Min 8 characters"></div>
+          <button class="btn btn-primary" id="rs-btn" onclick="realtorSignup()" style="width:100%;justify-content:center">Start Free Trial</button>
+          <p style="font-size:11px;color:var(--text-4);margin:12px 0 0;text-align:center">Already have an account? <span onclick="document.getElementById('realtor-signup-modal').classList.remove('show')" style="color:var(--teal);cursor:pointer">Sign in</span></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- PREQUAL CHAT MODAL -->
+    <div class="modal-overlay" id="prequal-chat-modal">
+      <div class="modal-box" style="max-width:680px;max-height:85vh;display:flex;flex-direction:column">
+        <div style="background:var(--navy);padding:18px 24px;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+          <div>
+            <div style="color:white;font-size:15px;font-weight:700">Client Prequalification</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">Describe your client's situation naturally</div>
+          </div>
+          <span onclick="closePrequalChat()" style="color:rgba(255,255,255,0.5);cursor:pointer;font-size:20px">×</span>
+        </div>
+        <div id="prequal-chat-messages" style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;min-height:300px;max-height:calc(85vh - 200px)">
+          <div class="chat-msg assistant" style="background:var(--bg-3);border-radius:12px;padding:14px 16px;font-size:14px;color:var(--text-2);max-width:90%;line-height:1.6">
+            Hi! Tell me about your client. You can start with something like: <em>"I have a buyer looking at a $350k home in Tampa, puts down 20%, W-2 income around $7k/month, credit around 700, no major debts."</em>
+          </div>
+        </div>
+        <div id="prequal-result-banner" style="display:none;flex-shrink:0;padding:14px 20px;background:linear-gradient(135deg,rgba(0,191,165,0.1),rgba(0,191,165,0.05));border-top:1px solid rgba(0,191,165,0.2)"></div>
+        <div style="padding:16px 20px;border-top:1px solid var(--border);flex-shrink:0">
+          <div style="display:flex;gap:10px">
+            <textarea id="prequal-input" placeholder="Describe your client..." rows="2" style="flex:1;background:var(--bg-3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text-1);font-size:14px;resize:none;font-family:inherit;line-height:1.5" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendPrequal()}"></textarea>
+            <button onclick="sendPrequal()" id="prequal-send-btn" class="btn btn-primary" style="align-self:flex-end;padding:10px 20px">Send</button>
+          </div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+            <span style="font-size:11px;color:var(--text-4)">Press Enter to send, Shift+Enter for new line</span>
+            <button id="prequal-save-btn" onclick="savePrequal()" style="display:none" class="btn btn-ghost" style="font-size:12px">💾 Save & Add to Pipeline</button>
+          </div>
+        </div>
+      </div>
+    </div>
 </body>
 </html>

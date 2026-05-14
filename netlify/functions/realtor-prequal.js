@@ -1,0 +1,276 @@
+// Realtor Client Prequalification Engine
+// Guidelines-accurate: 2025/2026 conforming limits, FHA, DSCR, Hard Money, Non-QM
+// Data is provided by realtor — we apply rules, not verify documents
+
+export default async (req) => {
+  const cors = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type",
+    "Content-Type": "application/json",
+  };
+  if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: cors });
+  if (req.method !== "POST") return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: cors });
+
+  try {
+    const ANTHROPIC_KEY = Netlify.env.get("ANTHROPIC_API_KEY");
+    const SUPABASE_URL = "https://mxyepucitjzleaziizkr.supabase.co";
+    const REALTOR_AUTH_FN = `${SUPABASE_URL}/functions/v1/capiq-realtor-auth`;
+
+    const body = await req.json();
+    const { action, token, messages, clientData } = body;
+
+    // ── CHAT: conversational prequal intake ──────────────────────────────────
+    if (action === "chat") {
+      if (!ANTHROPIC_KEY) throw new Error("ANTHROPIC_API_KEY not configured");
+
+      // Guidelines reference injected into system prompt — updated for 2025/2026
+      const GUIDELINES = `
+LOAN LIMITS (2025/2026 — use these exactly):
+- Conforming (Fannie/Freddie): $806,500 standard, up to $1,209,750 high-cost areas
+- FHA: varies by county; standard $524,225, high-cost up to $1,209,750
+- VA: no loan limit for eligible veterans with full entitlement
+- Jumbo: any loan above conforming limit
+- DSCR: typically $150k–$3M depending on lender
+
+DTI LIMITS:
+- Conventional: front-end ≤28%, back-end ≤45% (up to 50% with strong compensating factors: 20%+ down, 740+ credit, 6+ months reserves)
+- FHA: front-end ≤31%, back-end ≤43% standard; up to 57% with AUS approval and compensating factors
+- VA: no front-end limit; back-end ≤41% guideline, higher with residual income
+- Jumbo: back-end ≤43% typically, stricter with some lenders
+- DSCR loans: NO personal income/DTI required — rental income / PITIA ≥ 1.0 (most lenders want 1.1–1.25)
+- Bank statement loans: 12–24 months bank statements, no W-2, DTI varies by lender
+
+DOWN PAYMENT / LTV:
+- Conventional: 3% (first-time, HomeReady/HomePossible), 5% standard, 20% to avoid PMI
+- FHA: 3.5% with 580+ credit; 10% with 500–579 credit
+- VA: 0% down for eligible veterans
+- USDA: 0% down, rural areas only
+- Jumbo: 10–20% typically, varies by lender
+- Hard money / bridge: 10–35% depending on ARV vs purchase, typically 65–75% LTV or 70–80% of ARV
+- DSCR: 20–25% down typical, up to 80% LTV
+- Fix & Flip: purchase + rehab, typically 90% of purchase + 100% of rehab up to 70% ARV
+
+CREDIT SCORE MINIMUMS:
+- Conventional: 620 minimum, 740+ for best rates
+- FHA: 580 for 3.5% down; 500–579 for 10% down
+- VA: no official minimum, lenders typically require 580–620
+- Jumbo: 700–720 minimum, most require 740+
+- DSCR: 660–680 minimum, 700+ preferred
+- Hard money: 600+ (some lenders 580+, asset-based not credit-based)
+- Bank statement / Non-QM: 620–640 minimum
+
+EMPLOYMENT TYPES → LOAN PRODUCTS:
+- W-2 employed 2+ years → Conventional, FHA, VA, USDA, Jumbo
+- Self-employed 2+ years (strong returns) → Conventional, FHA, Jumbo
+- Self-employed (<2 years or complex returns) → Bank statement loan, Non-QM
+- 1099 contractor → Bank statement loan, or conventional if 2yr history
+- Investor (rental income) → DSCR (no personal income needed)
+- Investor (flip/rehab) → Hard money, bridge loan
+- Foreign national → Non-QM foreign national program (no SSN required)
+- ITIN borrower → FHA with ITIN (some lenders), Non-QM
+
+PROPERTY TYPES:
+- Primary residence: all programs eligible
+- Second home: conventional only (10% down minimum), not FHA/VA/USDA
+- Investment SFR (rental): DSCR, conventional (25% down)
+- Investment 2-4 unit: DSCR, conventional (25% down for investment, 3.5% if owner-occupying one unit)
+- Multifamily 5+: commercial loan, not residential guidelines
+- Condo: standard programs but warrantable condo required for conventional/FHA
+- Non-warrantable condo: Non-QM, portfolio loan
+
+RESERVES REQUIREMENTS:
+- Conventional: 2–6 months PITI
+- Jumbo: 6–12 months PITI
+- DSCR: 3–6 months PITI per property
+- FHA: not required but helps with AUS
+
+KEY CALCULATIONS:
+- Monthly payment (P&I): M = P * [r(1+r)^n] / [(1+r)^n - 1] where r = monthly rate, n = months
+- Front-end DTI = (PITI) / gross monthly income * 100
+- Back-end DTI = (PITI + all monthly debts) / gross monthly income * 100
+- DSCR = gross monthly rent / (P&I + taxes + insurance + HOA)
+- Max purchase (conventional): work backwards from max DTI and income
+`;
+
+      const systemPrompt = `You are an expert mortgage prequalification assistant for Underlytix, helping real estate agents quickly assess their clients' financing eligibility. You are NOT a lender and you do NOT verify documents. The realtor provides data — you apply lending guidelines accurately.
+
+${GUIDELINES}
+
+YOUR JOB:
+1. Gather client information through natural conversation. Ask one or two questions at a time — never a list.
+2. Determine the right loan product based on the situation.
+3. Run accurate calculations based on the guidelines above.
+4. Produce a clear, honest prequalification assessment.
+
+INFORMATION YOU NEED (gather naturally):
+- Purchase price and target loan amount (or down payment %)
+- Client's gross monthly or annual income
+- Monthly debt obligations (car, student loans, credit cards, etc.)
+- Credit score (approximate range is fine)
+- Employment type (W-2, self-employed, 1099, investor)
+- Property type and intended use (primary, investment, second home)
+- State and county (for loan limits)
+
+CONVERSATION STYLE:
+- Talk to the realtor directly ("Your client..."), not to the client
+- Be conversational and fast — realtors are busy
+- When you have enough info, calculate and give a clear answer
+- State the result plainly: "Based on what you've shared, your client likely qualifies for a [loan type] up to $[amount]"
+- Always note: "This is based on the information provided. Final approval requires lender underwriting."
+- Flag risks honestly: high DTI, low credit, unusual employment, etc.
+
+When you have enough information to make a determination, respond with a JSON block at the end of your message in this exact format:
+<PREQUAL_RESULT>
+{
+  "ready": true,
+  "loanType": "conventional|fha|va|usda|jumbo|dscr|hard_money|bank_statement|non_qm",
+  "result": "likely_qualifies|borderline|unlikely|needs_review",
+  "maxLoanAmount": 0,
+  "estimatedMonthlyPayment": 0,
+  "frontEndDTI": 0,
+  "backEndDTI": 0,
+  "ltv": 0,
+  "creditScoreAssessment": "strong|acceptable|borderline|insufficient",
+  "summary": "2-3 sentence plain English summary",
+  "recommendedProducts": ["product1", "product2"],
+  "riskFlags": ["flag1", "flag2"],
+  "nextSteps": "What the realtor should do next"
+}
+</PREQUAL_RESULT>
+
+If you don't have enough information yet, set "ready": false and omit the other fields.`;
+
+      const response = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-api-key": ANTHROPIC_KEY,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: "claude-sonnet-4-20250514",
+          max_tokens: 1500,
+          system: systemPrompt,
+          messages: messages || [],
+        }),
+      });
+
+      if (!response.ok) {
+        const err = await response.text();
+        throw new Error(`Anthropic error: ${err}`);
+      }
+
+      const data = await response.json();
+      const text = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("");
+
+      // Extract structured result if present
+      let prequal = null;
+      const match = text.match(/<PREQUAL_RESULT>([\s\S]*?)<\/PREQUAL_RESULT>/);
+      if (match) {
+        try { prequal = JSON.parse(match[1].trim()); } catch (e) { /* ignore */ }
+      }
+
+      // Clean message (remove the JSON block from display)
+      const cleanText = text.replace(/<PREQUAL_RESULT>[\s\S]*?<\/PREQUAL_RESULT>/g, "").trim();
+
+      return new Response(JSON.stringify({
+        success: true,
+        message: cleanText,
+        prequal: prequal?.ready ? prequal : null,
+      }), { status: 200, headers: cors });
+    }
+
+    // ── SAVE: persist completed prequal to Supabase ──────────────────────────
+    if (action === "save") {
+      if (!token) return new Response(JSON.stringify({ error: "Token required" }), { status: 401, headers: cors });
+
+      // Verify realtor token
+      const authRes = await fetch(REALTOR_AUTH_FN, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "verify", token }),
+      });
+      const authData = await authRes.json();
+      if (!authData.valid) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: cors });
+
+      const realtorId = authData.realtor.id;
+      const p = clientData?.prequal || {};
+
+      // Save via Supabase REST
+      const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eWVwdWNpdGp6bGVhemlpemtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0Njk1ODIsImV4cCI6MjA5MDA0NTU4Mn0.oQr_hO5fVkOhGcJ2u3mqQDJIfw9cAdXwfVAAXOf96q4";
+      const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/client_prequals`, {
+        method: "POST",
+        headers: {
+          "apikey": ANON_KEY,
+          "Authorization": `Bearer ${ANON_KEY}`,
+          "Content-Type": "application/json",
+          "Prefer": "return=representation",
+        },
+        body: JSON.stringify({
+          realtor_id: realtorId,
+          client_name: clientData?.clientName || "Client",
+          loan_type: p.loanType,
+          property_type: clientData?.propertyType,
+          purchase_price: clientData?.purchasePrice,
+          loan_amount: p.maxLoanAmount,
+          ltv: p.ltv,
+          front_end_dti: p.frontEndDTI,
+          back_end_dti: p.backEndDTI,
+          credit_score: clientData?.creditScore,
+          state: clientData?.state,
+          prequal_result: p.result,
+          max_loan_amount: p.maxLoanAmount,
+          recommended_products: p.recommendedProducts,
+          ai_summary: p.summary,
+          risk_flags: p.riskFlags,
+          raw_chat: clientData?.messages,
+        }),
+      });
+
+      if (!insertRes.ok) {
+        const e = await insertRes.json();
+        throw new Error(e.message || "Failed to save prequal");
+      }
+
+      const saved = await insertRes.json();
+
+      // Increment usage
+      await fetch(REALTOR_AUTH_FN, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "increment_usage", token }),
+      });
+
+      return new Response(JSON.stringify({ success: true, prequal: saved[0] }), { status: 200, headers: cors });
+    }
+
+    // ── HISTORY: get realtor's past prequals ─────────────────────────────────
+    if (action === "history") {
+      if (!token) return new Response(JSON.stringify({ error: "Token required" }), { status: 401, headers: cors });
+      const authRes = await fetch(REALTOR_AUTH_FN, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "verify", token }),
+      });
+      const authData = await authRes.json();
+      if (!authData.valid) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: cors });
+
+      const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eWVwdWNpdGp6bGVhemlpemtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0Njk1ODIsImV4cCI6MjA5MDA0NTU4Mn0.oQr_hO5fVkOhGcJ2u3mqQDJIfw9cAdXwfVAAXOf96q4";
+      const histRes = await fetch(
+        `${SUPABASE_URL}/rest/v1/client_prequals?realtor_id=eq.${authData.realtor.id}&order=created_at.desc&limit=20`,
+        { headers: { "apikey": ANON_KEY, "Authorization": `Bearer ${ANON_KEY}` } }
+      );
+      const history = await histRes.json();
+      return new Response(JSON.stringify({ success: true, history }), { status: 200, headers: cors });
+    }
+
+    return new Response(JSON.stringify({ error: "Unknown action" }), { status: 400, headers: cors });
+
+  } catch (e) {
+    console.error("realtor-prequal error:", e.message);
+    return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: cors });
+  }
+};
+
+export const config = { path: "/.netlify/functions/realtor-prequal" };
