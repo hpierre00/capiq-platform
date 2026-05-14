@@ -417,7 +417,7 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
         <div style="font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px" id="sidebar-email"></div>
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between">
-        <span class="plan-badge" id="sidebar-plan">STARTER</span>
+        <span class="plan-badge" id="sidebar-plan" onclick="showUpgradePrompt()" style="cursor:pointer" title="Click to upgrade">STARTER</span>
         <button onclick="logout()" style="background:none;border:none;cursor:pointer;font-size:11px;color:rgba(255,255,255,0.35);font-family:'DM Mono',monospace;letter-spacing:.06em">SIGN OUT</button>
       </div>
       <div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)">
@@ -1124,7 +1124,7 @@ function showPage(id) {
   document.querySelectorAll('.nav-item').forEach(btn=>{ if(btn.getAttribute('onclick')?.includes("'"+id+"'")) btn.classList.add('active'); });
   if(id==='match') renderMatchQueue();
   if(id==='lenders') initLenderPortal();
-  if(id==='realtor') { const sess=getRealtorSession(); if(sess?.token) verifyRealtorSession(sess.token); else showRealtorLoginScreen(); }
+  // realtor init handled by showRealtorMode() directly
 }
 
 function selectPill(groupId, value, hiddenId) {
@@ -2021,17 +2021,21 @@ function clearRealtorSession() {
 
 function showRealtorMode() {
   showPage('realtor');
+  // Show correct screen immediately — don't wait for async
   const sess = getRealtorSession();
-  if (sess?.token) {
+  if (sess?.realtor) {
+    // Has cached session — show dashboard right away
+    onRealtorAuth(sess.token, sess.realtor);
+    // Then silently verify in background
     verifyRealtorSession(sess.token);
+  } else {
+    // No session — show login immediately
+    showRealtorLoginScreen();
   }
 }
 
 async function verifyRealtorSession(token) {
   const sess = getRealtorSession();
-  if (sess?.realtor) {
-    onRealtorAuth(sess.token, sess.realtor);
-  }
   try {
     const res = await fetch(REALTOR_AUTH_FN, {
       method: 'POST', headers: {'Content-Type':'application/json'},
@@ -2310,12 +2314,49 @@ async function savePrequal() {
 // Initialize realtor session on page load if on realtor page
 if (window.location.hash === '#realtor') showRealtorMode();
 
+function showUpgradePrompt() {
+  const plan = document.getElementById('sidebar-plan')?.textContent?.trim();
+  if (plan === 'PRO') {
+    // Already pro — show billing portal option
+    showToast('You are on Pro. Use the billing portal to manage your subscription.', 'success');
+    return;
+  }
+  // Show upgrade modal
+  const modal = document.getElementById('upgrade-modal');
+  if (modal) modal.classList.add('show');
+}
+
 function showToast(msg,type) {
   const t=document.getElementById('toast');
   t.textContent=msg; t.className='toast show '+type;
   setTimeout(()=>t.classList.remove('show'),3500);
 }
 </script>
+
+    <!-- UPGRADE MODAL -->
+    <div class="modal-overlay" id="upgrade-modal">
+      <div class="modal-box" style="max-width:480px">
+        <div style="background:var(--navy);padding:24px;border-radius:14px 14px 0 0;text-align:center">
+          <div style="font-size:24px;margin-bottom:8px">⚡</div>
+          <div style="font-size:18px;font-weight:700;color:white">Upgrade to Pro</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.5);margin-top:4px">Unlimited analyses every month</div>
+        </div>
+        <div class="modal-body">
+          <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:24px">
+            <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text-2)"><span style="color:var(--teal);font-size:16px">✓</span> Unlimited deal analyses per month</div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text-2)"><span style="color:var(--teal);font-size:16px">✓</span> Priority lender matching</div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text-2)"><span style="color:var(--teal);font-size:16px">✓</span> Full AI analysis reports</div>
+            <div style="display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text-2)"><span style="color:var(--teal);font-size:16px">✓</span> Notion CRM sync on every deal</div>
+          </div>
+          <div style="text-align:center;margin-bottom:20px">
+            <div style="font-size:36px;font-weight:800;color:var(--text-1)">$97<span style="font-size:16px;font-weight:400;color:var(--text-4)">/month</span></div>
+            <div style="font-size:11px;color:var(--text-4);margin-top:4px">Cancel anytime</div>
+          </div>
+          <a href="https://buy.stripe.com/aFa7sM7Aa7LWglb5Qo3VC00" target="_blank" class="btn btn-primary" style="width:100%;justify-content:center;display:flex;text-decoration:none" onclick="document.getElementById('upgrade-modal').classList.remove('show')">Upgrade Now →</a>
+          <button onclick="document.getElementById('upgrade-modal').classList.remove('show')" class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:10px">Maybe later</button>
+        </div>
+      </div>
+    </div>
 
     <!-- REALTOR PORTAL PAGE -->
     <div class="page" id="page-realtor">
