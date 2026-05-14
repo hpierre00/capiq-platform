@@ -2235,9 +2235,11 @@ async function sendPrequal() {
         banner.innerHTML = `
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
             <div>
-              <div style="font-size:13px;font-weight:700;color:${resultColors[data.prequal.result]||'var(--teal)'};margin-bottom:4px">${resultLabels[data.prequal.result]||data.prequal.result}</div>
-              <div style="font-size:12px;color:var(--text-3)">${data.prequal.loanType?.toUpperCase()||'—'} · Max $${data.prequal.maxLoanAmount?.toLocaleString()||'—'} · DTI ${data.prequal.backEndDTI||'—'}%</div>
-              ${data.prequal.riskFlags?.length ? `<div style="font-size:11px;color:var(--red);margin-top:4px">⚠ ${data.prequal.riskFlags.join(' · ')}</div>` : ''}
+              <div style="font-size:13px;font-weight:700;color:${resultColors[data.prequal.result]||'var(--teal)'};margin-bottom:6px">${resultLabels[data.prequal.result]||data.prequal.result}</div>
+              <div style="font-size:12px;color:var(--text-3);margin-bottom:4px">${data.prequal.loanType?.toUpperCase()||'—'} · Max Loan $${data.prequal.maxLoanAmount?.toLocaleString()||'—'} · Back-end DTI ${data.prequal.backEndDTI||'—'}% · Front-end DTI ${data.prequal.frontEndDTI||'—'}%</div>
+              ${data.prequal.monthlyPITIA ? `<div style="font-size:11px;color:var(--text-4);margin-bottom:4px">P&I $${data.prequal.monthlyPI?.toLocaleString()||'—'} + Taxes $${data.prequal.monthlyTaxes?.toLocaleString()||'—'} + Insurance $${data.prequal.monthlyInsurance?.toLocaleString()||'—'} + HOA $${data.prequal.monthlyHOA?.toLocaleString()||'0'} = <strong style="color:var(--text-2)">PITIA $${data.prequal.monthlyPITIA?.toLocaleString()}/mo</strong></div>` : ''}
+              ${data.prequal.riskFlags?.length ? `<div style="font-size:11px;color:var(--red);margin-top:2px">⚠ ${data.prequal.riskFlags.join(' · ')}</div>` : ''}
+              <div style="font-size:10px;color:var(--text-4);margin-top:6px;font-style:italic">Not a commitment to lend. Subject to full lender underwriting and approval.</div>
             </div>
             <div style="font-size:10px;color:var(--text-4);text-align:right;line-height:1.4">Based on<br>provided data</div>
           </div>`;
