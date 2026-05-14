@@ -18,7 +18,9 @@ export default async (req) => {
     const REALTOR_AUTH_FN = `${SUPABASE_URL}/functions/v1/capiq-realtor-auth`;
 
     const body = await req.json();
-    const { action, token, messages, clientData } = body;
+    const { action, token, messages, clientData, successUrl, cancelUrl } = body;
+    const REALTOR_PRICE_ID = 'price_1TX81gBdTWAzjDqGDWtzfK7J';
+    const STRIPE_SECRET = Netlify.env.get("STRIPE_SECRET_KEY") || "";
 
     // ── CHAT: conversational prequal intake ──────────────────────────────────
     if (action === "chat") {
@@ -307,6 +309,92 @@ If you don't have enough information yet, set "ready": false and omit the other 
       );
       const history = await histRes.json();
       return new Response(JSON.stringify({ success: true, history }), { status: 200, headers: cors });
+    }
+
+    // ── CHECKOUT: start Stripe subscription for realtor ────────────────────────
+    if (action === "create_checkout") {
+      if (!token) return new Response(JSON.stringify({ error: "Token required" }), { status: 401, headers: cors });
+      const authRes = await fetch(REALTOR_AUTH_FN, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "verify", token }),
+      });
+      const authData = await authRes.json();
+      if (!authData.valid) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: cors });
+      const realtor = authData.realtor;
+      if (!STRIPE_SECRET) return new Response(JSON.stringify({ success: true, checkoutUrl: "https://buy.stripe.com/realtor_placeholder" }), { status: 200, headers: cors });
+
+      // Create or retrieve Stripe customer
+      const SUPABASE_URL_LOCAL = "https://mxyepucitjzleaziizkr.supabase.co";
+      const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eWVwdWNpdGp6bGVhemlpemtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0Njk1ODIsImV4cCI6MjA5MDA0NTU4Mn0.oQr_hO5fVkOhGcJ2u3mqQDJIfw9cAdXwfVAAXOf96q4";
+
+      // Check for existing stripe_customer_id
+      const userRes = await fetch(`${SUPABASE_URL_LOCAL}/rest/v1/realtor_users?id=eq.${realtor.id}&select=stripe_customer_id`, {
+        headers: { "apikey": ANON_KEY, "Authorization": `Bearer ${ANON_KEY}` }
+      });
+      const userRows = await userRes.json();
+      let cid = userRows[0]?.stripe_customer_id;
+
+      if (!cid) {
+        const cr = await fetch("https://api.stripe.com/v1/customers", {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${STRIPE_SECRET}`, "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ email: realtor.email, name: realtor.name || "", "metadata[realtor_id]": realtor.id }),
+        });
+        const c = await cr.json();
+        if (!cr.ok) throw new Error(c.error?.message || "Failed to create Stripe customer");
+        cid = c.id;
+        await fetch(`${SUPABASE_URL_LOCAL}/rest/v1/realtor_users?id=eq.${realtor.id}`, {
+          method: "PATCH",
+          headers: { "apikey": ANON_KEY, "Authorization": `Bearer ${ANON_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ stripe_customer_id: cid }),
+        });
+      }
+
+      const sr = await fetch("https://api.stripe.com/v1/checkout/sessions", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${STRIPE_SECRET}`, "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          mode: "subscription", customer: cid,
+          "line_items[0][price]": REALTOR_PRICE_ID, "line_items[0][quantity]": "1",
+          success_url: successUrl || "https://underlytix.com/?realtor_upgraded=true",
+          cancel_url: cancelUrl || "https://underlytix.com/",
+          "subscription_data[metadata][realtor_id]": realtor.id,
+          allow_promotion_codes: "true",
+        }),
+      });
+      const s = await sr.json();
+      if (!sr.ok) throw new Error(s.error?.message || "Checkout session failed");
+      return new Response(JSON.stringify({ success: true, checkoutUrl: s.url }), { status: 200, headers: cors });
+    }
+
+    // ── PORTAL: manage existing realtor subscription ─────────────────────────
+    if (action === "create_portal") {
+      if (!token) return new Response(JSON.stringify({ error: "Token required" }), { status: 401, headers: cors });
+      const authRes = await fetch(REALTOR_AUTH_FN, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "verify", token }),
+      });
+      const authData = await authRes.json();
+      if (!authData.valid) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: cors });
+
+      const SUPABASE_URL_LOCAL = "https://mxyepucitjzleaziizkr.supabase.co";
+      const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eWVwdWNpdGp6bGVhemlpemtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0Njk1ODIsImV4cCI6MjA5MDA0NTU4Mn0.oQr_hO5fVkOhGcJ2u3mqQDJIfw9cAdXwfVAAXOf96q4";
+      const userRes = await fetch(`${SUPABASE_URL_LOCAL}/rest/v1/realtor_users?id=eq.${authData.realtor.id}&select=stripe_customer_id`, {
+        headers: { "apikey": ANON_KEY, "Authorization": `Bearer ${ANON_KEY}` }
+      });
+      const userRows = await userRes.json();
+      const cid = userRows[0]?.stripe_customer_id;
+      if (!cid) return new Response(JSON.stringify({ error: "No active subscription found" }), { status: 400, headers: cors });
+      if (!STRIPE_SECRET) return new Response(JSON.stringify({ error: "Billing portal unavailable" }), { status: 500, headers: cors });
+
+      const pr = await fetch("https://api.stripe.com/v1/billing_portal/sessions", {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${STRIPE_SECRET}`, "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ customer: cid, return_url: "https://underlytix.com/" }),
+      });
+      const po = await pr.json();
+      if (!pr.ok) throw new Error(po.error?.message || "Portal session failed");
+      return new Response(JSON.stringify({ success: true, portalUrl: po.url }), { status: 200, headers: cors });
     }
 
     return new Response(JSON.stringify({ error: "Unknown action" }), { status: 400, headers: cors });

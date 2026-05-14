@@ -2131,8 +2131,35 @@ function realtorLogout() {
   showToast('Signed out', 'success');
 }
 
-function realtorCheckout() {
-  showToast('Billing coming soon — contact support@underlytix.com', 'success');
+async function realtorCheckout() {
+  const sess = getRealtorSession();
+  if (!sess?.token) return;
+  const btn = document.getElementById('realtor-billing-btn');
+  const plan = sess.realtor?.plan;
+  if (btn) { btn.disabled = true; btn.textContent = plan === 'active' ? 'Loading...' : 'Redirecting...'; }
+  try {
+    const action = plan === 'active' ? 'create_portal' : 'create_checkout';
+    const res = await fetch(REALTOR_PREQUAL_FN, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        action,
+        token: sess.token,
+        successUrl: window.location.origin + '/?realtor_upgraded=true',
+        cancelUrl: window.location.origin + '/'
+      })
+    });
+    const data = await res.json();
+    const url = data.checkoutUrl || data.portalUrl;
+    if (url) window.location.href = url;
+    else showToast(data.error || 'Billing unavailable', 'error');
+  } catch(e) { showToast('Connection error', 'error'); }
+  finally { if (btn) { btn.disabled = false; btn.textContent = 'Manage Billing'; } }
+}
+
+// Handle realtor upgrade redirect
+if (window.location.search.includes('realtor_upgraded=true')) {
+  window.history.replaceState({}, '', window.location.pathname);
+  setTimeout(() => showToast('Realtor Pro activated! Unlimited prequalifications unlocked.', 'success'), 800);
 }
 
 async function loadRealtorHistory() {

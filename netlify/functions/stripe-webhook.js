@@ -107,6 +107,43 @@ export default async (req) => {
       }
     }
 
+    // Handle realtor subscription events
+    const realtorId = meta.realtor_id;
+    if ((type === 'checkout.session.completed' || type === 'invoice.payment_succeeded') && realtorId) {
+      await fetch(`${SUPABASE_URL}/rest/v1/realtor_users?id=eq.${realtorId}`, {
+        method: 'PATCH', headers,
+        body: JSON.stringify({ plan: 'active', stripe_customer_id: customerId }),
+      });
+      // Fire upgrade confirmation email
+      const rLookup = await fetch(`${SUPABASE_URL}/rest/v1/realtor_users?id=eq.${realtorId}&select=email,full_name`, { headers });
+      const rRows = await rLookup.json();
+      if (rRows.length > 0) {
+        const RESEND_KEY = process.env.RESEND_API_KEY || '';
+        if (RESEND_KEY) {
+          fetch('https://api.resend.com/emails', {
+            method: 'POST', headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              from: 'Underlytix <noreply@underlytix.com>', to: [rRows[0].email],
+              subject: 'Underlytix Realtor Pro — Activated',
+              html: `<div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto;padding:40px"><div style="font-size:20px;font-weight:800;color:#0a1628;margin-bottom:24px">UNDERLYTIX</div><h1 style="font-size:22px;color:#0a1628">You're on Realtor Pro, ${rRows[0].full_name || 'there'}.</h1><p style="color:#374151;font-size:15px;line-height:1.6">Unlimited client prequalifications are now active. Available Friday at midnight, Saturday at 8pm, all day Sunday — always.</p><a href="https://underlytix.com" style="display:inline-block;background:#00bfa5;color:#fff;font-weight:600;padding:14px 28px;border-radius:8px;text-decoration:none;margin:16px 0">Open Realtor Portal →</a></div>`,
+            }),
+          }).catch(() => {});
+        }
+        console.log(`Upgraded realtor ${realtorId} to active`);
+      }
+    }
+
+    // Handle realtor subscription cancellation
+    if (type === 'customer.subscription.deleted' && customerId) {
+      const rLookup = await fetch(`${SUPABASE_URL}/rest/v1/realtor_users?stripe_customer_id=eq.${customerId}&select=id`, { headers });
+      const rRows = await rLookup.json();
+      if (rRows.length > 0) {
+        await fetch(`${SUPABASE_URL}/rest/v1/realtor_users?id=eq.${rRows[0].id}`, {
+          method: 'PATCH', headers, body: JSON.stringify({ plan: 'cancelled' }),
+        });
+      }
+    }
+
     // Handle lender subscription cancellation
     if ((type === 'customer.subscription.deleted') && customerId) {
       const lenderLookup = await fetch(`${SUPABASE_URL}/rest/v1/lender_users?stripe_customer_id=eq.${customerId}&select=id`, { headers });
