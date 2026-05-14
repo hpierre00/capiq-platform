@@ -23,6 +23,19 @@
   status = 301
   force = true
 
+# Realtor portal shortcut URL
+[[redirects]]
+  from = "/realtor"
+  to = "/?mode=realtor"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/realtor/*"
+  to = "/?mode=realtor"
+  status = 301
+  force = true
+
 # SPA fallback
 [[redirects]]
   from = "/*"
