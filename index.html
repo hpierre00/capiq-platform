@@ -1037,7 +1037,7 @@ async function startCheckout() {
       body: JSON.stringify({
         action: 'create_checkout', token: session.token,
         successUrl: window.location.origin + '/?upgraded=true',
-        cancelUrl: window.location.origin + '/'
+        cancelUrl: window.location.origin + '/app'
       })
     });
     const data = await res.json();
@@ -1925,7 +1925,7 @@ async function lenderStartCheckout() {
   try {
     const res = await fetch(LENDER_FN, {
       method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ action: 'create_checkout', token: session.token, successUrl: window.location.origin + '/?lender_upgraded=true', cancelUrl: window.location.origin + '/' })
+      body: JSON.stringify({ action: 'create_checkout', token: session.token, successUrl: window.location.origin + '/?lender_upgraded=true', cancelUrl: window.location.origin + '/app' })
     });
     const data = await res.json();
     if (data.checkoutUrl) window.location.href = data.checkoutUrl;
@@ -2357,8 +2357,8 @@ async function realtorCheckout() {
       body: JSON.stringify({
         action,
         token: sess.token,
-        successUrl: window.location.origin + '/?realtor_upgraded=true',
-        cancelUrl: window.location.origin + '/'
+        successUrl: window.location.origin + '/app?realtor_upgraded=true',
+        cancelUrl: window.location.origin + '/app'
       })
     });
     const data = await res.json();

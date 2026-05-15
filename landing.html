@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underlytix — Capital Intelligence Platform</title>
+<meta name="description" content="Know if your deal is fundable before approaching a lender. AI-powered deal analysis, lender matching, and realtor client prequalification — available 24/7.">
+<meta property="og:title" content="Underlytix — Capital Intelligence Platform">
+<meta property="og:description" content="Know if your deal is fundable before approaching a lender. Available Friday at midnight, Saturday at 8pm, all day Sunday.">
+<meta property="og:url" content="https://underlytix.com">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --navy: #060e1f;
+  --navy-2: #0a1628;
+  --navy-3: #0f1f38;
+  --teal: #00d4bc;
+  --teal-dim: rgba(0,212,188,0.12);
+  --teal-glow: rgba(0,212,188,0.25);
+  --white: #ffffff;
+  --white-60: rgba(255,255,255,0.6);
+  --white-30: rgba(255,255,255,0.3);
+  --white-10: rgba(255,255,255,0.08);
+  --white-6: rgba(255,255,255,0.05);
+  --border: rgba(255,255,255,0.08);
+  --gold: #f0c060;
+  --red: #ff4d4d;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--navy);
+  color: var(--white);
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── NAV ── */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 18px 48px;
+  border-bottom: 1px solid transparent;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(0px);
+}
+nav.scrolled {
+  background: rgba(6,14,31,0.92);
+  border-bottom-color: var(--border);
+  backdrop-filter: blur(20px);
+}
+.nav-logo {
+  display: flex; align-items: center; gap: 10px;
+}
+.nav-logo-mark {
+  width: 34px; height: 34px; background: var(--teal);
+  border-radius: 8px; display: flex; align-items: center; justify-content: center;
+}
+.nav-logo-mark svg { width: 18px; height: 18px; }
+.nav-logo-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 18px; letter-spacing: -0.5px; }
+.nav-logo-sub { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--white-30); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 1px; }
+.nav-links { display: flex; align-items: center; gap: 32px; }
+.nav-links a { font-size: 14px; color: var(--white-60); text-decoration: none; font-weight: 400; transition: color 0.2s; }
+.nav-links a:hover { color: var(--white); }
+.nav-cta { display: flex; gap: 10px; }
+.btn-ghost-sm {
+  padding: 9px 20px; border-radius: 8px; font-size: 14px; font-weight: 500;
+  border: 1px solid var(--border); color: var(--white-60); background: transparent;
+  cursor: pointer; text-decoration: none; transition: all 0.2s;
+  font-family: 'DM Sans', sans-serif;
+}
+.btn-ghost-sm:hover { border-color: var(--white-30); color: var(--white); }
+.btn-teal-sm {
+  padding: 9px 22px; border-radius: 8px; font-size: 14px; font-weight: 600;
+  border: none; color: var(--navy); background: var(--teal);
+  cursor: pointer; text-decoration: none; transition: all 0.2s;
+  font-family: 'DM Sans', sans-serif;
+}
+.btn-teal-sm:hover { background: #00ecd1; transform: translateY(-1px); }
+
+/* ── HERO ── */
+.hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 120px 24px 80px;
+  position: relative; overflow: hidden;
+  text-align: center;
+}
+.hero-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,212,188,0.08) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 20% 80%, rgba(0,100,200,0.06) 0%, transparent 50%),
+    radial-gradient(ellipse 40% 30% at 80% 60%, rgba(0,212,188,0.04) 0%, transparent 40%);
+}
+.hero-grid {
+  position: absolute; inset: 0; z-index: 0; opacity: 0.025;
+  background-image: linear-gradient(var(--white) 1px, transparent 1px), linear-gradient(90deg, var(--white) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+.hero-content { position: relative; z-index: 1; max-width: 860px; }
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 14px; border-radius: 999px;
+  background: var(--teal-dim); border: 1px solid rgba(0,212,188,0.25);
+  font-size: 12px; color: var(--teal); font-family: 'DM Mono', monospace;
+  letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 28px;
+  animation: fadeUp 0.6s ease both;
+}
+.hero-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+.hero-h1 {
+  font-family: 'Syne', sans-serif; font-weight: 800;
+  font-size: clamp(44px, 7vw, 78px); line-height: 1.05;
+  letter-spacing: -2px; margin-bottom: 24px;
+  animation: fadeUp 0.6s 0.1s ease both;
+}
+.hero-h1 .accent { color: var(--teal); }
+.hero-h1 .muted { color: var(--white-30); }
+.hero-sub {
+  font-size: clamp(16px, 2vw, 20px); color: var(--white-60);
+  line-height: 1.65; max-width: 600px; margin: 0 auto 40px;
+  font-weight: 300;
+  animation: fadeUp 0.6s 0.2s ease both;
+}
+.hero-ctas {
+  display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
+  animation: fadeUp 0.6s 0.3s ease both;
+}
+.btn-primary-lg {
+  padding: 16px 36px; border-radius: 10px; font-size: 16px; font-weight: 600;
+  border: none; color: var(--navy); background: var(--teal);
+  cursor: pointer; text-decoration: none; transition: all 0.2s;
+  font-family: 'DM Sans', sans-serif; display: inline-flex; align-items: center; gap: 8px;
+}
+.btn-primary-lg:hover { background: #00ecd1; transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,212,188,0.3); }
+.btn-ghost-lg {
+  padding: 16px 32px; border-radius: 10px; font-size: 16px; font-weight: 500;
+  border: 1px solid var(--border); color: var(--white-60); background: transparent;
+  cursor: pointer; text-decoration: none; transition: all 0.2s;
+  font-family: 'DM Sans', sans-serif; display: inline-flex; align-items: center; gap: 8px;
+}
+.btn-ghost-lg:hover { border-color: var(--white-30); color: var(--white); background: var(--white-6); }
+.hero-proof {
+  margin-top: 60px; display: flex; align-items: center; gap: 32px; justify-content: center;
+  flex-wrap: wrap; animation: fadeUp 0.6s 0.4s ease both;
+}
+.proof-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--white-30); }
+.proof-item svg { color: var(--teal); flex-shrink: 0; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── SECTION SHARED ── */
+section { padding: 100px 24px; }
+.section-inner { max-width: 1140px; margin: 0 auto; }
+.section-label {
+  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--teal); margin-bottom: 16px;
+}
+.section-h2 {
+  font-family: 'Syne', sans-serif; font-weight: 800;
+  font-size: clamp(32px, 5vw, 52px); letter-spacing: -1.5px; line-height: 1.1;
+  margin-bottom: 20px;
+}
+.section-sub { font-size: 18px; color: var(--white-60); line-height: 1.65; max-width: 560px; font-weight: 300; }
+
+/* ── PROBLEM SECTION ── */
+.problem { background: var(--navy-2); }
+.problem-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; margin-top: 60px; border-radius: 16px; overflow: hidden; }
+.problem-item {
+  background: var(--navy-3); padding: 36px 32px;
+  position: relative; overflow: hidden;
+  transition: background 0.2s;
+}
+.problem-item:hover { background: #121e35; }
+.problem-number {
+  font-family: 'Syne', sans-serif; font-size: 56px; font-weight: 800;
+  color: var(--white-6); line-height: 1; margin-bottom: 16px;
+  letter-spacing: -3px;
+}
+.problem-title { font-size: 18px; font-weight: 600; margin-bottom: 10px; line-height: 1.3; }
+.problem-text { font-size: 14px; color: var(--white-30); line-height: 1.65; }
+.problem-tag {
+  display: inline-block; margin-top: 16px; padding: 4px 10px;
+  background: rgba(255,77,77,0.1); border: 1px solid rgba(255,77,77,0.2);
+  border-radius: 4px; font-size: 11px; color: var(--red);
+  font-family: 'DM Mono', monospace; letter-spacing: 0.06em;
+}
+
+/* ── HOW IT WORKS ── */
+.how { background: var(--navy); }
+.how-header { margin-bottom: 64px; }
+.how-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+.how-steps { display: flex; flex-direction: column; gap: 0; }
+.how-step {
+  display: flex; gap: 24px; padding: 28px 0;
+  border-bottom: 1px solid var(--border); cursor: pointer;
+  transition: all 0.2s; position: relative;
+}
+.how-step:last-child { border-bottom: none; }
+.how-step:hover .step-title { color: var(--teal); }
+.step-num {
+  width: 36px; height: 36px; border-radius: 10px; background: var(--white-6);
+  border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace; font-size: 13px; color: var(--white-30);
+  flex-shrink: 0; margin-top: 2px; transition: all 0.2s;
+}
+.how-step.active .step-num { background: var(--teal-dim); border-color: var(--teal); color: var(--teal); }
+.step-title { font-size: 17px; font-weight: 600; margin-bottom: 6px; transition: color 0.2s; }
+.step-text { font-size: 14px; color: var(--white-30); line-height: 1.6; }
+.how-visual {
+  background: var(--navy-2); border: 1px solid var(--border);
+  border-radius: 16px; overflow: hidden; position: sticky; top: 100px;
+}
+.how-visual-header {
+  background: var(--navy-3); padding: 14px 20px;
+  display: flex; align-items: center; gap: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.dot { width: 10px; height: 10px; border-radius: 50%; }
+.how-visual-body { padding: 28px; }
+.mock-score { text-align: center; padding: 20px 0; }
+.mock-score-num {
+  font-family: 'Syne', sans-serif; font-size: 72px; font-weight: 800;
+  letter-spacing: -4px; color: var(--teal); line-height: 1;
+}
+.mock-score-label { font-size: 12px; color: var(--white-30); margin-top: 6px; font-family: 'DM Mono', monospace; letter-spacing: 0.06em; }
+.mock-bars { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
+.mock-bar-row { display: flex; align-items: center; gap: 12px; }
+.mock-bar-label { font-size: 11px; color: var(--white-30); width: 80px; flex-shrink: 0; }
+.mock-bar-track { flex: 1; height: 6px; background: var(--white-6); border-radius: 3px; overflow: hidden; }
+.mock-bar-fill { height: 100%; border-radius: 3px; background: var(--teal); }
+.mock-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 20px; }
+.mock-tag {
+  padding: 4px 10px; border-radius: 4px; font-size: 11px;
+  font-family: 'DM Mono', monospace; background: var(--teal-dim);
+  border: 1px solid rgba(0,212,188,0.2); color: var(--teal);
+}
+
+/* ── WHO IT'S FOR ── */
+.audience { background: var(--navy-2); }
+.audience-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; margin-top: 60px; border-radius: 16px; overflow: hidden; }
+.audience-card {
+  background: var(--navy-3); padding: 40px 32px;
+  transition: background 0.2s; position: relative;
+}
+.audience-card:hover { background: #121e35; }
+.audience-icon { font-size: 32px; margin-bottom: 20px; }
+.audience-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; margin-bottom: 12px; letter-spacing: -0.5px; }
+.audience-text { font-size: 14px; color: var(--white-60); line-height: 1.7; margin-bottom: 20px; }
+.audience-features { display: flex; flex-direction: column; gap: 8px; }
+.audience-feature { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--white-30); line-height: 1.5; }
+.audience-feature::before { content: '✓'; color: var(--teal); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+.audience-price {
+  margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border);
+  font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -1px;
+}
+.audience-price span { font-size: 14px; font-weight: 400; color: var(--white-30); font-family: 'DM Sans', sans-serif; }
+.audience-cta {
+  display: block; margin-top: 16px; padding: 12px 20px; border-radius: 8px;
+  text-align: center; font-size: 14px; font-weight: 600; text-decoration: none;
+  transition: all 0.2s;
+}
+.cta-teal { background: var(--teal); color: var(--navy); }
+.cta-teal:hover { background: #00ecd1; transform: translateY(-1px); }
+.cta-ghost { border: 1px solid var(--border); color: var(--white-60); background: transparent; }
+.cta-ghost:hover { border-color: var(--white-30); color: var(--white); }
+.featured-card { background: var(--navy-2); border: 1px solid rgba(0,212,188,0.25) !important; }
+.featured-card::before {
+  content: 'MOST POPULAR'; position: absolute; top: 0; right: 0;
+  background: var(--teal); color: var(--navy); font-size: 10px; font-weight: 700;
+  padding: 4px 12px; font-family: 'DM Mono', monospace; letter-spacing: 0.08em;
+  border-bottom-left-radius: 8px;
+}
+
+/* ── ALWAYS ON ── */
+.always { background: var(--navy); overflow: hidden; }
+.always-inner { max-width: 900px; margin: 0 auto; text-align: center; }
+.always-h2 {
+  font-family: 'Syne', sans-serif; font-size: clamp(40px, 7vw, 72px);
+  font-weight: 800; letter-spacing: -2px; line-height: 1.05; margin-bottom: 24px;
+}
+.always-h2 .dim { color: var(--white-30); }
+.always-h2 .bright { color: var(--teal); }
+.times-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px;
+  margin: 48px 0; border-radius: 12px; overflow: hidden;
+}
+.time-card {
+  background: var(--navy-2); padding: 28px 20px; text-align: center;
+  border: 1px solid transparent; transition: all 0.2s;
+}
+.time-card:hover { background: var(--navy-3); border-color: var(--teal-dim); }
+.time-icon { font-size: 28px; margin-bottom: 10px; }
+.time-label { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.time-sub { font-size: 12px; color: var(--white-30); }
+.time-status {
+  display: inline-block; margin-top: 10px; padding: 3px 8px; border-radius: 4px;
+  font-size: 10px; font-family: 'DM Mono', monospace; letter-spacing: 0.06em;
+}
+.status-online { background: rgba(0,212,188,0.12); color: var(--teal); border: 1px solid rgba(0,212,188,0.2); }
+.status-offline { background: rgba(255,77,77,0.1); color: var(--red); border: 1px solid rgba(255,77,77,0.15); }
+.always-vs {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 0;
+}
+.vs-card {
+  padding: 24px 28px; border-radius: 12px; text-align: left;
+}
+.vs-card.without { background: rgba(255,77,77,0.04); border: 1px solid rgba(255,77,77,0.12); }
+.vs-card.with { background: var(--teal-dim); border: 1px solid rgba(0,212,188,0.2); }
+.vs-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; font-family: 'DM Mono', monospace; }
+.vs-card.without .vs-title { color: var(--red); }
+.vs-card.with .vs-title { color: var(--teal); }
+.vs-items { display: flex; flex-direction: column; gap: 10px; }
+.vs-item { font-size: 14px; color: var(--white-60); line-height: 1.5; display: flex; gap: 8px; }
+
+/* ── TESTIMONIALS / SOCIAL PROOF ── */
+.proof { background: var(--navy-2); }
+.proof-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 56px; }
+.proof-card {
+  background: var(--navy-3); border: 1px solid var(--border);
+  border-radius: 14px; padding: 28px;
+  transition: border-color 0.2s;
+}
+.proof-card:hover { border-color: rgba(0,212,188,0.2); }
+.proof-quote { font-size: 15px; color: var(--white-60); line-height: 1.7; margin-bottom: 20px; font-style: italic; }
+.proof-author { display: flex; align-items: center; gap: 12px; }
+.proof-avatar {
+  width: 38px; height: 38px; border-radius: 10px;
+  background: var(--teal-dim); border: 1px solid rgba(0,212,188,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+.proof-name { font-size: 13px; font-weight: 600; }
+.proof-role { font-size: 12px; color: var(--white-30); margin-top: 2px; }
+.proof-stars { color: var(--gold); font-size: 12px; margin-bottom: 12px; letter-spacing: 1px; }
+
+/* ── CTA SECTION ── */
+.cta-section {
+  background: var(--navy);
+  padding: 120px 24px;
+  text-align: center;
+  position: relative; overflow: hidden;
+}
+.cta-bg {
+  position: absolute; inset: 0; z-index: 0;
+  background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(0,212,188,0.07) 0%, transparent 70%);
+}
+.cta-content { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; }
+.cta-h2 {
+  font-family: 'Syne', sans-serif; font-size: clamp(36px, 6vw, 60px);
+  font-weight: 800; letter-spacing: -2px; line-height: 1.1; margin-bottom: 20px;
+}
+.cta-sub { font-size: 18px; color: var(--white-60); margin-bottom: 40px; line-height: 1.6; font-weight: 300; }
+.cta-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+.cta-disclaimer { font-size: 12px; color: var(--white-30); margin-top: 20px; }
+
+/* ── FOOTER ── */
+footer {
+  background: var(--navy-2); border-top: 1px solid var(--border);
+  padding: 48px 24px 32px;
+}
+.footer-inner { max-width: 1140px; margin: 0 auto; }
+.footer-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; gap: 40px; flex-wrap: wrap; }
+.footer-brand .footer-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 20px; letter-spacing: -0.5px; margin-bottom: 8px; }
+.footer-brand p { font-size: 13px; color: var(--white-30); max-width: 240px; line-height: 1.6; }
+.footer-links-group { display: flex; flex-direction: column; gap: 10px; }
+.footer-links-group h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--white-30); margin-bottom: 4px; }
+.footer-links-group a { font-size: 13px; color: var(--white-30); text-decoration: none; transition: color 0.2s; }
+.footer-links-group a:hover { color: var(--white); }
+.footer-bottom { display: flex; justify-content: space-between; align-items: center; padding-top: 24px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px; }
+.footer-bottom p { font-size: 12px; color: var(--white-30); }
+.footer-disclaimer { font-size: 11px; color: rgba(255,255,255,0.15); max-width: 500px; line-height: 1.5; }
+
+/* ── MOBILE ── */
+@media(max-width:768px){
+  nav{padding:16px 20px}
+  .nav-links{display:none}
+  .hero{padding:100px 20px 60px}
+  .problem-grid,.audience-grid{grid-template-columns:1fr}
+  .how-grid{grid-template-columns:1fr}
+  .how-visual{display:none}
+  .times-grid{grid-template-columns:1fr 1fr}
+  .always-vs{grid-template-columns:1fr}
+  .proof-grid{grid-template-columns:1fr}
+  .footer-top{flex-direction:column}
+  section{padding:70px 20px}
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav id="navbar">
+  <div class="nav-logo">
+    <div class="nav-logo-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#060e1f" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+    </div>
+    <div>
+      <div class="nav-logo-text">Underlytix</div>
+      <div class="nav-logo-sub">Capital Intelligence</div>
+    </div>
+  </div>
+  <div class="nav-links">
+    <a href="#how">How It Works</a>
+    <a href="#who">Who It's For</a>
+    <a href="#pricing">Pricing</a>
+  </div>
+  <div class="nav-cta">
+    <a href="/app" class="btn-ghost-sm">Sign In</a>
+    <a href="/app" class="btn-teal-sm">Get Started Free</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-content">
+    <div class="hero-badge">
+      <div class="hero-badge-dot"></div>
+      Pre-Application Intelligence
+    </div>
+    <h1 class="hero-h1">
+      Know if your deal is<br>
+      <span class="accent">fundable</span> <span class="muted">before</span><br>
+      approaching a lender.
+    </h1>
+    <p class="hero-sub">
+      Underlytix analyzes your deals against real lending criteria, scores fundability, matches you to the right capital source — and never sleeps. Friday at midnight, Saturday at 8pm, all day Sunday.
+    </p>
+    <div class="hero-ctas">
+      <a href="/app" class="btn-primary-lg">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Analyze Your First Deal Free
+      </a>
+      <a href="#how" class="btn-ghost-lg">
+        See How It Works →
+      </a>
+    </div>
+    <div class="hero-proof">
+      <div class="proof-item">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        3 free analyses per month
+      </div>
+      <div class="proof-item">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        No credit card required
+      </div>
+      <div class="proof-item">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Results in under 60 seconds
+      </div>
+      <div class="proof-item">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Available 24/7
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<section class="problem" id="problem">
+  <div class="section-inner">
+    <div class="section-label">The Problem</div>
+    <h2 class="section-h2">The capital stack is broken<br>for everyone involved.</h2>
+    <p class="section-sub">Investors waste months on deals that never close. Realtors lose clients to financing uncertainty. Lenders drown in unqualified applications.</p>
+    <div class="problem-grid">
+      <div class="problem-item">
+        <div class="problem-number">01</div>
+        <div class="problem-title">Investors apply blind</div>
+        <div class="problem-text">No way to know if a deal pencils before spending weeks chasing lenders, getting soft declines, or worse — getting to the table and failing to close.</div>
+        <div class="problem-tag">WASTED TIME + MONEY</div>
+      </div>
+      <div class="problem-item">
+        <div class="problem-number">02</div>
+        <div class="problem-title">Realtors can't answer the $1M question</div>
+        <div class="problem-text">"Can my client get financing on this?" It's Saturday at 8pm. The loan officer isn't answering. The offer deadline is tomorrow. The deal dies.</div>
+        <div class="problem-tag">LOST COMMISSIONS</div>
+      </div>
+      <div class="problem-item">
+        <div class="problem-number">03</div>
+        <div class="problem-title">Lenders wade through noise</div>
+        <div class="problem-text">80% of loan applications fail basic underwriting criteria. Lenders spend hours reviewing deals that should have been filtered out before ever reaching their desk.</div>
+        <div class="problem-tag">OPERATIONAL WASTE</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how" id="how">
+  <div class="section-inner">
+    <div class="how-header">
+      <div class="section-label">How It Works</div>
+      <h2 class="section-h2">Deal intelligence in<br>under 60 seconds.</h2>
+    </div>
+    <div class="how-grid">
+      <div class="how-steps">
+        <div class="how-step active" onclick="setStep(0)">
+          <div class="step-num">01</div>
+          <div>
+            <div class="step-title">Submit your deal</div>
+            <div class="step-text">Enter deal type, property info, loan amount, and borrower profile. Takes 3 minutes. No documents required.</div>
+          </div>
+        </div>
+        <div class="how-step" onclick="setStep(1)">
+          <div class="step-num">02</div>
+          <div>
+            <div class="step-title">AI underwrites it</div>
+            <div class="step-text">Our engine scores your deal against real lender criteria — LTV limits, DSCR thresholds, credit requirements, deal type guidelines.</div>
+          </div>
+        </div>
+        <div class="how-step" onclick="setStep(2)">
+          <div class="step-num">03</div>
+          <div>
+            <div class="step-title">Get your fundability score</div>
+            <div class="step-text">Receive a 0–100 fundability score, an executive summary, structuring recommendations, and risk flags — in plain English.</div>
+          </div>
+        </div>
+        <div class="how-step" onclick="setStep(3)">
+          <div class="step-num">04</div>
+          <div>
+            <div class="step-title">Get matched to lenders</div>
+            <div class="step-text">High-scoring deals are automatically matched to lenders in the Underlytix network whose criteria your deal meets.</div>
+          </div>
+        </div>
+      </div>
+      <div class="how-visual">
+        <div class="how-visual-header">
+          <div class="dot" style="background:#ff5f57"></div>
+          <div class="dot" style="background:#febc2e"></div>
+          <div class="dot" style="background:#28c840"></div>
+          <span style="font-size:12px;color:rgba(255,255,255,0.3);margin-left:8px;font-family:'DM Mono',monospace">Deal Analysis Report</span>
+        </div>
+        <div class="how-visual-body">
+          <div class="mock-score">
+            <div class="mock-score-num">74</div>
+            <div class="mock-score-label">FUNDABILITY SCORE · STRONG PASS</div>
+          </div>
+          <div class="mock-bars">
+            <div class="mock-bar-row"><div class="mock-bar-label" style="font-size:10px;color:rgba(255,255,255,0.25)">LTV</div><div class="mock-bar-track"><div class="mock-bar-fill" style="width:72%"></div></div><span style="font-size:11px;color:rgba(255,255,255,0.4)">72%</span></div>
+            <div class="mock-bar-row"><div class="mock-bar-label" style="font-size:10px;color:rgba(255,255,255,0.25)">DSCR</div><div class="mock-bar-track"><div class="mock-bar-fill" style="width:85%"></div></div><span style="font-size:11px;color:rgba(255,255,255,0.4)">1.24</span></div>
+            <div class="mock-bar-row"><div class="mock-bar-label" style="font-size:10px;color:rgba(255,255,255,0.25)">CREDIT</div><div class="mock-bar-track"><div class="mock-bar-fill" style="width:68%"></div></div><span style="font-size:11px;color:rgba(255,255,255,0.4)">680</span></div>
+            <div class="mock-bar-row"><div class="mock-bar-label" style="font-size:10px;color:rgba(255,255,255,0.25)">SPREAD</div><div class="mock-bar-track"><div class="mock-bar-fill" style="width:90%"></div></div><span style="font-size:11px;color:rgba(255,255,255,0.4)">$58k</span></div>
+          </div>
+          <div class="mock-tags">
+            <div class="mock-tag">Fix &amp; Flip</div>
+            <div class="mock-tag">SFR · Miami-Dade</div>
+            <div class="mock-tag">3 Lender Matches</div>
+            <div class="mock-tag">Pre-Screened</div>
+          </div>
+          <div style="margin-top:20px;padding:14px;background:rgba(0,212,188,0.05);border:1px solid rgba(0,212,188,0.12);border-radius:8px">
+            <div style="font-size:11px;color:rgba(0,212,188,0.8);font-family:'DM Mono',monospace;letter-spacing:.06em;margin-bottom:6px">AI SUMMARY</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.6">Strong ARV spread with acceptable LTV. DSCR exceeds 1.2 threshold. Credit score is borderline — recommend 2 months reserves to strengthen file.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHO IT'S FOR -->
+<section class="audience" id="who">
+  <div class="section-inner">
+    <div class="section-label">Who It's For</div>
+    <h2 class="section-h2">Built for every side<br>of the transaction.</h2>
+    <div class="audience-grid" id="pricing">
+      <div class="audience-card">
+        <div class="audience-icon">🏗️</div>
+        <div class="audience-title">Real Estate Investors</div>
+        <div class="audience-text">Know if your deal pencils before you spend weeks chasing lenders. Fix &amp; flip, DSCR, bridge, cash-out, new construction — all deal types supported.</div>
+        <div class="audience-features">
+          <div class="audience-feature">AI fundability score (0–100)</div>
+          <div class="audience-feature">Lender matching by deal type</div>
+          <div class="audience-feature">Structuring recommendations</div>
+          <div class="audience-feature">Risk flag analysis</div>
+          <div class="audience-feature">Deal pipeline &amp; history</div>
+        </div>
+        <div class="audience-price">$97<span>/month</span></div>
+        <a href="/app" class="audience-cta cta-ghost">Start Free — 3 Analyses/Month</a>
+      </div>
+      <div class="audience-card featured-card" style="position:relative">
+        <div class="audience-icon">🏠</div>
+        <div class="audience-title">Realtors</div>
+        <div class="audience-text">Your clients ask about financing at 11pm on a Friday. Now you have an answer. Prequalify residential, commercial, and investor clients in minutes — anytime.</div>
+        <div class="audience-features">
+          <div class="audience-feature">Conversational AI prequalification</div>
+          <div class="audience-feature">Full PITIA calculation (taxes, HOA, insurance)</div>
+          <div class="audience-feature">Conventional, FHA, VA, DSCR, Jumbo, Non-QM</div>
+          <div class="audience-feature">DTI analysis with lender guidelines</div>
+          <div class="audience-feature">Saveable client prequal history</div>
+        </div>
+        <div class="audience-price">$49<span>/month</span></div>
+        <a href="/app" class="audience-cta cta-teal">Start 14-Day Free Trial</a>
+      </div>
+      <div class="audience-card">
+        <div class="audience-icon">🏦</div>
+        <div class="audience-title">Lenders</div>
+        <div class="audience-text">Stop wading through unqualified applications. Receive pre-screened, AI-scored investor deals matched to your exact lending criteria — delivered to your pipeline.</div>
+        <div class="audience-features">
+          <div class="audience-feature">Pre-screened deal flow</div>
+          <div class="audience-feature">AI fundability score on every deal</div>
+          <div class="audience-feature">Matched to your criteria</div>
+          <div class="audience-feature">One-click Interest / Term Sheet / Pass</div>
+          <div class="audience-feature">Full borrower profile &amp; deal details</div>
+        </div>
+        <div class="audience-price">$297<span>/month</span></div>
+        <a href="/app" class="audience-cta cta-ghost">Start 14-Day Free Trial</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ALWAYS ON -->
+<section class="always" id="availability">
+  <div class="always-inner">
+    <div class="section-label" style="text-align:center">Always Available</div>
+    <h2 class="always-h2">
+      <span class="dim">Your loan officer</span><br>
+      <span class="bright">doesn't answer</span><br>
+      <span class="dim">at midnight.</span><br>
+      <span style="color:white">We do.</span>
+    </h2>
+    <div class="times-grid">
+      <div class="time-card">
+        <div class="time-icon">🌙</div>
+        <div class="time-label">Friday, 11:47pm</div>
+        <div class="time-sub">Offer deadline tomorrow</div>
+        <div class="time-status status-online">UNDERLYTIX: ONLINE</div>
+      </div>
+      <div class="time-card">
+        <div class="time-icon">⚡</div>
+        <div class="time-label">Saturday, 8:00am</div>
+        <div class="time-sub">Client found a deal</div>
+        <div class="time-status status-online">UNDERLYTIX: ONLINE</div>
+      </div>
+      <div class="time-card">
+        <div class="time-icon">☀️</div>
+        <div class="time-label">Sunday, all day</div>
+        <div class="time-sub">Open house weekend</div>
+        <div class="time-status status-online">UNDERLYTIX: ONLINE</div>
+      </div>
+      <div class="time-card">
+        <div class="time-icon">🎄</div>
+        <div class="time-label">Christmas Day</div>
+        <div class="time-sub">Market never sleeps</div>
+        <div class="time-status status-online">UNDERLYTIX: ONLINE</div>
+      </div>
+    </div>
+    <div class="always-vs">
+      <div class="vs-card without">
+        <div class="vs-title">✕ Without Underlytix</div>
+        <div class="vs-items">
+          <div class="vs-item">⏳ Wait until Monday to call your loan officer</div>
+          <div class="vs-item">📉 Lose the deal to a buyer who knew their numbers</div>
+          <div class="vs-item">💸 Waste weeks on deals that don't qualify</div>
+          <div class="vs-item">❓ Guess whether your client can actually afford it</div>
+        </div>
+      </div>
+      <div class="vs-card with">
+        <div class="vs-title">✓ With Underlytix</div>
+        <div class="vs-items">
+          <div class="vs-item">⚡ Answer in under 60 seconds, any time of day</div>
+          <div class="vs-item">🎯 Submit only deals that match lender criteria</div>
+          <div class="vs-item">📊 Full PITIA calculation with exact DTI ratios</div>
+          <div class="vs-item">🏆 Show up to every deal knowing your numbers</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOCIAL PROOF -->
+<section class="proof">
+  <div class="section-inner">
+    <div class="section-label">What They're Saying</div>
+    <h2 class="section-h2">Built for the deals<br>that actually close.</h2>
+    <div class="proof-grid">
+      <div class="proof-card">
+        <div class="proof-stars">★★★★★</div>
+        <div class="proof-quote">"I had a buyer call me Friday at 9pm about a property. I ran the prequal in 4 minutes, sent him the result, and he made an offer Saturday morning. Closed 3 weeks later."</div>
+        <div class="proof-author">
+          <div class="proof-avatar">🏠</div>
+          <div>
+            <div class="proof-name">Marcus T.</div>
+            <div class="proof-role">Investment-focused Realtor · Orlando, FL</div>
+          </div>
+        </div>
+      </div>
+      <div class="proof-card">
+        <div class="proof-stars">★★★★★</div>
+        <div class="proof-quote">"Stopped wasting time on deals that won't close. My first analysis showed me exactly why my last deal fell apart — high LTV with a soft market comp. Wish I had this 2 years ago."</div>
+        <div class="proof-author">
+          <div class="proof-avatar">🏗️</div>
+          <div>
+            <div class="proof-name">Denise R.</div>
+            <div class="proof-role">Fix &amp; Flip Investor · South Florida</div>
+          </div>
+        </div>
+      </div>
+      <div class="proof-card">
+        <div class="proof-stars">★★★★★</div>
+        <div class="proof-quote">"The deals that come through our portal are actually screened. The AI score aligns closely with what we'd underwrite manually. It's filtering out the noise before it reaches us."</div>
+        <div class="proof-author">
+          <div class="proof-avatar">🏦</div>
+          <div>
+            <div class="proof-name">James C.</div>
+            <div class="proof-role">Hard Money Lender · Miami, FL</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="cta-section">
+  <div class="cta-bg"></div>
+  <div class="cta-content">
+    <div class="section-label" style="text-align:center;margin-bottom:20px">Get Started Today</div>
+    <h2 class="cta-h2">Stop guessing.<br>Start closing.</h2>
+    <p class="cta-sub">Your first 3 analyses are free. No credit card. No commitment. Just clarity on whether your deal has a shot — before you spend another hour chasing it.</p>
+    <div class="cta-btns">
+      <a href="/app" class="btn-primary-lg">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        Analyze Your First Deal Free
+      </a>
+      <a href="/app" class="btn-ghost-lg">Realtor? Start Free Trial →</a>
+    </div>
+    <p class="cta-disclaimer">Free plan: 3 analyses/month. Investor Pro: $97/month. Realtor: $49/month. Lender: $297/month.</p>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <div class="footer-logo">Underlytix</div>
+        <p>Capital intelligence for investors, realtors, and lenders. Available 24/7.</p>
+      </div>
+      <div class="footer-links-group">
+        <h4>Platform</h4>
+        <a href="/app">Investor Portal</a>
+        <a href="/app">Realtor Portal</a>
+        <a href="/app">Lender Portal</a>
+      </div>
+      <div class="footer-links-group">
+        <h4>Company</h4>
+        <a href="mailto:support@underlytix.com">Contact</a>
+        <a href="mailto:support@underlytix.com">Support</a>
+      </div>
+      <div class="footer-links-group">
+        <h4>Campaign</h4>
+        <a href="https://ctcready.com">CTCReady.com</a>
+        <a href="/app">Get Started</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 Underlytix. All rights reserved.</p>
+      <p class="footer-disclaimer">Underlytix provides pre-application intelligence tools. Results are based on user-provided data and do not constitute a commitment to lend, legal advice, or financial advice. All loan approvals are subject to lender underwriting and final approval.</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+// Nav scroll effect
+window.addEventListener('scroll', () => {
+  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 40);
+});
+
+// How it works step interaction
+function setStep(i) {
+  document.querySelectorAll('.how-step').forEach((s,idx) => s.classList.toggle('active', idx === i));
+}
+
+// Animate elements on scroll
+const observer = new IntersectionObserver((entries) => {
+  entries.forEach(e => { if(e.isIntersecting) { e.target.style.opacity = '1'; e.target.style.transform = 'translateY(0)'; } });
+}, { threshold: 0.1 });
+
+document.querySelectorAll('.problem-item, .audience-card, .proof-card, .time-card').forEach(el => {
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(24px)';
+  el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+  observer.observe(el);
+});
+</script>
+</body>
+</html>

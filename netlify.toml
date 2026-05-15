@@ -26,17 +26,34 @@
 # Realtor portal shortcut URL
 [[redirects]]
   from = "/realtor"
-  to = "/?mode=realtor"
+  to = "/app?mode=realtor"
   status = 301
   force = true
 
 [[redirects]]
   from = "/realtor/*"
-  to = "/?mode=realtor"
+  to = "/app?mode=realtor"
   status = 301
   force = true
 
-# SPA fallback
+# /app serves the investor/realtor/lender app (index.html)
+[[redirects]]
+  from = "/app"
+  to = "/index.html"
+  status = 200
+
+[[redirects]]
+  from = "/app/*"
+  to = "/index.html"
+  status = 200
+
+# Root serves landing page
+[[redirects]]
+  from = "/"
+  to = "/landing.html"
+  status = 200
+
+# SPA fallback for everything else
 [[redirects]]
   from = "/*"
   to = "/index.html"
