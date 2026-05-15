@@ -6,13 +6,13 @@
 # This rule fires when the host is ctcready.com
 [[redirects]]
   from = "https://ctcready.com/*"
-  to = "https://underlytix.com/?utm_source=ctcready&utm_medium=direct&utm_campaign=ctcready_brand"
+  to = "https://underlytix.com/app?utm_source=ctcready&utm_medium=direct&utm_campaign=ctcready_brand"
   status = 301
   force = true
 
 [[redirects]]
   from = "https://www.ctcready.com/*"
-  to = "https://underlytix.com/?utm_source=ctcready&utm_medium=direct&utm_campaign=ctcready_brand"
+  to = "https://underlytix.com/app?utm_source=ctcready&utm_medium=direct&utm_campaign=ctcready_brand"
   status = 301
   force = true
 
