@@ -39,22 +39,16 @@
 # /app serves the investor/realtor/lender app (index.html)
 [[redirects]]
   from = "/app"
-  to = "/index.html"
+  to = "/app.html"
   status = 200
 
 [[redirects]]
   from = "/app/*"
-  to = "/index.html"
+  to = "/app.html"
   status = 200
 
-# Root serves landing page
-[[redirects]]
-  from = "/"
-  to = "/landing.html"
-  status = 200
-
-# SPA fallback for everything else
+# SPA fallback for app routes
 [[redirects]]
   from = "/*"
-  to = "/index.html"
+  to = "/app.html"
   status = 200
