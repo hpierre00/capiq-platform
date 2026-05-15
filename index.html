@@ -10,383 +10,428 @@
 <meta property="og:url" content="https://underlytix.com">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
 <style>
+/* ── EXACT DASHBOARD COLOR SPEC ── */
 :root {
-  --navy: #060e1f;
-  --navy-2: #0a1628;
-  --navy-3: #0f1f38;
-  --teal: #00d4bc;
-  --teal-dim: rgba(0,212,188,0.12);
-  --teal-glow: rgba(0,212,188,0.25);
-  --white: #ffffff;
-  --white-60: rgba(255,255,255,0.6);
-  --white-30: rgba(255,255,255,0.3);
-  --white-10: rgba(255,255,255,0.08);
-  --white-6: rgba(255,255,255,0.05);
-  --border: rgba(255,255,255,0.08);
-  --gold: #f0c060;
-  --red: #ff4d4d;
+  --navy:        #0f2240;
+  --navy-2:      #1a3355;
+  --navy-3:      #0d1d35;
+  --teal:        #0e7490;
+  --teal-light:  #0891b2;
+  --teal-dim:    rgba(14,116,144,0.08);
+  --teal-border: rgba(14,116,144,0.2);
+  --teal-glow:   rgba(14,116,144,0.15);
+  --bg:          #f8fafc;
+  --bg-2:        #ffffff;
+  --bg-3:        #f1f5f9;
+  --bg-4:        #e2e8f0;
+  --border:      #e2e8f0;
+  --border-dark: #cbd5e1;
+  --text:        #0f172a;
+  --text-2:      #334155;
+  --text-3:      #64748b;
+  --text-4:      #94a3b8;
+  --green:       #059669;
+  --green-dim:   rgba(5,150,105,0.08);
+  --red:         #dc2626;
+  --red-dim:     rgba(220,38,38,0.08);
+  --gold:        #b45309;
+  --shadow-sm:   0 1px 3px rgba(15,34,64,0.06),0 1px 2px rgba(15,34,64,0.04);
+  --shadow:      0 4px 12px rgba(15,34,64,0.08),0 2px 4px rgba(15,34,64,0.05);
+  --shadow-lg:   0 20px 40px rgba(15,34,64,0.12),0 8px 16px rgba(15,34,64,0.06);
+  --r:           8px;
 }
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-body {
-  font-family: 'DM Sans', sans-serif;
-  background: var(--navy);
-  color: var(--white);
-  overflow-x: hidden;
-  -webkit-font-smoothing: antialiased;
-}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;-webkit-font-smoothing:antialiased}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.6;overflow-x:hidden}
+
+/* ── TYPOGRAPHY SYSTEM ── */
+/* Playfair Display for editorial headlines — authoritative, financial, credible */
+/* Inter for everything functional — same as dashboard */
+/* DM Mono for labels, data, chips — same as dashboard */
 
 /* ── NAV ── */
-nav {
-  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 18px 48px;
-  border-bottom: 1px solid transparent;
-  transition: all 0.3s ease;
-  backdrop-filter: blur(0px);
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  height:64px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 48px;
+  background:rgba(248,250,252,0.92);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  transition:box-shadow 0.2s;
 }
-nav.scrolled {
-  background: rgba(6,14,31,0.92);
-  border-bottom-color: var(--border);
-  backdrop-filter: blur(20px);
+nav.scrolled{box-shadow:var(--shadow-sm)}
+.nav-logo{display:flex;align-items:center;gap:10px;text-decoration:none}
+.nav-logo-mark{width:34px;height:34px;background:var(--navy);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.nav-logo-mark svg{width:17px;height:17px}
+.nav-logo-text{font-size:17px;font-weight:700;color:var(--text);letter-spacing:-.4px}
+.nav-logo-sub{font-family:'DM Mono',monospace;font-size:8px;color:var(--text-4);letter-spacing:.12em;text-transform:uppercase;margin-top:1px}
+.nav-links{display:flex;gap:28px}
+.nav-links a{font-size:13px;font-weight:500;color:var(--text-3);text-decoration:none;transition:color .15s}
+.nav-links a:hover{color:var(--text)}
+.nav-cta{display:flex;gap:8px;align-items:center}
+.btn-ghost-nav{
+  padding:8px 18px;border-radius:var(--r);font-size:13px;font-weight:500;
+  border:1px solid var(--border-dark);color:var(--text-2);background:var(--bg-2);
+  cursor:pointer;text-decoration:none;transition:all .15s;font-family:'Inter',sans-serif;
 }
-.nav-logo {
-  display: flex; align-items: center; gap: 10px;
+.btn-ghost-nav:hover{border-color:var(--teal);color:var(--teal)}
+.btn-navy-nav{
+  padding:8px 20px;border-radius:var(--r);font-size:13px;font-weight:600;
+  border:none;color:white;background:var(--navy);
+  cursor:pointer;text-decoration:none;transition:all .15s;font-family:'Inter',sans-serif;
 }
-.nav-logo-mark {
-  width: 34px; height: 34px; background: var(--teal);
-  border-radius: 8px; display: flex; align-items: center; justify-content: center;
-}
-.nav-logo-mark svg { width: 18px; height: 18px; }
-.nav-logo-text { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 18px; letter-spacing: -0.5px; }
-.nav-logo-sub { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--white-30); letter-spacing: 0.1em; text-transform: uppercase; margin-top: 1px; }
-.nav-links { display: flex; align-items: center; gap: 32px; }
-.nav-links a { font-size: 14px; color: var(--white-60); text-decoration: none; font-weight: 400; transition: color 0.2s; }
-.nav-links a:hover { color: var(--white); }
-.nav-cta { display: flex; gap: 10px; }
-.btn-ghost-sm {
-  padding: 9px 20px; border-radius: 8px; font-size: 14px; font-weight: 500;
-  border: 1px solid var(--border); color: var(--white-60); background: transparent;
-  cursor: pointer; text-decoration: none; transition: all 0.2s;
-  font-family: 'DM Sans', sans-serif;
-}
-.btn-ghost-sm:hover { border-color: var(--white-30); color: var(--white); }
-.btn-teal-sm {
-  padding: 9px 22px; border-radius: 8px; font-size: 14px; font-weight: 600;
-  border: none; color: var(--navy); background: var(--teal);
-  cursor: pointer; text-decoration: none; transition: all 0.2s;
-  font-family: 'DM Sans', sans-serif;
-}
-.btn-teal-sm:hover { background: #00ecd1; transform: translateY(-1px); }
+.btn-navy-nav:hover{background:var(--navy-2);transform:translateY(-1px);box-shadow:var(--shadow-sm)}
 
 /* ── HERO ── */
-.hero {
-  min-height: 100vh;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  padding: 120px 24px 80px;
-  position: relative; overflow: hidden;
-  text-align: center;
-}
-.hero-bg {
-  position: absolute; inset: 0; z-index: 0;
+.hero{
+  min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:100px 24px 80px;
   background:
-    radial-gradient(ellipse 80% 60% at 50% 0%, rgba(0,212,188,0.08) 0%, transparent 60%),
-    radial-gradient(ellipse 60% 40% at 20% 80%, rgba(0,100,200,0.06) 0%, transparent 50%),
-    radial-gradient(ellipse 40% 30% at 80% 60%, rgba(0,212,188,0.04) 0%, transparent 40%);
+    linear-gradient(180deg,var(--bg-2) 0%,var(--bg) 100%);
+  position:relative;text-align:center;overflow:hidden;
 }
-.hero-grid {
-  position: absolute; inset: 0; z-index: 0; opacity: 0.025;
-  background-image: linear-gradient(var(--white) 1px, transparent 1px), linear-gradient(90deg, var(--white) 1px, transparent 1px);
-  background-size: 60px 60px;
+.hero-rule{
+  position:absolute;inset:0;z-index:0;
+  background-image:
+    linear-gradient(var(--border) 1px,transparent 1px),
+    linear-gradient(90deg,var(--border) 1px,transparent 1px);
+  background-size:72px 72px;
+  opacity:0.5;
+  mask-image:radial-gradient(ellipse 80% 60% at 50% 0%,black 30%,transparent 80%);
 }
-.hero-content { position: relative; z-index: 1; max-width: 860px; }
-.hero-badge {
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 6px 14px; border-radius: 999px;
-  background: var(--teal-dim); border: 1px solid rgba(0,212,188,0.25);
-  font-size: 12px; color: var(--teal); font-family: 'DM Mono', monospace;
-  letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 28px;
-  animation: fadeUp 0.6s ease both;
+.hero-glow{
+  position:absolute;top:-120px;left:50%;transform:translateX(-50%);
+  width:800px;height:400px;
+  background:radial-gradient(ellipse at center,rgba(14,116,144,0.06) 0%,transparent 70%);
+  z-index:0;
 }
-.hero-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--teal); animation: pulse 2s infinite; }
-@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
-.hero-h1 {
-  font-family: 'Syne', sans-serif; font-weight: 800;
-  font-size: clamp(44px, 7vw, 78px); line-height: 1.05;
-  letter-spacing: -2px; margin-bottom: 24px;
-  animation: fadeUp 0.6s 0.1s ease both;
+.hero-content{position:relative;z-index:1;max-width:800px}
+.hero-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:5px 14px;border-radius:999px;
+  background:var(--teal-dim);border:1px solid var(--teal-border);
+  font-family:'DM Mono',monospace;font-size:10px;color:var(--teal);
+  letter-spacing:.08em;text-transform:uppercase;margin-bottom:28px;
+  animation:fadeUp .5s ease both;
 }
-.hero-h1 .accent { color: var(--teal); }
-.hero-h1 .muted { color: var(--white-30); }
-.hero-sub {
-  font-size: clamp(16px, 2vw, 20px); color: var(--white-60);
-  line-height: 1.65; max-width: 600px; margin: 0 auto 40px;
-  font-weight: 300;
-  animation: fadeUp 0.6s 0.2s ease both;
+.hero-badge-dot{width:5px;height:5px;border-radius:50%;background:var(--teal);animation:blink 2s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+.hero-h1{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(42px,6vw,72px);font-weight:800;
+  line-height:1.08;letter-spacing:-.5px;color:var(--text);
+  margin-bottom:24px;
+  animation:fadeUp .5s .08s ease both;
 }
-.hero-ctas {
-  display: flex; gap: 14px; justify-content: center; flex-wrap: wrap;
-  animation: fadeUp 0.6s 0.3s ease both;
+.hero-h1 .teal-word{color:var(--teal)}
+.hero-h1 .light-word{color:var(--text-3);font-weight:600}
+.hero-sub{
+  font-size:17px;color:var(--text-3);line-height:1.7;
+  max-width:560px;margin:0 auto 36px;font-weight:400;
+  animation:fadeUp .5s .14s ease both;
 }
-.btn-primary-lg {
-  padding: 16px 36px; border-radius: 10px; font-size: 16px; font-weight: 600;
-  border: none; color: var(--navy); background: var(--teal);
-  cursor: pointer; text-decoration: none; transition: all 0.2s;
-  font-family: 'DM Sans', sans-serif; display: inline-flex; align-items: center; gap: 8px;
+.hero-ctas{
+  display:flex;gap:12px;justify-content:center;flex-wrap:wrap;
+  animation:fadeUp .5s .2s ease both;
 }
-.btn-primary-lg:hover { background: #00ecd1; transform: translateY(-2px); box-shadow: 0 12px 40px rgba(0,212,188,0.3); }
-.btn-ghost-lg {
-  padding: 16px 32px; border-radius: 10px; font-size: 16px; font-weight: 500;
-  border: 1px solid var(--border); color: var(--white-60); background: transparent;
-  cursor: pointer; text-decoration: none; transition: all 0.2s;
-  font-family: 'DM Sans', sans-serif; display: inline-flex; align-items: center; gap: 8px;
+.btn-primary-lg{
+  padding:14px 32px;border-radius:var(--r);font-size:15px;font-weight:600;
+  border:none;color:white;background:var(--navy);
+  cursor:pointer;text-decoration:none;transition:all .2s;
+  font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:8px;
+  box-shadow:var(--shadow);
 }
-.btn-ghost-lg:hover { border-color: var(--white-30); color: var(--white); background: var(--white-6); }
-.hero-proof {
-  margin-top: 60px; display: flex; align-items: center; gap: 32px; justify-content: center;
-  flex-wrap: wrap; animation: fadeUp 0.6s 0.4s ease both;
+.btn-primary-lg:hover{background:var(--navy-2);transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.btn-teal-lg{
+  padding:14px 28px;border-radius:var(--r);font-size:15px;font-weight:500;
+  border:1px solid var(--teal-border);color:var(--teal);background:var(--teal-dim);
+  cursor:pointer;text-decoration:none;transition:all .2s;
+  font-family:'Inter',sans-serif;display:inline-flex;align-items:center;gap:8px;
 }
-.proof-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--white-30); }
-.proof-item svg { color: var(--teal); flex-shrink: 0; }
-@keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+.btn-teal-lg:hover{background:rgba(14,116,144,0.14);border-color:var(--teal);transform:translateY(-1px)}
+.hero-proof{
+  display:flex;align-items:center;gap:28px;justify-content:center;
+  flex-wrap:wrap;margin-top:48px;padding-top:28px;
+  border-top:1px solid var(--border);
+  animation:fadeUp .5s .26s ease both;
+}
+.proof-item{display:flex;align-items:center;gap:7px;font-size:12px;font-weight:500;color:var(--text-3)}
+.proof-check{width:16px;height:16px;background:var(--green-dim);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.proof-check svg{width:9px;height:9px;color:var(--green)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 
 /* ── SECTION SHARED ── */
-section { padding: 100px 24px; }
-.section-inner { max-width: 1140px; margin: 0 auto; }
-.section-label {
-  font-family: 'DM Mono', monospace; font-size: 11px; letter-spacing: 0.12em;
-  text-transform: uppercase; color: var(--teal); margin-bottom: 16px;
+section{padding:88px 24px}
+.sec-inner{max-width:1100px;margin:0 auto}
+.sec-label{
+  font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--teal);margin-bottom:12px;
 }
-.section-h2 {
-  font-family: 'Syne', sans-serif; font-weight: 800;
-  font-size: clamp(32px, 5vw, 52px); letter-spacing: -1.5px; line-height: 1.1;
-  margin-bottom: 20px;
+.sec-h2{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(28px,4vw,44px);font-weight:700;
+  letter-spacing:-.3px;line-height:1.15;color:var(--text);margin-bottom:16px;
 }
-.section-sub { font-size: 18px; color: var(--white-60); line-height: 1.65; max-width: 560px; font-weight: 300; }
+.sec-sub{font-size:16px;color:var(--text-3);line-height:1.7;max-width:520px;font-weight:400}
 
-/* ── PROBLEM SECTION ── */
-.problem { background: var(--navy-2); }
-.problem-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; margin-top: 60px; border-radius: 16px; overflow: hidden; }
-.problem-item {
-  background: var(--navy-3); padding: 36px 32px;
-  position: relative; overflow: hidden;
-  transition: background 0.2s;
-}
-.problem-item:hover { background: #121e35; }
-.problem-number {
-  font-family: 'Syne', sans-serif; font-size: 56px; font-weight: 800;
-  color: var(--white-6); line-height: 1; margin-bottom: 16px;
-  letter-spacing: -3px;
-}
-.problem-title { font-size: 18px; font-weight: 600; margin-bottom: 10px; line-height: 1.3; }
-.problem-text { font-size: 14px; color: var(--white-30); line-height: 1.65; }
-.problem-tag {
-  display: inline-block; margin-top: 16px; padding: 4px 10px;
-  background: rgba(255,77,77,0.1); border: 1px solid rgba(255,77,77,0.2);
-  border-radius: 4px; font-size: 11px; color: var(--red);
-  font-family: 'DM Mono', monospace; letter-spacing: 0.06em;
+/* ── PROBLEM ── */
+.problem{background:var(--navy)}
+.problem .sec-label{color:rgba(255,255,255,0.4)}
+.problem .sec-h2{color:white}
+.problem .sec-sub{color:rgba(255,255,255,0.5)}
+.prob-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1px;border-radius:12px;overflow:hidden;margin-top:52px;background:rgba(255,255,255,0.06)}
+.prob-card{background:var(--navy-2);padding:32px 28px;border-radius:0;transition:background .2s}
+.prob-card:hover{background:#1e3d68}
+.prob-num{font-family:'Playfair Display',serif;font-size:48px;font-weight:800;color:rgba(255,255,255,0.06);line-height:1;margin-bottom:16px;letter-spacing:-2px}
+.prob-title{font-size:14px;font-weight:600;color:white;margin-bottom:8px;line-height:1.4}
+.prob-text{font-size:13px;color:rgba(255,255,255,0.4);line-height:1.65}
+.prob-tag{
+  display:inline-block;margin-top:16px;padding:3px 9px;border-radius:4px;
+  font-family:'DM Mono',monospace;font-size:9px;color:#fca5a5;
+  background:rgba(220,38,38,0.12);border:1px solid rgba(220,38,38,0.2);
+  letter-spacing:.06em;text-transform:uppercase;
 }
 
 /* ── HOW IT WORKS ── */
-.how { background: var(--navy); }
-.how-header { margin-bottom: 64px; }
-.how-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
-.how-steps { display: flex; flex-direction: column; gap: 0; }
-.how-step {
-  display: flex; gap: 24px; padding: 28px 0;
-  border-bottom: 1px solid var(--border); cursor: pointer;
-  transition: all 0.2s; position: relative;
+.how{background:var(--bg-2)}
+.how-grid{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start;margin-top:52px}
+.steps{display:flex;flex-direction:column;gap:0}
+.step{
+  display:flex;gap:18px;padding:22px 0;
+  border-bottom:1px solid var(--border);cursor:pointer;
+  transition:all .15s;
 }
-.how-step:last-child { border-bottom: none; }
-.how-step:hover .step-title { color: var(--teal); }
-.step-num {
-  width: 36px; height: 36px; border-radius: 10px; background: var(--white-6);
-  border: 1px solid var(--border); display: flex; align-items: center; justify-content: center;
-  font-family: 'DM Mono', monospace; font-size: 13px; color: var(--white-30);
-  flex-shrink: 0; margin-top: 2px; transition: all 0.2s;
+.step:last-child{border-bottom:none;padding-bottom:0}
+.step-num{
+  width:32px;height:32px;border-radius:8px;
+  background:var(--bg-3);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'DM Mono',monospace;font-size:11px;color:var(--text-4);
+  flex-shrink:0;margin-top:2px;transition:all .15s;
 }
-.how-step.active .step-num { background: var(--teal-dim); border-color: var(--teal); color: var(--teal); }
-.step-title { font-size: 17px; font-weight: 600; margin-bottom: 6px; transition: color 0.2s; }
-.step-text { font-size: 14px; color: var(--white-30); line-height: 1.6; }
-.how-visual {
-  background: var(--navy-2); border: 1px solid var(--border);
-  border-radius: 16px; overflow: hidden; position: sticky; top: 100px;
+.step.active .step-num{background:var(--teal-dim);border-color:var(--teal-border);color:var(--teal)}
+.step-title{font-size:14px;font-weight:600;color:var(--text-2);margin-bottom:4px;transition:color .15s}
+.step.active .step-title{color:var(--text)}
+.step-text{font-size:13px;color:var(--text-4);line-height:1.65}
+/* Mock deal card */
+.mock-card{
+  background:var(--bg-2);border:1px solid var(--border);border-radius:12px;
+  box-shadow:var(--shadow-lg);overflow:hidden;position:sticky;top:88px;
 }
-.how-visual-header {
-  background: var(--navy-3); padding: 14px 20px;
-  display: flex; align-items: center; gap: 8px;
-  border-bottom: 1px solid var(--border);
+.mock-topbar{
+  background:var(--navy);padding:12px 16px;
+  display:flex;align-items:center;gap:6px;
 }
-.dot { width: 10px; height: 10px; border-radius: 50%; }
-.how-visual-body { padding: 28px; }
-.mock-score { text-align: center; padding: 20px 0; }
-.mock-score-num {
-  font-family: 'Syne', sans-serif; font-size: 72px; font-weight: 800;
-  letter-spacing: -4px; color: var(--teal); line-height: 1;
+.mock-dot{width:8px;height:8px;border-radius:50%}
+.mock-topbar-label{
+  font-family:'DM Mono',monospace;font-size:9px;
+  color:rgba(255,255,255,0.3);margin-left:6px;letter-spacing:.06em;
 }
-.mock-score-label { font-size: 12px; color: var(--white-30); margin-top: 6px; font-family: 'DM Mono', monospace; letter-spacing: 0.06em; }
-.mock-bars { display: flex; flex-direction: column; gap: 10px; margin-top: 24px; }
-.mock-bar-row { display: flex; align-items: center; gap: 12px; }
-.mock-bar-label { font-size: 11px; color: var(--white-30); width: 80px; flex-shrink: 0; }
-.mock-bar-track { flex: 1; height: 6px; background: var(--white-6); border-radius: 3px; overflow: hidden; }
-.mock-bar-fill { height: 100%; border-radius: 3px; background: var(--teal); }
-.mock-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 20px; }
-.mock-tag {
-  padding: 4px 10px; border-radius: 4px; font-size: 11px;
-  font-family: 'DM Mono', monospace; background: var(--teal-dim);
-  border: 1px solid rgba(0,212,188,0.2); color: var(--teal);
+.mock-body{padding:24px}
+.mock-score-row{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px}
+.mock-score-num{font-family:'Playfair Display',serif;font-size:64px;font-weight:800;color:var(--teal);letter-spacing:-3px;line-height:1}
+.mock-score-meta{text-align:right}
+.mock-score-label{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-4);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
+.mock-badge{
+  display:inline-block;padding:3px 9px;border-radius:4px;
+  font-family:'DM Mono',monospace;font-size:9px;font-weight:500;
+  background:var(--green-dim);color:var(--green);border:1px solid rgba(5,150,105,0.2);
+  letter-spacing:.06em;text-transform:uppercase;
 }
+.mock-divider{height:1px;background:var(--border);margin:16px 0}
+.mock-bars{display:flex;flex-direction:column;gap:10px}
+.mock-bar-row{display:flex;align-items:center;gap:10px}
+.mock-bar-label{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-4);width:60px}
+.mock-bar-track{flex:1;height:5px;background:var(--bg-3);border-radius:999px;overflow:hidden}
+.mock-bar-fill{height:100%;border-radius:999px;background:var(--teal);transition:width .6s ease}
+.mock-bar-val{font-size:11px;font-weight:600;color:var(--text-2);min-width:32px;text-align:right;font-family:'DM Mono',monospace}
+.mock-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:16px}
+.mock-tag{
+  padding:3px 9px;border-radius:4px;
+  font-family:'DM Mono',monospace;font-size:9px;font-weight:500;
+  background:var(--teal-dim);border:1px solid var(--teal-border);color:var(--teal);
+  letter-spacing:.04em;
+}
+.mock-ai{margin-top:14px;padding:12px;background:var(--bg-3);border-radius:6px;border-left:3px solid var(--teal)}
+.mock-ai-label{font-family:'DM Mono',monospace;font-size:9px;color:var(--teal);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px}
+.mock-ai-text{font-size:11px;color:var(--text-3);line-height:1.6}
 
-/* ── WHO IT'S FOR ── */
-.audience { background: var(--navy-2); }
-.audience-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 2px; margin-top: 60px; border-radius: 16px; overflow: hidden; }
-.audience-card {
-  background: var(--navy-3); padding: 40px 32px;
-  transition: background 0.2s; position: relative;
+/* ── AUDIENCE / PRICING ── */
+.audience{background:var(--bg)}
+.price-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:52px}
+.price-card{
+  background:var(--bg-2);border:1px solid var(--border);border-radius:12px;
+  padding:28px 24px;position:relative;
+  box-shadow:var(--shadow-sm);transition:box-shadow .2s,border-color .2s;
 }
-.audience-card:hover { background: #121e35; }
-.audience-icon { font-size: 32px; margin-bottom: 20px; }
-.audience-title { font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 700; margin-bottom: 12px; letter-spacing: -0.5px; }
-.audience-text { font-size: 14px; color: var(--white-60); line-height: 1.7; margin-bottom: 20px; }
-.audience-features { display: flex; flex-direction: column; gap: 8px; }
-.audience-feature { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; color: var(--white-30); line-height: 1.5; }
-.audience-feature::before { content: '✓'; color: var(--teal); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
-.audience-price {
-  margin-top: 28px; padding-top: 20px; border-top: 1px solid var(--border);
-  font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -1px;
+.price-card:hover{box-shadow:var(--shadow);border-color:var(--border-dark)}
+.price-card.featured{border-color:var(--teal);border-width:1.5px;box-shadow:0 0 0 4px rgba(14,116,144,0.06),var(--shadow)}
+.price-card.featured:hover{box-shadow:0 0 0 4px rgba(14,116,144,0.08),var(--shadow-lg)}
+.feat-label{
+  position:absolute;top:-1px;left:50%;transform:translateX(-50%);
+  background:var(--teal);color:white;
+  font-family:'DM Mono',monospace;font-size:9px;font-weight:500;letter-spacing:.08em;
+  padding:3px 12px;border-radius:0 0 6px 6px;text-transform:uppercase;
+  white-space:nowrap;
 }
-.audience-price span { font-size: 14px; font-weight: 400; color: var(--white-30); font-family: 'DM Sans', sans-serif; }
-.audience-cta {
-  display: block; margin-top: 16px; padding: 12px 20px; border-radius: 8px;
-  text-align: center; font-size: 14px; font-weight: 600; text-decoration: none;
-  transition: all 0.2s;
+.price-icon-wrap{
+  width:44px;height:44px;border-radius:10px;
+  background:var(--bg-3);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-size:20px;margin-bottom:16px;
 }
-.cta-teal { background: var(--teal); color: var(--navy); }
-.cta-teal:hover { background: #00ecd1; transform: translateY(-1px); }
-.cta-ghost { border: 1px solid var(--border); color: var(--white-60); background: transparent; }
-.cta-ghost:hover { border-color: var(--white-30); color: var(--white); }
-.featured-card { background: var(--navy-2); border: 1px solid rgba(0,212,188,0.25) !important; }
-.featured-card::before {
-  content: 'MOST POPULAR'; position: absolute; top: 0; right: 0;
-  background: var(--teal); color: var(--navy); font-size: 10px; font-weight: 700;
-  padding: 4px 12px; font-family: 'DM Mono', monospace; letter-spacing: 0.08em;
-  border-bottom-left-radius: 8px;
+.price-title{font-size:17px;font-weight:700;color:var(--text);margin-bottom:6px;letter-spacing:-.2px}
+.price-sub{font-size:13px;color:var(--text-3);line-height:1.6;margin-bottom:20px}
+.price-features{display:flex;flex-direction:column;gap:9px;margin-bottom:24px}
+.price-feat{
+  display:flex;align-items:flex-start;gap:8px;
+  font-size:12px;color:var(--text-2);line-height:1.5;
 }
+.feat-check{
+  width:16px;height:16px;border-radius:4px;background:var(--green-dim);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;
+}
+.feat-check svg{width:9px;height:9px;color:var(--green)}
+.price-divider{height:1px;background:var(--border);margin-bottom:20px}
+.price-amt{font-family:'Playfair Display',serif;font-size:36px;font-weight:700;color:var(--text);line-height:1;margin-bottom:4px;letter-spacing:-.5px}
+.price-amt span{font-size:14px;font-weight:400;color:var(--text-4);font-family:'Inter',sans-serif}
+.price-period{font-size:12px;color:var(--text-4);margin-bottom:16px}
+.price-cta{
+  display:block;padding:11px 16px;border-radius:var(--r);
+  text-align:center;font-size:13px;font-weight:600;text-decoration:none;
+  transition:all .15s;font-family:'Inter',sans-serif;cursor:pointer;
+}
+.cta-navy{background:var(--navy);color:white;border:none}
+.cta-navy:hover{background:var(--navy-2);transform:translateY(-1px);box-shadow:var(--shadow-sm)}
+.cta-teal{background:var(--teal-dim);color:var(--teal);border:1px solid var(--teal-border)}
+.cta-teal:hover{background:rgba(14,116,144,0.14);transform:translateY(-1px)}
+.cta-outline{background:transparent;color:var(--text-2);border:1px solid var(--border-dark)}
+.cta-outline:hover{border-color:var(--teal);color:var(--teal)}
 
 /* ── ALWAYS ON ── */
-.always { background: var(--navy); overflow: hidden; }
-.always-inner { max-width: 900px; margin: 0 auto; text-align: center; }
-.always-h2 {
-  font-family: 'Syne', sans-serif; font-size: clamp(40px, 7vw, 72px);
-  font-weight: 800; letter-spacing: -2px; line-height: 1.05; margin-bottom: 24px;
+.always{background:var(--navy)}
+.always .sec-h2{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(32px,5vw,56px);font-weight:800;
+  line-height:1.12;color:white;margin-bottom:8px;letter-spacing:-.5px;
 }
-.always-h2 .dim { color: var(--white-30); }
-.always-h2 .bright { color: var(--teal); }
-.times-grid {
-  display: grid; grid-template-columns: repeat(4, 1fr); gap: 2px;
-  margin: 48px 0; border-radius: 12px; overflow: hidden;
+.always-sub{font-size:15px;color:rgba(255,255,255,0.45);margin-bottom:48px;line-height:1.6}
+.times-grid{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:1px;
+  border-radius:12px;overflow:hidden;background:rgba(255,255,255,0.06);margin-bottom:24px;
 }
-.time-card {
-  background: var(--navy-2); padding: 28px 20px; text-align: center;
-  border: 1px solid transparent; transition: all 0.2s;
+.time-card{background:var(--navy-2);padding:24px 16px;text-align:center;transition:background .2s}
+.time-card:hover{background:#1e3d68}
+.time-icon{font-size:24px;margin-bottom:10px}
+.time-label{font-size:13px;font-weight:600;color:white;margin-bottom:3px}
+.time-sub{font-size:11px;color:rgba(255,255,255,0.3)}
+.time-status{
+  display:inline-block;margin-top:10px;padding:2px 9px;border-radius:4px;
+  font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.06em;text-transform:uppercase;
 }
-.time-card:hover { background: var(--navy-3); border-color: var(--teal-dim); }
-.time-icon { font-size: 28px; margin-bottom: 10px; }
-.time-label { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
-.time-sub { font-size: 12px; color: var(--white-30); }
-.time-status {
-  display: inline-block; margin-top: 10px; padding: 3px 8px; border-radius: 4px;
-  font-size: 10px; font-family: 'DM Mono', monospace; letter-spacing: 0.06em;
+.online{background:rgba(14,116,144,0.15);color:rgba(14,180,220,0.9);border:1px solid rgba(14,116,144,0.3)}
+.offline{background:rgba(220,38,38,0.1);color:#fca5a5;border:1px solid rgba(220,38,38,0.2)}
+.vs-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.vs{padding:20px 24px;border-radius:10px}
+.vs.wo{background:rgba(220,38,38,0.04);border:1px solid rgba(220,38,38,0.1)}
+.vs.wi{background:rgba(14,116,144,0.08);border:1px solid rgba(14,116,144,0.2)}
+.vs-title{
+  font-family:'DM Mono',monospace;font-size:10px;font-weight:500;
+  text-transform:uppercase;letter-spacing:.1em;margin-bottom:14px;
 }
-.status-online { background: rgba(0,212,188,0.12); color: var(--teal); border: 1px solid rgba(0,212,188,0.2); }
-.status-offline { background: rgba(255,77,77,0.1); color: var(--red); border: 1px solid rgba(255,77,77,0.15); }
-.always-vs {
-  display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 0;
-}
-.vs-card {
-  padding: 24px 28px; border-radius: 12px; text-align: left;
-}
-.vs-card.without { background: rgba(255,77,77,0.04); border: 1px solid rgba(255,77,77,0.12); }
-.vs-card.with { background: var(--teal-dim); border: 1px solid rgba(0,212,188,0.2); }
-.vs-title { font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 14px; font-family: 'DM Mono', monospace; }
-.vs-card.without .vs-title { color: var(--red); }
-.vs-card.with .vs-title { color: var(--teal); }
-.vs-items { display: flex; flex-direction: column; gap: 10px; }
-.vs-item { font-size: 14px; color: var(--white-60); line-height: 1.5; display: flex; gap: 8px; }
+.wo .vs-title{color:#fca5a5}
+.wi .vs-title{color:rgba(14,180,220,0.8)}
+.vs-item{font-size:13px;color:rgba(255,255,255,0.45);line-height:1.5;margin-bottom:9px;display:flex;gap:8px;align-items:flex-start}
 
-/* ── TESTIMONIALS / SOCIAL PROOF ── */
-.proof { background: var(--navy-2); }
-.proof-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-top: 56px; }
-.proof-card {
-  background: var(--navy-3); border: 1px solid var(--border);
-  border-radius: 14px; padding: 28px;
-  transition: border-color 0.2s;
+/* ── SOCIAL PROOF ── */
+.proof-sec{background:var(--bg-2)}
+.proof-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-top:52px}
+.proof-card{
+  background:var(--bg);border:1px solid var(--border);border-radius:12px;
+  padding:24px;transition:border-color .2s,box-shadow .2s;
 }
-.proof-card:hover { border-color: rgba(0,212,188,0.2); }
-.proof-quote { font-size: 15px; color: var(--white-60); line-height: 1.7; margin-bottom: 20px; font-style: italic; }
-.proof-author { display: flex; align-items: center; gap: 12px; }
-.proof-avatar {
-  width: 38px; height: 38px; border-radius: 10px;
-  background: var(--teal-dim); border: 1px solid rgba(0,212,188,0.2);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 16px;
+.proof-card:hover{border-color:var(--teal-border);box-shadow:var(--shadow)}
+.proof-stars{
+  font-family:'DM Mono',monospace;font-size:11px;color:var(--gold);
+  letter-spacing:2px;margin-bottom:12px;
 }
-.proof-name { font-size: 13px; font-weight: 600; }
-.proof-role { font-size: 12px; color: var(--white-30); margin-top: 2px; }
-.proof-stars { color: var(--gold); font-size: 12px; margin-bottom: 12px; letter-spacing: 1px; }
+.proof-quote{font-size:13px;color:var(--text-2);line-height:1.75;margin-bottom:18px;font-style:italic}
+.proof-author{display:flex;align-items:center;gap:10px}
+.proof-avatar{
+  width:36px;height:36px;border-radius:8px;
+  background:var(--teal-dim);border:1px solid var(--teal-border);
+  display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0;
+}
+.proof-name{font-size:13px;font-weight:600;color:var(--text)}
+.proof-role{font-size:11px;color:var(--text-4);margin-top:1px}
 
-/* ── CTA SECTION ── */
-.cta-section {
-  background: var(--navy);
-  padding: 120px 24px;
-  text-align: center;
-  position: relative; overflow: hidden;
+/* ── FINAL CTA ── */
+.cta-sec{
+  background:var(--navy);padding:100px 24px;text-align:center;
 }
-.cta-bg {
-  position: absolute; inset: 0; z-index: 0;
-  background: radial-gradient(ellipse 60% 50% at 50% 50%, rgba(0,212,188,0.07) 0%, transparent 70%);
+.cta-inner{max-width:640px;margin:0 auto}
+.cta-h2{
+  font-family:'Playfair Display',serif;
+  font-size:clamp(32px,5vw,52px);font-weight:800;
+  color:white;letter-spacing:-.5px;line-height:1.12;margin-bottom:16px;
 }
-.cta-content { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; }
-.cta-h2 {
-  font-family: 'Syne', sans-serif; font-size: clamp(36px, 6vw, 60px);
-  font-weight: 800; letter-spacing: -2px; line-height: 1.1; margin-bottom: 20px;
+.cta-sub{font-size:16px;color:rgba(255,255,255,0.5);margin-bottom:36px;line-height:1.7}
+.cta-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-bottom:16px}
+.btn-white-lg{
+  padding:14px 28px;border-radius:var(--r);font-size:14px;font-weight:600;
+  background:white;color:var(--navy);border:none;text-decoration:none;
+  display:inline-flex;align-items:center;gap:8px;cursor:pointer;
+  font-family:'Inter',sans-serif;transition:all .2s;box-shadow:var(--shadow);
 }
-.cta-sub { font-size: 18px; color: var(--white-60); margin-bottom: 40px; line-height: 1.6; font-weight: 300; }
-.cta-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
-.cta-disclaimer { font-size: 12px; color: var(--white-30); margin-top: 20px; }
+.btn-white-lg:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.btn-outline-lg{
+  padding:14px 24px;border-radius:var(--r);font-size:14px;font-weight:500;
+  background:transparent;color:rgba(255,255,255,0.6);border:1px solid rgba(255,255,255,0.15);
+  text-decoration:none;display:inline-flex;align-items:center;gap:8px;cursor:pointer;
+  font-family:'Inter',sans-serif;transition:all .2s;
+}
+.btn-outline-lg:hover{border-color:rgba(255,255,255,0.35);color:white}
+.cta-disclaimer{font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.2);letter-spacing:.04em}
 
 /* ── FOOTER ── */
-footer {
-  background: var(--navy-2); border-top: 1px solid var(--border);
-  padding: 48px 24px 32px;
+footer{
+  background:var(--navy-3);border-top:1px solid rgba(255,255,255,0.06);
+  padding:48px 24px 32px;
 }
-.footer-inner { max-width: 1140px; margin: 0 auto; }
-.footer-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 40px; gap: 40px; flex-wrap: wrap; }
-.footer-brand .footer-logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 20px; letter-spacing: -0.5px; margin-bottom: 8px; }
-.footer-brand p { font-size: 13px; color: var(--white-30); max-width: 240px; line-height: 1.6; }
-.footer-links-group { display: flex; flex-direction: column; gap: 10px; }
-.footer-links-group h4 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--white-30); margin-bottom: 4px; }
-.footer-links-group a { font-size: 13px; color: var(--white-30); text-decoration: none; transition: color 0.2s; }
-.footer-links-group a:hover { color: var(--white); }
-.footer-bottom { display: flex; justify-content: space-between; align-items: center; padding-top: 24px; border-top: 1px solid var(--border); flex-wrap: wrap; gap: 12px; }
-.footer-bottom p { font-size: 12px; color: var(--white-30); }
-.footer-disclaimer { font-size: 11px; color: rgba(255,255,255,0.15); max-width: 500px; line-height: 1.5; }
+.footer-inner{max-width:1100px;margin:0 auto}
+.footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:40px;align-items:start}
+.footer-logo-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.footer-logo-mark{width:30px;height:30px;background:var(--teal);border-radius:7px;display:flex;align-items:center;justify-content:center}
+.footer-logo-mark svg{width:15px;height:15px}
+.footer-logo-text{font-size:16px;font-weight:700;color:white;letter-spacing:-.3px}
+.footer-desc{font-size:12px;color:rgba(255,255,255,0.3);line-height:1.65;max-width:220px}
+.footer-col h4{font-family:'DM Mono',monospace;font-size:9px;font-weight:500;color:rgba(255,255,255,0.3);letter-spacing:.12em;text-transform:uppercase;margin-bottom:14px}
+.footer-col a{display:block;font-size:12px;color:rgba(255,255,255,0.4);text-decoration:none;margin-bottom:8px;transition:color .15s}
+.footer-col a:hover{color:rgba(255,255,255,0.8)}
+.footer-bottom{
+  display:flex;justify-content:space-between;align-items:flex-start;
+  padding-top:24px;border-top:1px solid rgba(255,255,255,0.06);
+  gap:24px;flex-wrap:wrap;
+}
+.footer-copy{font-size:11px;color:rgba(255,255,255,0.2);font-family:'DM Mono',monospace}
+.footer-legal{font-size:11px;color:rgba(255,255,255,0.15);max-width:480px;line-height:1.6}
 
 /* ── MOBILE ── */
 @media(max-width:768px){
-  nav{padding:16px 20px}
+  nav{padding:0 20px}
   .nav-links{display:none}
-  .hero{padding:100px 20px 60px}
-  .problem-grid,.audience-grid{grid-template-columns:1fr}
+  section{padding:60px 20px}
+  .hero{padding:88px 20px 60px}
+  .prob-grid,.price-grid,.proof-grid{grid-template-columns:1fr}
   .how-grid{grid-template-columns:1fr}
-  .how-visual{display:none}
+  .mock-card{display:none}
   .times-grid{grid-template-columns:1fr 1fr}
-  .always-vs{grid-template-columns:1fr}
-  .proof-grid{grid-template-columns:1fr}
-  .footer-top{flex-direction:column}
-  section{padding:70px 20px}
+  .vs-grid{grid-template-columns:1fr}
+  .footer-top{grid-template-columns:1fr 1fr}
+  .footer-bottom{flex-direction:column}
 }
 </style>
 </head>
@@ -394,67 +439,62 @@ footer {
 
 <!-- NAV -->
 <nav id="navbar">
-  <div class="nav-logo">
+  <a href="/" class="nav-logo">
     <div class="nav-logo-mark">
-      <svg viewBox="0 0 24 24" fill="none" stroke="#060e1f" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
     </div>
     <div>
       <div class="nav-logo-text">Underlytix</div>
       <div class="nav-logo-sub">Capital Intelligence</div>
     </div>
-  </div>
+  </a>
   <div class="nav-links">
     <a href="#how">How It Works</a>
-    <a href="#who">Who It's For</a>
     <a href="#pricing">Pricing</a>
+    <a href="#availability">Availability</a>
   </div>
   <div class="nav-cta">
-    <a href="/app" class="btn-ghost-sm">Sign In</a>
-    <a href="/app" class="btn-teal-sm">Get Started Free</a>
+    <a href="/app" class="btn-ghost-nav">Sign In</a>
+    <a href="/app" class="btn-navy-nav">Get Started Free</a>
   </div>
 </nav>
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-bg"></div>
-  <div class="hero-grid"></div>
+  <div class="hero-rule"></div>
+  <div class="hero-glow"></div>
   <div class="hero-content">
-    <div class="hero-badge">
-      <div class="hero-badge-dot"></div>
-      Pre-Application Intelligence
-    </div>
+    <div class="hero-badge"><div class="hero-badge-dot"></div>Pre-Application Intelligence</div>
     <h1 class="hero-h1">
       Know if your deal is<br>
-      <span class="accent">fundable</span> <span class="muted">before</span><br>
+      <span class="teal-word">fundable</span> <span class="light-word">before</span><br>
       approaching a lender.
     </h1>
     <p class="hero-sub">
-      Underlytix analyzes your deals against real lending criteria, scores fundability, matches you to the right capital source — and never sleeps. Friday at midnight, Saturday at 8pm, all day Sunday.
+      Underlytix analyzes real estate deals against actual lending criteria, scores fundability, and matches investors to the right capital source — before wasting time on applications.
     </p>
     <div class="hero-ctas">
       <a href="/app" class="btn-primary-lg">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
         Analyze Your First Deal Free
       </a>
-      <a href="#how" class="btn-ghost-lg">
-        See How It Works →
-      </a>
+      <a href="/app" class="btn-teal-lg">Realtor? Start Free Trial →</a>
     </div>
     <div class="hero-proof">
       <div class="proof-item">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <div class="proof-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
         3 free analyses per month
       </div>
       <div class="proof-item">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <div class="proof-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
         No credit card required
       </div>
       <div class="proof-item">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <div class="proof-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
         Results in under 60 seconds
       </div>
       <div class="proof-item">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        <div class="proof-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
         Available 24/7
       </div>
     </div>
@@ -462,29 +502,29 @@ footer {
 </section>
 
 <!-- PROBLEM -->
-<section class="problem" id="problem">
-  <div class="section-inner">
-    <div class="section-label">The Problem</div>
-    <h2 class="section-h2">The capital stack is broken<br>for everyone involved.</h2>
-    <p class="section-sub">Investors waste months on deals that never close. Realtors lose clients to financing uncertainty. Lenders drown in unqualified applications.</p>
-    <div class="problem-grid">
-      <div class="problem-item">
-        <div class="problem-number">01</div>
-        <div class="problem-title">Investors apply blind</div>
-        <div class="problem-text">No way to know if a deal pencils before spending weeks chasing lenders, getting soft declines, or worse — getting to the table and failing to close.</div>
-        <div class="problem-tag">WASTED TIME + MONEY</div>
+<section class="problem">
+  <div class="sec-inner">
+    <div class="sec-label">The Problem</div>
+    <h2 class="sec-h2" style="color:white">The capital stack is broken<br>for everyone involved.</h2>
+    <p class="sec-sub">Investors waste months on deals that never close. Realtors lose clients to financing uncertainty. Lenders drown in unqualified applications.</p>
+    <div class="prob-grid">
+      <div class="prob-card">
+        <div class="prob-num">01</div>
+        <div class="prob-title">Investors apply blind</div>
+        <div class="prob-text">No way to know if a deal pencils before spending weeks chasing lenders, getting soft declines, or failing to close at the table.</div>
+        <div class="prob-tag">Wasted time &amp; capital</div>
       </div>
-      <div class="problem-item">
-        <div class="problem-number">02</div>
-        <div class="problem-title">Realtors can't answer the $1M question</div>
-        <div class="problem-text">"Can my client get financing on this?" It's Saturday at 8pm. The loan officer isn't answering. The offer deadline is tomorrow. The deal dies.</div>
-        <div class="problem-tag">LOST COMMISSIONS</div>
+      <div class="prob-card">
+        <div class="prob-num">02</div>
+        <div class="prob-title">Realtors can't answer the financing question</div>
+        <div class="prob-text">Saturday at 8pm. The loan officer isn't answering. The offer deadline is tomorrow. Without an answer, the deal dies.</div>
+        <div class="prob-tag">Lost commissions</div>
       </div>
-      <div class="problem-item">
-        <div class="problem-number">03</div>
-        <div class="problem-title">Lenders wade through noise</div>
-        <div class="problem-text">80% of loan applications fail basic underwriting criteria. Lenders spend hours reviewing deals that should have been filtered out before ever reaching their desk.</div>
-        <div class="problem-tag">OPERATIONAL WASTE</div>
+      <div class="prob-card">
+        <div class="prob-num">03</div>
+        <div class="prob-title">Lenders review unqualified deals</div>
+        <div class="prob-text">80% of loan applications fail basic underwriting criteria. Lenders spend hours reviewing deals that should have been filtered before reaching their desk.</div>
+        <div class="prob-tag">Operational inefficiency</div>
       </div>
     </div>
   </div>
@@ -492,59 +532,49 @@ footer {
 
 <!-- HOW IT WORKS -->
 <section class="how" id="how">
-  <div class="section-inner">
-    <div class="how-header">
-      <div class="section-label">How It Works</div>
-      <h2 class="section-h2">Deal intelligence in<br>under 60 seconds.</h2>
-    </div>
+  <div class="sec-inner">
+    <div class="sec-label">How It Works</div>
+    <h2 class="sec-h2">Deal intelligence in<br>under 60 seconds.</h2>
     <div class="how-grid">
-      <div class="how-steps">
-        <div class="how-step active" onclick="setStep(0)">
+      <div class="steps">
+        <div class="step active" onclick="setStep(0)">
           <div class="step-num">01</div>
-          <div>
-            <div class="step-title">Submit your deal</div>
-            <div class="step-text">Enter deal type, property info, loan amount, and borrower profile. Takes 3 minutes. No documents required.</div>
-          </div>
+          <div><div class="step-title">Submit your deal</div><div class="step-text">Enter deal type, property info, loan amount, and borrower profile. Takes under 3 minutes. No documents required.</div></div>
         </div>
-        <div class="how-step" onclick="setStep(1)">
+        <div class="step" onclick="setStep(1)">
           <div class="step-num">02</div>
-          <div>
-            <div class="step-title">AI underwrites it</div>
-            <div class="step-text">Our engine scores your deal against real lender criteria — LTV limits, DSCR thresholds, credit requirements, deal type guidelines.</div>
-          </div>
+          <div><div class="step-title">AI underwrites it</div><div class="step-text">Our engine scores your deal against real lender criteria — LTV limits, DSCR thresholds, credit requirements, and deal type guidelines.</div></div>
         </div>
-        <div class="how-step" onclick="setStep(2)">
+        <div class="step" onclick="setStep(2)">
           <div class="step-num">03</div>
-          <div>
-            <div class="step-title">Get your fundability score</div>
-            <div class="step-text">Receive a 0–100 fundability score, an executive summary, structuring recommendations, and risk flags — in plain English.</div>
-          </div>
+          <div><div class="step-title">Receive your fundability score</div><div class="step-text">A 0–100 score, executive summary, structuring recommendations, and risk flags — in plain English.</div></div>
         </div>
-        <div class="how-step" onclick="setStep(3)">
+        <div class="step" onclick="setStep(3)">
           <div class="step-num">04</div>
-          <div>
-            <div class="step-title">Get matched to lenders</div>
-            <div class="step-text">High-scoring deals are automatically matched to lenders in the Underlytix network whose criteria your deal meets.</div>
-          </div>
+          <div><div class="step-title">Get matched to lenders</div><div class="step-text">High-scoring deals are automatically matched to lenders in the Underlytix network whose criteria your deal meets.</div></div>
         </div>
       </div>
-      <div class="how-visual">
-        <div class="how-visual-header">
-          <div class="dot" style="background:#ff5f57"></div>
-          <div class="dot" style="background:#febc2e"></div>
-          <div class="dot" style="background:#28c840"></div>
-          <span style="font-size:12px;color:rgba(255,255,255,0.3);margin-left:8px;font-family:'DM Mono',monospace">Deal Analysis Report</span>
+      <div class="mock-card">
+        <div class="mock-topbar">
+          <div class="mock-dot" style="background:#ff5f57"></div>
+          <div class="mock-dot" style="background:#febc2e"></div>
+          <div class="mock-dot" style="background:#28c840"></div>
+          <div class="mock-topbar-label">Deal Analysis Report — Underlytix</div>
         </div>
-        <div class="how-visual-body">
-          <div class="mock-score">
+        <div class="mock-body">
+          <div class="mock-score-row">
             <div class="mock-score-num">74</div>
-            <div class="mock-score-label">FUNDABILITY SCORE · STRONG PASS</div>
+            <div class="mock-score-meta">
+              <div class="mock-score-label">Fundability Score</div>
+              <div class="mock-badge">Strong Pass</div>
+            </div>
           </div>
+          <div class="mock-divider"></div>
           <div class="mock-bars">
-            <div class="mock-bar-row"><div class="mock-bar-label" style="font-size:10px;color:rgba(255,255,255,0.25)">LTV</div><div class="mock-bar-track"><div class="mock-bar-fill" style="width:72%"></div></div><span style="font-size:11px;color:rgba(255,255,255,0.4)">72%</span></div>
-            <div class="mock-bar-row"><div class="mock-bar-label" style="font-size:10px;color:rgba(255,255,255,0.25)">DSCR</div><div class="mock-bar-track"><div class="mock-bar-fill" style="width:85%"></div></div><span style="font-size:11px;color:rgba(255,255,255,0.4)">1.24</span></div>
-            <div class="mock-bar-row"><div class="mock-bar-label" style="font-size:10px;color:rgba(255,255,255,0.25)">CREDIT</div><div class="mock-bar-track"><div class="mock-bar-fill" style="width:68%"></div></div><span style="font-size:11px;color:rgba(255,255,255,0.4)">680</span></div>
-            <div class="mock-bar-row"><div class="mock-bar-label" style="font-size:10px;color:rgba(255,255,255,0.25)">SPREAD</div><div class="mock-bar-track"><div class="mock-bar-fill" style="width:90%"></div></div><span style="font-size:11px;color:rgba(255,255,255,0.4)">$58k</span></div>
+            <div class="mock-bar-row"><div class="mock-bar-label">LTV</div><div class="mock-bar-track"><div class="mock-bar-fill" style="width:72%"></div></div><div class="mock-bar-val">72%</div></div>
+            <div class="mock-bar-row"><div class="mock-bar-label">DSCR</div><div class="mock-bar-track"><div class="mock-bar-fill" style="width:85%"></div></div><div class="mock-bar-val">1.24</div></div>
+            <div class="mock-bar-row"><div class="mock-bar-label">Credit</div><div class="mock-bar-track"><div class="mock-bar-fill" style="width:68%"></div></div><div class="mock-bar-val">680</div></div>
+            <div class="mock-bar-row"><div class="mock-bar-label">Spread</div><div class="mock-bar-track"><div class="mock-bar-fill" style="width:90%"></div></div><div class="mock-bar-val">$58k</div></div>
           </div>
           <div class="mock-tags">
             <div class="mock-tag">Fix &amp; Flip</div>
@@ -552,9 +582,9 @@ footer {
             <div class="mock-tag">3 Lender Matches</div>
             <div class="mock-tag">Pre-Screened</div>
           </div>
-          <div style="margin-top:20px;padding:14px;background:rgba(0,212,188,0.05);border:1px solid rgba(0,212,188,0.12);border-radius:8px">
-            <div style="font-size:11px;color:rgba(0,212,188,0.8);font-family:'DM Mono',monospace;letter-spacing:.06em;margin-bottom:6px">AI SUMMARY</div>
-            <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.6">Strong ARV spread with acceptable LTV. DSCR exceeds 1.2 threshold. Credit score is borderline — recommend 2 months reserves to strengthen file.</div>
+          <div class="mock-ai">
+            <div class="mock-ai-label">AI Summary</div>
+            <div class="mock-ai-text">Strong ARV spread with acceptable LTV. DSCR exceeds the 1.2 threshold. Credit score is borderline — recommend 2 months reserves to strengthen the file before submission.</div>
           </div>
         </div>
       </div>
@@ -562,53 +592,60 @@ footer {
   </div>
 </section>
 
-<!-- WHO IT'S FOR -->
-<section class="audience" id="who">
-  <div class="section-inner">
-    <div class="section-label">Who It's For</div>
-    <h2 class="section-h2">Built for every side<br>of the transaction.</h2>
-    <div class="audience-grid" id="pricing">
-      <div class="audience-card">
-        <div class="audience-icon">🏗️</div>
-        <div class="audience-title">Real Estate Investors</div>
-        <div class="audience-text">Know if your deal pencils before you spend weeks chasing lenders. Fix &amp; flip, DSCR, bridge, cash-out, new construction — all deal types supported.</div>
-        <div class="audience-features">
-          <div class="audience-feature">AI fundability score (0–100)</div>
-          <div class="audience-feature">Lender matching by deal type</div>
-          <div class="audience-feature">Structuring recommendations</div>
-          <div class="audience-feature">Risk flag analysis</div>
-          <div class="audience-feature">Deal pipeline &amp; history</div>
+<!-- PRICING / AUDIENCE -->
+<section class="audience" id="pricing">
+  <div class="sec-inner">
+    <div class="sec-label">Who It's For</div>
+    <h2 class="sec-h2">Built for every side<br>of the transaction.</h2>
+    <div class="price-grid">
+      <div class="price-card">
+        <div class="price-icon-wrap">🏗️</div>
+        <div class="price-title">Real Estate Investors</div>
+        <div class="price-sub">Know if your deal pencils before approaching a single lender. Fix &amp; flip, DSCR, bridge, cash-out, and new construction all supported.</div>
+        <div class="price-features">
+          <div class="price-feat"><div class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>AI fundability score (0–100)</div>
+          <div class="price-feat"><div class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Lender matching by deal type</div>
+          <div class="price-feat"><div class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Structuring recommendations</div>
+          <div class="price-feat"><div class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Risk flag analysis</div>
+          <div class="price-feat"><div class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Deal pipeline &amp; history</div>
         </div>
-        <div class="audience-price">$97<span>/month</span></div>
-        <a href="/app" class="audience-cta cta-ghost">Start Free — 3 Analyses/Month</a>
+        <div class="price-divider"></div>
+        <div class="price-amt">$97<span>/mo</span></div>
+        <div class="price-period">Free plan available — 3 analyses/month</div>
+        <a href="/app" class="price-cta cta-outline">Start Free — No Card Required</a>
       </div>
-      <div class="audience-card featured-card" style="position:relative">
-        <div class="audience-icon">🏠</div>
-        <div class="audience-title">Realtors</div>
-        <div class="audience-text">Your clients ask about financing at 11pm on a Friday. Now you have an answer. Prequalify residential, commercial, and investor clients in minutes — anytime.</div>
-        <div class="audience-features">
-          <div class="audience-feature">Conversational AI prequalification</div>
-          <div class="audience-feature">Full PITIA calculation (taxes, HOA, insurance)</div>
-          <div class="audience-feature">Conventional, FHA, VA, DSCR, Jumbo, Non-QM</div>
-          <div class="audience-feature">DTI analysis with lender guidelines</div>
-          <div class="audience-feature">Saveable client prequal history</div>
+      <div class="price-card featured">
+        <div class="feat-label">Most Popular</div>
+        <div class="price-icon-wrap">🏠</div>
+        <div class="price-title">Realtors</div>
+        <div class="price-sub">Prequalify residential, commercial, and investor clients in minutes — at Friday midnight, Saturday 8pm, or any time your clients need answers.</div>
+        <div class="price-features">
+          <div class="price-feat"><div class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Conversational AI prequalification</div>
+          <div class="price-feat"><div class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Full PITIA — taxes, HOA, insurance</div>
+          <div class="price-feat"><div class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Conventional, FHA, VA, DSCR, Jumbo</div>
+          <div class="price-feat"><div class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>DTI analysis with lender guidelines</div>
+          <div class="price-feat"><div class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Client prequal history &amp; pipeline</div>
         </div>
-        <div class="audience-price">$49<span>/month</span></div>
-        <a href="/app" class="audience-cta cta-teal">Start 14-Day Free Trial</a>
+        <div class="price-divider"></div>
+        <div class="price-amt">$49<span>/mo</span></div>
+        <div class="price-period">14-day free trial — no credit card required</div>
+        <a href="/app" class="price-cta cta-navy">Start 14-Day Free Trial</a>
       </div>
-      <div class="audience-card">
-        <div class="audience-icon">🏦</div>
-        <div class="audience-title">Lenders</div>
-        <div class="audience-text">Stop wading through unqualified applications. Receive pre-screened, AI-scored investor deals matched to your exact lending criteria — delivered to your pipeline.</div>
-        <div class="audience-features">
-          <div class="audience-feature">Pre-screened deal flow</div>
-          <div class="audience-feature">AI fundability score on every deal</div>
-          <div class="audience-feature">Matched to your criteria</div>
-          <div class="audience-feature">One-click Interest / Term Sheet / Pass</div>
-          <div class="audience-feature">Full borrower profile &amp; deal details</div>
+      <div class="price-card">
+        <div class="price-icon-wrap">🏦</div>
+        <div class="price-title">Lenders</div>
+        <div class="price-sub">Receive pre-screened, AI-scored investor deals matched to your exact lending criteria. Stop reviewing applications that don't qualify.</div>
+        <div class="price-features">
+          <div class="price-feat"><div class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Pre-screened deal flow</div>
+          <div class="price-feat"><div class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>AI fundability score on every deal</div>
+          <div class="price-feat"><div class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Matched to your lending criteria</div>
+          <div class="price-feat"><div class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Interest / Term Sheet / Pass workflow</div>
+          <div class="price-feat"><div class="feat-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>Full borrower profile &amp; deal details</div>
         </div>
-        <div class="audience-price">$297<span>/month</span></div>
-        <a href="/app" class="audience-cta cta-ghost">Start 14-Day Free Trial</a>
+        <div class="price-divider"></div>
+        <div class="price-amt">$297<span>/mo</span></div>
+        <div class="price-period">14-day free trial included</div>
+        <a href="/app" class="price-cta cta-outline">Start 14-Day Free Trial</a>
       </div>
     </div>
   </div>
@@ -616,121 +653,74 @@ footer {
 
 <!-- ALWAYS ON -->
 <section class="always" id="availability">
-  <div class="always-inner">
-    <div class="section-label" style="text-align:center">Always Available</div>
-    <h2 class="always-h2">
-      <span class="dim">Your loan officer</span><br>
-      <span class="bright">doesn't answer</span><br>
-      <span class="dim">at midnight.</span><br>
-      <span style="color:white">We do.</span>
-    </h2>
+  <div class="sec-inner" style="text-align:center">
+    <div class="sec-label" style="color:rgba(255,255,255,0.35)">Always Available</div>
+    <h2 class="always-h2">Your loan officer<br>doesn't answer at midnight.<br><span style="color:rgba(14,140,178,0.9)">We do.</span></h2>
+    <p class="always-sub">Need to know if your client qualifies Friday at midnight, Saturday at 8pm, or all day Sunday? Underlytix is available every hour of every day — no appointments, no voicemails, no waiting until Monday.</p>
     <div class="times-grid">
-      <div class="time-card">
-        <div class="time-icon">🌙</div>
-        <div class="time-label">Friday, 11:47pm</div>
-        <div class="time-sub">Offer deadline tomorrow</div>
-        <div class="time-status status-online">UNDERLYTIX: ONLINE</div>
-      </div>
-      <div class="time-card">
-        <div class="time-icon">⚡</div>
-        <div class="time-label">Saturday, 8:00am</div>
-        <div class="time-sub">Client found a deal</div>
-        <div class="time-status status-online">UNDERLYTIX: ONLINE</div>
-      </div>
-      <div class="time-card">
-        <div class="time-icon">☀️</div>
-        <div class="time-label">Sunday, all day</div>
-        <div class="time-sub">Open house weekend</div>
-        <div class="time-status status-online">UNDERLYTIX: ONLINE</div>
-      </div>
-      <div class="time-card">
-        <div class="time-icon">🎄</div>
-        <div class="time-label">Christmas Day</div>
-        <div class="time-sub">Market never sleeps</div>
-        <div class="time-status status-online">UNDERLYTIX: ONLINE</div>
-      </div>
+      <div class="time-card"><div class="time-icon">🌙</div><div class="time-label">Friday, 11:47pm</div><div class="time-sub">Offer deadline tomorrow</div><div class="time-status online">Underlytix: Online</div></div>
+      <div class="time-card"><div class="time-icon">⚡</div><div class="time-label">Saturday, 8:00am</div><div class="time-sub">Client found a deal</div><div class="time-status online">Underlytix: Online</div></div>
+      <div class="time-card"><div class="time-icon">☀️</div><div class="time-label">Sunday, all day</div><div class="time-sub">Open house weekend</div><div class="time-status online">Underlytix: Online</div></div>
+      <div class="time-card"><div class="time-icon">🎄</div><div class="time-label">Christmas Day</div><div class="time-sub">Market never sleeps</div><div class="time-status online">Underlytix: Online</div></div>
     </div>
-    <div class="always-vs">
-      <div class="vs-card without">
+    <div class="vs-grid">
+      <div class="vs wo">
         <div class="vs-title">✕ Without Underlytix</div>
-        <div class="vs-items">
-          <div class="vs-item">⏳ Wait until Monday to call your loan officer</div>
-          <div class="vs-item">📉 Lose the deal to a buyer who knew their numbers</div>
-          <div class="vs-item">💸 Waste weeks on deals that don't qualify</div>
-          <div class="vs-item">❓ Guess whether your client can actually afford it</div>
-        </div>
+        <div class="vs-item">⏳ Wait until Monday to reach your loan officer</div>
+        <div class="vs-item">📉 Lose deals to buyers who already knew their numbers</div>
+        <div class="vs-item">💸 Waste weeks pursuing deals that won't close</div>
+        <div class="vs-item">❓ Guess whether your client can actually qualify</div>
       </div>
-      <div class="vs-card with">
+      <div class="vs wi">
         <div class="vs-title">✓ With Underlytix</div>
-        <div class="vs-items">
-          <div class="vs-item">⚡ Answer in under 60 seconds, any time of day</div>
-          <div class="vs-item">🎯 Submit only deals that match lender criteria</div>
-          <div class="vs-item">📊 Full PITIA calculation with exact DTI ratios</div>
-          <div class="vs-item">🏆 Show up to every deal knowing your numbers</div>
-        </div>
+        <div class="vs-item">⚡ Get a fundability answer in under 60 seconds</div>
+        <div class="vs-item">🎯 Submit only deals that meet lender criteria</div>
+        <div class="vs-item">📊 Full PITIA with exact DTI ratios, any time</div>
+        <div class="vs-item">🏆 Show up to every transaction knowing the numbers</div>
       </div>
     </div>
   </div>
 </section>
 
 <!-- SOCIAL PROOF -->
-<section class="proof">
-  <div class="section-inner">
-    <div class="section-label">What They're Saying</div>
-    <h2 class="section-h2">Built for the deals<br>that actually close.</h2>
+<section class="proof-sec">
+  <div class="sec-inner">
+    <div class="sec-label">What They're Saying</div>
+    <h2 class="sec-h2">Built for the deals<br>that actually close.</h2>
     <div class="proof-grid">
       <div class="proof-card">
         <div class="proof-stars">★★★★★</div>
-        <div class="proof-quote">"I had a buyer call me Friday at 9pm about a property. I ran the prequal in 4 minutes, sent him the result, and he made an offer Saturday morning. Closed 3 weeks later."</div>
-        <div class="proof-author">
-          <div class="proof-avatar">🏠</div>
-          <div>
-            <div class="proof-name">Marcus T.</div>
-            <div class="proof-role">Investment-focused Realtor · Orlando, FL</div>
-          </div>
-        </div>
+        <div class="proof-quote">"I had a buyer call me Friday at 9pm about a listing. I ran the prequal in 4 minutes, sent him the result, and he made an offer Saturday morning. We closed three weeks later."</div>
+        <div class="proof-author"><div class="proof-avatar">🏠</div><div><div class="proof-name">Marcus T.</div><div class="proof-role">Investment-Focused Realtor · Orlando, FL</div></div></div>
       </div>
       <div class="proof-card">
         <div class="proof-stars">★★★★★</div>
-        <div class="proof-quote">"Stopped wasting time on deals that won't close. My first analysis showed me exactly why my last deal fell apart — high LTV with a soft market comp. Wish I had this 2 years ago."</div>
-        <div class="proof-author">
-          <div class="proof-avatar">🏗️</div>
-          <div>
-            <div class="proof-name">Denise R.</div>
-            <div class="proof-role">Fix &amp; Flip Investor · South Florida</div>
-          </div>
-        </div>
+        <div class="proof-quote">"Stopped wasting time on deals that won't close. My first analysis showed me exactly why my last deal fell apart — high LTV, soft comp. I wish I had this two years ago."</div>
+        <div class="proof-author"><div class="proof-avatar">🏗️</div><div><div class="proof-name">Denise R.</div><div class="proof-role">Fix &amp; Flip Investor · South Florida</div></div></div>
       </div>
       <div class="proof-card">
         <div class="proof-stars">★★★★★</div>
-        <div class="proof-quote">"The deals that come through our portal are actually screened. The AI score aligns closely with what we'd underwrite manually. It's filtering out the noise before it reaches us."</div>
-        <div class="proof-author">
-          <div class="proof-avatar">🏦</div>
-          <div>
-            <div class="proof-name">James C.</div>
-            <div class="proof-role">Hard Money Lender · Miami, FL</div>
-          </div>
-        </div>
+        <div class="proof-quote">"The deals that come through the portal are actually screened. The AI score aligns closely with what we'd underwrite manually. It's filtering out the noise before it reaches our desk."</div>
+        <div class="proof-author"><div class="proof-avatar">🏦</div><div><div class="proof-name">James C.</div><div class="proof-role">Hard Money Lender · Miami, FL</div></div></div>
       </div>
     </div>
   </div>
 </section>
 
 <!-- FINAL CTA -->
-<section class="cta-section">
-  <div class="cta-bg"></div>
-  <div class="cta-content">
-    <div class="section-label" style="text-align:center;margin-bottom:20px">Get Started Today</div>
+<section class="cta-sec">
+  <div class="cta-inner">
+    <div class="sec-label" style="text-align:center;color:rgba(255,255,255,0.3);margin-bottom:20px">Get Started Today</div>
     <h2 class="cta-h2">Stop guessing.<br>Start closing.</h2>
     <p class="cta-sub">Your first 3 analyses are free. No credit card. No commitment. Just clarity on whether your deal has a shot — before you spend another hour chasing it.</p>
     <div class="cta-btns">
-      <a href="/app" class="btn-primary-lg">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      <a href="/app" class="btn-white-lg">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
         Analyze Your First Deal Free
       </a>
-      <a href="/app" class="btn-ghost-lg">Realtor? Start Free Trial →</a>
+      <a href="/app" class="btn-outline-lg">Realtor? Start Free Trial →</a>
     </div>
-    <p class="cta-disclaimer">Free plan: 3 analyses/month. Investor Pro: $97/month. Realtor: $49/month. Lender: $297/month.</p>
+    <p class="cta-disclaimer">Free: 3 analyses/month &nbsp;·&nbsp; Investor Pro: $97/mo &nbsp;·&nbsp; Realtor: $49/mo &nbsp;·&nbsp; Lender: $297/mo</p>
   </div>
 </section>
 
@@ -738,55 +728,53 @@ footer {
 <footer>
   <div class="footer-inner">
     <div class="footer-top">
-      <div class="footer-brand">
-        <div class="footer-logo">Underlytix</div>
-        <p>Capital intelligence for investors, realtors, and lenders. Available 24/7.</p>
+      <div>
+        <div class="footer-logo-row">
+          <div class="footer-logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+          <div class="footer-logo-text">Underlytix</div>
+        </div>
+        <div class="footer-desc">Capital intelligence for investors, realtors, and lenders. Available 24/7.</div>
       </div>
-      <div class="footer-links-group">
+      <div class="footer-col">
         <h4>Platform</h4>
         <a href="/app">Investor Portal</a>
         <a href="/app">Realtor Portal</a>
         <a href="/app">Lender Portal</a>
       </div>
-      <div class="footer-links-group">
+      <div class="footer-col">
         <h4>Company</h4>
         <a href="mailto:support@underlytix.com">Contact</a>
         <a href="mailto:support@underlytix.com">Support</a>
       </div>
-      <div class="footer-links-group">
+      <div class="footer-col">
         <h4>Campaign</h4>
         <a href="https://ctcready.com">CTCReady.com</a>
         <a href="/app">Get Started</a>
       </div>
     </div>
     <div class="footer-bottom">
-      <p>© 2026 Underlytix. All rights reserved.</p>
-      <p class="footer-disclaimer">Underlytix provides pre-application intelligence tools. Results are based on user-provided data and do not constitute a commitment to lend, legal advice, or financial advice. All loan approvals are subject to lender underwriting and final approval.</p>
+      <div class="footer-copy">© 2026 Underlytix. All rights reserved.</div>
+      <div class="footer-legal">Underlytix provides pre-application intelligence tools. Results are based on user-provided data and do not constitute a commitment to lend, legal advice, or financial advice. All loan approvals are subject to full lender underwriting and final approval.</div>
     </div>
   </div>
 </footer>
 
 <script>
-// Nav scroll effect
-window.addEventListener('scroll', () => {
-  document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 40);
+window.addEventListener('scroll',()=>{
+  document.getElementById('navbar').classList.toggle('scrolled',window.scrollY>20);
 });
 
-// How it works step interaction
-function setStep(i) {
-  document.querySelectorAll('.how-step').forEach((s,idx) => s.classList.toggle('active', idx === i));
+function setStep(i){
+  document.querySelectorAll('.step').forEach((s,idx)=>s.classList.toggle('active',idx===i));
 }
 
-// Animate elements on scroll
-const observer = new IntersectionObserver((entries) => {
-  entries.forEach(e => { if(e.isIntersecting) { e.target.style.opacity = '1'; e.target.style.transform = 'translateY(0)'; } });
-}, { threshold: 0.1 });
-
-document.querySelectorAll('.problem-item, .audience-card, .proof-card, .time-card').forEach(el => {
-  el.style.opacity = '0';
-  el.style.transform = 'translateY(24px)';
-  el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
-  observer.observe(el);
+const obs = new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)'}});
+},{threshold:0.1});
+document.querySelectorAll('.prob-card,.price-card,.proof-card,.time-card').forEach(el=>{
+  el.style.opacity='0';el.style.transform='translateY(20px)';
+  el.style.transition='opacity .45s ease, transform .45s ease';
+  obs.observe(el);
 });
 </script>
 </body>
