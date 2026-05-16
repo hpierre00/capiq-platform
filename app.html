@@ -1306,7 +1306,15 @@ document.addEventListener('DOMContentLoaded', () => {
   const storedRealtorMode = localStorage.getItem('capiq_realtor_mode') === 'true';
   const rsess = getRealtorSession();
 
-  if (urlRealtorMode || storedRealtorMode || rsess?.realtor) {
+  // Only enter realtor mode if: URL param present, OR there's an active realtor session
+  // Don't lock into realtor mode from stored flag alone (no session = cleared mode)
+  const hasRealtorSession = !!(rsess?.realtor);
+  if (!hasRealtorSession && storedRealtorMode && !urlRealtorMode) {
+    localStorage.removeItem('capiq_realtor_mode');
+  }
+  const enterRealtorMode = urlRealtorMode || (storedRealtorMode && hasRealtorSession) || hasRealtorSession;
+
+  if (enterRealtorMode) {
     // Realtor mode — hide investor shell, show realtor interface
     if (urlRealtorMode) localStorage.setItem('capiq_realtor_mode', 'true');
     document.getElementById('app-shell').style.display = 'none';
