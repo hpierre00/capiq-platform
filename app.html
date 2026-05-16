@@ -264,6 +264,10 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
 .auth-divider{text-align:center;font-size:12px;color:var(--text-4);margin:16px 0}
 .auth-forgot{font-size:12px;color:var(--teal);cursor:pointer;text-align:right;display:block;margin-top:4px}
 .auth-forgot:hover{text-decoration:underline}
+.pw-wrap{position:relative;display:flex;align-items:center}
+.pw-wrap input{flex:1;padding-right:36px!important}
+.pw-eye{position:absolute;right:10px;cursor:pointer;color:var(--text-4);font-size:14px;line-height:1;user-select:none;padding:4px}
+.pw-eye:hover{color:var(--teal)}
 .plan-badge{display:inline-flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:10px;padding:3px 10px;border-radius:4px;background:var(--teal-dim);color:var(--teal);border:1px solid var(--teal-border);font-weight:600}
 .plan-badge.pro{background:rgba(180,83,9,0.1);color:var(--gold);border-color:rgba(180,83,9,0.3)}
 /* UPGRADE MODAL */
@@ -333,9 +337,10 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
         <div class="card-body">
           <div id="rs-login-error" style="display:none;font-size:12px;color:var(--red);background:var(--red-dim);border:1px solid rgba(220,38,38,0.15);border-radius:6px;padding:10px;margin-bottom:16px"></div>
           <div class="field" style="margin-bottom:14px"><label class="label">Email</label><input class="input" id="rs-login-email" type="email" placeholder="you@brokerage.com"></div>
-          <div class="field" style="margin-bottom:20px"><label class="label">Password</label><input class="input" id="rs-login-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')realtorStandaloneLogin()"></div>
+          <div class="field" style="margin-bottom:20px"><label class="label">Password</label><div class="pw-wrap"><input class="input" id="rs-login-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')realtorStandaloneLogin()"><span class="pw-eye" onclick="togglePw(this)">👁</span></div></div>
           <button class="btn btn-primary" id="rs-login-btn" onclick="realtorStandaloneLogin()" style="width:100%;justify-content:center">Sign In</button>
-          <div style="margin-top:16px;text-align:center">
+          <div style="margin-top:12px;text-align:center"><span style="font-size:12px;color:var(--teal);cursor:pointer" onclick="showStandaloneRealtorReset()">Forgot password?</span></div>
+          <div style="margin-top:10px;text-align:center">
             <span style="font-size:12px;color:var(--text-4)">New here? </span>
             <span onclick="showRealtorSignup()" style="font-size:12px;color:var(--teal);cursor:pointer;font-weight:600">Start free 14-day trial →</span>
           </div>
@@ -385,7 +390,7 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
     <!-- LOGIN FORM -->
     <div id="form-login">
       <div class="auth-field"><label class="auth-label">Email</label><input class="auth-input" id="auth-email" type="email" placeholder="john@example.com" onkeydown="if(event.key==='Enter')doAuth()"></div>
-      <div class="auth-field"><label class="auth-label">Password</label><input class="auth-input" id="auth-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doAuth()"><span class="auth-forgot" onclick="switchAuthTab('reset')">Forgot password?</span></div>
+      <div class="auth-field"><label class="auth-label">Password</label><div class="pw-wrap"><input class="auth-input" id="auth-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doAuth()"><span class="pw-eye" onclick="togglePw(this)">👁</span></div><span class="auth-forgot" onclick="switchAuthTab('reset')">Forgot password?</span></div>
       <button class="auth-btn" id="auth-btn" onclick="doAuth()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>Sign In
       </button>
@@ -403,7 +408,7 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
       </div>
       <div class="auth-field"><label class="auth-label">Email</label><input class="auth-input" id="auth-email-signup" type="email" placeholder="john@example.com"></div>
       <div class="auth-field"><label class="auth-label">Phone</label><input class="auth-input" id="auth-phone-signup" type="tel" placeholder="(305) 555-0100"></div>
-      <div class="auth-field"><label class="auth-label">Password</label><input class="auth-input" id="auth-password-signup" type="password" placeholder="Min 8 characters"></div>
+      <div class="auth-field"><label class="auth-label">Password</label><div class="pw-wrap"><input class="auth-input" id="auth-password-signup" type="password" placeholder="Min 8 characters"><span class="pw-eye" onclick="togglePw(this)">👁</span></div></div>
       <button class="auth-btn" id="auth-btn-signup" onclick="doSignup()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8zM19 8v6M22 11h-6"/></svg>Create Account
       </button>
@@ -426,7 +431,7 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
         <div style="font-size:12px;color:var(--text-4)">Sign in as a licensed real estate agent</div>
       </div>
       <div class="auth-field"><label class="auth-label">Email</label><input class="auth-input" id="realtor-auth-email" type="email" placeholder="you@brokerage.com" onkeydown="if(event.key==='Enter')doRealtorAuth()"></div>
-      <div class="auth-field"><label class="auth-label">Password</label><input class="auth-input" id="realtor-auth-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doRealtorAuth()"></div>
+      <div class="auth-field"><label class="auth-label">Password</label><div class="pw-wrap"><input class="auth-input" id="realtor-auth-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doRealtorAuth()"><span class="pw-eye" onclick="togglePw(this)">👁</span></div></div>
       <button class="auth-btn" id="realtor-auth-btn" onclick="doRealtorAuth()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         Sign In as Realtor
@@ -450,7 +455,7 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
         <div class="auth-field"><label class="auth-label">License #</label><input class="auth-input" id="ras-license" type="text" placeholder="SL3456789"></div>
         <div class="auth-field"><label class="auth-label">Brokerage</label><input class="auth-input" id="ras-brokerage" type="text" placeholder="EXP Realty"></div>
       </div>
-      <div class="auth-field"><label class="auth-label">Password</label><input class="auth-input" id="ras-password" type="password" placeholder="Min 8 characters"></div>
+      <div class="auth-field"><label class="auth-label">Password</label><div class="pw-wrap"><input class="auth-input" id="ras-password" type="password" placeholder="Min 8 characters"><span class="pw-eye" onclick="togglePw(this)">👁</span></div></div>
       <button class="auth-btn" id="ras-btn" onclick="doRealtorSignupFromAuth()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         Start Free Trial
@@ -496,6 +501,40 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
         </div>
       </div>
     </div>
+
+<!-- LENDER RESET MODAL -->
+<div class="modal-overlay" id="lender-reset-modal">
+  <div class="modal-box" style="max-width:420px">
+    <div style="background:var(--navy);padding:20px 24px;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center">
+      <div style="color:white;font-size:15px;font-weight:700">Reset Lender Password</div>
+      <span onclick="document.getElementById('lender-reset-modal').classList.remove('show')" style="color:rgba(255,255,255,0.5);cursor:pointer;font-size:20px">×</span>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text-3);margin-bottom:20px">Enter your lender account email. We'll send a reset link.</p>
+      <div id="lender-reset-error" style="display:none;font-size:12px;color:var(--red);background:var(--red-dim);border:1px solid rgba(220,38,38,0.15);border-radius:6px;padding:10px;margin-bottom:16px"></div>
+      <div class="field" style="margin-bottom:16px"><label class="label">Email</label><input class="input" id="lender-reset-email" type="email" placeholder="portal@yourlender.com"></div>
+      <button class="btn btn-primary" id="lender-reset-btn" onclick="doLenderReset()" style="width:100%;justify-content:center">Send Reset Link</button>
+      <div style="text-align:center;margin-top:12px"><span style="font-size:12px;color:var(--teal);cursor:pointer" onclick="document.getElementById('lender-reset-modal').classList.remove('show')">← Back to sign in</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- REALTOR STANDALONE RESET MODAL -->
+<div class="modal-overlay" id="realtor-reset-modal">
+  <div class="modal-box" style="max-width:420px">
+    <div style="background:var(--navy);padding:20px 24px;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center">
+      <div style="color:white;font-size:15px;font-weight:700">Reset Realtor Password</div>
+      <span onclick="document.getElementById('realtor-reset-modal').classList.remove('show')" style="color:rgba(255,255,255,0.5);cursor:pointer;font-size:20px">×</span>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text-3);margin-bottom:20px">Enter your realtor account email. We'll send a reset link.</p>
+      <div id="realtor-reset-error" style="display:none;font-size:12px;color:var(--red);background:var(--red-dim);border:1px solid rgba(220,38,38,0.15);border-radius:6px;padding:10px;margin-bottom:16px"></div>
+      <div class="field" style="margin-bottom:16px"><label class="label">Email</label><input class="input" id="realtor-reset-email-modal" type="email" placeholder="you@brokerage.com"></div>
+      <button class="btn btn-primary" id="realtor-reset-btn" onclick="doRealtorResetModal()" style="width:100%;justify-content:center">Send Reset Link</button>
+      <div style="text-align:center;margin-top:12px"><span style="font-size:12px;color:var(--teal);cursor:pointer" onclick="document.getElementById('realtor-reset-modal').classList.remove('show')">← Back to sign in</span></div>
+    </div>
+  </div>
+</div>
 
 <!-- UPGRADE MODAL -->
 <div class="modal-overlay" id="upgrade-modal">
@@ -820,7 +859,7 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
             <div class="field"><label class="label">Work Email</label><input class="input" id="ls-email" type="email" placeholder="jane@yourlender.com"></div>
             <div class="field"><label class="label">Phone</label><input class="input" id="ls-phone" type="tel" placeholder="(305) 555-0100"></div>
           </div>
-          <div class="field" style="margin-bottom:14px"><label class="label">Password</label><input class="input" id="ls-password" type="password" placeholder="Min 8 characters"></div>
+          <div class="field" style="margin-bottom:14px"><label class="label">Password</label><div class="pw-wrap"><input class="input" id="ls-password" type="password" placeholder="Min 8 characters"><span class="pw-eye" onclick="togglePw(this)">👁</span></div></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
             <div class="field"><label class="label">Lender Type</label>
               <select class="input" id="ls-type" style="appearance:auto">
@@ -905,6 +944,7 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
                 <div class="field" style="margin-bottom:14px"><label class="label">Email</label><input class="auth-input" id="lender-email" type="email" placeholder="portal@yourlender.com" onkeydown="if(event.key==='Enter')lenderLogin()"></div>
                 <div class="field" style="margin-bottom:20px"><label class="label">Password</label><input class="auth-input" id="lender-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')lenderLogin()"></div>
                 <button class="auth-btn" id="lender-login-btn" onclick="lenderLogin()">Sign In to Lender Portal</button>
+                <div style="text-align:center;margin-top:12px"><span style="font-size:12px;color:var(--teal);cursor:pointer" onclick="showLenderReset()">Forgot password?</span></div>
                 <div style="margin-top:16px;padding:12px;background:var(--bg-3);border-radius:6px;font-size:11px;color:var(--text-4);text-align:center;font-family:'DM Mono',monospace">
                   DEMO: portal@coastalcapital.com / demo123<br>portal@summitbridge.com / demo123<br>portal@flexlend.com / demo123
                 </div>
@@ -1166,6 +1206,79 @@ function logout() {
   document.getElementById('f-investor-email').value = '';
   switchAuthTab('login');
   showAuthScreen();
+}
+
+// ─── PASSWORD RESET — ALL THREE PORTALS ───────────────────────────────────
+
+// LENDER reset
+function showLenderReset() {
+  document.getElementById('lender-reset-error').style.display = 'none';
+  document.getElementById('lender-reset-email').value = '';
+  document.getElementById('lender-reset-modal').classList.add('show');
+}
+
+async function doLenderReset() {
+  const email = document.getElementById('lender-reset-email').value.trim();
+  const errEl = document.getElementById('lender-reset-error');
+  const btn = document.getElementById('lender-reset-btn');
+  errEl.style.display = 'none';
+  if (!email) { errEl.textContent = 'Email required.'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Sending...';
+  try {
+    await fetch('/.netlify/functions/send-reset-email', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ email, userType: 'lender' })
+    });
+    document.getElementById('lender-reset-modal').classList.remove('show');
+    showToast('If a lender account exists, a reset link has been sent.', 'success');
+  } catch(e) { errEl.textContent = 'Connection error. Please try again.'; errEl.style.display = 'block'; }
+  finally { btn.disabled = false; btn.textContent = 'Send Reset Link'; }
+}
+
+// REALTOR reset — standalone mode (modal)
+function showStandaloneRealtorReset() {
+  document.getElementById('realtor-reset-error').style.display = 'none';
+  document.getElementById('realtor-reset-email-modal').value = '';
+  document.getElementById('realtor-reset-modal').classList.add('show');
+}
+
+async function doRealtorResetModal() {
+  const email = document.getElementById('realtor-reset-email-modal').value.trim();
+  const errEl = document.getElementById('realtor-reset-error');
+  const btn = document.getElementById('realtor-reset-btn');
+  errEl.style.display = 'none';
+  if (!email) { errEl.textContent = 'Email required.'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Sending...';
+  try {
+    await fetch('/.netlify/functions/send-reset-email', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ email, userType: 'realtor' })
+    });
+    document.getElementById('realtor-reset-modal').classList.remove('show');
+    showToast('If a realtor account exists, a reset link has been sent.', 'success');
+  } catch(e) { errEl.textContent = 'Connection error. Please try again.'; errEl.style.display = 'block'; }
+  finally { btn.disabled = false; btn.textContent = 'Send Reset Link'; }
+}
+
+// REALTOR reset — from auth screen Realtor tab
+async function doRealtorReset() {
+  const email = document.getElementById('realtor-reset-email')?.value?.trim();
+  if (!email) { showAuthError('Email required.'); return; }
+  try {
+    await fetch('/.netlify/functions/send-reset-email', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ email, userType: 'realtor' })
+    });
+  } catch(e) { /* silent */ }
+  showAuthError('If a realtor account exists, a reset link has been sent.');
+}
+
+function togglePw(eyeEl) {
+  const input = eyeEl.previousElementSibling;
+  if (!input) return;
+  const show = input.type === 'password';
+  input.type = show ? 'text' : 'password';
+  eyeEl.textContent = show ? '🙈' : '👁';
 }
 
 function switchAuthTab(tab) {
