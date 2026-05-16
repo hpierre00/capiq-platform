@@ -320,7 +320,12 @@ If you don't have enough information yet, set "ready": false and omit the other 
       const authData = await authRes.json();
       if (!authData.valid) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: cors });
       const realtor = authData.realtor;
-      if (!STRIPE_SECRET) return new Response(JSON.stringify({ success: true, checkoutUrl: "https://buy.stripe.com/realtor_placeholder" }), { status: 200, headers: cors });
+      // Route to Stripe checkout via capiq-lender-portal-v3 which has STRIPE_SECRET_KEY
+      // Fall back to direct payment link if secret unavailable
+      if (!STRIPE_SECRET) {
+        const REALTOR_PAYMENT_URL = `https://buy.stripe.com/aFa7sM7Aa7LWglb5Qo3VC00?prefilled_email=${encodeURIComponent(authData.realtor?.email||"")}&client_reference_id=${authData.realtor?.id||""}`;
+        return new Response(JSON.stringify({ success: true, checkoutUrl: REALTOR_PAYMENT_URL }), { status: 200, headers: cors });
+      }
 
       // Create or retrieve Stripe customer
       // Check for existing stripe_customer_id
@@ -389,6 +394,61 @@ If you don't have enough information yet, set "ready": false and omit the other 
       const po = await pr.json();
       if (!pr.ok) throw new Error(po.error?.message || "Portal session failed");
       return new Response(JSON.stringify({ success: true, portalUrl: po.url }), { status: 200, headers: cors });
+    }
+
+    // ── CAPITAL MATCH REQUEST ────────────────────────────────────────────────
+    if (action === "request_capital_match") {
+      if (!token) return new Response(JSON.stringify({ error: "Token required" }), { status: 401, headers: cors });
+      const authRes = await fetch(REALTOR_AUTH_FN, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "verify", token }),
+      });
+      const authData = await authRes.json();
+      if (!authData.valid) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: cors });
+
+      const p = body.prequal || {};
+      const clientName = body.clientName || "Client";
+      const SUPABASE_URL_L = "https://mxyepucitjzleaziizkr.supabase.co";
+      const SK_LOCAL = Netlify.env.get("SUPABASE_SERVICE_KEY") || "";
+
+      // Save capital match request to client_prequals with match_requested flag
+      if (SK_LOCAL) {
+        await fetch(`${SUPABASE_URL_L}/rest/v1/client_prequals?id=eq.${body.prequal_id || "none"}`, {
+          method: "PATCH",
+          headers: { "apikey": SK_LOCAL, "Authorization": `Bearer ${SK_LOCAL}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ match_requested: true, match_requested_at: new Date().toISOString() }),
+        }).catch(() => {});
+      }
+
+      // Send notification email to admin
+      const RESEND_KEY = Netlify.env.get("RESEND_API_KEY") || "";
+      if (RESEND_KEY) {
+        await fetch("https://api.resend.com/emails", {
+          method: "POST",
+          headers: { "Authorization": `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
+          body: JSON.stringify({
+            from: "Underlytix <noreply@underlytix.com>",
+            to: ["heroldpierre@sofloam.com"],
+            subject: `Capital Match Assessment Request — ${p.loanType || "Unknown"} | ${p.result || "—"}`,
+            html: `<div style="font-family:sans-serif;padding:20px">
+              <h2>Capital Match Assessment Request</h2>
+              <p><b>Realtor:</b> ${authData.realtor?.email || "—"}</p>
+              <p><b>Client:</b> ${clientName}</p>
+              <p><b>Loan Type:</b> ${p.loanType || "—"}</p>
+              <p><b>Result:</b> ${p.result || "—"}</p>
+              <p><b>Max Loan:</b> $${(p.maxLoanAmount || 0).toLocaleString()}</p>
+              <p><b>Back-end DTI:</b> ${p.backEndDTI || "—"}%</p>
+              <p><b>PITIA:</b> $${(p.monthlyPITIA || 0).toLocaleString()}/mo</p>
+              <p><b>Risk Flags:</b> ${(p.riskFlags || []).join(", ") || "None"}</p>
+              <p><b>Summary:</b> ${p.summary || "—"}</p>
+              <hr>
+              <p style="font-size:12px;color:#666">This is a preliminary review request. No commitment to lend is implied.</p>
+            </div>`,
+          }),
+        }).catch(() => {});
+      }
+
+      return new Response(JSON.stringify({ success: true }), { status: 200, headers: cors });
     }
 
     return new Response(JSON.stringify({ error: "Unknown action" }), { status: 400, headers: cors });

@@ -977,6 +977,12 @@ function onAuthSuccess(token, investor, refreshToken) {
   setSession(token, investor, refreshToken);
   hideAuthScreen();
   updateSidebarUser(investor);
+  // If a lender session is active, route to lender portal directly
+  const lsess = getLenderSession();
+  if (lsess?.user && lsess?.token) {
+    setTimeout(() => showPage('lenders'), 50);
+    return;
+  }
   // Check access and update usage UI
   checkAccess().then(access => updateUsageUI(access));
   // Auto-fill investor profile fields if empty
@@ -2239,7 +2245,7 @@ async function loadAdminData() {
 
 // ─── REALTOR PORTAL ────────────────────────────────────────────────────────
 
-const REALTOR_AUTH_FN = 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-realtor-auth-v2';
+const REALTOR_AUTH_FN = 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-realtor-billing';
 const REALTOR_PREQUAL_FN = '/.netlify/functions/realtor-prequal';
 
 let realtorSession = null;
@@ -2275,6 +2281,48 @@ function launchRealtorPortal() {
   }
 }
 
+async function requestCapitalMatch() {
+  const sess = getRealtorSession();
+  if (!sess?.token || !currentPrequal) {
+    showToast('Complete a prequalification first', 'error');
+    return;
+  }
+  const clientName = document.getElementById('prequal-client-name-display')?.textContent || 'Client';
+  
+  // Show confirmation modal
+  const confirmed = confirm(
+    `Submit this client profile for Capital Match Assessment?\n\n` +
+    `This will share your client's anonymized financial profile (loan type, income range, credit range, DTI) ` +
+    `with lenders in the Underlytix network for a preliminary review.\n\n` +
+    `This is not an application for credit and creates no obligation for any party. ` +
+    `Final financing decisions are made by lenders through their own underwriting process.`
+  );
+  if (!confirmed) return;
+
+  try {
+    const res = await fetch(REALTOR_PREQUAL_FN, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        action: 'request_capital_match',
+        token: sess.token,
+        prequal: currentPrequal,
+        clientName
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Capital Match Assessment submitted. Lenders will review and may reach out within 24-48 hours.', 'success');
+      document.querySelectorAll('[onclick="requestCapitalMatch()"]').forEach(btn => {
+        btn.textContent = '✓ Assessment Submitted';
+        btn.disabled = true;
+        btn.style.opacity = '0.6';
+      });
+    } else {
+      showToast(data.error || 'Submission failed. Please try again.', 'error');
+    }
+  } catch(e) { showToast('Connection error', 'error'); }
+}
+
 function showRealtorSignup() {
   // Route to auth screen with realtor signup tab
   document.getElementById('realtor-standalone').style.display = 'none';
@@ -2291,7 +2339,8 @@ async function realtorCheckout() {
   if (btn) { btn.disabled = true; btn.textContent = plan === 'active' ? 'Loading...' : 'Redirecting...'; }
   try {
     const action = plan === 'active' ? 'create_portal' : 'create_checkout';
-    const res = await fetch(REALTOR_PREQUAL_FN, {
+    // Use Supabase edge function — has STRIPE_SECRET_KEY auto-injected
+    const res = await fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-realtor-billing', {
       method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
         action,
@@ -2303,7 +2352,7 @@ async function realtorCheckout() {
     const data = await res.json();
     const url = data.checkoutUrl || data.portalUrl;
     if (url) window.location.href = url;
-    else showToast(data.error || 'Billing unavailable', 'error');
+    else showToast(data.error || 'Billing unavailable. Contact support@underlytix.com', 'error');
   } catch(e) { showToast('Connection error', 'error'); }
   finally { if (btn) { btn.disabled = false; btn.textContent = 'Manage Billing'; } }
 }
@@ -2341,6 +2390,88 @@ function appendChatMessage(role, text) {
   div.textContent = text;
   el.appendChild(div);
   el.scrollTop = el.scrollHeight;
+}
+
+// ── Voice Input ────────────────────────────────────────────────────────────
+let voiceRecognition = null;
+let isRecording = false;
+
+function toggleVoiceInput() {
+  const btn = document.getElementById('prequal-voice-btn');
+  const input = document.getElementById('prequal-input');
+  
+  // Check browser support
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    showToast('Voice input not supported in this browser. Try Chrome.', 'error');
+    return;
+  }
+
+  if (isRecording) {
+    // Stop recording
+    if (voiceRecognition) voiceRecognition.stop();
+    isRecording = false;
+    btn.textContent = '🎤';
+    btn.style.background = 'var(--bg-3)';
+    btn.style.borderColor = 'var(--border)';
+    btn.style.color = 'var(--text-3)';
+    return;
+  }
+
+  // Start recording
+  voiceRecognition = new SpeechRecognition();
+  voiceRecognition.continuous = true;
+  voiceRecognition.interimResults = true;
+  voiceRecognition.lang = 'en-US';
+
+  let finalTranscript = input.value;
+  
+  voiceRecognition.onstart = () => {
+    isRecording = true;
+    btn.textContent = '⏹';
+    btn.style.background = 'rgba(239,68,68,0.15)';
+    btn.style.borderColor = 'rgba(239,68,68,0.4)';
+    btn.style.color = '#ef4444';
+    showToast('Listening... speak naturally. Click ⏹ to stop.', 'success');
+  };
+
+  voiceRecognition.onresult = (event) => {
+    let interim = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      if (event.results[i].isFinal) {
+        finalTranscript += event.results[i][0].transcript + ' ';
+      } else {
+        interim = event.results[i][0].transcript;
+      }
+    }
+    input.value = finalTranscript + interim;
+    input.style.borderColor = 'var(--teal)';
+  };
+
+  voiceRecognition.onend = () => {
+    isRecording = false;
+    btn.textContent = '🎤';
+    btn.style.background = 'var(--bg-3)';
+    btn.style.borderColor = 'var(--border)';
+    btn.style.color = 'var(--text-3)';
+    input.style.borderColor = 'var(--border)';
+    if (input.value.trim()) {
+      showToast('Voice captured. Click Send or press Enter to submit.', 'success');
+    }
+  };
+
+  voiceRecognition.onerror = (event) => {
+    isRecording = false;
+    btn.textContent = '🎤';
+    btn.style.background = 'var(--bg-3)';
+    if (event.error === 'not-allowed') {
+      showToast('Microphone access denied. Enable mic in browser settings.', 'error');
+    } else {
+      showToast('Voice input error: ' + event.error, 'error');
+    }
+  };
+
+  voiceRecognition.start();
 }
 
 async function sendPrequal() {
@@ -2393,6 +2524,12 @@ async function sendPrequal() {
               ${data.prequal.monthlyPITIA ? `<div style="font-size:11px;color:var(--text-4);margin-bottom:4px">P&I $${data.prequal.monthlyPI?.toLocaleString()||'—'} + Taxes $${data.prequal.monthlyTaxes?.toLocaleString()||'—'} + Insurance $${data.prequal.monthlyInsurance?.toLocaleString()||'—'} + HOA $${data.prequal.monthlyHOA?.toLocaleString()||'0'} = <strong style="color:var(--text-2)">PITIA $${data.prequal.monthlyPITIA?.toLocaleString()}/mo</strong></div>` : ''}
               ${data.prequal.riskFlags?.length ? `<div style="font-size:11px;color:var(--red);margin-top:2px">⚠ ${data.prequal.riskFlags.join(' · ')}</div>` : ''}
               <div style="font-size:10px;color:var(--text-4);margin-top:6px;font-style:italic">Not a commitment to lend. Subject to full lender underwriting and approval.</div>
+              <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+                <button onclick="requestCapitalMatch()" style="padding:7px 14px;border-radius:6px;background:rgba(0,212,188,0.1);border:1px solid rgba(0,212,188,0.25);color:var(--teal);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">
+                  🔗 Request Capital Match Assessment
+                </button>
+                <span style="font-size:10px;color:var(--text-4)">Connects your client's profile to our lender network for preliminary review</span>
+              </div>
             </div>
             <div style="font-size:10px;color:var(--text-4);text-align:right;line-height:1.4">Based on<br>provided data</div>
           </div>`;
@@ -2560,8 +2697,11 @@ function showToast(msg,type) {
         <div id="prequal-result-banner" style="display:none;flex-shrink:0;padding:14px 20px;background:linear-gradient(135deg,rgba(0,191,165,0.1),rgba(0,191,165,0.05));border-top:1px solid rgba(0,191,165,0.2)"></div>
         <div style="padding:16px 20px;border-top:1px solid var(--border);flex-shrink:0">
           <div style="display:flex;gap:10px">
-            <textarea id="prequal-input" placeholder="Describe your client..." rows="2" style="flex:1;background:var(--bg-3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text-1);font-size:14px;resize:none;font-family:inherit;line-height:1.5" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendPrequal()}"></textarea>
-            <button onclick="sendPrequal()" id="prequal-send-btn" class="btn btn-primary" style="align-self:flex-end;padding:10px 20px">Send</button>
+            <textarea id="prequal-input" placeholder="Describe your client... or use the mic 🎤" rows="2" style="flex:1;background:var(--bg-3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text-1);font-size:14px;resize:none;font-family:inherit;line-height:1.5" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendPrequal()}"></textarea>
+            <div style="display:flex;flex-direction:column;gap:6px;align-self:flex-end">
+              <button onclick="toggleVoiceInput()" id="prequal-voice-btn" title="Voice input" style="padding:10px 12px;border-radius:8px;background:var(--bg-3);border:1px solid var(--border);color:var(--text-3);cursor:pointer;font-size:16px;line-height:1;transition:all 0.2s">🎤</button>
+              <button onclick="sendPrequal()" id="prequal-send-btn" class="btn btn-primary" style="padding:10px 20px">Send</button>
+            </div>
           </div>
           <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
             <span style="font-size:11px;color:var(--text-4)">Press Enter to send, Shift+Enter for new line</span>
