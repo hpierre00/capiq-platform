@@ -2311,9 +2311,9 @@ async function requestCapitalMatch() {
     });
     const data = await res.json();
     if (data.success) {
-      showToast('Capital Match Assessment submitted. Lenders will review and may reach out within 24-48 hours.', 'success');
+      showToast('Submitted. Lenders in our network will review and may reach out within 24-48 hours.', 'success');
       document.querySelectorAll('[onclick="requestCapitalMatch()"]').forEach(btn => {
-        btn.textContent = '✓ Assessment Submitted';
+        btn.textContent = '✓ Sent to Lender Network';
         btn.disabled = true;
         btn.style.opacity = '0.6';
       });
@@ -2526,7 +2526,7 @@ async function sendPrequal() {
               <div style="font-size:10px;color:var(--text-4);margin-top:6px;font-style:italic">Not a commitment to lend. Subject to full lender underwriting and approval.</div>
               <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-wrap:wrap">
                 <button onclick="requestCapitalMatch()" style="padding:7px 14px;border-radius:6px;background:rgba(0,212,188,0.1);border:1px solid rgba(0,212,188,0.25);color:var(--teal);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">
-                  🔗 Request Capital Match Assessment
+                  🔍 See Who Can Fund This
                 </button>
                 <span style="font-size:10px;color:var(--text-4)">Connects your client's profile to our lender network for preliminary review</span>
               </div>
