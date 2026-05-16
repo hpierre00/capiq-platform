@@ -237,11 +237,34 @@ When you have enough information to make a determination, respond with a JSON bl
   "creditScoreTarget": 0,
   "autoSubmitted": true,
   "nextSteps": "What the realtor should do next",
-  "disclaimer": "This prequalification is based solely on the information provided and is not a commitment to lend. All loan approvals are subject to full lender underwriting, credit review, income verification, appraisal, and final lender decision."
+  "disclaimer": "This prequalification is based solely on the information provided and is not a commitment to lend. All loan approvals are subject to full lender underwriting, credit review, income verification, appraisal, and final lender decision.",
+  "improvementStrategies": [
+    {
+      "issue": "High DTI — back-end at 52%, limit is 45%",
+      "paths": [
+        {"label": "Option 1", "action": "Pay off $8,400 credit card balance", "impact": "DTI drops to 44.2% — qualifies at original price"},
+        {"label": "Option 2", "action": "Add co-borrower with $2,800/month income", "impact": "Combined DTI 41% — qualifies with strong file"},
+        {"label": "Combined", "action": "Pay off $4,200 card + reduce price to $395k", "impact": "DTI 43.8% — qualifies conventionally with PMI"}
+      ]
+    }
+  ],
+  "qualifyingPricePoint": 395000,
+  "coborrowerIncomeNeeded": 2800,
+  "creditScoreTarget": 680
 }
 </PREQUAL_RESULT>
 
 Set autoSubmitted: true on every result — details are always forwarded to the lender network.
+When result is "borderline" or "unlikely", you MUST include detailed remediation strategies.
+For each barrier to qualification, provide 2-3 specific paths with exact numbers:
+- PATH 1 (Single fix): "Pay off the $12,400 auto loan → DTI drops from 51% to 43% → qualifies at original price"
+- PATH 2 (Alternative): "Add co-borrower with $3,200/month income → combined DTI 41% → qualifies"  
+- PATH 3 (Combined): "Pay off credit card ($4,200) + reduce purchase price to $385k → qualifies conventionally"
+- Price reduction: calculate the exact price point where they qualify
+- Credit improvement: give exact score target and what it unlocks ("680+ opens FHA at 3.5% down")
+- Down payment increase: calculate exact additional down needed to hit LTV threshold
+- Debt payoff: identify which specific debt, if paid, fixes DTI the most efficiently
+
 If you don't have enough information yet, set "ready": false and omit the other fields.`;
 
       const response = await fetch("https://api.anthropic.com/v1/messages", {
@@ -464,6 +487,9 @@ If you don't have enough information yet, set "ready": false and omit the other 
 
       const p = body.prequal || {};
       const clientName = body.clientName || "Client";
+      const clientEmail = body.clientEmail || "";
+      const clientPhone = body.clientPhone || "";
+      const ctaSource = body.ctaSource || "unknown";
       const SUPABASE_URL_L = "https://mxyepucitjzleaziizkr.supabase.co";
       const SK_LOCAL = Netlify.env.get("SUPABASE_SERVICE_KEY") || "";
 

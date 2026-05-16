@@ -461,6 +461,42 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
   </div>
 </div>
 
+
+    <!-- LENDER MATCH MODAL -->
+    <div class="modal-overlay" id="lender-match-modal" style="z-index:9998">
+      <div class="modal-box" style="max-width:500px">
+        <div style="background:var(--navy);padding:20px 24px;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="color:white;font-size:15px;font-weight:700">Find Matching Lenders</div>
+            <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">Connect this buyer scenario to our lender network</div>
+          </div>
+          <span onclick="document.getElementById('lender-match-modal').classList.remove('show')" style="color:rgba(255,255,255,0.5);cursor:pointer;font-size:20px">×</span>
+        </div>
+        <div class="modal-body">
+          <div style="background:rgba(0,212,188,0.05);border:1px solid rgba(0,212,188,0.15);border-radius:8px;padding:12px;margin-bottom:20px;font-size:12px;color:var(--text-3);line-height:1.6">
+            <strong style="color:var(--teal)">How this works:</strong> Your client's anonymized financial profile will be shared with participating lenders for a preliminary compatibility review. This is not a loan application and creates no obligation for any party. Working with our partner lenders can help expedite the financing process.
+          </div>
+          <div id="lm-error" style="display:none;font-size:12px;color:var(--red);background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.15);border-radius:6px;padding:10px;margin-bottom:16px"></div>
+          <div class="label" style="margin-bottom:12px;font-size:11px;color:var(--text-4)">CLIENT CONTACT INFORMATION</div>
+          <div class="field" style="margin-bottom:12px"><label class="label">Client Full Name <span style="color:var(--red)">*</span></label><input class="input" id="lm-name" type="text" placeholder="Jane Smith"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+            <div class="field"><label class="label">Client Email <span style="color:var(--red)">*</span></label><input class="input" id="lm-email" type="email" placeholder="jane@email.com"></div>
+            <div class="field"><label class="label">Client Phone <span style="color:var(--red)">*</span></label><input class="input" id="lm-phone" type="tel" placeholder="(305) 555-0100"></div>
+          </div>
+          <div style="background:var(--bg-3);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:20px">
+            <label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer">
+              <input type="checkbox" id="lm-consent" style="margin-top:2px;flex-shrink:0;accent-color:var(--teal)">
+              <span style="font-size:11px;color:var(--text-3);line-height:1.6">I confirm my client has authorized me to share their financial profile with participating lenders for preliminary financing review purposes. This does not constitute a loan application or guarantee of financing.</span>
+            </label>
+          </div>
+          <button class="btn btn-primary" id="lm-submit-btn" onclick="submitLenderMatch()" style="width:100%;justify-content:center">
+            Find Matching Lenders
+          </button>
+          <p style="font-size:10px;color:var(--text-4);margin-top:10px;text-align:center;line-height:1.5">Lenders will review this scenario and may contact your client directly within 24-48 hours. Preliminary review only — all decisions subject to full lender underwriting.</p>
+        </div>
+      </div>
+    </div>
+
 <!-- UPGRADE MODAL -->
 <div class="modal-overlay" id="upgrade-modal">
   <div class="modal-box">
@@ -2281,6 +2317,47 @@ function launchRealtorPortal() {
   }
 }
 
+function showLenderMatchModal() {
+  if (!currentPrequal) { showToast('Complete a prequalification first', 'error'); return; }
+  document.getElementById('lm-name').value = '';
+  document.getElementById('lm-email').value = '';
+  document.getElementById('lm-phone').value = '';
+  document.getElementById('lm-consent').checked = false;
+  document.getElementById('lm-error').style.display = 'none';
+  document.getElementById('lender-match-modal').classList.add('show');
+  window._lmSource = event?.target?.textContent?.trim() || 'Find Matching Lenders';
+}
+
+async function submitLenderMatch() {
+  const name = document.getElementById('lm-name').value.trim();
+  const email = document.getElementById('lm-email').value.trim();
+  const phone = document.getElementById('lm-phone').value.trim();
+  const consent = document.getElementById('lm-consent').checked;
+  const errEl = document.getElementById('lm-error');
+  const btn = document.getElementById('lm-submit-btn');
+  errEl.style.display = 'none';
+  if (!name) { errEl.textContent = 'Client name is required.'; errEl.style.display = 'block'; return; }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errEl.textContent = 'Valid client email is required.'; errEl.style.display = 'block'; return; }
+  if (!phone) { errEl.textContent = 'Client phone number is required.'; errEl.style.display = 'block'; return; }
+  if (!consent) { errEl.textContent = 'Please confirm your client has authorized this submission.'; errEl.style.display = 'block'; return; }
+  const sess = getRealtorSession();
+  if (!sess?.token) { errEl.textContent = 'Session expired. Please sign in again.'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Submitting...';
+  try {
+    const res = await fetch(REALTOR_PREQUAL_FN, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'request_capital_match', token: sess.token, prequal: currentPrequal, clientName: name, clientEmail: email, clientPhone: phone, ctaSource: window._lmSource || 'unknown' })
+    });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('lender-match-modal').classList.remove('show');
+      showToast('Submitted. Lenders will review and may contact ' + name + ' within 24-48 hours.', 'success');
+      document.querySelectorAll('[onclick="showLenderMatchModal()"]').forEach(b => { b.textContent = '✓ Submitted to Lender Network'; b.disabled = true; b.style.opacity = '0.7'; });
+    } else { errEl.textContent = data.error || 'Submission failed.'; errEl.style.display = 'block'; }
+  } catch(e) { errEl.textContent = 'Connection error.'; errEl.style.display = 'block'; }
+  finally { btn.disabled = false; btn.textContent = 'Find Matching Lenders'; }
+}
+
 async function requestCapitalMatch(silent = false) {
   const sess = getRealtorSession();
   if (!sess?.token || !currentPrequal) {
@@ -2562,21 +2639,24 @@ async function sendPrequal() {
               ${p.riskFlags?.length ? `<div style="font-size:11px;color:var(--red);margin-top:2px">⚠ ${p.riskFlags.join(' · ')}</div>` : ''}
               <div style="font-size:10px;color:var(--text-4);margin-top:6px;font-style:italic">Not a commitment to lend. Subject to full lender underwriting and approval.</div>
               ${strategiesHtml}
-              <div style="margin-top:10px;padding:8px 12px;background:rgba(0,212,188,0.05);border:1px solid rgba(0,212,188,0.15);border-radius:6px;font-size:11px;color:var(--text-3);line-height:1.5">
-                <span style="color:var(--teal);font-weight:600">✓ Profile forwarded to Underlytix lender network.</span> Working with our partner lenders can help expedite your client's financing — they're already familiar with profiles like this and can move quickly.
-              </div>
-              <div style="margin-top:10px">
-                <button onclick="requestCapitalMatch()" id="capital-match-btn" style="padding:7px 14px;border-radius:6px;background:rgba(0,212,188,0.1);border:1px solid rgba(0,212,188,0.25);color:var(--teal);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">
-                  🔍 See Who Can Fund This
-                </button>
+              <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border)">
+                <div style="font-size:11px;color:var(--text-4);margin-bottom:10px;line-height:1.5">Working with our partner lenders can help expedite your client's financing process. Connect this buyer scenario to our lender network for a preliminary compatibility review.</div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                  <button onclick="showLenderMatchModal()" style="padding:8px 18px;border-radius:7px;background:var(--teal);border:none;color:var(--navy);font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+                    Find Matching Lenders
+                  </button>
+                  <button onclick="showLenderMatchModal()" style="padding:8px 16px;border-radius:7px;background:transparent;border:1px solid rgba(0,212,188,0.3);color:var(--teal);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">
+                    Submit for Financing Review
+                  </button>
+                </div>
               </div>
             </div>
             <div style="font-size:10px;color:var(--text-4);text-align:right;line-height:1.4;flex-shrink:0;margin-left:12px">Based on<br>provided data</div>
           </div>`;
         document.getElementById('prequal-save-btn').style.display = 'block';
 
-        // Auto-submit to lender network silently
-        setTimeout(() => requestCapitalMatch(true), 2000);
+        // Lender matching is opt-in — realtor must initiate via 'Find Matching Lenders'
       }
     } else {
       document.getElementById('typing-indicator')?.remove();
