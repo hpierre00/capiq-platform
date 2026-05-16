@@ -2835,19 +2835,12 @@ function appendChatMessage(role, text) {
 let voiceRecognition = null;
 let isRecording = false;
 
-function toggleVoiceInput() {
+async function toggleVoiceInput() {
   const btn = document.getElementById('prequal-voice-btn');
   const input = document.getElementById('prequal-input');
-  
-  // Check browser support
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    showToast('Voice input not supported in this browser. Try Chrome.', 'error');
-    return;
-  }
 
+  // Stop if already recording
   if (isRecording) {
-    // Stop recording
     if (voiceRecognition) voiceRecognition.stop();
     isRecording = false;
     btn.textContent = '🎤';
@@ -2857,21 +2850,50 @@ function toggleVoiceInput() {
     return;
   }
 
-  // Start recording
+  // Must be HTTPS or localhost
+  if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+    showToast('Voice input requires HTTPS. You are connected securely at underlytix.com.', 'error');
+    return;
+  }
+
+  // Check browser support
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    showToast('Voice input requires Chrome on desktop. Firefox and Safari do not support it.', 'error');
+    return;
+  }
+
+  // Explicitly request mic permission first — gives a clear browser prompt
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream.getTracks().forEach(t => t.stop()); // release immediately — SpeechRecognition manages its own
+  } catch(e) {
+    if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
+      showToast('Microphone blocked. Click the 🔒 icon in your browser address bar → allow microphone → try again.', 'error');
+    } else if (e.name === 'NotFoundError') {
+      showToast('No microphone found. Plug in a mic and try again.', 'error');
+    } else {
+      showToast('Microphone error: ' + e.message, 'error');
+    }
+    return;
+  }
+
+  // Start speech recognition
   voiceRecognition = new SpeechRecognition();
   voiceRecognition.continuous = true;
   voiceRecognition.interimResults = true;
   voiceRecognition.lang = 'en-US';
 
   let finalTranscript = input.value;
-  
+
   voiceRecognition.onstart = () => {
     isRecording = true;
     btn.textContent = '⏹';
     btn.style.background = 'rgba(239,68,68,0.15)';
     btn.style.borderColor = 'rgba(239,68,68,0.4)';
     btn.style.color = '#ef4444';
-    showToast('Listening... speak naturally. Click ⏹ to stop.', 'success');
+    btn.title = 'Click to stop recording';
+    showToast('🎤 Listening — speak naturally. Click ⏹ when done.', 'success');
   };
 
   voiceRecognition.onresult = (event) => {
@@ -2893,9 +2915,10 @@ function toggleVoiceInput() {
     btn.style.background = 'var(--bg-3)';
     btn.style.borderColor = 'var(--border)';
     btn.style.color = 'var(--text-3)';
+    btn.title = 'Voice input';
     input.style.borderColor = 'var(--border)';
     if (input.value.trim()) {
-      showToast('Voice captured. Click Send or press Enter to submit.', 'success');
+      showToast('✓ Voice captured. Press Enter or click Send.', 'success');
     }
   };
 
@@ -2903,14 +2926,25 @@ function toggleVoiceInput() {
     isRecording = false;
     btn.textContent = '🎤';
     btn.style.background = 'var(--bg-3)';
-    if (event.error === 'not-allowed') {
-      showToast('Microphone access denied. Enable mic in browser settings.', 'error');
-    } else {
-      showToast('Voice input error: ' + event.error, 'error');
-    }
+    btn.style.borderColor = 'var(--border)';
+    btn.style.color = 'var(--text-3)';
+    const msgs = {
+      'not-allowed': 'Microphone blocked. Allow mic access in your browser settings and try again.',
+      'no-speech': 'No speech detected. Click 🎤 and speak clearly.',
+      'network': 'Network error. Check your connection — voice recognition needs internet.',
+      'aborted': '',  // user stopped intentionally — no toast needed
+      'audio-capture': 'No microphone found. Check that a mic is connected.',
+      'service-not-allowed': 'Speech service blocked. Try on underlytix.com (HTTPS required).',
+    };
+    const msg = msgs[event.error];
+    if (msg) showToast(msg, 'error');
   };
 
-  voiceRecognition.start();
+  try {
+    voiceRecognition.start();
+  } catch(e) {
+    showToast('Could not start voice input: ' + e.message, 'error');
+  }
 }
 
 async function sendPrequal() {
