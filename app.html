@@ -320,6 +320,7 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
     <div style="display:flex;gap:10px;align-items:center">
       <span id="rs-user-badge" style="display:none;font-size:12px;color:rgba(255,255,255,0.6)"></span>
       <button id="rs-billing-btn" onclick="realtorCheckout()" style="display:none" class="btn btn-primary" style="font-size:12px;padding:6px 14px">Manage Billing</button>
+      <button id="rs-changepw-btn" onclick="showChangePassword('realtor')" style="display:none" class="btn btn-ghost" style="font-size:12px;padding:6px 14px" title="Change password">🔑 Password</button>
       <button id="rs-logout-btn" onclick="realtorStandaloneLogout()" style="display:none" class="btn btn-ghost" style="font-size:12px;padding:6px 14px">Sign Out</button>
       <a href="https://underlytix.com" style="font-size:11px;color:rgba(255,255,255,0.3);text-decoration:none;font-family:'DM Mono',monospace">Investor Portal →</a>
     </div>
@@ -502,6 +503,63 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
       </div>
     </div>
 
+<!-- PASSWORD RESET MODAL (from email link) -->
+<div class="modal-overlay" id="pw-reset-modal" style="z-index:10000">
+  <div class="modal-box" style="max-width:440px">
+    <div style="background:var(--navy);padding:20px 24px;border-radius:14px 14px 0 0;text-align:center">
+      <div style="font-size:28px;margin-bottom:8px">🔐</div>
+      <div style="color:white;font-size:16px;font-weight:700" id="pw-reset-title">Set New Password</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px" id="pw-reset-sub">Create a strong password for your account</div>
+    </div>
+    <div class="modal-body">
+      <div id="pw-reset-error" style="display:none;font-size:12px;color:var(--red);background:var(--red-dim);border:1px solid rgba(220,38,38,0.15);border-radius:6px;padding:10px;margin-bottom:16px"></div>
+      <div id="pw-reset-success" style="display:none;font-size:13px;color:var(--teal);background:rgba(0,212,188,0.08);border:1px solid rgba(0,212,188,0.2);border-radius:6px;padding:12px;margin-bottom:16px;text-align:center"></div>
+      <div class="field" style="margin-bottom:14px">
+        <label class="label">New Password</label>
+        <div class="pw-wrap"><input class="input" id="pw-reset-new" type="password" placeholder="Min 8 characters" oninput="checkPwStrength(this.value)"><span class="pw-eye" onclick="togglePw(this)">👁</span></div>
+        <div id="pw-strength-bar" style="height:3px;border-radius:2px;margin-top:6px;background:var(--border);overflow:hidden"><div id="pw-strength-fill" style="height:100%;width:0%;border-radius:2px;transition:width .3s,background .3s"></div></div>
+        <div id="pw-strength-label" style="font-size:10px;color:var(--text-4);margin-top:4px"></div>
+      </div>
+      <div class="field" style="margin-bottom:20px">
+        <label class="label">Confirm Password</label>
+        <div class="pw-wrap"><input class="input" id="pw-reset-confirm" type="password" placeholder="Repeat password"><span class="pw-eye" onclick="togglePw(this)">👁</span></div>
+      </div>
+      <button class="btn btn-primary" id="pw-reset-btn" onclick="submitPasswordReset()" style="width:100%;justify-content:center">
+        Set New Password
+      </button>
+      <p style="font-size:11px;color:var(--text-4);margin-top:12px;text-align:center">Password must be at least 8 characters.</p>
+    </div>
+  </div>
+</div>
+
+<!-- CHANGE PASSWORD MODAL (for logged-in users) -->
+<div class="modal-overlay" id="change-pw-modal" style="z-index:9997">
+  <div class="modal-box" style="max-width:440px">
+    <div style="background:var(--navy);padding:20px 24px;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center">
+      <div style="color:white;font-size:15px;font-weight:700">Change Password</div>
+      <span onclick="document.getElementById('change-pw-modal').classList.remove('show')" style="color:rgba(255,255,255,0.5);cursor:pointer;font-size:20px">×</span>
+    </div>
+    <div class="modal-body">
+      <div id="change-pw-error" style="display:none;font-size:12px;color:var(--red);background:var(--red-dim);border:1px solid rgba(220,38,38,0.15);border-radius:6px;padding:10px;margin-bottom:16px"></div>
+      <div id="change-pw-success" style="display:none;font-size:12px;color:var(--teal);background:rgba(0,212,188,0.08);border:1px solid rgba(0,212,188,0.2);border-radius:6px;padding:10px;margin-bottom:16px"></div>
+      <div class="field" style="margin-bottom:14px">
+        <label class="label">Current Password</label>
+        <div class="pw-wrap"><input class="input" id="cpw-current" type="password" placeholder="Your current password"><span class="pw-eye" onclick="togglePw(this)">👁</span></div>
+      </div>
+      <div class="field" style="margin-bottom:14px">
+        <label class="label">New Password</label>
+        <div class="pw-wrap"><input class="input" id="cpw-new" type="password" placeholder="Min 8 characters" oninput="checkPwStrength(this.value,'cpw-strength-fill','cpw-strength-label')"><span class="pw-eye" onclick="togglePw(this)">👁</span></div>
+        <div id="cpw-strength-bar" style="height:3px;border-radius:2px;margin-top:6px;background:var(--border);overflow:hidden"><div id="cpw-strength-fill" style="height:100%;width:0%;border-radius:2px;transition:width .3s,background .3s"></div></div>
+        <div id="cpw-strength-label" style="font-size:10px;color:var(--text-4);margin-top:4px"></div>
+      </div>
+      <div class="field" style="margin-bottom:20px">
+        <label class="label">Confirm New Password</label>
+        <div class="pw-wrap"><input class="input" id="cpw-confirm" type="password" placeholder="Repeat new password"><span class="pw-eye" onclick="togglePw(this)">👁</span></div>
+      </div>
+      <button class="btn btn-primary" id="change-pw-btn" onclick="submitChangePassword()" style="width:100%;justify-content:center">Update Password</button>
+    </div>
+  </div>
+</div>
 <!-- LENDER RESET MODAL -->
 <div class="modal-overlay" id="lender-reset-modal">
   <div class="modal-box" style="max-width:420px">
@@ -609,6 +667,7 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
       </div>
       <div style="display:flex;align-items:center;justify-content:space-between">
         <span class="plan-badge" id="sidebar-plan" onclick="showUpgradePrompt()" style="cursor:pointer" title="Click to upgrade">STARTER</span>
+        <span onclick="showChangePassword('investor')" style="font-size:10px;color:var(--text-4);cursor:pointer;font-family:'DM Mono',monospace;letter-spacing:.04em;margin-left:8px" title="Change password">🔑</span>
         <button onclick="logout()" style="background:none;border:none;cursor:pointer;font-size:11px;color:rgba(255,255,255,0.35);font-family:'DM Mono',monospace;letter-spacing:.06em">SIGN OUT</button>
       </div>
       <div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)">
@@ -926,6 +985,7 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
           <span id="lender-user-badge" style="display:none;font-family:'DM Mono',monospace;font-size:11px;color:var(--teal)"></span>
           <button id="lender-billing-btn" onclick="lenderStartCheckout()" style="display:none" class="btn btn-primary" style="padding:6px 14px;font-size:11px">Manage Billing</button>
           <button id="lender-logout-btn" onclick="lenderLogout()" style="display:none" class="btn btn-ghost" style="padding:6px 12px;font-size:11px">Sign Out</button>
+          <button id="lender-changepw-btn" onclick="showChangePassword('lender')" style="display:none;font-size:11px;padding:6px 10px" class="btn btn-ghost" title="Change password">🔑</button>
           <span class="chip chip-green">● LIVE</span>
         </div>
       </div>
@@ -1208,6 +1268,182 @@ function logout() {
   showAuthScreen();
 }
 
+
+// ─── PASSWORD RESET + CHANGE FLOW ──────────────────────────────────────────
+
+let _pwResetUserType = 'investor';
+let _pwResetToken = '';
+let _pwResetEmail = '';
+
+// Check URL for reset tokens on page load
+function checkPasswordResetToken() {
+  const p = new URLSearchParams(window.location.search);
+  const investorToken = p.get('reset_token');
+  const realtorToken = p.get('realtor_reset_token');
+  const lenderToken = p.get('lender_reset_token');
+  const email = p.get('email') || '';
+
+  if (investorToken) {
+    _pwResetUserType = 'investor'; _pwResetToken = investorToken; _pwResetEmail = email;
+    showPasswordResetModal('Investor Portal');
+  } else if (realtorToken) {
+    _pwResetUserType = 'realtor'; _pwResetToken = realtorToken; _pwResetEmail = email;
+    showPasswordResetModal('Realtor Portal');
+  } else if (lenderToken) {
+    _pwResetUserType = 'lender'; _pwResetToken = lenderToken; _pwResetEmail = email;
+    showPasswordResetModal('Lender Portal');
+  }
+
+  // Clean URL
+  if (investorToken || realtorToken || lenderToken) {
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+}
+
+function showPasswordResetModal(portalLabel) {
+  document.getElementById('pw-reset-title').textContent = 'Set New Password';
+  document.getElementById('pw-reset-sub').textContent = portalLabel + ' — create a strong password';
+  document.getElementById('pw-reset-new').value = '';
+  document.getElementById('pw-reset-confirm').value = '';
+  document.getElementById('pw-reset-error').style.display = 'none';
+  document.getElementById('pw-reset-success').style.display = 'none';
+  document.getElementById('pw-reset-modal').classList.add('show');
+}
+
+// Password strength checker
+function checkPwStrength(pw, fillId='pw-strength-fill', labelId='pw-strength-label') {
+  const fill = document.getElementById(fillId);
+  const label = document.getElementById(labelId);
+  if (!fill || !label) return;
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  const levels = [
+    {w:'0%', c:'var(--red)', t:''},
+    {w:'25%', c:'var(--red)', t:'Weak'},
+    {w:'50%', c:'#f59e0b', t:'Fair'},
+    {w:'75%', c:'#3b82f6', t:'Good'},
+    {w:'100%', c:'var(--teal)', t:'Strong'},
+  ];
+  const l = levels[Math.min(score, 4)];
+  fill.style.width = l.w; fill.style.background = l.c;
+  label.textContent = l.t; label.style.color = l.c;
+}
+
+async function submitPasswordReset() {
+  const newPw = document.getElementById('pw-reset-new').value;
+  const confirmPw = document.getElementById('pw-reset-confirm').value;
+  const errEl = document.getElementById('pw-reset-error');
+  const successEl = document.getElementById('pw-reset-success');
+  const btn = document.getElementById('pw-reset-btn');
+  errEl.style.display = 'none'; successEl.style.display = 'none';
+
+  if (newPw.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; errEl.style.display = 'block'; return; }
+  if (newPw !== confirmPw) { errEl.textContent = 'Passwords do not match.'; errEl.style.display = 'block'; return; }
+
+  btn.disabled = true; btn.textContent = 'Updating...';
+
+  const fnMap = {
+    investor: 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth-v3',
+    realtor: 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-realtor-auth-v3',
+    lender: 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-lender-portal-v4',
+  };
+
+  try {
+    const res = await fetch(fnMap[_pwResetUserType], {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'reset_password', token: _pwResetToken, email: _pwResetEmail, newPassword: newPw })
+    });
+    const data = await res.json();
+    if (data.success) {
+      successEl.textContent = 'Password updated. You can now sign in with your new password.';
+      successEl.style.display = 'block';
+      btn.textContent = '✓ Password Updated';
+      setTimeout(() => {
+        document.getElementById('pw-reset-modal').classList.remove('show');
+        // Route to correct login tab
+        if (_pwResetUserType === 'realtor') switchAuthTab('realtor');
+        else if (_pwResetUserType === 'lender') showPage('lenders');
+        else switchAuthTab('login');
+      }, 2000);
+    } else {
+      errEl.textContent = data.error || 'Reset failed. The link may have expired — request a new one.';
+      errEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Set New Password';
+    }
+  } catch(e) {
+    errEl.textContent = 'Connection error. Please try again.';
+    errEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Set New Password';
+  }
+}
+
+// Change password for logged-in users
+function showChangePassword(userType) {
+  window._changePwUserType = userType || 'investor';
+  document.getElementById('cpw-current').value = '';
+  document.getElementById('cpw-new').value = '';
+  document.getElementById('cpw-confirm').value = '';
+  document.getElementById('change-pw-error').style.display = 'none';
+  document.getElementById('change-pw-success').style.display = 'none';
+  document.getElementById('change-pw-modal').classList.add('show');
+}
+
+async function submitChangePassword() {
+  const current = document.getElementById('cpw-current').value;
+  const newPw = document.getElementById('cpw-new').value;
+  const confirmPw = document.getElementById('cpw-confirm').value;
+  const errEl = document.getElementById('change-pw-error');
+  const successEl = document.getElementById('change-pw-success');
+  const btn = document.getElementById('change-pw-btn');
+  errEl.style.display = 'none'; successEl.style.display = 'none';
+
+  if (!current) { errEl.textContent = 'Current password required.'; errEl.style.display = 'block'; return; }
+  if (newPw.length < 8) { errEl.textContent = 'New password must be at least 8 characters.'; errEl.style.display = 'block'; return; }
+  if (newPw !== confirmPw) { errEl.textContent = 'New passwords do not match.'; errEl.style.display = 'block'; return; }
+  if (current === newPw) { errEl.textContent = 'New password must be different from current password.'; errEl.style.display = 'block'; return; }
+
+  btn.disabled = true; btn.textContent = 'Updating...';
+
+  const userType = window._changePwUserType || 'investor';
+  const fnMap = {
+    investor: 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth-v3',
+    realtor: 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-realtor-auth-v3',
+    lender: 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-lender-portal-v4',
+  };
+
+  // Get current session token
+  let token = '';
+  if (userType === 'investor') token = getSession()?.token || '';
+  else if (userType === 'realtor') token = getRealtorSession()?.token || '';
+  else if (userType === 'lender') token = getLenderSession()?.token || '';
+
+  try {
+    const res = await fetch(fnMap[userType], {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'change_password', token, currentPassword: current, newPassword: newPw })
+    });
+    const data = await res.json();
+    if (data.success) {
+      successEl.textContent = '✓ Password updated successfully.';
+      successEl.style.display = 'block';
+      btn.textContent = '✓ Updated';
+      setTimeout(() => document.getElementById('change-pw-modal').classList.remove('show'), 2000);
+    } else {
+      errEl.textContent = data.error || 'Update failed. Check your current password and try again.';
+      errEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Update Password';
+    }
+  } catch(e) {
+    errEl.textContent = 'Connection error. Please try again.';
+    errEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Update Password';
+  }
+}
+
 // ─── PASSWORD RESET — ALL THREE PORTALS ───────────────────────────────────
 
 // LENDER reset
@@ -1457,6 +1693,7 @@ const LENDERS = [
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
   renderLenders(); updateStats(); renderDashboardRecent(); renderDealsTable();
+  checkPasswordResetToken(); // Handle email reset links
   document.getElementById('deal-count').textContent = state.deals.length;
 
   // Check for returning realtor session OR realtor mode URL param
@@ -2040,7 +2277,7 @@ function clearForm() {
 }
 
 // ─── LENDER PORTAL ───────────────────────────────────────────────────────────
-const LENDER_FN = 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-lender-portal-v3';
+const LENDER_FN = 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-lender-portal-v4';
 const LENDER_SESSION_KEY = 'capiq_lender_session';
 let lenderMatches = [];
 let lenderFilter = 'all';
@@ -2111,6 +2348,7 @@ async function onLenderAuth(token, user, refreshToken) {
   document.getElementById('lender-user-badge').style.display = 'inline';
   document.getElementById('lender-user-badge').textContent = (user.name || user.email) + ' · ' + (user.lender?.lender_name || '');
   document.getElementById('lender-logout-btn').style.display = 'inline-flex';
+  const lpwBtn = document.getElementById('lender-changepw-btn'); if(lpwBtn) lpwBtn.style.display = 'inline-flex';
   await loadLenderDeals(token);
 }
 
