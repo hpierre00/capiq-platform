@@ -36,6 +36,17 @@
   status = 301
   force = true
 
+# Legal pages — must be before the SPA catch-all
+[[redirects]]
+  from = "/terms"
+  to = "/terms.html"
+  status = 200
+
+[[redirects]]
+  from = "/privacy"
+  to = "/privacy.html"
+  status = 200
+
 # /app serves the investor/realtor/lender app (index.html)
 [[redirects]]
   from = "/app"
