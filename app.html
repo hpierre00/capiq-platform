@@ -2281,13 +2281,24 @@ function launchRealtorPortal() {
   }
 }
 
-async function requestCapitalMatch() {
+async function requestCapitalMatch(silent = false) {
   const sess = getRealtorSession();
   if (!sess?.token || !currentPrequal) {
-    showToast('Complete a prequalification first', 'error');
+    if (!silent) showToast('Complete a prequalification first', 'error');
     return;
   }
   const clientName = document.getElementById('prequal-client-name-display')?.textContent || 'Client';
+
+  // Auto-submit silently if triggered automatically
+  if (silent) {
+    try {
+      await fetch(REALTOR_PREQUAL_FN, {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ action: 'request_capital_match', token: sess.token, prequal: currentPrequal, clientName, silent: true })
+      });
+    } catch(e) { /* silent fail */ }
+    return;
+  }
   
   // Show confirmation modal
   const confirmed = confirm(
@@ -2512,28 +2523,60 @@ async function sendPrequal() {
       // If prequal result is ready, show result banner
       if (data.prequal?.ready || data.prequal?.result) {
         currentPrequal = data.prequal;
+        const p = data.prequal;
         const resultColors = { likely_qualifies: '#00bfa5', borderline: '#f59e0b', unlikely: '#ef4444', needs_review: '#6b7280' };
         const resultLabels = { likely_qualifies: '✓ Likely Qualifies', borderline: '⚠ Borderline', unlikely: '✗ Unlikely to Qualify', needs_review: '? Needs Review' };
         const banner = document.getElementById('prequal-result-banner');
         banner.style.display = 'block';
+
+        // Build improvement strategies HTML for non-qualifying results
+        let strategiesHtml = '';
+        if ((p.result === 'borderline' || p.result === 'unlikely') && p.improvementStrategies?.length) {
+          strategiesHtml = `<div style="margin-top:12px;padding:12px;background:rgba(245,158,11,0.06);border:1px solid rgba(245,158,11,0.2);border-radius:8px">
+            <div style="font-size:11px;font-weight:700;color:#f59e0b;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px">📋 Paths to Qualification</div>`;
+          p.improvementStrategies.forEach(s => {
+            strategiesHtml += `<div style="margin-bottom:10px"><div style="font-size:11px;font-weight:600;color:var(--text-2);margin-bottom:6px">Issue: ${s.issue}</div>`;
+            (s.paths || []).forEach(path => {
+              const isCombo = (path.label||'').toLowerCase().includes('combined') || (path.label||'').includes('3');
+              strategiesHtml += `<div style="display:flex;gap:8px;margin-bottom:4px;padding:6px 8px;background:${isCombo?'rgba(0,212,188,0.06)':'rgba(255,255,255,0.02)'};border-radius:6px;border:1px solid ${isCombo?'rgba(0,212,188,0.15)':'var(--border)'}">
+                <span style="font-size:10px;font-weight:700;color:${isCombo?'var(--teal)':'var(--text-4)'};flex-shrink:0;min-width:52px">${path.label}</span>
+                <div><div style="font-size:11px;color:var(--text-2)">${path.action}</div><div style="font-size:10px;color:var(--text-4)">${path.impact}</div></div>
+              </div>`;
+            });
+            strategiesHtml += `</div>`;
+          });
+          const extras = [];
+          if (p.qualifyingPricePoint) extras.push(`Qualifying price: <strong>$${parseInt(p.qualifyingPricePoint).toLocaleString()}</strong>`);
+          if (p.coborrowerIncomeNeeded) extras.push(`Co-borrower needed: <strong>$${parseInt(p.coborrowerIncomeNeeded).toLocaleString()}/mo</strong>`);
+          if (p.creditScoreTarget) extras.push(`Credit target: <strong>${p.creditScoreTarget}+</strong>`);
+          if (extras.length) strategiesHtml += `<div style="margin-top:8px;font-size:11px;color:var(--text-3);line-height:1.8">${extras.join(' &nbsp;·&nbsp; ')}</div>`;
+          strategiesHtml += `</div>`;
+        }
+
         banner.innerHTML = `
           <div style="display:flex;justify-content:space-between;align-items:flex-start">
-            <div>
-              <div style="font-size:13px;font-weight:700;color:${resultColors[data.prequal.result]||'var(--teal)'};margin-bottom:6px">${resultLabels[data.prequal.result]||data.prequal.result}</div>
-              <div style="font-size:12px;color:var(--text-3);margin-bottom:4px">${data.prequal.loanType?.toUpperCase()||'—'} · Max Loan $${data.prequal.maxLoanAmount?.toLocaleString()||'—'} · Back-end DTI ${data.prequal.backEndDTI||'—'}% · Front-end DTI ${data.prequal.frontEndDTI||'—'}%</div>
-              ${data.prequal.monthlyPITIA ? `<div style="font-size:11px;color:var(--text-4);margin-bottom:4px">P&I $${data.prequal.monthlyPI?.toLocaleString()||'—'} + Taxes $${data.prequal.monthlyTaxes?.toLocaleString()||'—'} + Insurance $${data.prequal.monthlyInsurance?.toLocaleString()||'—'} + HOA $${data.prequal.monthlyHOA?.toLocaleString()||'0'} = <strong style="color:var(--text-2)">PITIA $${data.prequal.monthlyPITIA?.toLocaleString()}/mo</strong></div>` : ''}
-              ${data.prequal.riskFlags?.length ? `<div style="font-size:11px;color:var(--red);margin-top:2px">⚠ ${data.prequal.riskFlags.join(' · ')}</div>` : ''}
+            <div style="flex:1">
+              <div style="font-size:13px;font-weight:700;color:${resultColors[p.result]||'var(--teal)'};margin-bottom:6px">${resultLabels[p.result]||p.result}</div>
+              <div style="font-size:12px;color:var(--text-3);margin-bottom:4px">${p.loanType?.toUpperCase()||'—'} · Max Loan $${p.maxLoanAmount?.toLocaleString()||'—'} · Back-end DTI ${p.backEndDTI||'—'}% · Front-end DTI ${p.frontEndDTI||'—'}%</div>
+              ${p.monthlyPITIA ? `<div style="font-size:11px;color:var(--text-4);margin-bottom:4px">P&I $${p.monthlyPI?.toLocaleString()||'—'} + Taxes $${p.monthlyTaxes?.toLocaleString()||'—'} + Insurance $${p.monthlyInsurance?.toLocaleString()||'—'} + HOA $${p.monthlyHOA?.toLocaleString()||'0'} = <strong style="color:var(--text-2)">PITIA $${p.monthlyPITIA?.toLocaleString()}/mo</strong></div>` : ''}
+              ${p.riskFlags?.length ? `<div style="font-size:11px;color:var(--red);margin-top:2px">⚠ ${p.riskFlags.join(' · ')}</div>` : ''}
               <div style="font-size:10px;color:var(--text-4);margin-top:6px;font-style:italic">Not a commitment to lend. Subject to full lender underwriting and approval.</div>
-              <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-                <button onclick="requestCapitalMatch()" style="padding:7px 14px;border-radius:6px;background:rgba(0,212,188,0.1);border:1px solid rgba(0,212,188,0.25);color:var(--teal);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">
+              ${strategiesHtml}
+              <div style="margin-top:10px;padding:8px 12px;background:rgba(0,212,188,0.05);border:1px solid rgba(0,212,188,0.15);border-radius:6px;font-size:11px;color:var(--text-3);line-height:1.5">
+                <span style="color:var(--teal);font-weight:600">✓ Profile forwarded to Underlytix lender network.</span> Working with our partner lenders can help expedite your client's financing — they're already familiar with profiles like this and can move quickly.
+              </div>
+              <div style="margin-top:10px">
+                <button onclick="requestCapitalMatch()" id="capital-match-btn" style="padding:7px 14px;border-radius:6px;background:rgba(0,212,188,0.1);border:1px solid rgba(0,212,188,0.25);color:var(--teal);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">
                   🔍 See Who Can Fund This
                 </button>
-                <span style="font-size:10px;color:var(--text-4)">Connects your client's profile to our lender network for preliminary review</span>
               </div>
             </div>
-            <div style="font-size:10px;color:var(--text-4);text-align:right;line-height:1.4">Based on<br>provided data</div>
+            <div style="font-size:10px;color:var(--text-4);text-align:right;line-height:1.4;flex-shrink:0;margin-left:12px">Based on<br>provided data</div>
           </div>`;
         document.getElementById('prequal-save-btn').style.display = 'block';
+
+        // Auto-submit to lender network silently
+        setTimeout(() => requestCapitalMatch(true), 2000);
       }
     } else {
       document.getElementById('typing-indicator')?.remove();
