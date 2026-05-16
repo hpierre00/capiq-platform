@@ -521,6 +521,10 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
         <button class="nav-item" onclick="showPage('match')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Match Queue
         </button>
+        <button class="nav-item" onclick="launchRealtorPortal()" style="background:rgba(0,212,188,0.08);border:1px solid rgba(0,212,188,0.2);margin-top:4px">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span style="color:var(--teal)">Realtor Portal</span>
+        </button>
       </div>
     </nav>
     <div class="sidebar-footer">
@@ -2256,6 +2260,19 @@ function setRealtorSession(token, realtor, refreshToken) {
 function clearRealtorSession() {
   realtorSession = null;
   localStorage.removeItem('capiq_realtor_session');
+}
+
+function launchRealtorPortal() {
+  // Switch from investor view to realtor standalone shell
+  document.getElementById('app-shell').style.display = 'none';
+  document.getElementById('realtor-standalone').style.display = 'flex';
+  window.scrollTo(0, 0);
+  const rsess = getRealtorSession();
+  if (rsess?.realtor) {
+    onRealtorStandaloneAuth(rsess.token, rsess.realtor, rsess.refresh_token);
+  } else {
+    showRealtorStandaloneLogin();
+  }
 }
 
 function showRealtorSignup() {
