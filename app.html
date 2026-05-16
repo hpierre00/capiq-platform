@@ -927,8 +927,8 @@ const AUTH_KEY = 'capiq_session';
 function getSession() {
   try { return JSON.parse(localStorage.getItem(AUTH_KEY) || 'null'); } catch { return null; }
 }
-function setSession(token, investor) {
-  localStorage.setItem(AUTH_KEY, JSON.stringify({ token, investor }));
+function setSession(token, investor, refreshToken) {
+  localStorage.setItem(AUTH_KEY, JSON.stringify({ token, investor, refresh_token: refreshToken || null }));
 }
 function clearSession() {
   localStorage.removeItem(AUTH_KEY);
@@ -937,16 +937,22 @@ function clearSession() {
 function initAuth() {
   const session = getSession();
   if (!session || !session.token) { showAuthScreen(); return; }
-  // Immediately populate sidebar from cache to avoid "Loading..." flash
-  if (session.investor) onAuthSuccess(session.token, session.investor);
-  // Then verify token in background and refresh if needed
-  fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth-v2', {
+  if (session.investor) onAuthSuccess(session.token, session.investor, session.refresh_token);
+  fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth-v3', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'verify', token: session.token })
   }).then(r => r.json()).then(r => {
-    if (r.valid) { onAuthSuccess(session.token, r.investor || session.investor); }
-    else { clearSession(); showAuthScreen(); }
+    if (r.valid) { onAuthSuccess(session.token, r.investor || session.investor, session.refresh_token); }
+    else if (session.refresh_token) {
+      fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth-v3', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'refresh', refresh_token: session.refresh_token })
+      }).then(r2 => r2.json()).then(rd => {
+        if (rd.success) onAuthSuccess(rd.token, rd.investor || session.investor, rd.refresh_token);
+        else { clearSession(); showAuthScreen(); }
+      }).catch(() => { clearSession(); showAuthScreen(); });
+    } else { clearSession(); showAuthScreen(); }
   }).catch(() => {
     if (!session.investor) showAuthScreen();
   });
@@ -959,8 +965,8 @@ function hideAuthScreen() {
   document.getElementById('auth-screen').classList.remove('show');
 }
 
-function onAuthSuccess(token, investor) {
-  setSession(token, investor);
+function onAuthSuccess(token, investor, refreshToken) {
+  setSession(token, investor, refreshToken);
   hideAuthScreen();
   updateSidebarUser(investor);
   // Check access and update usage UI
@@ -987,7 +993,7 @@ function updateSidebarUser(investor) {
 }
 
 // ─── STRIPE PAYWALL ──────────────────────────────────────────────────────────
-const STRIPE_FN = 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-stripe';
+const STRIPE_FN = 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-stripe-v2';
 
 async function checkAccess() {
   const session = getSession();
@@ -1076,14 +1082,14 @@ if (window.location.search.includes('upgraded=true')) {
     const session = getSession();
     if (!session?.token) { clearInterval(pollForUpgrade); return; }
     try {
-      const res = await fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth-v2', {
+      const res = await fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth-v3', {
         method: 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ action: 'verify', token: session.token })
       });
       const data = await res.json();
       if (data.valid && data.investor?.plan === 'pro') {
         clearInterval(pollForUpgrade);
-        setSession(session.token, data.investor);
+        setSession(session.token, data.investor, session.refresh_token);
         updateSidebarUser(data.investor);
         updateUsageUI({ plan: 'pro', canAnalyze: true, remaining: -1 });
         showToast('Welcome to Underlytix Pro! Unlimited analyses unlocked.', 'success');
@@ -1147,7 +1153,7 @@ async function doRealtorAuth() {
       document.getElementById('app-shell').style.display = 'none';
       document.getElementById('realtor-standalone').style.display = 'flex';
       window.scrollTo(0, 0);
-      onRealtorStandaloneAuth(data.token, data.realtor);
+      onRealtorStandaloneAuth(data.token, data.realtor, data.refresh_token);
     } else {
       showAuthError(data.error || 'Invalid credentials.');
     }
@@ -1178,7 +1184,7 @@ async function doRealtorSignupFromAuth() {
       document.getElementById('app-shell').style.display = 'none';
       document.getElementById('realtor-standalone').style.display = 'flex';
       window.scrollTo(0, 0);
-      onRealtorStandaloneAuth(data.token, data.realtor);
+      onRealtorStandaloneAuth(data.token, data.realtor, data.refresh_token);
       // Fire welcome email
       fetch('/.netlify/functions/resend-email', {
         method: 'POST', headers: {'Content-Type':'application/json'},
@@ -1197,12 +1203,12 @@ async function doAuth() {
   if (!email || !password) { showAuthError('Please enter your email and password.'); return; }
   btn.disabled = true; btn.textContent = 'Signing in...';
   try {
-    const res = await fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth-v2', {
+    const res = await fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth-v3', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'login', email, password })
     });
     const data = await res.json();
-    if (data.success) { onAuthSuccess(data.token, data.investor); }
+    if (data.success) { onAuthSuccess(data.token, data.investor, data.refresh_token); }
     else showAuthError(data.error || 'Sign in failed.');
   } catch (e) { showAuthError('Connection error. Please try again.'); }
   finally { btn.disabled = false; btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>Sign In'; }
@@ -1220,13 +1226,13 @@ async function doSignup() {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showAuthError('Please enter a valid email address.'); return; }
   btn.disabled = true; btn.textContent = 'Creating account...';
   try {
-    const res = await fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth-v2', {
+    const res = await fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth-v3', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action: 'signup', email, password, name: `${firstName} ${lastName}`.trim(), phone })
     });
     const data = await res.json();
     if (data.success) {
-      onAuthSuccess(data.token, data.investor);
+      onAuthSuccess(data.token, data.investor, data.refresh_token);
       showToast('Welcome to Underlytix!', 'success');
       // Fire welcome email (non-blocking)
       fetch('/.netlify/functions/resend-email', {
@@ -1242,7 +1248,7 @@ async function doSignup() {
 async function doReset() {
   const email = document.getElementById('auth-email-reset').value.trim();
   if (!email) { showAuthError('Please enter your email.'); return; }
-  const resetRes = await fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth-v2', {
+  const resetRes = await fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth-v3', {
     method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'reset_request', email })
   });
@@ -1304,14 +1310,22 @@ document.addEventListener('DOMContentLoaded', () => {
     window.scrollTo(0, 0);
     if (rsess?.realtor) {
       // Has cached session — show dashboard immediately
-      onRealtorStandaloneAuth(rsess.token, rsess.realtor);
+      onRealtorStandaloneAuth(rsess.token, rsess.realtor, rsess.refresh_token);
       // Verify in background
       fetch(REALTOR_AUTH_FN, {
         method: 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ action: 'verify', token: rsess.token })
       }).then(r => r.json()).then(d => {
-        if (!d.valid) { clearRealtorSession(); localStorage.removeItem('capiq_realtor_mode'); location.reload(); }
-        else if (d.realtor) onRealtorStandaloneAuth(rsess.token, d.realtor);
+        if (d.valid) { if (d.realtor) onRealtorStandaloneAuth(rsess.token, d.realtor, rsess.refresh_token); }
+        else if (rsess.refresh_token) {
+          fetch(REALTOR_AUTH_FN, {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ action: 'refresh', refresh_token: rsess.refresh_token })
+          }).then(r2 => r2.json()).then(rd => {
+            if (rd.success) onRealtorStandaloneAuth(rd.token, rd.realtor, rd.refresh_token);
+            else { clearRealtorSession(); localStorage.removeItem('capiq_realtor_mode'); location.reload(); }
+          }).catch(() => { clearRealtorSession(); localStorage.removeItem('capiq_realtor_mode'); location.reload(); });
+        } else { clearRealtorSession(); localStorage.removeItem('capiq_realtor_mode'); location.reload(); }
       }).catch(() => {});
     } else {
       // No session — show realtor standalone login (not the investor auth screen)
@@ -1660,7 +1674,7 @@ const res = await fetch('/.netlify/functions/capiq-analyze',{method:'POST',heade
     const session = getSession();
     // Increment usage counter
     if (session?.token) {
-      fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth-v2', {
+      fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth-v3', {
         method: 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ action: 'increment_usage', token: session.token })
       }).catch(() => {});
@@ -1855,7 +1869,7 @@ function clearForm() {
 }
 
 // ─── LENDER PORTAL ───────────────────────────────────────────────────────────
-const LENDER_FN = 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-lender-portal-v2';
+const LENDER_FN = 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-lender-portal-v3';
 const LENDER_SESSION_KEY = 'capiq_lender_session';
 let lenderMatches = [];
 let lenderFilter = 'all';
@@ -1863,8 +1877,8 @@ let lenderFilter = 'all';
 function getLenderSession() {
   try { return JSON.parse(localStorage.getItem(LENDER_SESSION_KEY) || 'null'); } catch { return null; }
 }
-function setLenderSession(token, user) {
-  localStorage.setItem(LENDER_SESSION_KEY, JSON.stringify({ token, user }));
+function setLenderSession(token, user, refreshToken) {
+  localStorage.setItem(LENDER_SESSION_KEY, JSON.stringify({ token, user, refresh_token: refreshToken || null }));
 }
 function clearLenderSession() {
   localStorage.removeItem(LENDER_SESSION_KEY);
@@ -1879,9 +1893,17 @@ async function initLenderPortal() {
       body: JSON.stringify({ action: 'verify', token: session.token })
     });
     const data = await res.json();
-    if (data.valid) { onLenderAuth(session.token, data.user); }
-    else { clearLenderSession(); showLenderLogin(); }
-  } catch { if (session.user) onLenderAuth(session.token, session.user); else showLenderLogin(); }
+    if (data.valid) { onLenderAuth(session.token, data.user, session.refresh_token); }
+    else if (session.refresh_token) {
+      const r2 = await fetch(LENDER_FN, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'refresh', refresh_token: session.refresh_token })
+      });
+      const rd = await r2.json();
+      if (rd.success) onLenderAuth(rd.token, rd.user, rd.refresh_token);
+      else { clearLenderSession(); showLenderLogin(); }
+    } else { clearLenderSession(); showLenderLogin(); }
+  } catch { if (session.user) onLenderAuth(session.token, session.user, session.refresh_token); else showLenderLogin(); }
 }
 
 function showLenderLogin() {
@@ -1905,14 +1927,14 @@ async function lenderLogin() {
       body: JSON.stringify({ action: 'login', email, password })
     });
     const data = await res.json();
-    if (data.success) { errEl.style.display = 'none'; onLenderAuth(data.token, data.user); }
+    if (data.success) { errEl.style.display = 'none'; onLenderAuth(data.token, data.user, data.refresh_token); }
     else { errEl.textContent = data.error || 'Sign in failed.'; errEl.style.display = 'block'; }
   } catch { errEl.textContent = 'Connection error.'; errEl.style.display = 'block'; }
   finally { btn.disabled = false; btn.textContent = 'Sign In to Lender Portal'; }
 }
 
-async function onLenderAuth(token, user) {
-  setLenderSession(token, user);
+async function onLenderAuth(token, user, refreshToken) {
+  setLenderSession(token, user, refreshToken);
   document.getElementById('lender-login-screen').style.display = 'none';
   document.getElementById('lender-dashboard').style.display = 'block';
   document.getElementById('lender-user-badge').style.display = 'inline';
@@ -2201,7 +2223,7 @@ async function loadAdminData() {
 
 // ─── REALTOR PORTAL ────────────────────────────────────────────────────────
 
-const REALTOR_AUTH_FN = 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-realtor-auth';
+const REALTOR_AUTH_FN = 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-realtor-auth-v2';
 const REALTOR_PREQUAL_FN = '/.netlify/functions/realtor-prequal';
 
 let realtorSession = null;
@@ -2214,8 +2236,8 @@ function getRealtorSession() {
   return realtorSession;
 }
 
-function setRealtorSession(token, realtor) {
-  realtorSession = { token, realtor };
+function setRealtorSession(token, realtor, refreshToken) {
+  realtorSession = { token, realtor, refresh_token: refreshToken || null };
   localStorage.setItem('capiq_realtor_session', JSON.stringify(realtorSession));
 }
 
@@ -2397,8 +2419,8 @@ function showRealtorStandaloneDashboard() {
   document.getElementById('rs-dashboard-view').style.display = 'block';
 }
 
-function onRealtorStandaloneAuth(token, realtor) {
-  setRealtorSession(token, realtor);
+function onRealtorStandaloneAuth(token, realtor, refreshToken) {
+  setRealtorSession(token, realtor, refreshToken);
   document.getElementById('rs-user-badge').style.display = 'inline';
   document.getElementById('rs-user-badge').textContent = realtor.name || realtor.email;
   document.getElementById('rs-logout-btn').style.display = 'block';
@@ -2427,7 +2449,7 @@ async function realtorStandaloneLogin() {
     });
     const data = await res.json();
     if (data.success) {
-      onRealtorStandaloneAuth(data.token, data.realtor);
+      onRealtorStandaloneAuth(data.token, data.realtor, data.refresh_token);
     } else { errEl.textContent = data.error || 'Sign in failed.'; errEl.style.display = 'block'; }
   } catch(e) { errEl.textContent = 'Connection error.'; errEl.style.display = 'block'; }
   finally { btn.disabled = false; btn.textContent = 'Sign In'; }

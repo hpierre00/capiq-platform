@@ -15,7 +15,8 @@ export default async (req) => {
   try {
     const ANTHROPIC_KEY = Netlify.env.get("ANTHROPIC_API_KEY");
     const SUPABASE_URL = "https://mxyepucitjzleaziizkr.supabase.co";
-    const REALTOR_AUTH_FN = `${SUPABASE_URL}/functions/v1/capiq-realtor-auth`;
+    const REALTOR_AUTH_FN = `${SUPABASE_URL}/functions/v1/capiq-realtor-auth-v2`;
+    const SVC_KEY = Netlify.env.get("SUPABASE_SERVICE_KEY");
 
     const body = await req.json();
     const { action, token, messages, clientData, successUrl, cancelUrl } = body;
@@ -243,13 +244,12 @@ If you don't have enough information yet, set "ready": false and omit the other 
       const realtorId = authData.realtor.id;
       const p = clientData?.prequal || {};
 
-      // Save via Supabase REST
-      const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eWVwdWNpdGp6bGVhemlpemtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0Njk1ODIsImV4cCI6MjA5MDA0NTU4Mn0.oQr_hO5fVkOhGcJ2u3mqQDJIfw9cAdXwfVAAXOf96q4";
+      // Save via Supabase REST (service role — anon blocked by RLS)
       const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/client_prequals`, {
         method: "POST",
         headers: {
-          "apikey": ANON_KEY,
-          "Authorization": `Bearer ${ANON_KEY}`,
+          "apikey": SVC_KEY,
+          "Authorization": `Bearer ${SVC_KEY}`,
           "Content-Type": "application/json",
           "Prefer": "return=representation",
         },
@@ -302,10 +302,9 @@ If you don't have enough information yet, set "ready": false and omit the other 
       const authData = await authRes.json();
       if (!authData.valid) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: cors });
 
-      const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eWVwdWNpdGp6bGVhemlpemtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0Njk1ODIsImV4cCI6MjA5MDA0NTU4Mn0.oQr_hO5fVkOhGcJ2u3mqQDJIfw9cAdXwfVAAXOf96q4";
       const histRes = await fetch(
         `${SUPABASE_URL}/rest/v1/client_prequals?realtor_id=eq.${authData.realtor.id}&order=created_at.desc&limit=20`,
-        { headers: { "apikey": ANON_KEY, "Authorization": `Bearer ${ANON_KEY}` } }
+        { headers: { "apikey": SVC_KEY, "Authorization": `Bearer ${SVC_KEY}` } }
       );
       const history = await histRes.json();
       return new Response(JSON.stringify({ success: true, history }), { status: 200, headers: cors });
@@ -324,12 +323,9 @@ If you don't have enough information yet, set "ready": false and omit the other 
       if (!STRIPE_SECRET) return new Response(JSON.stringify({ success: true, checkoutUrl: "https://buy.stripe.com/realtor_placeholder" }), { status: 200, headers: cors });
 
       // Create or retrieve Stripe customer
-      const SUPABASE_URL_LOCAL = "https://mxyepucitjzleaziizkr.supabase.co";
-      const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eWVwdWNpdGp6bGVhemlpemtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0Njk1ODIsImV4cCI6MjA5MDA0NTU4Mn0.oQr_hO5fVkOhGcJ2u3mqQDJIfw9cAdXwfVAAXOf96q4";
-
       // Check for existing stripe_customer_id
-      const userRes = await fetch(`${SUPABASE_URL_LOCAL}/rest/v1/realtor_users?id=eq.${realtor.id}&select=stripe_customer_id`, {
-        headers: { "apikey": ANON_KEY, "Authorization": `Bearer ${ANON_KEY}` }
+      const userRes = await fetch(`${SUPABASE_URL}/rest/v1/realtor_users?id=eq.${realtor.id}&select=stripe_customer_id`, {
+        headers: { "apikey": SVC_KEY, "Authorization": `Bearer ${SVC_KEY}` }
       });
       const userRows = await userRes.json();
       let cid = userRows[0]?.stripe_customer_id;
@@ -343,9 +339,9 @@ If you don't have enough information yet, set "ready": false and omit the other 
         const c = await cr.json();
         if (!cr.ok) throw new Error(c.error?.message || "Failed to create Stripe customer");
         cid = c.id;
-        await fetch(`${SUPABASE_URL_LOCAL}/rest/v1/realtor_users?id=eq.${realtor.id}`, {
+        await fetch(`${SUPABASE_URL}/rest/v1/realtor_users?id=eq.${realtor.id}`, {
           method: "PATCH",
-          headers: { "apikey": ANON_KEY, "Authorization": `Bearer ${ANON_KEY}`, "Content-Type": "application/json" },
+          headers: { "apikey": SVC_KEY, "Authorization": `Bearer ${SVC_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({ stripe_customer_id: cid }),
         });
       }
@@ -377,10 +373,8 @@ If you don't have enough information yet, set "ready": false and omit the other 
       const authData = await authRes.json();
       if (!authData.valid) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: cors });
 
-      const SUPABASE_URL_LOCAL = "https://mxyepucitjzleaziizkr.supabase.co";
-      const ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eWVwdWNpdGp6bGVhemlpemtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0Njk1ODIsImV4cCI6MjA5MDA0NTU4Mn0.oQr_hO5fVkOhGcJ2u3mqQDJIfw9cAdXwfVAAXOf96q4";
-      const userRes = await fetch(`${SUPABASE_URL_LOCAL}/rest/v1/realtor_users?id=eq.${authData.realtor.id}&select=stripe_customer_id`, {
-        headers: { "apikey": ANON_KEY, "Authorization": `Bearer ${ANON_KEY}` }
+      const userRes = await fetch(`${SUPABASE_URL}/rest/v1/realtor_users?id=eq.${authData.realtor.id}&select=stripe_customer_id`, {
+        headers: { "apikey": SVC_KEY, "Authorization": `Bearer ${SVC_KEY}` }
       });
       const userRows = await userRes.json();
       const cid = userRows[0]?.stripe_customer_id;
