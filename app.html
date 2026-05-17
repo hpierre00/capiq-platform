@@ -2781,24 +2781,33 @@ async function realtorCheckout() {
   if (!sess?.token) return;
   const btn = document.getElementById('rs-billing-btn');
   const plan = sess.realtor?.plan;
-  if (btn) { btn.disabled = true; btn.textContent = plan === 'active' ? 'Loading...' : 'Redirecting...'; }
+  if (btn) { btn.disabled = true; btn.textContent = 'Loading...'; }
   try {
     const action = plan === 'active' ? 'create_portal' : 'create_checkout';
-    // Use Supabase edge function — has STRIPE_SECRET_KEY auto-injected
     const res = await fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-realtor-billing', {
       method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
-        action,
-        token: sess.token,
+        action, token: sess.token,
         successUrl: window.location.origin + '/app?realtor_upgraded=true',
         cancelUrl: window.location.origin + '/app'
       })
     });
     const data = await res.json();
     const url = data.checkoutUrl || data.portalUrl;
-    if (url) window.location.href = url;
-    else showToast(data.error || 'Billing unavailable. Contact support@underlytix.com', 'error');
-  } catch(e) { showToast('Connection error', 'error'); }
+    if (url) {
+      window.location.href = url;
+    } else if (data.error && data.error.includes('Session expired')) {
+      // Token format changed with v3 — redirect to direct payment link
+      const email = encodeURIComponent(sess.realtor?.email || '');
+      window.location.href = 'https://buy.stripe.com/aFa7sM7Aa7LWglb5Qo3VC00?prefilled_email=' + email;
+    } else {
+      showToast(data.error || 'Billing unavailable', 'error');
+    }
+  } catch(e) {
+    // Network error — fall back to direct link
+    const email = encodeURIComponent(sess.realtor?.email || '');
+    window.location.href = 'https://buy.stripe.com/aFa7sM7Aa7LWglb5Qo3VC00?prefilled_email=' + email;
+  }
   finally { if (btn) { btn.disabled = false; btn.textContent = 'Manage Billing'; } }
 }
 
