@@ -3040,7 +3040,11 @@ async function sendPrequal() {
             <div style="font-size:10px;color:var(--text-4);text-align:right;line-height:1.4;flex-shrink:0;margin-left:12px">Based on<br>provided data</div>
           </div>`;
         document.getElementById('prequal-save-btn').style.display = 'block';
-
+        // Show sticky action footer with save + lender match buttons
+        const af = document.getElementById('prequal-action-footer');
+        if (af) af.style.display = 'flex';
+        // Auto-save silently to pipeline so it's never lost
+        setTimeout(() => savePrequal(true), 800);
         // Lender matching is opt-in — realtor must initiate via 'Find Matching Lenders'
       }
     } else {
@@ -3053,10 +3057,11 @@ async function sendPrequal() {
   } finally { btn.disabled = false; btn.textContent = 'Send'; }
 }
 
-async function savePrequal() {
+async function savePrequal(silent = false) {
   const sess = getRealtorSession();
   if (!sess?.token || !currentPrequal) return;
-  const clientName = prompt('Client name or reference (optional):') || 'Client';
+  // Skip browser prompt on auto-save — use 'Auto-saved' as placeholder name
+  const clientName = silent ? 'Auto-saved' : (prompt('Client name or reference (optional):') || 'Client');
   try {
     const res = await fetch(REALTOR_PREQUAL_FN, {
       method: 'POST', headers: {'Content-Type':'application/json'},
@@ -3067,7 +3072,7 @@ async function savePrequal() {
     });
     const data = await res.json();
     if (data.success) {
-      showToast('Prequal saved to your pipeline', 'success');
+      if (!silent) showToast('Prequal saved to your pipeline', 'success');
       document.getElementById('prequal-save-btn').textContent = '✓ Saved';
       document.getElementById('prequal-save-btn').disabled = true;
       loadRealtorStandaloneHistory();
@@ -3075,7 +3080,7 @@ async function savePrequal() {
       const countEl = document.getElementById('rs-prequal-count');
       if (countEl) countEl.textContent = parseInt(countEl.textContent || 0) + 1;
     }
-  } catch(e) { showToast('Save failed', 'error'); }
+  } catch(e) { if (!silent) showToast('Save failed', 'error'); }
 }
 
 // ─── REALTOR STANDALONE MODE FUNCTIONS ────────────────────────────────────
@@ -3189,31 +3194,40 @@ function showToast(msg,type) {
 
     <!-- PREQUAL CHAT MODAL -->
     <div class="modal-overlay" id="prequal-chat-modal" style="z-index:9999">
-      <div class="modal-box" style="max-width:680px;max-height:85vh;display:flex;flex-direction:column">
+      <div class="modal-box" style="max-width:700px;width:95vw;max-height:90vh;display:flex;flex-direction:column;padding:0">
+        <!-- Header -->
         <div style="background:var(--navy);padding:18px 24px;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
           <div>
             <div style="color:white;font-size:15px;font-weight:700">Client Prequalification</div>
             <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">Describe your client's situation naturally</div>
           </div>
-          <span onclick="closePrequalChat()" style="color:rgba(255,255,255,0.5);cursor:pointer;font-size:20px">×</span>
+          <span onclick="closePrequalChat()" style="color:rgba(255,255,255,0.5);cursor:pointer;font-size:20px;padding:4px 8px">×</span>
         </div>
-        <div id="prequal-chat-messages" style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;min-height:300px;max-height:calc(85vh - 200px)">
+        <!-- Chat messages — scrollable -->
+        <div id="prequal-chat-messages" style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;min-height:200px">
           <div class="chat-msg assistant" style="background:var(--bg-3);border-radius:12px;padding:14px 16px;font-size:14px;color:var(--text-2);max-width:90%;line-height:1.6">
             Hi! Tell me about your client. You can start with something like: <em>"I have a buyer looking at a $350k home in Tampa, puts down 20%, W-2 income around $7k/month, credit around 700, no major debts."</em>
           </div>
         </div>
-        <div id="prequal-result-banner" style="display:none;flex-shrink:0;padding:14px 20px;background:linear-gradient(135deg,rgba(0,191,165,0.1),rgba(0,191,165,0.05));border-top:1px solid rgba(0,191,165,0.2)"></div>
-        <div style="padding:16px 20px;border-top:1px solid var(--border);flex-shrink:0">
-          <div style="display:flex;gap:10px">
-            <textarea id="prequal-input" placeholder="Describe your client... or use the mic 🎤" rows="2" style="flex:1;background:var(--bg-3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text-1);font-size:14px;resize:none;font-family:inherit;line-height:1.5" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendPrequal()}"></textarea>
-            <div style="display:flex;flex-direction:column;gap:6px;align-self:flex-end">
-              <button onclick="toggleVoiceInput()" id="prequal-voice-btn" title="Voice input" style="padding:10px 12px;border-radius:8px;background:var(--bg-3);border:1px solid var(--border);color:var(--text-3);cursor:pointer;font-size:16px;line-height:1;transition:all 0.2s">🎤</button>
-              <button onclick="sendPrequal()" id="prequal-send-btn" class="btn btn-primary" style="padding:10px 20px">Send</button>
+        <!-- Input area — fixed at bottom, never pushed off screen -->
+        <div style="border-top:1px solid var(--border);flex-shrink:0;background:var(--bg-2)">
+          <div style="padding:14px 20px">
+            <div style="display:flex;gap:10px">
+              <textarea id="prequal-input" placeholder="Describe your client... or use the mic 🎤" rows="2" style="flex:1;background:var(--bg-3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text-1);font-size:14px;resize:none;font-family:inherit;line-height:1.5" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendPrequal()}"></textarea>
+              <div style="display:flex;flex-direction:column;gap:6px;align-self:flex-end">
+                <button onclick="toggleVoiceInput()" id="prequal-voice-btn" title="Voice input" style="padding:10px 12px;border-radius:8px;background:var(--bg-3);border:1px solid var(--border);color:var(--text-3);cursor:pointer;font-size:16px;line-height:1;transition:all 0.2s">🎤</button>
+                <button onclick="sendPrequal()" id="prequal-send-btn" class="btn btn-primary" style="padding:10px 20px">Send</button>
+              </div>
             </div>
+            <div style="font-size:11px;color:var(--text-4);margin-top:6px">Press Enter to send, Shift+Enter for new line</div>
           </div>
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
-            <span style="font-size:11px;color:var(--text-4)">Press Enter to send, Shift+Enter for new line</span>
-            <button id="prequal-save-btn" onclick="savePrequal()" style="display:none" class="btn btn-ghost" style="font-size:12px">💾 Save & Add to Pipeline</button>
+          <!-- Result banner + action buttons — shown after prequal completes -->
+          <div id="prequal-result-banner" style="display:none;border-top:1px solid rgba(0,191,165,0.2);background:linear-gradient(135deg,rgba(0,191,165,0.08),rgba(0,191,165,0.03));padding:14px 20px"></div>
+          <!-- Action footer — always visible after result -->
+          <div id="prequal-action-footer" style="display:none;padding:12px 20px;border-top:1px solid var(--border);background:var(--bg-2);display:none;flex-wrap:wrap;gap:8px;align-items:center">
+            <button id="prequal-save-btn" onclick="savePrequal()" class="btn btn-ghost" style="font-size:12px;padding:7px 14px">💾 Save to Pipeline</button>
+            <button onclick="showLenderMatchModal()" class="btn btn-primary" style="font-size:12px;padding:7px 18px">🔗 Find Matching Lenders</button>
+            <button onclick="showLenderMatchModal()" style="padding:7px 14px;border-radius:7px;background:transparent;border:1px solid rgba(0,212,188,0.3);color:var(--teal);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Submit for Financing Review</button>
           </div>
         </div>
       </div>
