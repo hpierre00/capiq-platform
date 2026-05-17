@@ -47,7 +47,13 @@
   to = "/privacy.html"
   status = 200
 
-# /app serves the investor/realtor/lender app (index.html)
+# Root serves the marketing landing page
+[[redirects]]
+  from = "/"
+  to = "/index.html"
+  status = 200
+
+# /app serves the investor/realtor/lender app
 [[redirects]]
   from = "/app"
   to = "/app.html"
@@ -58,8 +64,14 @@
   to = "/app.html"
   status = 200
 
-# SPA fallback for app routes
+# /lender — dedicated lender portal entry point
 [[redirects]]
-  from = "/*"
+  from = "/lender"
+  to = "/app?mode=lender"
+  status = 301
+
+# SPA fallback — only for /app subroutes, not root
+[[redirects]]
+  from = "/app/**"
   to = "/app.html"
   status = 200
