@@ -469,7 +469,7 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
 
 
     <!-- LENDER MATCH MODAL -->
-    <div class="modal-overlay" id="lender-match-modal" style="z-index:9998">
+    <div class="modal-overlay" id="lender-match-modal" style="z-index:10001">
       <div class="modal-box" style="max-width:500px">
         <div style="background:var(--navy);padding:20px 24px;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center">
           <div>
@@ -2703,7 +2703,13 @@ async function submitLenderMatch() {
     if (data.success) {
       document.getElementById('lender-match-modal').classList.remove('show');
       showToast('Submitted. Lenders will review and may contact ' + name + ' within 24-48 hours.', 'success');
-      document.querySelectorAll('[onclick="showLenderMatchModal()"]').forEach(b => { b.textContent = '✓ Submitted to Lender Network'; b.disabled = true; b.style.opacity = '0.7'; });
+      document.querySelectorAll('[onclick="showLenderMatchModal()"]').forEach(b => { b.textContent = '✓ Submitted'; b.disabled = true; b.style.opacity = '0.7'; });
+      // Auto-save and close after a moment
+      setTimeout(() => savePrequal(true), 500);
+      setTimeout(() => {
+        closePrequalChat();
+        showToast('Client profile saved and submitted to lender network.', 'success');
+      }, 1800);
     } else { errEl.textContent = data.error || 'Submission failed.'; errEl.style.display = 'block'; }
   } catch(e) { errEl.textContent = 'Connection error.'; errEl.style.display = 'block'; }
   finally { btn.disabled = false; btn.textContent = 'Find Matching Lenders'; }
@@ -2807,18 +2813,26 @@ if (window.location.search.includes('realtor_upgraded=true')) {
 function startNewPrequal() {
   prequaMessages = [];
   currentPrequal = null;
+  _prequal_saved = false; // Reset double-save guard
   const messagesEl = document.getElementById('prequal-chat-messages');
   messagesEl.innerHTML = `<div class="chat-msg assistant" style="background:var(--bg-3);border-radius:12px;padding:14px 16px;font-size:14px;color:var(--text-2);max-width:90%;line-height:1.6">
     Hi! Tell me about your client. You can start with something like: <em>"I have a buyer looking at a $350k home in Tampa, puts down 20%, W-2 income around $7k/month, credit around 700, no major debts."</em>
   </div>`;
   document.getElementById('prequal-result-banner').style.display = 'none';
   document.getElementById('prequal-save-btn').style.display = 'none';
+  const af = document.getElementById('prequal-action-footer');
+  if (af) af.style.display = 'none';
   document.getElementById('prequal-input').value = '';
   document.getElementById('prequal-chat-modal').classList.add('show');
 }
 
 function closePrequalChat() {
   document.getElementById('prequal-chat-modal').classList.remove('show');
+  // Also hide action footer for next session
+  const af = document.getElementById('prequal-action-footer');
+  if (af) af.style.display = 'none';
+  const rb = document.getElementById('prequal-result-banner');
+  if (rb) rb.style.display = 'none';
 }
 
 function appendChatMessage(role, text) {
@@ -2841,110 +2855,105 @@ async function toggleVoiceInput() {
 
   // Stop if already recording
   if (isRecording) {
-    if (voiceRecognition) voiceRecognition.stop();
+    if (voiceRecognition) { try { voiceRecognition.abort(); } catch(e){} }
     isRecording = false;
-    btn.textContent = '🎤';
+    btn.innerHTML = '🎤';
     btn.style.background = 'var(--bg-3)';
     btn.style.borderColor = 'var(--border)';
     btn.style.color = 'var(--text-3)';
     return;
   }
 
-  // Must be HTTPS or localhost
-  if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
-    showToast('Voice input requires HTTPS. You are connected securely at underlytix.com.', 'error');
-    return;
-  }
-
-  // Check browser support
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
   if (!SpeechRecognition) {
-    showToast('Voice input requires Chrome on desktop. Firefox and Safari do not support it.', 'error');
+    // Fallback: show a textarea overlay for manual voice-to-text paste
+    showToast('Voice recognition requires Chrome. On other browsers, use your device keyboard mic 🎤 or dictation feature.', 'error');
     return;
   }
 
-  // Explicitly request mic permission first — gives a clear browser prompt
+  // Request mic permission first — shows browser prompt
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    stream.getTracks().forEach(t => t.stop()); // release immediately — SpeechRecognition manages its own
-  } catch(e) {
-    if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
-      showToast('Microphone blocked. Click the 🔒 icon in your browser address bar → allow microphone → try again.', 'error');
-    } else if (e.name === 'NotFoundError') {
-      showToast('No microphone found. Plug in a mic and try again.', 'error');
+    // Permission granted — immediately release the stream, SpeechRecognition handles its own
+    stream.getTracks().forEach(t => t.stop());
+  } catch(permErr) {
+    if (permErr.name === 'NotAllowedError' || permErr.name === 'PermissionDeniedError') {
+      showToast('Mic blocked. In Chrome: click the camera/mic icon in the address bar and select Allow.', 'error');
+    } else if (permErr.name === 'NotFoundError' || permErr.name === 'DevicesNotFoundError') {
+      showToast('No microphone detected on this device.', 'error');
     } else {
-      showToast('Microphone error: ' + e.message, 'error');
+      showToast('Mic unavailable: ' + (permErr.message || permErr.name), 'error');
     }
     return;
   }
 
-  // Start speech recognition
+  // Build recognizer
   voiceRecognition = new SpeechRecognition();
   voiceRecognition.continuous = true;
   voiceRecognition.interimResults = true;
   voiceRecognition.lang = 'en-US';
+  voiceRecognition.maxAlternatives = 1;
 
-  let finalTranscript = input.value;
+  let baseText = input.value.trim() ? input.value.trimEnd() + ' ' : '';
 
   voiceRecognition.onstart = () => {
     isRecording = true;
-    btn.textContent = '⏹';
-    btn.style.background = 'rgba(239,68,68,0.15)';
-    btn.style.borderColor = 'rgba(239,68,68,0.4)';
+    btn.innerHTML = '<span style="display:inline-block;width:10px;height:10px;background:#ef4444;border-radius:50%;animation:pulse 1s infinite"></span>';
+    btn.style.background = 'rgba(239,68,68,0.12)';
+    btn.style.borderColor = 'rgba(239,68,68,0.35)';
     btn.style.color = '#ef4444';
-    btn.title = 'Click to stop recording';
-    showToast('🎤 Listening — speak naturally. Click ⏹ when done.', 'success');
+    btn.title = 'Recording — click to stop';
+    if (!document.getElementById('pulse-style')) {
+      const s = document.createElement('style');
+      s.id = 'pulse-style';
+      s.textContent = '@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.3)}}';
+      document.head.appendChild(s);
+    }
+    showToast('🎤 Listening — speak now', 'success');
   };
 
-  voiceRecognition.onresult = (event) => {
+  voiceRecognition.onresult = (ev) => {
     let interim = '';
-    for (let i = event.resultIndex; i < event.results.length; i++) {
-      if (event.results[i].isFinal) {
-        finalTranscript += event.results[i][0].transcript + ' ';
-      } else {
-        interim = event.results[i][0].transcript;
-      }
+    for (let i = ev.resultIndex; i < ev.results.length; i++) {
+      const t = ev.results[i][0].transcript;
+      if (ev.results[i].isFinal) { baseText += t + ' '; }
+      else { interim = t; }
     }
-    input.value = finalTranscript + interim;
+    input.value = baseText + interim;
     input.style.borderColor = 'var(--teal)';
   };
 
   voiceRecognition.onend = () => {
+    if (!isRecording) return; // already manually stopped
     isRecording = false;
-    btn.textContent = '🎤';
+    btn.innerHTML = '🎤';
     btn.style.background = 'var(--bg-3)';
     btn.style.borderColor = 'var(--border)';
     btn.style.color = 'var(--text-3)';
     btn.title = 'Voice input';
     input.style.borderColor = 'var(--border)';
-    if (input.value.trim()) {
-      showToast('✓ Voice captured. Press Enter or click Send.', 'success');
-    }
+    if (input.value.trim()) showToast('✓ Done. Click Send or press Enter.', 'success');
   };
 
-  voiceRecognition.onerror = (event) => {
+  voiceRecognition.onerror = (ev) => {
     isRecording = false;
-    btn.textContent = '🎤';
+    btn.innerHTML = '🎤';
     btn.style.background = 'var(--bg-3)';
     btn.style.borderColor = 'var(--border)';
     btn.style.color = 'var(--text-3)';
+    if (ev.error === 'aborted') return;
     const msgs = {
-      'not-allowed': 'Microphone blocked. Allow mic access in your browser settings and try again.',
-      'no-speech': 'No speech detected. Click 🎤 and speak clearly.',
-      'network': 'Network error. Check your connection — voice recognition needs internet.',
-      'aborted': '',  // user stopped intentionally — no toast needed
-      'audio-capture': 'No microphone found. Check that a mic is connected.',
-      'service-not-allowed': 'Speech service blocked. Try on underlytix.com (HTTPS required).',
+      'not-allowed': 'Mic access denied. Allow it in Chrome → address bar icon.',
+      'no-speech': 'Nothing heard. Try again and speak clearly.',
+      'network': 'Network error — speech recognition needs internet.',
+      'audio-capture': 'No mic found on this device.',
     };
-    const msg = msgs[event.error];
-    if (msg) showToast(msg, 'error');
+    showToast(msgs[ev.error] || 'Voice error: ' + ev.error, 'error');
   };
 
-  try {
-    voiceRecognition.start();
-  } catch(e) {
-    showToast('Could not start voice input: ' + e.message, 'error');
-  }
+  try { voiceRecognition.start(); }
+  catch(startErr) { showToast('Could not start mic: ' + startErr.message, 'error'); }
 }
 
 async function sendPrequal() {
@@ -3057,30 +3066,53 @@ async function sendPrequal() {
   } finally { btn.disabled = false; btn.textContent = 'Send'; }
 }
 
+let _prequal_saved = false; // Guard against double-save
+
 async function savePrequal(silent = false) {
   const sess = getRealtorSession();
   if (!sess?.token || !currentPrequal) return;
-  // Skip browser prompt on auto-save — use 'Auto-saved' as placeholder name
-  const clientName = silent ? 'Auto-saved' : (prompt('Client name or reference (optional):') || 'Client');
+  if (_prequal_saved) {
+    if (!silent) showToast('Already saved to pipeline.', 'success');
+    return;
+  }
+  // No prompt() — use auto-generated name, realtor can rename in pipeline
+  const clientName = 'Client ' + new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'});
+  _prequal_saved = true;
+  const saveBtn = document.getElementById('prequal-save-btn');
+  if (saveBtn) { saveBtn.textContent = 'Saving...'; saveBtn.disabled = true; }
   try {
     const res = await fetch(REALTOR_PREQUAL_FN, {
       method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({
         action: 'save', token: sess.token,
-        clientData: { clientName, prequal: currentPrequal, messages: prequaMessages }
+        clientData: { clientName, prequal: currentPrequal, messages: prequaMessages || [] }
       })
     });
     const data = await res.json();
     if (data.success) {
-      if (!silent) showToast('Prequal saved to your pipeline', 'success');
-      document.getElementById('prequal-save-btn').textContent = '✓ Saved';
-      document.getElementById('prequal-save-btn').disabled = true;
-      loadRealtorStandaloneHistory();
-      // Update count
-      const countEl = document.getElementById('rs-prequal-count');
-      if (countEl) countEl.textContent = parseInt(countEl.textContent || 0) + 1;
+      if (saveBtn) { saveBtn.textContent = '✓ Saved'; saveBtn.disabled = true; }
+      if (!silent) {
+        showToast('Saved to pipeline. Closing in 2 seconds...', 'success');
+        setTimeout(() => {
+          closePrequalChat();
+          loadRealtorStandaloneHistory();
+          showToast('Client added to your pipeline.', 'success');
+        }, 2000);
+      } else {
+        loadRealtorStandaloneHistory();
+        const countEl = document.getElementById('rs-prequal-count');
+        if (countEl) countEl.textContent = parseInt(countEl.textContent || 0) + 1;
+      }
+    } else {
+      _prequal_saved = false;
+      if (saveBtn) { saveBtn.textContent = '💾 Save to Pipeline'; saveBtn.disabled = false; }
+      if (!silent) showToast(data.error || 'Save failed. Please try again.', 'error');
     }
-  } catch(e) { if (!silent) showToast('Save failed', 'error'); }
+  } catch(e) {
+    _prequal_saved = false;
+    if (saveBtn) { saveBtn.textContent = '💾 Save to Pipeline'; saveBtn.disabled = false; }
+    if (!silent) showToast('Connection error. Please try again.', 'error');
+  }
 }
 
 // ─── REALTOR STANDALONE MODE FUNCTIONS ────────────────────────────────────

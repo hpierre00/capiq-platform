@@ -15,7 +15,7 @@ export default async (req) => {
   try {
     const ANTHROPIC_KEY = Netlify.env.get("ANTHROPIC_API_KEY");
     const SUPABASE_URL = "https://mxyepucitjzleaziizkr.supabase.co";
-    const REALTOR_AUTH_FN = `${SUPABASE_URL}/functions/v1/capiq-realtor-auth-v2`;
+    const REALTOR_AUTH_FN = `${SUPABASE_URL}/functions/v1/capiq-realtor-auth-v3`;
     const SVC_KEY = Netlify.env.get("SUPABASE_SERVICE_KEY");
 
     const body = await req.json();
