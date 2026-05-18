@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underlytix — Realtor Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap">
+<style>
+:root {
+  --navy: #0f2240;
+  --navy-2: #1a3355;
+  --teal: #0e7490;
+  --teal-light: #0891b2;
+  --teal-dim: rgba(14,116,144,0.08);
+  --teal-border: rgba(14,116,144,0.2);
+  --gold: #b45309;
+  --gold-light: #d97706;
+  --gold-dim: rgba(180,83,9,0.08);
+  --bg: #f8fafc;
+  --bg-2: #ffffff;
+  --bg-3: #f1f5f9;
+  --bg-4: #e2e8f0;
+  --border: #e2e8f0;
+  --border-dark: #cbd5e1;
+  --text: #0f172a;
+  --text-2: #334155;
+  --text-3: #64748b;
+  --text-4: #94a3b8;
+  --green: #059669;
+  --green-dim: rgba(5,150,105,0.08);
+  --green-border: rgba(5,150,105,0.2);
+  --red: #dc2626;
+  --red-dim: rgba(220,38,38,0.08);
+  --amber: #d97706;
+  --amber-dim: rgba(217,119,6,0.08);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+  --r: 8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;line-height:1.6;min-height:100vh}
+body{min-height:100vh;overflow-x:hidden}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.fade-up{animation:fadeUp .4s ease both}
+.card{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow)}
+.card-header{padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:13px;font-weight:600;color:var(--text);letter-spacing:.01em}
+.card-body{padding:24px}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}
+.stat-card{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r);padding:20px 24px;box-shadow:var(--shadow)}
+.stat-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.stat-label{font-size:12px;font-weight:500;color:var(--text-3)}
+.stat-value{font-size:28px;font-weight:700;color:var(--text);line-height:1;letter-spacing:-1px}
+.stat-value.teal{color:var(--teal)}
+.stat-sub{font-size:11px;color:var(--text-4);margin-top:4px}
+.field{display:flex;flex-direction:column;gap:5px}
+.label{font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px}
+input,select,textarea{background:var(--bg-2);border:1px solid var(--border-dark);border-radius:6px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:9px 12px;width:100%;transition:all .15s;box-shadow:var(--shadow-sm)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(14,116,144,0.1)}
+input::placeholder,textarea::placeholder{color:var(--text-4)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 20px;border-radius:6px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s}
+.btn-primary{background:var(--teal);color:white;box-shadow:0 1px 2px rgba(14,116,144,0.3)}
+.btn-primary:hover{background:var(--teal-light)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-ghost{background:transparent;color:var(--text-2);border:1px solid var(--border-dark)}
+.btn-ghost:hover{border-color:var(--border-dark);color:var(--text);background:var(--bg-3)}
+.chip{font-family:'DM Mono',monospace;font-size:10px;padding:3px 10px;border-radius:4px;letter-spacing:.06em;font-weight:500}
+.chip-green{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border)}
+.chip-yellow{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(217,119,6,0.2)}
+.chip-red{background:var(--red-dim);color:var(--red);border:1px solid rgba(220,38,38,0.2)}
+.chip-gray{background:var(--bg-3);color:var(--text-3);border:1px solid var(--border)}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;font-size:13px;z-index:300;display:none;box-shadow:var(--shadow-md)}
+.toast.show{display:flex;align-items:center;gap:10px}
+.toast.success{border-color:var(--green-border);color:var(--green)}
+.toast.error{border-color:rgba(220,38,38,0.2);color:var(--red)}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,34,64,0.7);z-index:400;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-overlay.show{display:flex}
+.modal-box{background:white;border-radius:14px;width:100%;max-width:480px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.25)}
+.portal-shell{display:flex;flex-direction:column;min-height:100vh;background:var(--bg)}
+.portal-topbar{background:var(--navy);padding:14px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50;border-bottom:1px solid rgba(255,255,255,0.08)}
+@media(max-width:768px){.stats-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<div class="portal-shell">
+  <div class="portal-topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="width:32px;height:32px;background:var(--teal);border-radius:8px;display:flex;align-items:center;justify-content:center">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      </div>
+      <div>
+        <div style="font-size:15px;font-weight:800;color:white;letter-spacing:-0.3px">UNDERLYTIX</div>
+        <div style="font-size:10px;color:rgba(255,255,255,0.4);font-family:'DM Mono',monospace;letter-spacing:.06em">REALTOR PORTAL</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <span id="rs-user-badge" style="display:none;font-size:12px;color:rgba(255,255,255,0.6)"></span>
+      <button id="rs-billing-btn" onclick="realtorCheckout()" style="display:none" class="btn btn-primary">Manage Billing</button>
+      <button id="rs-logout-btn" onclick="realtorLogout()" style="display:none" class="btn btn-ghost">Sign Out</button>
+      <a href="/app" style="font-size:11px;color:rgba(255,255,255,0.3);text-decoration:none;font-family:'DM Mono',monospace">Investor Portal →</a>
+    </div>
+  </div>
+
+  <!-- LOGIN VIEW -->
+  <div id="rs-login-view" style="flex:1;display:flex;align-items:center;justify-content:center;padding:40px">
+    <div style="width:100%;max-width:420px">
+      <div class="card">
+        <div style="background:var(--navy);padding:32px;border-radius:10px 10px 0 0;text-align:center">
+          <div style="font-size:32px;margin-bottom:10px">🏠</div>
+          <div style="font-size:20px;font-weight:700;color:white;margin-bottom:6px">Realtor Portal</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4)">Client prequalification — available anytime</div>
+        </div>
+        <div class="card-body">
+          <div id="rs-login-error" style="display:none;font-size:12px;color:var(--red);background:var(--red-dim);border:1px solid rgba(220,38,38,0.15);border-radius:6px;padding:10px;margin-bottom:16px"></div>
+          <div class="field" style="margin-bottom:14px"><label class="label">Email</label><input id="rs-login-email" type="email" placeholder="you@brokerage.com"></div>
+          <div class="field" style="margin-bottom:20px"><label class="label">Password</label><input id="rs-login-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')realtorLogin()"></div>
+          <button class="btn btn-primary" id="rs-login-btn" onclick="realtorLogin()" style="width:100%;justify-content:center">Sign In</button>
+          <div style="margin-top:16px;text-align:center">
+            <span style="font-size:12px;color:var(--text-4)">New here? </span>
+            <span onclick="showSignupView()" style="font-size:12px;color:var(--teal);cursor:pointer;font-weight:600">Start free 14-day trial →</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIGNUP VIEW -->
+  <div id="rs-signup-view" style="display:none;flex:1;align-items:center;justify-content:center;padding:40px">
+    <div style="width:100%;max-width:440px">
+      <div class="card">
+        <div style="background:var(--navy);padding:28px 32px;border-radius:10px 10px 0 0;text-align:center">
+          <div style="font-size:20px;font-weight:700;color:white;margin-bottom:4px">Start Free Trial</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4)">14-day free trial · $49/month after · No credit card required</div>
+        </div>
+        <div class="card-body">
+          <div id="rs-signup-error" style="display:none;font-size:12px;color:var(--red);background:var(--red-dim);border:1px solid rgba(220,38,38,0.15);border-radius:6px;padding:10px;margin-bottom:16px"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div class="field"><label class="label">Full Name</label><input id="rs-name" type="text" placeholder="Jane Smith"></div>
+            <div class="field"><label class="label">Phone</label><input id="rs-phone" type="tel" placeholder="(305) 555-0100"></div>
+          </div>
+          <div class="field" style="margin-top:12px"><label class="label">Work Email</label><input id="rs-email" type="email" placeholder="jane@brokerage.com"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
+            <div class="field"><label class="label">License #</label><input id="rs-license" type="text" placeholder="SL3456789"></div>
+            <div class="field"><label class="label">Brokerage</label><input id="rs-brokerage" type="text" placeholder="EXP Realty"></div>
+          </div>
+          <div class="field" style="margin-top:12px;margin-bottom:20px"><label class="label">Password</label><input id="rs-password" type="password" placeholder="Min 8 characters"></div>
+          <button class="btn btn-primary" id="rs-signup-btn" onclick="realtorSignup()" style="width:100%;justify-content:center">Start Free Trial</button>
+          <div style="text-align:center;margin-top:14px">
+            <span style="cursor:pointer;color:var(--teal);font-size:12px" onclick="showLoginView()">← Back to sign in</span>
+          </div>
+          <div style="text-align:center;margin-top:8px;font-size:11px;color:var(--text-4)">By signing up you agree to our <a href="/terms" target="_blank" style="color:var(--teal)">Terms</a> and <a href="/privacy" target="_blank" style="color:var(--teal)">Privacy Policy</a>.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DASHBOARD VIEW -->
+  <div id="rs-dashboard-view" style="display:none">
+    <div style="max-width:900px;width:100%;margin:0 auto;padding:32px 24px">
+      <div class="stats-grid">
+        <div class="stat-card"><div class="stat-top"><span class="stat-label">Prequals This Month</span></div><div class="stat-value teal" id="rs-prequal-count">0</div><div class="stat-sub">Client assessments</div></div>
+        <div class="stat-card"><div class="stat-top"><span class="stat-label">Plan</span></div><div class="stat-value teal" id="rs-plan-badge">Trial</div><div class="stat-sub" id="rs-plan-sub">14-day free trial</div></div>
+        <div class="stat-card" style="cursor:pointer" onclick="startNewPrequal()"><div class="stat-top"><span class="stat-label">Available</span></div><div class="stat-value teal">24/7</div><div class="stat-sub" style="color:var(--teal)">Click to run a prequal →</div></div>
+      </div>
+      <div class="card">
+        <div class="card-body">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+            <div>
+              <div style="font-size:15px;font-weight:700;color:var(--text)">Client Prequalifications</div>
+              <div style="font-size:12px;color:var(--text-4);margin-top:2px">Describe your client — the AI handles the rest</div>
+            </div>
+            <button class="btn btn-primary" onclick="startNewPrequal()" style="gap:6px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              New Prequal
+            </button>
+          </div>
+          <div id="rs-history-list"><div style="text-align:center;padding:40px;color:var(--text-4);font-size:13px">No prequalifications yet. Click "New Prequal" to get started.</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PREQUAL CHAT MODAL -->
+<div class="modal-overlay" id="prequal-chat-modal" style="z-index:9999">
+  <div class="modal-box" style="max-width:680px;max-height:85vh;display:flex;flex-direction:column">
+    <div style="background:var(--navy);padding:18px 24px;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
+      <div>
+        <div style="color:white;font-size:15px;font-weight:700">Client Prequalification</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">Describe your client's situation naturally</div>
+      </div>
+      <span onclick="closePrequalChat()" style="color:rgba(255,255,255,0.5);cursor:pointer;font-size:20px">×</span>
+    </div>
+    <div id="prequal-chat-messages" style="flex:1;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;min-height:300px;max-height:calc(85vh - 200px)">
+      <div style="background:var(--bg-3);border-radius:12px;padding:14px 16px;font-size:14px;color:var(--text-2);max-width:90%;line-height:1.6">
+        Hi! Tell me about your client. You can start with something like: <em>"I have a buyer looking at a $350k home in Tampa, puts down 20%, W-2 income around $7k/month, credit around 700, no major debts."</em>
+      </div>
+    </div>
+    <div id="prequal-result-banner" style="display:none;flex-shrink:0;padding:14px 20px;background:linear-gradient(135deg,rgba(0,191,165,0.1),rgba(0,191,165,0.05));border-top:1px solid rgba(0,191,165,0.2)"></div>
+    <div style="padding:16px 20px;border-top:1px solid var(--border);flex-shrink:0">
+      <div style="display:flex;gap:10px">
+        <textarea id="prequal-input" placeholder="Describe your client..." rows="2" style="flex:1;background:var(--bg-3);border:1px solid var(--border);border-radius:8px;padding:10px 14px;color:var(--text);font-size:14px;resize:none;font-family:inherit;line-height:1.5" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendPrequal()}"></textarea>
+        <button onclick="sendPrequal()" id="prequal-send-btn" class="btn btn-primary" style="align-self:flex-end;padding:10px 20px">Send</button>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+        <span style="font-size:11px;color:var(--text-4)">Press Enter to send, Shift+Enter for new line</span>
+        <button id="prequal-save-btn" onclick="savePrequal()" style="display:none" class="btn btn-ghost">💾 Save &amp; Add to Pipeline</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="/portal-common.js"></script>
+<script>
+const REALTOR_AUTH_FN = 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-realtor-auth-v2';
+const REALTOR_PREQUAL_FN = '/.netlify/functions/realtor-prequal';
+
+let realtorSession = null;
+let prequaMessages = [];
+let currentPrequal = null;
+
+function getRealtorSession() {
+  if (realtorSession) return realtorSession;
+  try { realtorSession = JSON.parse(localStorage.getItem('capiq_realtor_session')); } catch(e) {}
+  return realtorSession;
+}
+function setRealtorSession(token, realtor, refreshToken) {
+  realtorSession = { token, realtor, refresh_token: refreshToken || null };
+  localStorage.setItem('capiq_realtor_session', JSON.stringify(realtorSession));
+}
+function clearRealtorSession() {
+  realtorSession = null;
+  localStorage.removeItem('capiq_realtor_session');
+}
+
+function showLoginView() {
+  document.getElementById('rs-login-view').style.display = 'flex';
+  document.getElementById('rs-signup-view').style.display = 'none';
+  document.getElementById('rs-dashboard-view').style.display = 'none';
+}
+function showSignupView() {
+  document.getElementById('rs-login-view').style.display = 'none';
+  document.getElementById('rs-signup-view').style.display = 'flex';
+  document.getElementById('rs-dashboard-view').style.display = 'none';
+}
+function showDashboardView() {
+  document.getElementById('rs-login-view').style.display = 'none';
+  document.getElementById('rs-signup-view').style.display = 'none';
+  document.getElementById('rs-dashboard-view').style.display = 'block';
+}
+
+async function realtorLogin() {
+  const email = document.getElementById('rs-login-email').value.trim();
+  const password = document.getElementById('rs-login-password').value;
+  const errEl = document.getElementById('rs-login-error');
+  const btn = document.getElementById('rs-login-btn');
+  errEl.style.display = 'none';
+  if (!email || !password) { errEl.textContent = 'Email and password required.'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  try {
+    const res = await fetch(REALTOR_AUTH_FN, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'login', email, password })
+    });
+    const data = await res.json();
+    if (data.success) { onRealtorAuth(data.token, data.realtor, data.refresh_token); }
+    else { errEl.textContent = data.error || 'Sign in failed.'; errEl.style.display = 'block'; }
+  } catch(e) { errEl.textContent = 'Connection error.'; errEl.style.display = 'block'; }
+  finally { btn.disabled = false; btn.textContent = 'Sign In'; }
+}
+
+async function realtorSignup() {
+  const name = document.getElementById('rs-name').value.trim();
+  const phone = document.getElementById('rs-phone').value.trim();
+  const email = document.getElementById('rs-email').value.trim();
+  const license = document.getElementById('rs-license').value.trim();
+  const brokerage = document.getElementById('rs-brokerage').value.trim();
+  const password = document.getElementById('rs-password').value;
+  const errEl = document.getElementById('rs-signup-error');
+  const btn = document.getElementById('rs-signup-btn');
+  if (!name || !email || !password) { errEl.textContent = 'Name, email, and password are required.'; errEl.style.display = 'block'; return; }
+  if (password.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Creating account...';
+  try {
+    const res = await fetch(REALTOR_AUTH_FN, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'signup', email, password, fullName: name, phone, licenseNumber: license, brokerage, state: 'FL' })
+    });
+    const data = await res.json();
+    if (data.success) {
+      onRealtorAuth(data.token, data.realtor, data.refresh_token);
+      fetch('/.netlify/functions/resend-email', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ type: 'welcome', to: email, name })
+      }).catch(()=>{});
+    } else { errEl.textContent = data.error || 'Signup failed.'; errEl.style.display = 'block'; }
+  } catch(e) { errEl.textContent = 'Connection error.'; errEl.style.display = 'block'; }
+  finally { btn.disabled = false; btn.textContent = 'Start Free Trial'; }
+}
+
+function onRealtorAuth(token, realtor, refreshToken) {
+  setRealtorSession(token, realtor, refreshToken);
+  document.getElementById('rs-user-badge').style.display = 'inline';
+  document.getElementById('rs-user-badge').textContent = realtor.name || realtor.email;
+  document.getElementById('rs-logout-btn').style.display = 'block';
+  document.getElementById('rs-billing-btn').style.display = 'block';
+  document.getElementById('rs-prequal-count').textContent = realtor.prequals_this_month || 0;
+  const plan = realtor.plan || 'trial';
+  document.getElementById('rs-plan-badge').textContent = plan === 'active' ? 'Pro' : 'Trial';
+  const trialEnd = realtor.trial_ends_at ? new Date(realtor.trial_ends_at).toLocaleDateString() : '';
+  document.getElementById('rs-plan-sub').textContent = plan === 'trial' ? `Ends ${trialEnd}` : '$49/month';
+  showDashboardView();
+  loadRealtorHistory();
+}
+
+function realtorLogout() {
+  clearRealtorSession();
+  document.getElementById('rs-user-badge').style.display = 'none';
+  document.getElementById('rs-logout-btn').style.display = 'none';
+  document.getElementById('rs-billing-btn').style.display = 'none';
+  showLoginView();
+  showToast('Signed out', 'success');
+}
+
+async function realtorCheckout() {
+  const sess = getRealtorSession();
+  if (!sess?.token) return;
+  const btn = document.getElementById('rs-billing-btn');
+  const plan = sess.realtor?.plan;
+  if (btn) { btn.disabled = true; btn.textContent = plan === 'active' ? 'Loading...' : 'Redirecting...'; }
+  try {
+    const action = plan === 'active' ? 'create_portal' : 'create_checkout';
+    const res = await fetch(REALTOR_PREQUAL_FN, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action, token: sess.token, successUrl: window.location.origin + '/realtor?realtor_upgraded=true', cancelUrl: window.location.origin + '/realtor' })
+    });
+    const data = await res.json();
+    const url = data.checkoutUrl || data.portalUrl;
+    if (url) window.location.href = url;
+    else showToast(data.error || 'Billing unavailable', 'error');
+  } catch(e) { showToast('Connection error', 'error'); }
+  finally { if (btn) { btn.disabled = false; btn.textContent = 'Manage Billing'; } }
+}
+
+function startNewPrequal() {
+  prequaMessages = [];
+  currentPrequal = null;
+  const messagesEl = document.getElementById('prequal-chat-messages');
+  messagesEl.innerHTML = `<div style="background:var(--bg-3);border-radius:12px;padding:14px 16px;font-size:14px;color:var(--text-2);max-width:90%;line-height:1.6">Hi! Tell me about your client. You can start with something like: <em>"I have a buyer looking at a $350k home in Tampa, puts down 20%, W-2 income around $7k/month, credit around 700, no major debts."</em></div>`;
+  document.getElementById('prequal-result-banner').style.display = 'none';
+  document.getElementById('prequal-save-btn').style.display = 'none';
+  document.getElementById('prequal-input').value = '';
+  document.getElementById('prequal-chat-modal').classList.add('show');
+}
+
+function closePrequalChat() {
+  document.getElementById('prequal-chat-modal').classList.remove('show');
+}
+
+function appendChatMessage(role, text) {
+  const el = document.getElementById('prequal-chat-messages');
+  const isAssistant = role === 'assistant';
+  const div = document.createElement('div');
+  div.style.cssText = `background:${isAssistant ? 'var(--bg-3)' : 'rgba(0,191,165,0.1)'};border-radius:12px;padding:14px 16px;font-size:14px;color:var(--text-2);max-width:90%;line-height:1.6;align-self:${isAssistant ? 'flex-start' : 'flex-end'};margin-left:${isAssistant ? '0' : 'auto'}`;
+  div.textContent = text;
+  el.appendChild(div);
+  el.scrollTop = el.scrollHeight;
+}
+
+async function sendPrequal() {
+  const input = document.getElementById('prequal-input');
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = '';
+  appendChatMessage('user', text);
+  prequaMessages.push({ role: 'user', content: text });
+  const btn = document.getElementById('prequal-send-btn');
+  btn.disabled = true; btn.textContent = '...';
+  const typingEl = document.getElementById('prequal-chat-messages');
+  const typingDiv = document.createElement('div');
+  typingDiv.id = 'typing-indicator';
+  typingDiv.style.cssText = 'background:var(--bg-3);border-radius:12px;padding:14px 16px;font-size:14px;color:var(--text-4);max-width:90%';
+  typingDiv.textContent = 'Analyzing...';
+  typingEl.appendChild(typingDiv);
+  typingEl.scrollTop = typingEl.scrollHeight;
+  try {
+    const res = await fetch(REALTOR_PREQUAL_FN, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'chat', messages: prequaMessages })
+    });
+    const data = await res.json();
+    document.getElementById('typing-indicator')?.remove();
+    if (data.success) {
+      prequaMessages.push({ role: 'assistant', content: data.message });
+      appendChatMessage('assistant', data.message);
+      if (data.prequal?.ready || data.prequal?.result) {
+        currentPrequal = data.prequal;
+        const resultColors = { likely_qualifies: '#00bfa5', borderline: '#f59e0b', unlikely: '#ef4444', needs_review: '#6b7280' };
+        const resultLabels = { likely_qualifies: '✓ Likely Qualifies', borderline: '⚠ Borderline', unlikely: '✗ Unlikely to Qualify', needs_review: '? Needs Review' };
+        const banner = document.getElementById('prequal-result-banner');
+        banner.style.display = 'block';
+        banner.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="font-size:13px;font-weight:700;color:${resultColors[data.prequal.result]||'var(--teal)'};margin-bottom:6px">${resultLabels[data.prequal.result]||data.prequal.result}</div><div style="font-size:12px;color:var(--text-3);margin-bottom:4px">${data.prequal.loanType?.toUpperCase()||'—'} · Max Loan $${data.prequal.maxLoanAmount?.toLocaleString()||'—'} · Back-end DTI ${data.prequal.backEndDTI||'—'}% · Front-end DTI ${data.prequal.frontEndDTI||'—'}%</div>${data.prequal.monthlyPITIA?`<div style="font-size:11px;color:var(--text-4);margin-bottom:4px">P&amp;I $${data.prequal.monthlyPI?.toLocaleString()||'—'} + Taxes $${data.prequal.monthlyTaxes?.toLocaleString()||'—'} + Insurance $${data.prequal.monthlyInsurance?.toLocaleString()||'—'} + HOA $${data.prequal.monthlyHOA?.toLocaleString()||'0'} = <strong style="color:var(--text-2)">PITIA $${data.prequal.monthlyPITIA?.toLocaleString()}/mo</strong></div>`:''} ${data.prequal.riskFlags?.length?`<div style="font-size:11px;color:var(--red);margin-top:2px">⚠ ${data.prequal.riskFlags.join(' · ')}</div>`:''}<div style="font-size:10px;color:var(--text-4);margin-top:6px;font-style:italic">Not a commitment to lend. Subject to full lender underwriting and approval.</div></div><div style="font-size:10px;color:var(--text-4);text-align:right;line-height:1.4">Based on<br>provided data</div></div>`;
+        document.getElementById('prequal-save-btn').style.display = 'block';
+      }
+    } else {
+      document.getElementById('typing-indicator')?.remove();
+      appendChatMessage('assistant', 'Sorry, something went wrong. Please try again.');
+    }
+  } catch(e) {
+    document.getElementById('typing-indicator')?.remove();
+    appendChatMessage('assistant', 'Connection error. Please try again.');
+  } finally { btn.disabled = false; btn.textContent = 'Send'; }
+}
+
+async function savePrequal() {
+  const sess = getRealtorSession();
+  if (!sess?.token || !currentPrequal) return;
+  const clientName = prompt('Client name or reference (optional):') || 'Client';
+  try {
+    const res = await fetch(REALTOR_PREQUAL_FN, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'save', token: sess.token, clientData: { clientName, prequal: currentPrequal, messages: prequaMessages } })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Prequal saved to your pipeline', 'success');
+      document.getElementById('prequal-save-btn').textContent = '✓ Saved';
+      document.getElementById('prequal-save-btn').disabled = true;
+      loadRealtorHistory();
+      const countEl = document.getElementById('rs-prequal-count');
+      if (countEl) countEl.textContent = parseInt(countEl.textContent || 0) + 1;
+    }
+  } catch(e) { showToast('Save failed', 'error'); }
+}
+
+async function loadRealtorHistory() {
+  const sess = getRealtorSession();
+  if (!sess?.token) return;
+  try {
+    const res = await fetch(REALTOR_PREQUAL_FN, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'history', token: sess.token })
+    });
+    const data = await res.json();
+    const container = document.getElementById('rs-history-list');
+    if (!container) return;
+    if (!data.success || !data.history?.length) {
+      container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-4);font-size:13px">No prequalifications yet. Click "New Prequal" to get started.</div>';
+      return;
+    }
+    const resultColors = { likely_qualifies: 'chip-green', borderline: 'chip-yellow', unlikely: 'chip-red', needs_review: 'chip-gray' };
+    const resultLabels = { likely_qualifies: 'Likely Qualifies', borderline: 'Borderline', unlikely: 'Unlikely', needs_review: 'Needs Review' };
+    container.innerHTML = data.history.map(p => `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)"><div><div style="font-size:13px;font-weight:600;color:var(--text)">${p.client_name || 'Client'}</div><div style="font-size:11px;color:var(--text-4);margin-top:2px">${p.loan_type || '—'} · ${p.state || '—'} · ${p.max_loan_amount ? '$'+parseInt(p.max_loan_amount).toLocaleString() : '—'} · ${new Date(p.created_at).toLocaleDateString()}</div>${p.ai_summary ? `<div style="font-size:11px;color:var(--text-3);margin-top:3px">${p.ai_summary.slice(0,100)}...</div>` : ''}</div><span class="chip ${resultColors[p.prequal_result] || 'chip-gray'}">${resultLabels[p.prequal_result] || p.prequal_result || '—'}</span></div>`).join('');
+  } catch(e) {}
+}
+
+if (window.location.search.includes('realtor_upgraded=true')) {
+  window.history.replaceState({}, '', window.location.pathname);
+  setTimeout(() => showToast('Realtor Pro activated! Unlimited prequalifications unlocked.', 'success'), 800);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  const sess = getRealtorSession();
+  if (sess?.realtor) {
+    onRealtorAuth(sess.token, sess.realtor, sess.refresh_token);
+    fetch(REALTOR_AUTH_FN, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'verify', token: sess.token })
+    }).then(r => r.json()).then(d => {
+      if (d.valid) { if (d.realtor) onRealtorAuth(sess.token, d.realtor, sess.refresh_token); }
+      else if (sess.refresh_token) {
+        fetch(REALTOR_AUTH_FN, {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({ action: 'refresh', refresh_token: sess.refresh_token })
+        }).then(r2 => r2.json()).then(rd => {
+          if (rd.success) onRealtorAuth(rd.token, rd.realtor, rd.refresh_token);
+          else { clearRealtorSession(); showLoginView(); }
+        }).catch(() => { clearRealtorSession(); showLoginView(); });
+      } else { clearRealtorSession(); showLoginView(); }
+    }).catch(() => {});
+  } else {
+    showLoginView();
+  }
+});
+</script>
+</body>
+</html>
