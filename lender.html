@@ -130,9 +130,22 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
         </div>
         <div class="card-body">
           <div id="lender-login-error" style="display:none;font-size:12px;color:var(--red);background:var(--red-dim);border:1px solid rgba(220,38,38,0.15);border-radius:6px;padding:10px;margin-bottom:16px"></div>
-          <div class="field" style="margin-bottom:14px"><label class="label">Email</label><input class="auth-input" id="lender-email" type="email" placeholder="portal@yourlender.com" onkeydown="if(event.key==='Enter')lenderLogin()"></div>
-          <div class="field" style="margin-bottom:20px"><label class="label">Password</label><input class="auth-input" id="lender-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')lenderLogin()"></div>
-          <button class="auth-btn" id="lender-login-btn" onclick="lenderLogin()">Sign In to Lender Portal</button>
+          <div class="field" style="margin-bottom:14px"><label class="label">Email</label><input class="input" id="lender-email" type="email" placeholder="portal@yourlender.com" onkeydown="if(event.key==='Enter')lenderLogin()"></div>
+          <div class="field" style="margin-bottom:20px">
+            <label class="label" style="display:flex;justify-content:space-between;align-items:center">
+              <span>Password</span>
+              <span onclick="showLenderForgotPassword()" style="font-size:11px;color:var(--teal);cursor:pointer;font-weight:500">Forgot password?</span>
+            </label>
+            <div style="position:relative;display:flex;align-items:center">
+              <input class="input" id="lender-password" type="password" placeholder="••••••••" autocomplete="current-password" style="padding-right:38px;width:100%" onkeydown="if(event.key==='Enter')lenderLogin()">
+              <span onclick="const i=document.getElementById('lender-password');i.type=i.type==='password'?'text':'password';this.textContent=i.type==='password'?'👁':'🙈'" style="position:absolute;right:10px;cursor:pointer;color:var(--text-4);font-size:13px;user-select:none">👁</span>
+            </div>
+          </div>
+          <button class="btn btn-primary" id="lender-login-btn" onclick="lenderLogin()" style="width:100%;justify-content:center">Sign In to Lender Portal</button>
+          <div style="margin-top:12px;text-align:center;display:flex;justify-content:center;gap:16px">
+            <a href="/app" style="font-size:11px;color:var(--text-4);text-decoration:none">Investor Portal →</a>
+            <a href="/realtor" style="font-size:11px;color:var(--text-4);text-decoration:none">Realtor Portal →</a>
+          </div>
           <div style="margin-top:16px;padding:12px;background:var(--bg-3);border-radius:6px;font-size:11px;color:var(--text-4);text-align:center;font-family:'DM Mono',monospace">
             DEMO: portal@coastalcapital.com / demo123<br>portal@summitbridge.com / demo123<br>portal@flexlend.com / demo123
           </div>
@@ -232,7 +245,7 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 
 <script src="/portal-common.js"></script>
 <script>
-const LENDER_FN = 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-lender-portal-v3';
+const LENDER_FN = 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-lender-portal-v4';
 const LENDER_SESSION_KEY = 'capiq_lender_session';
 let lenderMatches = [];
 let lenderFilter = 'all';
@@ -554,6 +567,47 @@ document.addEventListener('DOMContentLoaded', async () => {
     } else { clearLenderSession(); showLenderLoginView(); }
   } catch { if (!session.user) showLenderLoginView(); }
 });
+</script>
+
+<!-- LENDER FORGOT PASSWORD MODAL -->
+<div class="modal-overlay" id="lender-forgot-modal" style="z-index:10001">
+  <div style="background:var(--bg-2);border-radius:14px;max-width:420px;width:90%;overflow:hidden">
+    <div style="background:var(--navy);padding:20px 24px;display:flex;justify-content:space-between;align-items:center">
+      <div style="color:white;font-size:15px;font-weight:700">Reset Lender Password</div>
+      <span onclick="document.getElementById('lender-forgot-modal').classList.remove('show')" style="color:rgba(255,255,255,0.5);cursor:pointer;font-size:20px">×</span>
+    </div>
+    <div style="padding:20px">
+      <p style="font-size:13px;color:var(--text-3);margin-bottom:16px">Enter your lender email and we'll send a reset link.</p>
+      <div id="lender-forgot-error" style="display:none;font-size:12px;color:#ef4444;background:rgba(239,68,68,0.08);border-radius:6px;padding:10px;margin-bottom:12px"></div>
+      <div style="margin-bottom:16px"><label style="font-size:11px;color:var(--text-4);display:block;margin-bottom:4px">EMAIL</label><input class="input" id="lender-forgot-email" type="email" placeholder="portal@yourlender.com"></div>
+      <button class="btn btn-primary" id="lender-forgot-btn" onclick="doLenderForgotPassword()" style="width:100%;justify-content:center">Send Reset Link</button>
+      <div style="text-align:center;margin-top:12px"><span onclick="document.getElementById('lender-forgot-modal').classList.remove('show')" style="font-size:12px;color:var(--teal);cursor:pointer">← Back to sign in</span></div>
+    </div>
+  </div>
+</div>
+<script>
+function showLenderForgotPassword() {
+  document.getElementById('lender-forgot-error').style.display = 'none';
+  document.getElementById('lender-forgot-email').value = '';
+  document.getElementById('lender-forgot-modal').classList.add('show');
+}
+async function doLenderForgotPassword() {
+  const email = document.getElementById('lender-forgot-email').value.trim();
+  const errEl = document.getElementById('lender-forgot-error');
+  const btn = document.getElementById('lender-forgot-btn');
+  errEl.style.display = 'none';
+  if (!email) { errEl.textContent = 'Email required.'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Sending...';
+  try {
+    await fetch('/.netlify/functions/send-reset-email', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ email, userType: 'lender' })
+    });
+    document.getElementById('lender-forgot-modal').classList.remove('show');
+    showToast('If a lender account exists, a reset link has been sent.', 'success');
+  } catch(e) { errEl.textContent = 'Connection error.'; errEl.style.display = 'block'; }
+  finally { btn.disabled = false; btn.textContent = 'Send Reset Link'; }
+}
 </script>
 </body>
 </html>
