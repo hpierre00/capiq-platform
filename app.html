@@ -384,7 +384,7 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
     <div class="auth-tabs">
       <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Sign In</button>
       <button class="auth-tab" id="tab-signup" onclick="switchAuthTab('signup')">Create Account</button>
-      <button class="auth-tab" id="tab-realtor" onclick="switchAuthTab('realtor')" style="color:var(--teal)">🏠 Realtor</button>
+      <a href="/realtor" class="auth-tab" style="color:var(--teal);text-decoration:none">🏠 Realtor Portal →</a>
     </div>
     <div class="auth-error" id="auth-error"></div>
 
@@ -395,10 +395,10 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
       <button class="auth-btn" id="auth-btn" onclick="doAuth()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>Sign In
       </button>
-      <div onclick="switchAuthTab('realtor')" style="margin-top:14px;padding:10px 14px;background:rgba(0,212,188,0.06);border:1px solid rgba(0,212,188,0.18);border-radius:8px;text-align:center;cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='rgba(0,212,188,0.1)'" onmouseout="this.style.background='rgba(0,212,188,0.06)'">
+      <a href="/realtor" style="display:block;margin-top:14px;padding:10px 14px;background:rgba(0,212,188,0.06);border:1px solid rgba(0,212,188,0.18);border-radius:8px;text-align:center;text-decoration:none;transition:background 0.15s" onmouseover="this.style.background='rgba(0,212,188,0.1)'" onmouseout="this.style.background='rgba(0,212,188,0.06)'">
         <span style="font-size:12px;color:rgba(255,255,255,0.4)">Are you a real estate agent? </span>
         <span style="font-size:12px;color:var(--teal);font-weight:600">Access Realtor Portal →</span>
-      </div>
+      </a>
     </div>
 
     <!-- SIGNUP FORM -->
