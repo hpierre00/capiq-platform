@@ -23,19 +23,6 @@
   status = 301
   force = true
 
-# Realtor portal shortcut URL
-[[redirects]]
-  from = "/realtor"
-  to = "/app?mode=realtor"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "/realtor/*"
-  to = "/app?mode=realtor"
-  status = 301
-  force = true
-
 # Legal pages — must be before the SPA catch-all
 [[redirects]]
   from = "/terms"
@@ -53,7 +40,18 @@
   to = "/index.html"
   status = 200
 
-# /app serves the investor/realtor/lender app
+# Standalone portal routes
+[[redirects]]
+  from = "/realtor"
+  to = "/realtor.html"
+  status = 200
+
+[[redirects]]
+  from = "/lender"
+  to = "/lender.html"
+  status = 200
+
+# /app serves the investor portal
 [[redirects]]
   from = "/app"
   to = "/app.html"
@@ -63,12 +61,6 @@
   from = "/app/*"
   to = "/app.html"
   status = 200
-
-# /lender — dedicated lender portal entry point
-[[redirects]]
-  from = "/lender"
-  to = "/app?mode=lender"
-  status = 301
 
 # SPA fallback — only for /app subroutes, not root
 [[redirects]]
