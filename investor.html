@@ -1,0 +1,2194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underlytix — Investor Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap">
+<style>
+:root {
+  --navy: #0f2240;
+  --navy-2: #1a3355;
+  --teal: #0e7490;
+  --teal-light: #0891b2;
+  --teal-dim: rgba(14,116,144,0.08);
+  --teal-border: rgba(14,116,144,0.2);
+  --gold: #b45309;
+  --gold-light: #d97706;
+  --gold-dim: rgba(180,83,9,0.08);
+  --bg: #f8fafc;
+  --bg-2: #ffffff;
+  --bg-3: #f1f5f9;
+  --bg-4: #e2e8f0;
+  --border: #e2e8f0;
+  --border-dark: #cbd5e1;
+  --text: #0f172a;
+  --text-2: #334155;
+  --text-3: #64748b;
+  --text-4: #94a3b8;
+  --green: #059669;
+  --green-dim: rgba(5,150,105,0.08);
+  --green-border: rgba(5,150,105,0.2);
+  --red: #dc2626;
+  --red-dim: rgba(220,38,38,0.08);
+  --amber: #d97706;
+  --amber-dim: rgba(217,119,6,0.08);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+  --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+  --r: 8px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;font-size:14px;line-height:1.6;min-height:100vh}
+body{min-height:100vh;overflow-x:hidden}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+@keyframes spin{to{transform:rotate(360deg)}}
+.fade-up{animation:fadeUp .4s ease both}
+
+/* LAYOUT */
+.shell{display:flex;min-height:100vh}
+.sidebar{width:240px;min-height:100vh;background:var(--navy);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100}
+.main{margin-left:240px;flex:1;min-height:100vh;background:var(--bg)}
+
+/* SIDEBAR */
+.logo{padding:24px 20px;border-bottom:1px solid rgba(255,255,255,0.08)}
+.logo-mark{display:flex;align-items:center;gap:12px;text-decoration:none}
+.logo-icon{width:36px;height:36px;background:var(--teal);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.logo-icon svg{width:20px;height:20px;fill:white}
+.logo-text{font-size:17px;font-weight:700;color:white;letter-spacing:-.4px}
+.logo-sub{font-family:'DM Mono',monospace;font-size:9px;color:rgba(255,255,255,0.4);letter-spacing:.12em;text-transform:uppercase;margin-top:1px}
+.nav{padding:16px 12px;flex:1}
+.nav-section{margin-bottom:28px}
+.nav-label{font-family:'DM Mono',monospace;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,0.3);padding:0 8px;margin-bottom:6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:6px;color:rgba(255,255,255,0.55);cursor:pointer;transition:all .15s;margin-bottom:1px;font-size:13px;font-weight:500;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.85)}
+.nav-item.active{background:rgba(14,116,144,0.3);color:white;border-left:2px solid var(--teal-light)}
+.nav-item svg{width:15px;height:15px;flex-shrink:0}
+.nav-badge{margin-left:auto;background:var(--teal);color:white;font-size:10px;font-weight:600;padding:1px 7px;border-radius:10px;font-family:'DM Mono',monospace}
+.sidebar-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.08)}
+.status-dot{display:inline-block;width:6px;height:6px;background:#10b981;border-radius:50%;margin-right:6px;animation:pulse 2s infinite}
+.status-text{font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.35)}
+
+/* TOPBAR */
+.topbar{height:60px;background:var(--bg-2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 32px;position:sticky;top:0;z-index:50;box-shadow:var(--shadow-sm)}
+.topbar-title{font-size:16px;font-weight:600;color:var(--text)}
+.topbar-meta{font-family:'DM Mono',monospace;font-size:11px;color:var(--text-4);margin-top:1px}
+.chip{font-family:'DM Mono',monospace;font-size:10px;padding:3px 10px;border-radius:4px;letter-spacing:.06em;font-weight:500}
+.chip-teal{background:var(--teal-dim);color:var(--teal);border:1px solid var(--teal-border)}
+.chip-green{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border)}
+
+/* CONTENT */
+.content{padding:32px}
+.page{display:none}
+.page.active{display:block}
+
+/* CARDS */
+.card{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow)}
+.card-header{padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between}
+.card-title{font-size:13px;font-weight:600;color:var(--text);letter-spacing:.01em}
+.card-body{padding:24px}
+
+/* STATS */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px}
+.stat-card{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r);padding:20px 24px;box-shadow:var(--shadow)}
+.stat-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.stat-label{font-size:12px;font-weight:500;color:var(--text-3)}
+.stat-icon{width:32px;height:32px;border-radius:6px;display:flex;align-items:center;justify-content:center}
+.stat-icon.teal{background:var(--teal-dim)}
+.stat-icon.green{background:var(--green-dim)}
+.stat-value{font-size:28px;font-weight:700;color:var(--text);line-height:1;letter-spacing:-1px}
+.stat-value.teal{color:var(--teal)}
+.stat-value.green{color:var(--green)}
+.stat-sub{font-size:11px;color:var(--text-4);margin-top:4px}
+
+/* PILL SELECTORS */
+.pill-group{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.pill{padding:7px 16px;border-radius:6px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border-dark);background:var(--bg-3);color:var(--text-2);transition:all .15s;font-family:'Inter',sans-serif}
+.pill:hover{border-color:var(--teal);color:var(--teal);background:var(--teal-dim)}
+.pill.selected{background:var(--teal-dim);color:var(--teal);border-color:var(--teal);font-weight:600}
+
+/* FORM */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.form-grid-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px}
+.field{display:flex;flex-direction:column;gap:5px}
+.field-full{grid-column:1/-1}
+.label{font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:6px}
+.label .req{color:var(--red);font-size:11px}
+.label .auto-badge{font-size:9px;color:var(--green);background:var(--green-dim);padding:1px 6px;border-radius:4px;letter-spacing:.04em;border:1px solid var(--green-border)}
+input,select,textarea{background:var(--bg-2);border:1px solid var(--border-dark);border-radius:6px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:9px 12px;width:100%;transition:all .15s;box-shadow:var(--shadow-sm)}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(14,116,144,0.1)}
+input.auto-calc{border-color:var(--green-border);background:var(--green-dim);color:var(--green);font-weight:600}
+input.auto-calc:focus{box-shadow:0 0 0 3px rgba(5,150,105,0.1)}
+input::placeholder,textarea::placeholder{color:var(--text-4)}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+textarea{resize:vertical;min-height:90px;line-height:1.6}
+
+/* ADDRESS FIELDS */
+.address-row{display:grid;grid-template-columns:120px 1fr;gap:8px}
+.address-unit{display:grid;grid-template-columns:1fr 80px;gap:8px}
+
+/* SECTION DIVIDER */
+.section-divider{display:flex;align-items:center;gap:14px;margin:28px 0 20px}
+.section-divider-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--teal);white-space:nowrap}
+.section-divider-line{flex:1;height:1px;background:var(--border)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 20px;border-radius:6px;font-family:'Inter',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s}
+.btn-primary{background:var(--teal);color:white;box-shadow:0 1px 2px rgba(14,116,144,0.3)}
+.btn-primary:hover{background:var(--teal-light)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed}
+.btn-ghost{background:transparent;color:var(--text-2);border:1px solid var(--border-dark)}
+.btn-ghost:hover{border-color:var(--border-dark);color:var(--text);background:var(--bg-3)}
+.btn-lg{padding:12px 28px;font-size:14px}
+.spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+
+/* LOADING */
+.loading-overlay{display:none;position:fixed;inset:0;background:rgba(15,34,64,0.6);z-index:200;flex-direction:column;align-items:center;justify-content:center;gap:16px;backdrop-filter:blur(4px)}
+.loading-overlay.show{display:flex}
+.loading-card{background:white;border-radius:12px;padding:32px 40px;text-align:center;box-shadow:var(--shadow-md)}
+.loading-spinner{width:40px;height:40px;border:3px solid var(--bg-4);border-top-color:var(--teal);border-radius:50%;animation:spin 1s linear infinite;margin:0 auto 16px}
+.loading-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
+.loading-sub{font-size:12px;color:var(--text-4)}
+
+/* SCORE RING */
+.score-ring{position:relative;width:120px;height:120px}
+.score-ring svg{transform:rotate(-90deg)}
+.score-ring-num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.score-big{font-size:32px;font-weight:800;line-height:1;letter-spacing:-2px}
+.score-label{font-family:'DM Mono',monospace;font-size:9px;color:var(--text-4);text-transform:uppercase;letter-spacing:.1em}
+
+/* VERDICT */
+.verdict-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:4px;font-family:'DM Mono',monospace;font-size:11px;font-weight:600;letter-spacing:.06em}
+.verdict-pass{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border)}
+.verdict-review{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(217,119,6,0.2)}
+.verdict-reject{background:var(--red-dim);color:var(--red);border:1px solid rgba(220,38,38,0.2)}
+
+/* ANALYSIS */
+.analysis-section{margin-bottom:20px}
+.analysis-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--teal);margin-bottom:8px;display:flex;align-items:center;gap:10px}
+.analysis-title::after{content:'';flex:1;height:1px;background:var(--teal-border)}
+.analysis-text{font-size:13px;line-height:1.75;color:var(--text-2)}
+
+/* TABLES */
+.deal-table{width:100%;border-collapse:collapse}
+.deal-table th{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--text-3);padding:10px 16px;text-align:left;border-bottom:1px solid var(--border);background:var(--bg-3)}
+.deal-table td{padding:12px 16px;border-bottom:1px solid var(--border);font-size:13px;color:var(--text-2)}
+.deal-table tr:last-child td{border-bottom:none}
+.deal-table tr:hover td{background:var(--bg-3);cursor:pointer}
+.deal-table .deal-name{color:var(--text);font-weight:600}
+.deal-table .mono{font-family:'DM Mono',monospace;font-size:12px}
+
+/* LENDERS */
+.lender-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.lender-card{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--r);padding:20px;box-shadow:var(--shadow);transition:box-shadow .15s}
+.lender-card:hover{box-shadow:var(--shadow-md)}
+.lender-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:4px}
+.lender-name{font-size:14px;font-weight:700;color:var(--text)}
+.lender-tier{font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px;background:var(--teal-dim);color:var(--teal);border:1px solid var(--teal-border);font-family:'DM Mono',monospace}
+.lender-type{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-4);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px}
+.lender-criteria{display:flex;flex-direction:column;gap:5px}
+.criteria-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border)}
+.criteria-row:last-child{border-bottom:none}
+.criteria-key{font-size:11px;color:var(--text-3)}
+.criteria-val{font-family:'DM Mono',monospace;font-size:11px;color:var(--text);font-weight:600}
+
+/* RESULT */
+#result-panel{display:none;margin-top:28px;animation:fadeUp .4s ease both}
+#result-panel.show{display:block}
+
+/* EMPTY STATE */
+.empty-state{text-align:center;padding:60px 20px;color:var(--text-4)}
+.empty-state svg{width:40px;height:40px;opacity:.3;margin:0 auto 16px;display:block}
+.empty-state h3{font-size:15px;font-weight:600;color:var(--text-3);margin-bottom:6px}
+.empty-state p{font-size:13px;line-height:1.6}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--bg-2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;font-size:13px;z-index:300;display:none;box-shadow:var(--shadow-md)}
+.toast.show{display:flex;align-items:center;gap:10px}
+.toast.success{border-color:var(--green-border);color:var(--green)}
+.toast.error{border-color:rgba(220,38,38,0.2);color:var(--red)}
+
+/* HERO */
+.hero{padding:32px 0 28px}
+.hero-eyebrow{font-family:'DM Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.15em;color:var(--teal);margin-bottom:8px}
+.hero-title{font-size:32px;font-weight:700;line-height:1.2;color:var(--text);margin-bottom:8px;letter-spacing:-.5px}
+.hero-title em{color:var(--teal);font-style:normal}
+.hero-sub{font-size:14px;color:var(--text-3);line-height:1.65;max-width:540px}
+
+/* TABS */
+.tabs{display:flex;gap:1px;background:var(--bg-4);padding:3px;border-radius:6px;margin-bottom:20px;width:fit-content}
+.tab{padding:6px 16px;border-radius:5px;font-size:12px;font-weight:500;cursor:pointer;color:var(--text-3);transition:all .15s;border:none;background:none}
+.tab.active{background:white;color:var(--text);box-shadow:var(--shadow-sm);font-weight:600}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--border);margin:24px 0}
+
+/* FORM ERROR */
+.form-error-msg{font-size:12px;color:var(--red);font-weight:500}
+.autocomplete-wrap{position:relative}
+.autocomplete-list{position:absolute;top:100%;left:0;right:0;background:white;border:1px solid var(--border-dark);border-top:none;border-radius:0 0 6px 6px;box-shadow:var(--shadow-md);z-index:200;max-height:220px;overflow-y:auto}
+.autocomplete-item{padding:10px 12px;font-size:13px;cursor:pointer;color:var(--text-2);border-bottom:1px solid var(--border);display:flex;align-items:flex-start;gap:8px}
+.autocomplete-item:last-child{border-bottom:none}
+.autocomplete-item:hover,.autocomplete-item.active{background:var(--teal-dim);color:var(--teal)}
+.autocomplete-main{font-weight:500}
+.autocomplete-sub{font-size:11px;color:var(--text-4)}
+input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+
+/* AUTH SCREEN */
+.auth-screen{display:none;position:fixed;inset:0;background:var(--navy);z-index:500;align-items:center;justify-content:center}
+.auth-screen.show{display:flex}
+.auth-box{background:white;border-radius:12px;width:100%;max-width:420px;padding:40px;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.auth-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px}
+.auth-logo-icon{width:40px;height:40px;background:var(--teal);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.auth-logo-icon svg{width:22px;height:22px;fill:white}
+.auth-logo-text{font-size:20px;font-weight:700;color:var(--text)}
+.auth-logo-sub{font-family:'DM Mono',monospace;font-size:10px;color:var(--text-4);letter-spacing:.1em;text-transform:uppercase}
+.auth-title{font-size:22px;font-weight:700;color:var(--text);margin-bottom:6px}
+.auth-sub{font-size:13px;color:var(--text-3);margin-bottom:28px;line-height:1.5}
+.auth-tabs{display:flex;gap:1px;background:var(--bg-4);padding:3px;border-radius:6px;margin-bottom:24px}
+.auth-tab{flex:1;padding:8px;border-radius:5px;font-size:13px;font-weight:500;cursor:pointer;color:var(--text-3);transition:all .15s;border:none;background:none;text-align:center}
+.auth-tab.active{background:white;color:var(--text);box-shadow:var(--shadow-sm);font-weight:600}
+.auth-field{margin-bottom:16px}
+.auth-label{font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;display:block;margin-bottom:5px}
+.auth-input{width:100%;padding:10px 12px;border:1px solid var(--border-dark);border-radius:6px;font-size:13px;font-family:'Inter',sans-serif;color:var(--text);background:var(--bg-2);transition:border-color .15s}
+.auth-input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(14,116,144,0.1)}
+.auth-btn{width:100%;padding:12px;background:var(--teal);color:white;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s;display:flex;align-items:center;justify-content:center;gap:8px;font-family:'Inter',sans-serif;margin-top:8px}
+.auth-btn:hover{background:var(--teal-light)}
+.auth-btn:disabled{opacity:.5;cursor:not-allowed}
+.auth-error{font-size:12px;color:var(--red);background:var(--red-dim);border:1px solid rgba(220,38,38,0.15);border-radius:6px;padding:10px 12px;margin-bottom:16px;display:none}
+.auth-error.show{display:block}
+.auth-divider{text-align:center;font-size:12px;color:var(--text-4);margin:16px 0}
+.auth-forgot{font-size:12px;color:var(--teal);cursor:pointer;text-align:right;display:block;margin-top:4px}
+.auth-forgot:hover{text-decoration:underline}
+.pw-wrap{position:relative;display:flex;align-items:center}
+.pw-wrap input{flex:1;padding-right:36px!important}
+.pw-eye{position:absolute;right:10px;cursor:pointer;color:var(--text-4);font-size:14px;line-height:1;user-select:none;padding:4px}
+.pw-eye:hover{color:var(--teal)}
+.plan-badge{display:inline-flex;align-items:center;gap:5px;font-family:'DM Mono',monospace;font-size:10px;padding:3px 10px;border-radius:4px;background:var(--teal-dim);color:var(--teal);border:1px solid var(--teal-border);font-weight:600}
+.plan-badge.pro{background:rgba(180,83,9,0.1);color:var(--gold);border-color:rgba(180,83,9,0.3)}
+/* UPGRADE MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(15,34,64,0.7);z-index:400;align-items:center;justify-content:center;backdrop-filter:blur(4px)}
+.modal-overlay.show{display:flex}
+.modal-box{background:white;border-radius:14px;width:100%;max-width:480px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,0.25)}
+.modal-header{background:var(--navy);padding:28px 32px;text-align:center}
+.modal-header h2{font-size:22px;font-weight:700;color:white;margin-bottom:6px}
+.modal-header p{font-size:13px;color:rgba(255,255,255,0.6)}
+.modal-body{padding:28px 32px}
+.plan-compare{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:24px}
+.plan-card{border:1px solid var(--border);border-radius:10px;padding:18px;text-align:center}
+.plan-card.featured{border-color:var(--teal);background:var(--teal-dim)}
+.plan-card-name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);margin-bottom:8px}
+.plan-card.featured .plan-card-name{color:var(--teal)}
+.plan-card-price{font-size:28px;font-weight:800;color:var(--text);letter-spacing:-1px;line-height:1}
+.plan-card-price span{font-size:13px;font-weight:400;color:var(--text-4)}
+.plan-card-features{font-size:12px;color:var(--text-3);margin-top:10px;line-height:1.7}
+.usage-bar{background:var(--bg-4);border-radius:6px;height:6px;overflow:hidden;margin-top:6px}
+.usage-bar-fill{height:100%;border-radius:6px;background:var(--teal);transition:width .4s ease}
+.usage-bar-fill.danger{background:var(--red)}
+@media(max-width:768px){.sidebar{width:100%;min-height:auto;position:static}.main{margin-left:0}.stats-grid{grid-template-columns:1fr 1fr}.form-grid,.form-grid-3,.form-grid-4{grid-template-columns:1fr}.lender-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="loading-overlay" id="loading">
+  <div class="loading-card">
+    <div class="loading-spinner"></div>
+    <div class="loading-title">Analyzing Deal</div>
+    <div class="loading-sub" id="loading-msg">Reviewing deal structure...</div>
+    <div style="margin-top:12px;font-size:11px;color:var(--text-4)">This typically takes 10–20 seconds</div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<!-- AUTH SCREEN — Investor only -->
+<div class="auth-screen" id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="auth-logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+      <div><div class="auth-logo-text">Underlytix</div><div class="auth-logo-sub">Capital Intelligence</div></div>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Sign In</button>
+      <button class="auth-tab" id="tab-signup" onclick="switchAuthTab('signup')">Create Account</button>
+    </div>
+    <div class="auth-error" id="auth-error"></div>
+
+    <!-- LOGIN FORM -->
+    <div id="form-login">
+      <div class="auth-field"><label class="auth-label">Email</label><input class="auth-input" id="auth-email" type="email" placeholder="john@example.com" onkeydown="if(event.key==='Enter')doAuth()"></div>
+      <div class="auth-field"><label class="auth-label">Password</label><div class="pw-wrap"><input class="auth-input" id="auth-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doAuth()"><span class="pw-eye" onclick="togglePw(this)">👁</span></div><span class="auth-forgot" onclick="switchAuthTab('reset')">Forgot password?</span></div>
+      <button class="auth-btn" id="auth-btn" onclick="doAuth()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>Sign In
+      </button>
+      <div onclick="window.location.href='/realtor'" style="margin-top:14px;padding:10px 14px;background:rgba(0,212,188,0.06);border:1px solid rgba(0,212,188,0.18);border-radius:8px;text-align:center;cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='rgba(0,212,188,0.1)'" onmouseout="this.style.background='rgba(0,212,188,0.06)'">
+        <span style="font-size:12px;color:rgba(15,34,64,0.5)">Are you a real estate agent? </span>
+        <span style="font-size:12px;color:var(--teal);font-weight:600">Access Realtor Portal →</span>
+      </div>
+    </div>
+
+    <!-- SIGNUP FORM -->
+    <div id="form-signup" style="display:none">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+        <div class="auth-field"><label class="auth-label">First Name</label><input class="auth-input" id="auth-firstname" type="text" placeholder="John"></div>
+        <div class="auth-field"><label class="auth-label">Last Name</label><input class="auth-input" id="auth-lastname" type="text" placeholder="Smith"></div>
+      </div>
+      <div class="auth-field"><label class="auth-label">Email</label><input class="auth-input" id="auth-email-signup" type="email" placeholder="john@example.com"></div>
+      <div class="auth-field"><label class="auth-label">Phone</label><input class="auth-input" id="auth-phone-signup" type="tel" placeholder="(305) 555-0100"></div>
+      <div class="auth-field"><label class="auth-label">Password</label><div class="pw-wrap"><input class="auth-input" id="auth-password-signup" type="password" placeholder="Min 8 characters"><span class="pw-eye" onclick="togglePw(this)">👁</span></div></div>
+      <button class="auth-btn" id="auth-btn-signup" onclick="doSignup()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8zM19 8v6M22 11h-6"/></svg>Create Account
+      </button>
+      <div class="auth-divider">Free to start — no credit card required</div>
+      <div style="text-align:center;margin-top:12px;font-size:11px;color:var(--text-4)">By creating an account you agree to our <a href="/terms" target="_blank" style="color:var(--teal)">Terms of Service</a> and <a href="/privacy" target="_blank" style="color:var(--teal)">Privacy Policy</a>.</div>
+    </div>
+
+    <!-- RESET FORM -->
+    <div id="form-reset" style="display:none">
+      <p style="font-size:13px;color:var(--text-3);margin-bottom:20px">Enter your email and we'll send a reset link.</p>
+      <div class="auth-field"><label class="auth-label">Email</label><input class="auth-input" id="auth-email-reset" type="email" placeholder="john@example.com"></div>
+      <button class="auth-btn" onclick="doReset()">Send Reset Link</button>
+      <div class="auth-divider"><span style="cursor:pointer;color:var(--teal)" onclick="switchAuthTab('login')">← Back to sign in</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- PASSWORD RESET MODAL (from email link) -->
+<div class="modal-overlay" id="pw-reset-modal" style="z-index:10000">
+  <div class="modal-box" style="max-width:440px">
+    <div style="background:var(--navy);padding:20px 24px;border-radius:14px 14px 0 0;text-align:center">
+      <div style="font-size:28px;margin-bottom:8px">🔐</div>
+      <div style="color:white;font-size:16px;font-weight:700" id="pw-reset-title">Set New Password</div>
+      <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:4px" id="pw-reset-sub">Create a strong password for your account</div>
+    </div>
+    <div class="modal-body">
+      <div id="pw-reset-error" style="display:none;font-size:12px;color:var(--red);background:var(--red-dim);border:1px solid rgba(220,38,38,0.15);border-radius:6px;padding:10px;margin-bottom:16px"></div>
+      <div id="pw-reset-success" style="display:none;font-size:13px;color:var(--teal);background:rgba(0,212,188,0.08);border:1px solid rgba(0,212,188,0.2);border-radius:6px;padding:12px;margin-bottom:16px;text-align:center"></div>
+      <div class="field" style="margin-bottom:14px">
+        <label class="label">New Password</label>
+        <div class="pw-wrap"><input class="input" id="pw-reset-new" type="password" placeholder="Min 8 characters" oninput="checkPwStrength(this.value)"><span class="pw-eye" onclick="togglePw(this)">👁</span></div>
+        <div id="pw-strength-bar" style="height:3px;border-radius:2px;margin-top:6px;background:var(--border);overflow:hidden"><div id="pw-strength-fill" style="height:100%;width:0%;border-radius:2px;transition:width .3s,background .3s"></div></div>
+        <div id="pw-strength-label" style="font-size:10px;color:var(--text-4);margin-top:4px"></div>
+      </div>
+      <div class="field" style="margin-bottom:20px">
+        <label class="label">Confirm Password</label>
+        <div class="pw-wrap"><input class="input" id="pw-reset-confirm" type="password" placeholder="Repeat password"><span class="pw-eye" onclick="togglePw(this)">👁</span></div>
+      </div>
+      <button class="btn btn-primary" id="pw-reset-btn" onclick="submitPasswordReset()" style="width:100%;justify-content:center">Set New Password</button>
+      <p style="font-size:11px;color:var(--text-4);margin-top:12px;text-align:center">Password must be at least 8 characters.</p>
+    </div>
+  </div>
+</div>
+
+<!-- CHANGE PASSWORD MODAL (for logged-in users) -->
+<div class="modal-overlay" id="change-pw-modal" style="z-index:9997">
+  <div class="modal-box" style="max-width:440px">
+    <div style="background:var(--navy);padding:20px 24px;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center">
+      <div style="color:white;font-size:15px;font-weight:700">Change Password</div>
+      <span onclick="document.getElementById('change-pw-modal').classList.remove('show')" style="color:rgba(255,255,255,0.5);cursor:pointer;font-size:20px">×</span>
+    </div>
+    <div class="modal-body">
+      <div id="change-pw-error" style="display:none;font-size:12px;color:var(--red);background:var(--red-dim);border:1px solid rgba(220,38,38,0.15);border-radius:6px;padding:10px;margin-bottom:16px"></div>
+      <div id="change-pw-success" style="display:none;font-size:12px;color:var(--teal);background:rgba(0,212,188,0.08);border:1px solid rgba(0,212,188,0.2);border-radius:6px;padding:10px;margin-bottom:16px"></div>
+      <div class="field" style="margin-bottom:14px">
+        <label class="label">Current Password</label>
+        <div class="pw-wrap"><input class="input" id="cpw-current" type="password" placeholder="Your current password"><span class="pw-eye" onclick="togglePw(this)">👁</span></div>
+      </div>
+      <div class="field" style="margin-bottom:14px">
+        <label class="label">New Password</label>
+        <div class="pw-wrap"><input class="input" id="cpw-new" type="password" placeholder="Min 8 characters" oninput="checkPwStrength(this.value,'cpw-strength-fill','cpw-strength-label')"><span class="pw-eye" onclick="togglePw(this)">👁</span></div>
+        <div id="cpw-strength-bar" style="height:3px;border-radius:2px;margin-top:6px;background:var(--border);overflow:hidden"><div id="cpw-strength-fill" style="height:100%;width:0%;border-radius:2px;transition:width .3s,background .3s"></div></div>
+        <div id="cpw-strength-label" style="font-size:10px;color:var(--text-4);margin-top:4px"></div>
+      </div>
+      <div class="field" style="margin-bottom:20px">
+        <label class="label">Confirm New Password</label>
+        <div class="pw-wrap"><input class="input" id="cpw-confirm" type="password" placeholder="Repeat new password"><span class="pw-eye" onclick="togglePw(this)">👁</span></div>
+      </div>
+      <button class="btn btn-primary" id="change-pw-btn" onclick="submitChangePassword()" style="width:100%;justify-content:center">Update Password</button>
+    </div>
+  </div>
+</div>
+
+<!-- LENDER RESET MODAL -->
+<div class="modal-overlay" id="lender-reset-modal">
+  <div class="modal-box" style="max-width:420px">
+    <div style="background:var(--navy);padding:20px 24px;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center">
+      <div style="color:white;font-size:15px;font-weight:700">Reset Lender Password</div>
+      <span onclick="document.getElementById('lender-reset-modal').classList.remove('show')" style="color:rgba(255,255,255,0.5);cursor:pointer;font-size:20px">×</span>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text-3);margin-bottom:20px">Enter your lender account email. We'll send a reset link.</p>
+      <div id="lender-reset-error" style="display:none;font-size:12px;color:var(--red);background:var(--red-dim);border:1px solid rgba(220,38,38,0.15);border-radius:6px;padding:10px;margin-bottom:16px"></div>
+      <div class="field" style="margin-bottom:16px"><label class="label">Email</label><input class="input" id="lender-reset-email" type="email" placeholder="portal@yourlender.com"></div>
+      <button class="btn btn-primary" id="lender-reset-btn" onclick="doLenderReset()" style="width:100%;justify-content:center">Send Reset Link</button>
+      <div style="text-align:center;margin-top:12px"><span style="font-size:12px;color:var(--teal);cursor:pointer" onclick="document.getElementById('lender-reset-modal').classList.remove('show')">← Back to sign in</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- UPGRADE MODAL -->
+<div class="modal-overlay" id="upgrade-modal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h2>You've used your free analyses</h2>
+      <p>Upgrade to Underlytix Pro for unlimited deal intelligence</p>
+    </div>
+    <div class="modal-body">
+      <div class="plan-compare">
+        <div class="plan-card">
+          <div class="plan-card-name">Free</div>
+          <div class="plan-card-price">$0<span>/mo</span></div>
+          <div class="plan-card-features">3 analyses/month<br>Basic lender matching<br>Deal pipeline</div>
+        </div>
+        <div class="plan-card featured">
+          <div class="plan-card-name">Pro ✦</div>
+          <div class="plan-card-price">$97<span>/mo</span></div>
+          <div class="plan-card-features">Unlimited analyses<br>Full lender network<br>Priority matching<br>Deal history</div>
+        </div>
+      </div>
+      <button class="auth-btn" onclick="startCheckout()" id="checkout-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        Upgrade to Pro — $97/month
+      </button>
+      <div style="text-align:center;margin-top:12px;font-size:12px;color:var(--text-4)">Cancel anytime. Instant access. No contracts.</div>
+      <div style="text-align:center;margin-top:10px"><span style="font-size:12px;color:var(--teal);cursor:pointer" onclick="closeUpgradeModal()">← Stay on free plan</span></div>
+    </div>
+  </div>
+</div>
+
+<div class="shell" id="app-shell">
+  <aside class="sidebar">
+    <div class="logo">
+      <a class="logo-mark" href="#">
+        <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+        <div><div class="logo-text">Underlytix</div><div class="logo-sub">Capital Intelligence</div></div>
+      </a>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">
+        <div class="nav-label">Platform</div>
+        <button class="nav-item active" onclick="showPage('dashboard')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Dashboard
+        </button>
+        <button class="nav-item" onclick="showPage('submit')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>Submit Deal
+        </button>
+        <button class="nav-item" onclick="showPage('deals')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Deal Pipeline
+          <span class="nav-badge" id="deal-count">0</span>
+        </button>
+      </div>
+      <div class="nav-section">
+        <div class="nav-label">Network</div>
+        <button class="nav-item" onclick="showPage('lenders')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Lender Portal
+        </button>
+        <button class="nav-item" onclick="showPage('match')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Match Queue
+        </button>
+        <a class="nav-item" href="/realtor" style="background:rgba(0,212,188,0.08);border:1px solid rgba(0,212,188,0.2);margin-top:4px;text-decoration:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span style="color:var(--teal)">Realtor Portal</span>
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-footer">
+      <div style="margin-bottom:10px">
+        <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.8)" id="sidebar-name"></div>
+        <div style="font-family:'DM Mono',monospace;font-size:10px;color:rgba(255,255,255,0.4);margin-top:2px" id="sidebar-email"></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <span class="plan-badge" id="sidebar-plan" onclick="showUpgradePrompt()" style="cursor:pointer" title="Click to upgrade">STARTER</span>
+        <span onclick="showChangePassword('investor')" style="font-size:10px;color:var(--text-4);cursor:pointer;font-family:'DM Mono',monospace;letter-spacing:.04em;margin-left:8px" title="Change password">🔑</span>
+        <button onclick="logout()" style="background:none;border:none;cursor:pointer;font-size:11px;color:rgba(255,255,255,0.35);font-family:'DM Mono',monospace;letter-spacing:.06em">SIGN OUT</button>
+      </div>
+      <div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,0.06)">
+        <button onclick="showAdminPanel()" style="background:none;border:none;cursor:pointer;font-size:10px;color:rgba(255,255,255,0.2);font-family:'DM Mono',monospace;letter-spacing:.06em;padding:0">⚙ ADMIN</button>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <!-- DASHBOARD -->
+    <div class="page active" id="page-dashboard">
+      <div class="topbar">
+        <div><div class="topbar-title">Dashboard</div><div class="topbar-meta" id="current-date"></div></div>
+        <div style="display:flex;gap:10px;align-items:center"><span class="chip chip-teal">PRE-APPLICATION INTELLIGENCE</span><span class="chip chip-green">● LIVE</span></div>
+      </div>
+      <div class="content">
+        <div class="hero fade-up">
+          <div class="hero-eyebrow">Capital Intelligence Platform</div>
+          <div class="hero-title">Know if your deal is fundable<br><em>before</em> approaching a lender.</div>
+          <div class="hero-sub">Underlytix analyzes deals against real lending criteria, scores fundability, and matches investors to the right capital source — before wasting time on applications.</div>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-card fade-up">
+            <div class="stat-top"><span class="stat-label">Deals Analyzed</span><div class="stat-icon teal"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div></div>
+            <div class="stat-value teal" id="stat-total">0</div><div class="stat-sub">All time</div>
+          </div>
+          <div class="stat-card green fade-up">
+            <div class="stat-top"><span class="stat-label">Pass Rate</span><div class="stat-icon green"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div></div>
+            <div class="stat-value green" id="stat-pass">—</div><div class="stat-sub">Fundable deals</div>
+          </div>
+          <div class="stat-card fade-up">
+            <div class="stat-top"><span class="stat-label">Avg Fundability</span><div class="stat-icon teal"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div></div>
+            <div class="stat-value teal" id="stat-avg">—</div><div class="stat-sub">Score /100</div>
+          </div>
+          <div class="stat-card fade-up">
+            <div class="stat-top"><span class="stat-label">Active Lenders</span><div class="stat-icon teal"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div></div>
+            <div class="stat-value teal">5</div><div class="stat-sub">In network</div>
+          </div>
+        </div>
+        <div class="card fade-up">
+          <div class="card-header"><div class="card-title">Recent Deal Activity</div><button class="btn btn-ghost" onclick="showPage('submit')" style="padding:6px 14px;font-size:12px">+ Submit Deal</button></div>
+          <div class="card-body" id="dashboard-recent">
+            <div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><h3>No deals yet</h3><p>Submit your first deal to generate fundability intelligence.</p></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SUBMIT DEAL -->
+    <div class="page" id="page-submit">
+      <div class="topbar">
+        <div><div class="topbar-title">Submit Deal</div><div class="topbar-meta">AI-Powered Underwriting Analysis</div></div>
+        <div style="display:flex;align-items:center;gap:14px">
+          <div id="usage-indicator" style="display:none;text-align:right">
+            <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text-3)" id="usage-label">0 / 3 used</div>
+            <div class="usage-bar" style="width:80px;margin-top:4px"><div class="usage-bar-fill" id="usage-fill" style="width:0%"></div></div>
+          </div>
+          <span class="chip chip-teal">STEP 1 OF 1</span>
+        </div>
+      </div>
+      <div class="content">
+        <div class="card fade-up">
+          <div class="card-header"><div class="card-title">Deal Intake Form</div></div>
+          <div class="card-body">
+            <div class="section-divider"><div class="section-divider-label">Investor Profile</div><div class="section-divider-line"></div></div>
+            <div class="form-grid-3">
+              <div class="field"><label class="label">First Name <span class="req">*</span></label><input id="f-first-name" type="text" placeholder="John"></div>
+              <div class="field"><label class="label">Last Name <span class="req">*</span></label><input id="f-last-name" type="text" placeholder="Smith"></div>
+              <div class="field"><label class="label">Email <span class="req">*</span></label><input id="f-investor-email" type="email" placeholder="john@example.com"></div>
+              <div class="field"><label class="label">Phone</label><input id="f-investor-phone" type="tel" placeholder="(305) 555-0100"></div>
+              <div class="field field-full">
+                <label class="label">Investment Experience <span class="req">*</span></label>
+                <div class="pill-group" id="exp-pills">
+                  <div class="pill" onclick="selectPill('exp-pills','First Deal','f-experience')">First Deal</div>
+                  <div class="pill" onclick="selectPill('exp-pills','1-3 Deals','f-experience')">1–3 Deals</div>
+                  <div class="pill" onclick="selectPill('exp-pills','4-10 Deals','f-experience')">4–10 Deals</div>
+                  <div class="pill" onclick="selectPill('exp-pills','10-20 Deals','f-experience')">10–20 Deals</div>
+                  <div class="pill" onclick="selectPill('exp-pills','20+ Deals','f-experience')">20+ Deals</div>
+                </div>
+                <input type="hidden" id="f-experience">
+              </div>
+            </div>
+            <div class="section-divider"><div class="section-divider-label">Deal Type</div><div class="section-divider-line"></div></div>
+            <div class="pill-group" id="deal-type-pills">
+              <div class="pill" onclick="selectPill('deal-type-pills','Purchase','f-deal-type')">Purchase</div>
+              <div class="pill" onclick="selectPill('deal-type-pills','Fix & Flip','f-deal-type')">Fix &amp; Flip</div>
+              <div class="pill" onclick="selectPill('deal-type-pills','Rental','f-deal-type')">Rental / DSCR</div>
+              <div class="pill" onclick="selectPill('deal-type-pills','Cash-Out','f-deal-type')">Cash-Out Refi</div>
+              <div class="pill" onclick="selectPill('deal-type-pills','Bridge','f-deal-type')">Bridge</div>
+              <div class="pill" onclick="selectPill('deal-type-pills','New Construction','f-deal-type')">New Construction</div>
+            </div>
+            <input type="hidden" id="f-deal-type">
+            <div class="section-divider"><div class="section-divider-label">Property Type</div><div class="section-divider-line"></div></div>
+            <div class="pill-group" id="prop-type-pills">
+              <div class="pill" onclick="selectPill('prop-type-pills','SFR','f-property-type')">SFR</div>
+              <div class="pill" onclick="selectPill('prop-type-pills','Condo','f-property-type')">Condo</div>
+              <div class="pill" onclick="selectPill('prop-type-pills','2-4 Unit','f-property-type')">2–4 Unit</div>
+              <div class="pill" onclick="selectPill('prop-type-pills','Multifamily 5+','f-property-type')">Multifamily 5+</div>
+              <div class="pill" onclick="selectPill('prop-type-pills','Commercial','f-property-type')">Commercial</div>
+              <div class="pill" onclick="selectPill('prop-type-pills','Land','f-property-type')">Land</div>
+            </div>
+            <input type="hidden" id="f-property-type">
+            <div class="section-divider"><div class="section-divider-label">Property Address</div><div class="section-divider-line"></div></div>
+            <div class="field field-full" style="margin-bottom:16px">
+              <label class="label">Search Address <span class="req">*</span></label>
+              <div class="autocomplete-wrap">
+                <input id="f-address-search" type="text" placeholder="Start typing address e.g. 5521 Hawkes..." autocomplete="off" oninput="addressSearch(this.value)" onkeydown="addressKeyNav(event)">
+                <div class="autocomplete-list" id="address-suggestions" style="display:none"></div>
+              </div>
+              <div style="font-size:11px;color:var(--text-4);margin-top:4px">Type to search — select from suggestions to auto-fill all fields below</div>
+            </div>
+            <div class="form-grid" style="margin-bottom:12px">
+              <div class="field"><label class="label">Street Number <span class="req">*</span></label><input id="f-street-number" type="text" placeholder="5521" oninput="buildAddress()"></div>
+              <div class="field"><label class="label">Direction</label>
+                <select id="f-street-dir" onchange="buildAddress()">
+                  <option value="">None</option>
+                  <option value="N">N</option><option value="S">S</option>
+                  <option value="E">E</option><option value="W">W</option>
+                  <option value="NE">NE</option><option value="NW">NW</option>
+                  <option value="SE">SE</option><option value="SW">SW</option>
+                </select>
+              </div>
+              <div class="field"><label class="label">Street Name <span class="req">*</span></label><input id="f-street-name" type="text" placeholder="Hawkes Bluff" oninput="buildAddress()"></div>
+              <div class="field"><label class="label">Street Type <span class="req">*</span></label>
+                <select id="f-street-type" onchange="buildAddress()">
+                  <option value="">Select...</option>
+                  <option value="Ave">Ave</option><option value="Blvd">Blvd</option>
+                  <option value="Cir">Cir</option><option value="Ct">Ct</option>
+                  <option value="Dr">Dr</option><option value="Hwy">Hwy</option>
+                  <option value="Ln">Ln</option><option value="Loop">Loop</option>
+                  <option value="Pkwy">Pkwy</option><option value="Pl">Pl</option>
+                  <option value="Rd">Rd</option><option value="St">St</option>
+                  <option value="Ter">Ter</option><option value="Trl">Trl</option>
+                  <option value="Way">Way</option>
+                </select>
+              </div>
+              <div class="field" id="unit-field">
+                <label class="label">Unit / Suite <span class="req" id="unit-req" style="display:none">*</span> <span id="unit-hint" style="font-size:10px;color:var(--amber);display:none">Required for Condo</span></label>
+                <input id="f-unit" type="text" placeholder="Apt 2B or Unit 101" oninput="buildAddress()">
+              </div>
+              <div class="field"><label class="label">Zip Code</label><input id="f-zip" type="text" placeholder="33331" maxlength="10" oninput="buildAddress()"></div>
+            </div>
+            <div class="form-grid">
+              <div class="field"><label class="label">City <span class="req">*</span></label><input id="f-city" type="text" placeholder="Davie"></div>
+              <div class="field"><label class="label">State <span class="req">*</span></label><input id="f-state" type="text" placeholder="FL" maxlength="2" style="text-transform:uppercase"></div>
+            </div>
+            <input type="hidden" id="f-location">
+            <div class="section-divider"><div class="section-divider-label">Financial Details</div><div class="section-divider-line"></div></div>
+            <div class="form-grid-3" style="margin-bottom:14px">
+              <div class="field"><label class="label">Loan Amount ($) <span class="req">*</span></label><input id="f-loan-amount" type="number" placeholder="600000" oninput="autoCalc()"></div>
+              <div class="field" id="purchase-price-field"><label class="label">Purchase Price ($) <span class="req" id="pp-req">*</span></label><input id="f-purchase-price" type="number" placeholder="750000" oninput="autoCalc()"></div>
+              <div class="field"><label class="label">ARV ($) <span class="req">*</span></label><input id="f-arv" type="number" placeholder="850000" oninput="autoCalc()"></div>
+              <div class="field"><label class="label">As-Is Value ($)</label><input id="f-as-is-value" type="number" placeholder="750000" oninput="autoCalc()"></div>
+              <div class="field"><label class="label">Rehab Budget ($) <span class="req" id="rehab-req" style="display:none">*</span> <span id="rehab-hint" style="font-size:10px;color:var(--amber);display:none">Required for Fix &amp; Flip</span></label><input id="f-rehab-budget" type="number" placeholder="0"></div>
+              <div class="field"><label class="label">Monthly Rent ($) <span class="req" id="rent-req" style="display:none">*</span> <span id="rent-hint" style="font-size:10px;color:var(--amber);display:none">Required for Rental/DSCR</span></label><input id="f-monthly-rent" type="number" placeholder="5800" oninput="autoCalc()"></div>
+            </div>
+            <div class="form-grid-3">
+              <div class="field">
+                <label class="label">LTV (%) <span class="req">*</span> <span class="auto-badge">AUTO-CALC</span></label>
+                <input id="f-ltv" type="number" placeholder="Auto-calculated from above" step="0.1" class="auto-calc" readonly>
+              </div>
+              <div class="field">
+                <label class="label">DSCR <span class="auto-badge">AUTO-CALC</span></label>
+                <input id="f-dscr" type="number" placeholder="Auto-calculated" step="0.01" class="auto-calc" readonly>
+              </div>
+              <div class="field"><label class="label">Credit Score <span class="req">*</span></label><input id="f-credit-score" type="number" placeholder="730"></div>
+              <div class="field"><label class="label">Interest Rate (%) <span class="auto-badge">FOR DSCR</span></label><input id="f-rate" type="number" placeholder="7.0" step="0.1" value="7.0" oninput="autoCalc()"></div>
+              <div class="field"><label class="label">Loan Term (yrs) <span class="auto-badge">FOR DSCR</span></label><input id="f-term" type="number" placeholder="30" value="30" oninput="autoCalc()"></div>
+              <div class="field"><label class="label">Monthly Payment ($) <span class="auto-badge">AUTO-CALC</span></label><input id="f-monthly-payment" type="number" placeholder="Auto-calculated" class="auto-calc" readonly></div>
+            </div>
+            <div class="section-divider"><div class="section-divider-label">Additional Context</div><div class="section-divider-line"></div></div>
+            <div class="field"><label class="label">Notes</label><textarea id="f-notes" placeholder="Any additional details about the deal, borrower situation, or special circumstances..."></textarea></div>
+            <div style="margin-top:24px;display:flex;gap:12px;align-items:center">
+              <button class="btn btn-primary btn-lg" onclick="analyzeDeal()" id="analyze-btn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>Analyze Deal
+              </button>
+              <button class="btn btn-ghost" onclick="clearForm()">Clear Form</button>
+              <div id="form-error" class="form-error-msg" style="display:none"></div>
+            </div>
+          </div>
+        </div>
+        <div id="result-panel"><div id="result-content"></div></div>
+      </div>
+    </div>
+
+    <!-- DEAL PIPELINE -->
+    <div class="page" id="page-deals">
+      <div class="topbar">
+        <div><div class="topbar-title">Deal Pipeline</div><div class="topbar-meta">All submitted deals</div></div>
+        <button class="btn btn-primary" onclick="showPage('submit')" style="padding:8px 16px;font-size:12px">+ Submit Deal</button>
+      </div>
+      <div class="content">
+        <div class="tabs">
+          <button class="tab active" onclick="filterDeals('all',this)">All Deals</button>
+          <button class="tab" onclick="filterDeals('Pass',this)">Passed</button>
+          <button class="tab" onclick="filterDeals('Review',this)">Needs Review</button>
+          <button class="tab" onclick="filterDeals('Reject',this)">Rejected</button>
+        </div>
+        <div class="card"><div style="padding:0" id="deals-table-wrap">
+          <div class="empty-state"><h3>No deals yet</h3><p>Submitted deals will appear here.</p></div>
+        </div></div>
+      </div>
+    </div>
+
+    <!-- LENDER SIGNUP MODAL -->
+    <div class="modal-overlay" id="lender-signup-modal" style="z-index:9998">
+      <div class="modal-box" style="max-width:520px">
+        <div style="background:var(--navy);padding:20px 24px;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center">
+          <div style="color:white;font-size:15px;font-weight:700">Lender Portal — Create Account</div>
+          <span onclick="document.getElementById('lender-signup-modal').classList.remove('show')" style="color:rgba(255,255,255,0.5);cursor:pointer;font-size:20px">×</span>
+        </div>
+        <div class="modal-body">
+          <p style="font-size:13px;color:var(--text-3);margin:0 0 20px">14-day free trial. No credit card required. $297/month after trial.</p>
+          <div id="lender-signup-error" style="display:none;font-size:12px;color:var(--red);background:var(--red-dim);border:1px solid rgba(220,38,38,0.15);border-radius:6px;padding:10px;margin-bottom:16px"></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+            <div class="field"><label class="label">Company Name</label><input class="input" id="ls-company" type="text" placeholder="Coastal Capital Partners"></div>
+            <div class="field"><label class="label">Your Name</label><input class="input" id="ls-contact" type="text" placeholder="Jane Smith"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+            <div class="field"><label class="label">Work Email</label><input class="input" id="ls-email" type="email" placeholder="jane@yourlender.com"></div>
+            <div class="field"><label class="label">Phone</label><input class="input" id="ls-phone" type="tel" placeholder="(305) 555-0100"></div>
+          </div>
+          <div class="field" style="margin-bottom:14px"><label class="label">Password</label><div class="pw-wrap"><input class="input" id="ls-password" type="password" placeholder="Min 8 characters"><span class="pw-eye" onclick="togglePw(this)">👁</span></div></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+            <div class="field"><label class="label">Lender Type</label>
+              <select class="input" id="ls-type" style="appearance:auto">
+                <option value="hard_money">Hard Money</option>
+                <option value="dscr">DSCR</option>
+                <option value="non_qm">Non-QM</option>
+                <option value="bridge">Bridge</option>
+                <option value="construction">Construction</option>
+              </select>
+            </div>
+            <div class="field"><label class="label">Primary State</label><input class="input" id="ls-state" type="text" placeholder="FL"></div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
+            <div class="field"><label class="label">Min Loan ($)</label><input class="input" id="ls-min-loan" type="number" placeholder="100000"></div>
+            <div class="field"><label class="label">Max Loan ($)</label><input class="input" id="ls-max-loan" type="number" placeholder="5000000"></div>
+          </div>
+          <button class="btn btn-primary" id="ls-btn" onclick="lenderSignup()" style="width:100%;justify-content:center">Start 14-Day Free Trial</button>
+          <p style="font-size:11px;color:var(--text-4);margin:12px 0 0;text-align:center">Already have an account? <span onclick="document.getElementById('lender-signup-modal').classList.remove('show')" style="color:var(--teal);cursor:pointer">Sign in to the portal</span></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ADMIN DASHBOARD MODAL -->
+    <div class="modal-overlay" id="admin-modal" style="z-index:9999">
+      <div class="modal-box" style="max-width:800px;max-height:85vh;overflow-y:auto">
+        <div style="background:var(--navy);padding:20px 24px;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:1">
+          <div style="color:white;font-size:15px;font-weight:700;letter-spacing:-0.3px">UNDERLYTIX — OPERATOR DASHBOARD</div>
+          <span onclick="document.getElementById('admin-modal').classList.remove('show')" style="color:rgba(255,255,255,0.5);cursor:pointer;font-size:20px">×</span>
+        </div>
+        <div class="modal-body">
+          <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:20px">
+            <a href="https://app.notion.com/p/8f18aa1aa23741bbb7078202f2dc2e25" target="_blank" style="display:flex;align-items:center;gap:8px;background:var(--bg-3);border:1px solid var(--border);border-radius:8px;padding:12px;text-decoration:none;color:var(--text-2);font-size:12px;font-weight:600;transition:border-color .15s" onmouseover="this.style.borderColor='var(--teal)'" onmouseout="this.style.borderColor='var(--border)'">
+              <span style="font-size:18px">📋</span><div><div style="color:var(--text-1)">Deal Pipeline</div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace">Notion CRM</div></div>
+            </a>
+            <a href="https://app.notion.com/p/95cf92bf015f4f1191b11938fc2bef0f" target="_blank" style="display:flex;align-items:center;gap:8px;background:var(--bg-3);border:1px solid var(--border);border-radius:8px;padding:12px;text-decoration:none;color:var(--text-2);font-size:12px;font-weight:600;transition:border-color .15s" onmouseover="this.style.borderColor='var(--teal)'" onmouseout="this.style.borderColor='var(--border)'">
+              <span style="font-size:18px">🏦</span><div><div style="color:var(--text-1)">Lender Pipeline</div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace">Notion CRM</div></div>
+            </a>
+            <a href="https://app.notion.com/p/ffa19a8309614699a62c32ef4a0638b0" target="_blank" style="display:flex;align-items:center;gap:8px;background:var(--bg-3);border:1px solid var(--border);border-radius:8px;padding:12px;text-decoration:none;color:var(--text-2);font-size:12px;font-weight:600;transition:border-color .15s" onmouseover="this.style.borderColor='var(--teal)'" onmouseout="this.style.borderColor='var(--border)'">
+              <span style="font-size:18px">🔗</span><div><div style="color:var(--text-1)">Match Queue</div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace">Notion CRM</div></div>
+            </a>
+          </div>
+          <div id="admin-login-section">
+            <div style="margin-bottom:16px;font-size:13px;color:var(--text-3)">Platform operator access only.</div>
+            <div class="field" style="margin-bottom:14px"><label class="label">Admin Password</label><input class="input" id="admin-secret-input" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')loadAdminData()"></div>
+            <button class="btn btn-primary" onclick="loadAdminData()">Access Dashboard</button>
+          </div>
+          <div id="admin-data-section" style="display:none">
+            <div class="stats-grid" style="margin-bottom:24px" id="admin-stats-grid"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+              <div class="card"><div class="card-body" id="admin-state-breakdown"></div></div>
+              <div class="card"><div class="card-body" id="admin-type-breakdown"></div></div>
+            </div>
+            <div class="card"><div class="card-body"><div class="label" style="margin-bottom:12px">Recent Investors</div><div id="admin-investors-table"></div></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- LENDER PORTAL -->
+    <div class="page" id="page-lenders">
+      <div class="topbar">
+        <div><div class="topbar-title">Lender Portal</div><div class="topbar-meta">Deal matching &amp; pipeline management</div></div>
+        <div style="display:flex;gap:10px;align-items:center">
+          <span id="lender-user-badge" style="display:none;font-family:'DM Mono',monospace;font-size:11px;color:var(--teal)"></span>
+          <button id="lender-billing-btn" onclick="lenderStartCheckout()" style="display:none" class="btn btn-primary" style="padding:6px 14px;font-size:11px">Manage Billing</button>
+          <button id="lender-logout-btn" onclick="lenderLogout()" style="display:none" class="btn btn-ghost" style="padding:6px 12px;font-size:11px">Sign Out</button>
+          <button id="lender-changepw-btn" onclick="showChangePassword('lender')" style="display:none;font-size:11px;padding:6px 10px" class="btn btn-ghost" title="Change password">🔑</button>
+          <span class="chip chip-green">● LIVE</span>
+        </div>
+      </div>
+      <div class="content">
+        <!-- LENDER LOGIN SCREEN -->
+        <div id="lender-login-screen">
+          <div class="lender-grid" id="lender-grid" style="margin-bottom:32px"></div>
+          <div style="max-width:420px;margin:40px auto">
+            <div class="card">
+              <div style="background:var(--navy);padding:28px 32px;text-align:center;border-radius:10px 10px 0 0">
+                <div style="font-size:18px;font-weight:700;color:white;margin-bottom:4px">Lender Portal</div>
+                <div style="font-size:12px;color:rgba(255,255,255,0.5)">Sign in to view matched deals</div>
+              </div>
+              <div class="card-body">
+                <div id="lender-login-error" style="display:none;font-size:12px;color:var(--red);background:var(--red-dim);border:1px solid rgba(220,38,38,0.15);border-radius:6px;padding:10px;margin-bottom:16px"></div>
+                <div class="field" style="margin-bottom:14px"><label class="label">Email</label><input class="auth-input" id="lender-email" type="email" placeholder="portal@yourlender.com" onkeydown="if(event.key==='Enter')lenderLogin()"></div>
+                <div class="field" style="margin-bottom:20px"><label class="label">Password</label><input class="auth-input" id="lender-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')lenderLogin()"></div>
+                <button class="auth-btn" id="lender-login-btn" onclick="lenderLogin()">Sign In to Lender Portal</button>
+                <div style="text-align:center;margin-top:12px"><span style="font-size:12px;color:var(--teal);cursor:pointer" onclick="showLenderReset()">Forgot password?</span></div>
+                <div style="margin-top:16px;padding:12px;background:var(--bg-3);border-radius:6px;font-size:11px;color:var(--text-4);text-align:center;font-family:'DM Mono',monospace">
+                  DEMO: portal@coastalcapital.com / demo123<br>portal@summitbridge.com / demo123<br>portal@flexlend.com / demo123
+                </div>
+                <div style="margin-top:16px;text-align:center">
+                  <span style="font-size:12px;color:var(--text-4)">New lender? </span>
+                  <span onclick="showLenderSignup()" style="font-size:12px;color:var(--teal);cursor:pointer;font-weight:600">Start your 14-day free trial →</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LENDER DASHBOARD (shown after login) -->
+        <div id="lender-dashboard" style="display:none">
+          <div class="stats-grid" style="margin-bottom:24px">
+            <div class="stat-card"><div class="stat-top"><span class="stat-label">Matched Deals</span><div class="stat-icon teal"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div></div><div class="stat-value teal" id="lp-stat-total">—</div><div class="stat-sub">In pipeline</div></div>
+            <div class="stat-card green"><div class="stat-top"><span class="stat-label">Interested</span><div class="stat-icon green"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div></div><div class="stat-value green" id="lp-stat-interested">—</div><div class="stat-sub">Flagged interested</div></div>
+            <div class="stat-card"><div class="stat-top"><span class="stat-label">Avg Score</span><div class="stat-icon teal"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div></div><div class="stat-value teal" id="lp-stat-avg">—</div><div class="stat-sub">Fundability avg</div></div>
+            <div class="stat-card"><div class="stat-top"><span class="stat-label">Term Sheets</span><div class="stat-icon teal"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div></div><div class="stat-value teal" id="lp-stat-term">—</div><div class="stat-sub">Issued</div></div>
+          </div>
+          <div class="tabs" style="margin-bottom:20px">
+            <button class="tab active" onclick="filterLenderDeals('all',this)">All Deals</button>
+            <button class="tab" onclick="filterLenderDeals('pending',this)">New</button>
+            <button class="tab" onclick="filterLenderDeals('interested',this)">Interested</button>
+            <button class="tab" onclick="filterLenderDeals('term_sheet_issued',this)">Term Sheet</button>
+            <button class="tab" onclick="filterLenderDeals('not_interested',this)">Passed</button>
+          </div>
+          <div id="lender-deals-grid" style="display:grid;grid-template-columns:1fr;gap:16px"></div>
+        </div>
+
+        <!-- Deal detail modal -->
+        <div class="modal-overlay" id="lender-deal-modal">
+          <div class="modal-box" style="max-width:620px">
+            <div style="background:var(--navy);padding:20px 24px;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center">
+              <div style="color:white;font-size:15px;font-weight:600" id="modal-deal-title">Deal Details</div>
+              <span onclick="document.getElementById('lender-deal-modal').classList.remove('show')" style="color:rgba(255,255,255,0.5);cursor:pointer;font-size:18px">×</span>
+            </div>
+            <div class="modal-body" id="modal-deal-body"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MATCH QUEUE -->
+    <div class="page" id="page-match">
+      <div class="topbar"><div><div class="topbar-title">Match Queue</div><div class="topbar-meta">Deal-to-lender matching engine</div></div></div>
+      <div class="content"><div id="match-content">
+        <div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><h3>No matches yet</h3><p>Analyze a deal and matches will appear here.</p></div>
+      </div></div>
+    </div>
+  </main>
+</div>
+
+<script src="/portal-common.js"></script>
+<script>
+// ─── AUTH SYSTEM ─────────────────────────────────────────────────────────────
+const AUTH_KEY = 'capiq_session';
+
+function getSession() {
+  try { return JSON.parse(localStorage.getItem(AUTH_KEY) || 'null'); } catch { return null; }
+}
+function setSession(token, investor, refreshToken) {
+  localStorage.setItem(AUTH_KEY, JSON.stringify({ token, investor, refresh_token: refreshToken || null }));
+}
+function clearSession() {
+  localStorage.removeItem(AUTH_KEY);
+}
+
+function initAuth() {
+  const session = getSession();
+  if (!session || !session.token) { showAuthScreen(); return; }
+  if (session.investor) onAuthSuccess(session.token, session.investor, session.refresh_token);
+  fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth-v3', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'verify', token: session.token })
+  }).then(r => r.json()).then(r => {
+    if (r.valid) { onAuthSuccess(session.token, r.investor || session.investor, session.refresh_token); }
+    else if (session.refresh_token) {
+      fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth-v3', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'refresh', refresh_token: session.refresh_token })
+      }).then(r2 => r2.json()).then(rd => {
+        if (rd.success) onAuthSuccess(rd.token, rd.investor || session.investor, rd.refresh_token);
+        else { clearSession(); showAuthScreen(); }
+      }).catch(() => { clearSession(); showAuthScreen(); });
+    } else { clearSession(); showAuthScreen(); }
+  }).catch(() => {
+    if (!session.investor) showAuthScreen();
+  });
+}
+
+function showAuthScreen() {
+  document.getElementById('auth-screen').classList.add('show');
+}
+function hideAuthScreen() {
+  document.getElementById('auth-screen').classList.remove('show');
+}
+
+function onAuthSuccess(token, investor, refreshToken) {
+  setSession(token, investor, refreshToken);
+  hideAuthScreen();
+  updateSidebarUser(investor);
+  const lsess = getLenderSession();
+  if (lsess?.user && lsess?.token) {
+    setTimeout(() => showPage('lenders'), 50);
+    return;
+  }
+  checkAccess().then(access => updateUsageUI(access));
+  if (investor.name) {
+    const parts = investor.name.split(' ');
+    const fn = document.getElementById('f-first-name');
+    const ln = document.getElementById('f-last-name');
+    if (fn && !fn.value) fn.value = parts[0] || '';
+    if (ln && !ln.value) ln.value = parts.slice(1).join(' ') || '';
+  }
+  const emailEl = document.getElementById('f-investor-email');
+  if (emailEl && !emailEl.value && investor.email) emailEl.value = investor.email;
+}
+
+function updateSidebarUser(investor) {
+  const nameEl = document.getElementById('sidebar-name');
+  const emailEl = document.getElementById('sidebar-email');
+  const planEl = document.getElementById('sidebar-plan');
+  if (nameEl) nameEl.textContent = investor.name || investor.email.split('@')[0];
+  if (emailEl) emailEl.textContent = investor.email;
+  if (planEl) planEl.textContent = (investor.plan || 'starter').toUpperCase();
+}
+
+// ─── STRIPE PAYWALL ──────────────────────────────────────────────────────────
+const STRIPE_FN = 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-stripe-v2';
+
+async function checkAccess() {
+  const session = getSession();
+  if (!session?.token) return { canAnalyze: false, plan: 'free', remaining: 0 };
+  try {
+    const res = await fetch(STRIPE_FN, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'check_access', token: session.token })
+    });
+    return await res.json();
+  } catch { return { canAnalyze: true, plan: 'starter', remaining: 3 }; }
+}
+
+function updateUsageUI(access) {
+  const indicator = document.getElementById('usage-indicator');
+  const label = document.getElementById('usage-label');
+  const fill = document.getElementById('usage-fill');
+  const planEl = document.getElementById('sidebar-plan');
+  if (!indicator) return;
+  if (access.plan === 'pro') {
+    indicator.style.display = 'none';
+    if (planEl) { planEl.textContent = 'PRO'; planEl.classList.add('pro'); }
+  } else {
+    indicator.style.display = 'block';
+    const used = access.used || 0;
+    const pct = Math.min((used / access.limit) * 100, 100);
+    label.textContent = `${used} / ${access.limit} analyses used`;
+    fill.style.width = pct + '%';
+    if (pct >= 100) fill.classList.add('danger');
+    if (planEl) planEl.textContent = 'STARTER';
+  }
+}
+
+const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/aFa7sM7Aa7LWglb5Qo3VC00';
+
+async function startCheckout() {
+  const session = getSession();
+  if (!session?.token) { showAuthScreen(); return; }
+  const btn = document.getElementById('checkout-btn');
+  btn.disabled = true; btn.textContent = 'Redirecting to checkout...';
+  try {
+    const res = await fetch(STRIPE_FN, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'create_checkout', token: session.token,
+        successUrl: window.location.origin + '/app?upgraded=true',
+        cancelUrl: window.location.origin + '/app'
+      })
+    });
+    const data = await res.json();
+    if (data.checkoutUrl) { window.location.href = data.checkoutUrl; return; }
+  } catch (e) { /* fall through */ }
+  const email = session.investor?.email || '';
+  const invId = session.investor?.id || '';
+  const url = `${STRIPE_PAYMENT_LINK}?prefilled_email=${encodeURIComponent(email)}&client_reference_id=${encodeURIComponent(invId)}`;
+  window.location.href = url;
+}
+
+async function openBillingPortal() {
+  const session = getSession();
+  if (!session?.token) return;
+  const res = await fetch(STRIPE_FN, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'create_portal', token: session.token })
+  });
+  const data = await res.json();
+  if (data.portalUrl) window.location.href = data.portalUrl;
+  else showToast(data.error || 'Could not open billing portal', 'error');
+}
+
+function closeUpgradeModal() {
+  document.getElementById('upgrade-modal').classList.remove('show');
+}
+
+if (window.location.search.includes('upgraded=true')) {
+  window.history.replaceState({}, '', window.location.pathname);
+  let polls = 0;
+  const pollForUpgrade = setInterval(async () => {
+    polls++;
+    const session = getSession();
+    if (!session?.token) { clearInterval(pollForUpgrade); return; }
+    try {
+      const res = await fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth-v3', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ action: 'verify', token: session.token })
+      });
+      const data = await res.json();
+      if (data.valid && data.investor?.plan === 'pro') {
+        clearInterval(pollForUpgrade);
+        setSession(session.token, data.investor, session.refresh_token);
+        updateSidebarUser(data.investor);
+        updateUsageUI({ plan: 'pro', canAnalyze: true, remaining: -1 });
+        showToast('Welcome to Underlytix Pro! Unlimited analyses unlocked.', 'success');
+        const sessUpg = getSession();
+        if (sessUpg?.investor?.email) {
+          fetch('/.netlify/functions/resend-email', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({ type: 'upgrade_confirm', to: sessUpg.investor.email, name: sessUpg.investor.name || '' })
+          }).catch(() => {});
+        }
+      } else if (polls >= 10) {
+        clearInterval(pollForUpgrade);
+        showToast('Payment received! Your account will upgrade shortly.', 'success');
+      }
+    } catch { clearInterval(pollForUpgrade); }
+  }, 3000);
+}
+
+function logout() {
+  clearSession();
+  document.getElementById('f-first-name').value = '';
+  document.getElementById('f-last-name').value = '';
+  document.getElementById('f-investor-email').value = '';
+  switchAuthTab('login');
+  showAuthScreen();
+}
+
+// ─── PASSWORD RESET + CHANGE FLOW ────────────────────────────────────────────
+
+let _pwResetUserType = 'investor';
+let _pwResetToken = '';
+let _pwResetEmail = '';
+
+function checkPasswordResetToken() {
+  const p = new URLSearchParams(window.location.search);
+  const investorToken = p.get('reset_token');
+  const realtorToken = p.get('realtor_reset_token');
+  const lenderToken = p.get('lender_reset_token');
+  const email = p.get('email') || '';
+
+  if (investorToken) {
+    _pwResetUserType = 'investor'; _pwResetToken = investorToken; _pwResetEmail = email;
+    showPasswordResetModal('Investor Portal');
+  } else if (realtorToken) {
+    // Realtors have their own portal — redirect with token preserved
+    window.location.href = '/realtor?' + p.toString();
+    return;
+  } else if (lenderToken) {
+    _pwResetUserType = 'lender'; _pwResetToken = lenderToken; _pwResetEmail = email;
+    showPasswordResetModal('Lender Portal');
+  }
+
+  if (investorToken || lenderToken) {
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+}
+
+function showPasswordResetModal(portalLabel) {
+  document.getElementById('pw-reset-title').textContent = 'Set New Password';
+  document.getElementById('pw-reset-sub').textContent = portalLabel + ' — create a strong password';
+  document.getElementById('pw-reset-new').value = '';
+  document.getElementById('pw-reset-confirm').value = '';
+  document.getElementById('pw-reset-error').style.display = 'none';
+  document.getElementById('pw-reset-success').style.display = 'none';
+  document.getElementById('pw-reset-modal').classList.add('show');
+}
+
+function checkPwStrength(pw, fillId='pw-strength-fill', labelId='pw-strength-label') {
+  const fill = document.getElementById(fillId);
+  const label = document.getElementById(labelId);
+  if (!fill || !label) return;
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  const levels = [
+    {w:'0%', c:'var(--red)', t:''},
+    {w:'25%', c:'var(--red)', t:'Weak'},
+    {w:'50%', c:'#f59e0b', t:'Fair'},
+    {w:'75%', c:'#3b82f6', t:'Good'},
+    {w:'100%', c:'var(--teal)', t:'Strong'},
+  ];
+  const l = levels[Math.min(score, 4)];
+  fill.style.width = l.w; fill.style.background = l.c;
+  label.textContent = l.t; label.style.color = l.c;
+}
+
+async function submitPasswordReset() {
+  const newPw = document.getElementById('pw-reset-new').value;
+  const confirmPw = document.getElementById('pw-reset-confirm').value;
+  const errEl = document.getElementById('pw-reset-error');
+  const successEl = document.getElementById('pw-reset-success');
+  const btn = document.getElementById('pw-reset-btn');
+  errEl.style.display = 'none'; successEl.style.display = 'none';
+
+  if (newPw.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; errEl.style.display = 'block'; return; }
+  if (newPw !== confirmPw) { errEl.textContent = 'Passwords do not match.'; errEl.style.display = 'block'; return; }
+
+  btn.disabled = true; btn.textContent = 'Updating...';
+
+  const fnMap = {
+    investor: 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth-v3',
+    lender: 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-lender-portal-v4',
+  };
+
+  try {
+    const res = await fetch(fnMap[_pwResetUserType] || fnMap.investor, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'reset_password', token: _pwResetToken, email: _pwResetEmail, newPassword: newPw })
+    });
+    const data = await res.json();
+    if (data.success) {
+      successEl.textContent = 'Password updated. You can now sign in with your new password.';
+      successEl.style.display = 'block';
+      btn.textContent = '✓ Password Updated';
+      setTimeout(() => {
+        document.getElementById('pw-reset-modal').classList.remove('show');
+        if (_pwResetUserType === 'lender') showPage('lenders');
+        else switchAuthTab('login');
+      }, 2000);
+    } else {
+      errEl.textContent = data.error || 'Reset failed. The link may have expired — request a new one.';
+      errEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Set New Password';
+    }
+  } catch(e) {
+    errEl.textContent = 'Connection error. Please try again.';
+    errEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Set New Password';
+  }
+}
+
+function showChangePassword(userType) {
+  window._changePwUserType = userType || 'investor';
+  document.getElementById('cpw-current').value = '';
+  document.getElementById('cpw-new').value = '';
+  document.getElementById('cpw-confirm').value = '';
+  document.getElementById('change-pw-error').style.display = 'none';
+  document.getElementById('change-pw-success').style.display = 'none';
+  document.getElementById('change-pw-modal').classList.add('show');
+}
+
+async function submitChangePassword() {
+  const current = document.getElementById('cpw-current').value;
+  const newPw = document.getElementById('cpw-new').value;
+  const confirmPw = document.getElementById('cpw-confirm').value;
+  const errEl = document.getElementById('change-pw-error');
+  const successEl = document.getElementById('change-pw-success');
+  const btn = document.getElementById('change-pw-btn');
+  errEl.style.display = 'none'; successEl.style.display = 'none';
+
+  if (!current) { errEl.textContent = 'Current password required.'; errEl.style.display = 'block'; return; }
+  if (newPw.length < 8) { errEl.textContent = 'New password must be at least 8 characters.'; errEl.style.display = 'block'; return; }
+  if (newPw !== confirmPw) { errEl.textContent = 'New passwords do not match.'; errEl.style.display = 'block'; return; }
+  if (current === newPw) { errEl.textContent = 'New password must be different from current password.'; errEl.style.display = 'block'; return; }
+
+  btn.disabled = true; btn.textContent = 'Updating...';
+
+  const userType = window._changePwUserType || 'investor';
+  const fnMap = {
+    investor: 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth-v3',
+    lender: 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-lender-portal-v4',
+  };
+
+  let token = '';
+  if (userType === 'investor') token = getSession()?.token || '';
+  else if (userType === 'lender') token = getLenderSession()?.token || '';
+
+  try {
+    const res = await fetch(fnMap[userType] || fnMap.investor, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'change_password', token, currentPassword: current, newPassword: newPw })
+    });
+    const data = await res.json();
+    if (data.success) {
+      successEl.textContent = '✓ Password updated successfully.';
+      successEl.style.display = 'block';
+      btn.textContent = '✓ Updated';
+      setTimeout(() => document.getElementById('change-pw-modal').classList.remove('show'), 2000);
+    } else {
+      errEl.textContent = data.error || 'Update failed. Check your current password and try again.';
+      errEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Update Password';
+    }
+  } catch(e) {
+    errEl.textContent = 'Connection error. Please try again.';
+    errEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Update Password';
+  }
+}
+
+function showLenderReset() {
+  document.getElementById('lender-reset-error').style.display = 'none';
+  document.getElementById('lender-reset-email').value = '';
+  document.getElementById('lender-reset-modal').classList.add('show');
+}
+
+async function doLenderReset() {
+  const email = document.getElementById('lender-reset-email').value.trim();
+  const errEl = document.getElementById('lender-reset-error');
+  const btn = document.getElementById('lender-reset-btn');
+  errEl.style.display = 'none';
+  if (!email) { errEl.textContent = 'Email required.'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Sending...';
+  try {
+    await fetch('/.netlify/functions/send-reset-email', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ email, userType: 'lender' })
+    });
+    document.getElementById('lender-reset-modal').classList.remove('show');
+    showToast('If a lender account exists, a reset link has been sent.', 'success');
+  } catch(e) { errEl.textContent = 'Connection error. Please try again.'; errEl.style.display = 'block'; }
+  finally { btn.disabled = false; btn.textContent = 'Send Reset Link'; }
+}
+
+function togglePw(eyeEl) {
+  const input = eyeEl.previousElementSibling;
+  if (!input) return;
+  const show = input.type === 'password';
+  input.type = show ? 'text' : 'password';
+  eyeEl.textContent = show ? '🙈' : '👁';
+}
+
+function switchAuthTab(tab) {
+  ['login','signup','reset'].forEach(t => {
+    const el = document.getElementById('form-' + t);
+    if (el) el.style.display = t === tab ? 'block' : 'none';
+  });
+  document.querySelectorAll('.auth-tab').forEach(t => t.classList.remove('active'));
+  const activeTab = document.getElementById('tab-' + tab);
+  if (activeTab) activeTab.classList.add('active');
+  document.getElementById('auth-error').classList.remove('show');
+}
+
+async function doAuth() {
+  const email = document.getElementById('auth-email').value.trim();
+  const password = document.getElementById('auth-password').value;
+  const btn = document.getElementById('auth-btn');
+  if (!email || !password) { showAuthError('Please enter your email and password.'); return; }
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  try {
+    const res = await fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth-v3', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'login', email, password })
+    });
+    const data = await res.json();
+    if (data.success) { onAuthSuccess(data.token, data.investor, data.refresh_token); }
+    else showAuthError(data.error || 'Sign in failed.');
+  } catch (e) { showAuthError('Connection error. Please try again.'); }
+  finally { btn.disabled = false; btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>Sign In'; }
+}
+
+async function doSignup() {
+  const firstName = document.getElementById('auth-firstname').value.trim();
+  const lastName = document.getElementById('auth-lastname').value.trim();
+  const email = document.getElementById('auth-email-signup').value.trim();
+  const phone = document.getElementById('auth-phone-signup').value.trim();
+  const password = document.getElementById('auth-password-signup').value;
+  const btn = document.getElementById('auth-btn-signup');
+  if (!firstName || !email || !password) { showAuthError('First name, email, and password are required.'); return; }
+  if (password.length < 8) { showAuthError('Password must be at least 8 characters.'); return; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { showAuthError('Please enter a valid email address.'); return; }
+  btn.disabled = true; btn.textContent = 'Creating account...';
+  try {
+    const res = await fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth-v3', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'signup', email, password, name: `${firstName} ${lastName}`.trim(), phone })
+    });
+    const data = await res.json();
+    if (data.success) {
+      onAuthSuccess(data.token, data.investor, data.refresh_token);
+      showToast('Welcome to Underlytix!', 'success');
+      fetch('/.netlify/functions/resend-email', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ type: 'welcome', to: email, name: firstName })
+      }).catch(() => {});
+    }
+    else showAuthError(data.error || 'Signup failed.');
+  } catch (e) { showAuthError('Connection error. Please try again.'); }
+  finally { btn.disabled = false; btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8zM19 8v6M22 11h-6"/></svg>Create Account'; }
+}
+
+async function doReset() {
+  const email = document.getElementById('auth-email-reset').value.trim();
+  if (!email) { showAuthError('Please enter your email.'); return; }
+  const resetRes = await fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth-v3', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'reset_request', email })
+  });
+  const resetData = await resetRes.json();
+  if (resetData.success && resetData.resetToken) {
+    fetch('/.netlify/functions/send-reset-email', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ email, resetToken: resetData.resetToken })
+    }).catch(() => {});
+  }
+  showAuthError('If an account exists, a reset link has been sent.');
+  document.getElementById('auth-error').style.color = 'var(--green)';
+}
+
+function showAuthError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg; el.classList.add('show');
+  el.style.color = '';
+}
+
+// ─── STATE + LENDERS ─────────────────────────────────────────────────────────
+const STORAGE_VERSION = 'v3';
+const stored = localStorage.getItem('capiq_deals');
+const storedVersion = localStorage.getItem('capiq_version');
+let initialDeals = [];
+if(stored && storedVersion === STORAGE_VERSION) {
+  try { initialDeals = JSON.parse(stored).filter(d => d && d.dealData && d.analysis); } catch(e) { initialDeals = []; }
+} else {
+  localStorage.removeItem('capiq_deals');
+  localStorage.setItem('capiq_version', STORAGE_VERSION);
+}
+const state = { deals: initialDeals, currentFilter:'all' };
+
+const LENDERS = [
+  {name:'Kiavi',type:'Hard Money',maxLtv:90,minDscr:1.0,minCredit:660,minLoan:100000,maxLoan:3000000,states:'FL TX CA GA NC SC TN AZ CO OH PA NJ NY VA MD IL',loans:['Purchase','Fix & Flip','Bridge','Rental'],props:['SFR','2-4 Unit','Condo'],tier:'Active Partner',notes:'Up to 90% LTC on Fix & Flip. No rural properties.'},
+  {name:'Visio Lending',type:'DSCR',maxLtv:80,minDscr:1.0,minCredit:680,minLoan:75000,maxLoan:2000000,states:'FL TX CA GA NC SC TN AZ CO OH PA NJ VA MD IL NY',loans:['Rental','Cash-Out'],props:['SFR','2-4 Unit','Multifamily 5+','Condo'],tier:'Active Partner',notes:'Cash-out max 75% LTV. Prepayment penalty 5-4-3-2-1.'},
+  {name:'Lima One Capital',type:'Hard Money / DSCR',maxLtv:80,minDscr:1.0,minCredit:660,minLoan:75000,maxLoan:5000000,states:'FL TX GA NC SC TN AZ CO OH PA NJ NY VA MD IL AL MO',loans:['Purchase','Fix & Flip','Rental','Bridge','Cash-Out'],props:['SFR','2-4 Unit','Multifamily 5+','Condo'],tier:'Active Partner',notes:'Full product suite. Prepay applies on DSCR loans.'},
+  {name:'Groundfloor',type:'Hard Money',maxLtv:75,minDscr:0,minCredit:640,minLoan:75000,maxLoan:2000000,states:'FL TX GA NC SC TN AL CO PA MD VA OH MO IN',loans:['Fix & Flip','Bridge','New Construction'],props:['SFR','2-4 Unit'],tier:'Standard',notes:'Fix & Flip, Bridge, New Construction only. Max 75% ARV.'},
+  {name:'CoreVest Finance',type:'DSCR',maxLtv:75,minDscr:1.15,minCredit:680,minLoan:500000,maxLoan:5000000,states:'FL TX CA GA NC SC TN AZ CO OH PA NJ NY VA MD IL NV WA OR',loans:['Rental','Bridge','Cash-Out'],props:['SFR','2-4 Unit','Multifamily 5+','Commercial'],tier:'Active Partner',notes:'Portfolio & single-asset. Min loan $500K. Mixed use accepted.'}
+];
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('current-date').textContent = new Date().toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  renderLenders(); updateStats(); renderDashboardRecent(); renderDealsTable();
+  document.getElementById('deal-count').textContent = state.deals.length;
+  checkPasswordResetToken();
+  initAuth();
+});
+
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('page-'+id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(btn=>{ if(btn.getAttribute('onclick')?.includes("'"+id+"'")) btn.classList.add('active'); });
+  if(id==='match') renderMatchQueue();
+  if(id==='lenders') initLenderPortal();
+}
+
+function selectPill(groupId, value, hiddenId) {
+  document.querySelectorAll('#'+groupId+' .pill').forEach(p=>p.classList.remove('selected'));
+  event.target.classList.add('selected');
+  document.getElementById(hiddenId).value = value;
+
+  if(hiddenId==='f-deal-type') {
+    const isCashOut = value==='Cash-Out';
+    const isFlip = value==='Fix & Flip';
+    const isRental = value==='Rental';
+    const isNewConst = value==='New Construction';
+    const ppField = document.getElementById('purchase-price-field');
+    ppField.style.opacity = isCashOut ? '0.5' : '1';
+    document.getElementById('pp-req').style.display = isCashOut ? 'none' : 'inline';
+    document.getElementById('f-purchase-price').placeholder = isCashOut ? 'N/A for Cash-Out Refi' : '750000';
+    document.getElementById('rehab-req').style.display = (isFlip||isNewConst) ? 'inline' : 'none';
+    document.getElementById('rehab-hint').style.display = (isFlip||isNewConst) ? 'inline' : 'none';
+    document.getElementById('rent-req').style.display = isRental ? 'inline' : 'none';
+    document.getElementById('rent-hint').style.display = isRental ? 'inline' : 'none';
+    autoCalc();
+  }
+
+  if(hiddenId==='f-property-type') {
+    const isCondo = value==='Condo';
+    const unitReq = document.getElementById('unit-req');
+    const unitHint = document.getElementById('unit-hint');
+    if(unitReq) unitReq.style.display = isCondo ? 'inline' : 'none';
+    if(unitHint) unitHint.style.display = isCondo ? 'inline' : 'none';
+    const unitInput = document.getElementById('f-unit');
+    if(unitInput) {
+      unitInput.placeholder = isCondo ? 'Required: Unit 101 or Apt 2B' : 'Apt 2B (optional)';
+      unitInput.style.borderColor = isCondo ? 'var(--amber)' : '';
+    }
+  }
+}
+
+// ─── ADDRESS AUTOCOMPLETE ─────────────────────────────────────────────────────
+let _acTimer = null, _acIndex = -1, _acResults = [];
+
+async function addressSearch(val) {
+  clearTimeout(_acTimer);
+  const list = document.getElementById('address-suggestions');
+  if(!val || val.length < 4) { list.style.display='none'; return; }
+  _acTimer = setTimeout(async () => {
+    try {
+      const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(val)}&format=json&addressdetails=1&countrycodes=us&limit=6`,
+        {headers:{'Accept-Language':'en-US'}});
+      _acResults = await res.json();
+      if(!_acResults.length) { list.style.display='none'; return; }
+      _acIndex = -1;
+      list.innerHTML = _acResults.map((r,i) => {
+        const main = r.address?.house_number ? `${r.address.house_number} ${r.address.road||''}`.trim() : (r.address?.road || r.display_name.split(',')[0]);
+        const sub = [r.address?.city||r.address?.town||r.address?.village, r.address?.state, r.address?.postcode].filter(Boolean).join(', ');
+        return `<div class="autocomplete-item" onclick="selectAddress(${i})" onmouseover="setAcIndex(${i})">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          <div><div class="autocomplete-main">${main}</div><div class="autocomplete-sub">${sub}</div></div>
+        </div>`;
+      }).join('');
+      list.style.display='block';
+    } catch(e) { list.style.display='none'; }
+  }, 350);
+}
+
+function setAcIndex(i) { _acIndex = i; }
+
+function addressKeyNav(e) {
+  const items = document.querySelectorAll('.autocomplete-item');
+  if(e.key==='ArrowDown') { _acIndex=Math.min(_acIndex+1,items.length-1); items.forEach((el,i)=>el.classList.toggle('active',i===_acIndex)); e.preventDefault(); }
+  else if(e.key==='ArrowUp') { _acIndex=Math.max(_acIndex-1,0); items.forEach((el,i)=>el.classList.toggle('active',i===_acIndex)); e.preventDefault(); }
+  else if(e.key==='Enter' && _acIndex>=0) { selectAddress(_acIndex); e.preventDefault(); }
+  else if(e.key==='Escape') { document.getElementById('address-suggestions').style.display='none'; }
+}
+
+function selectAddress(i) {
+  const r = _acResults[i];
+  if(!r) return;
+  const addr = r.address || {};
+  const num = addr.house_number || '';
+  const road = addr.road || '';
+  const city = addr.city || addr.town || addr.village || addr.municipality || '';
+  const stateVal = addr.state || '';
+  const zip = addr.postcode || '';
+  const streetTypes = {avenue:'Ave',boulevard:'Blvd',circle:'Cir',court:'Ct',drive:'Dr',highway:'Hwy',lane:'Ln',loop:'Loop',parkway:'Pkwy',place:'Pl',road:'Rd',street:'St',terrace:'Ter',trail:'Trl',way:'Way',ave:'Ave',blvd:'Blvd',dr:'Dr',ln:'Ln',pkwy:'Pkwy',rd:'Rd',st:'St'};
+  const roadParts = road.split(' ');
+  let streetType = '', streetName = road;
+  const lastWord = roadParts[roadParts.length-1]?.toLowerCase();
+  if(streetTypes[lastWord]) { streetType = streetTypes[lastWord]; streetName = roadParts.slice(0,-1).join(' '); }
+  const dirs = ['N','S','E','W','NE','NW','SE','SW'];
+  let dir = '';
+  const firstWord = streetName.split(' ')[0]?.toUpperCase();
+  if(dirs.includes(firstWord)) { dir = firstWord; streetName = streetName.split(' ').slice(1).join(' '); }
+  document.getElementById('f-street-number').value = num;
+  document.getElementById('f-street-name').value = streetName;
+  document.getElementById('f-city').value = city;
+  document.getElementById('f-state').value = stateVal.substring(0,2).toUpperCase();
+  document.getElementById('f-zip').value = zip;
+  document.getElementById('f-address-search').value = r.display_name.split(',').slice(0,3).join(',');
+  if(streetType) {
+    const sel = document.getElementById('f-street-type');
+    for(let o of sel.options) { if(o.value===streetType) { sel.value=streetType; break; } }
+  }
+  if(dir) {
+    const sel = document.getElementById('f-street-dir');
+    for(let o of sel.options) { if(o.value===dir) { sel.value=dir; break; } }
+  }
+  document.getElementById('address-suggestions').style.display='none';
+  buildAddress();
+}
+
+document.addEventListener('click', e => {
+  if(!e.target.closest('.autocomplete-wrap')) document.getElementById('address-suggestions').style.display='none';
+});
+
+function buildAddress() {
+  const num = document.getElementById('f-street-number').value.trim();
+  const dir = document.getElementById('f-street-dir').value;
+  const name = document.getElementById('f-street-name').value.trim();
+  const type = document.getElementById('f-street-type').value;
+  const unit = document.getElementById('f-unit').value.trim();
+  const zip = document.getElementById('f-zip').value.trim();
+  const street = [num, dir, name, type].filter(Boolean).join(' ');
+  const withUnit = unit ? street + ' ' + unit : street;
+  const withZip = zip ? withUnit + ' ' + zip : withUnit;
+  document.getElementById('f-location').value = withZip;
+}
+
+function autoCalc() {
+  const loan = parseFloat(document.getElementById('f-loan-amount').value)||0;
+  const purchase = parseFloat(document.getElementById('f-purchase-price').value)||0;
+  const asIs = parseFloat(document.getElementById('f-as-is-value').value)||0;
+  const arv = parseFloat(document.getElementById('f-arv').value)||0;
+  const rent = parseFloat(document.getElementById('f-monthly-rent').value)||0;
+  const rate = parseFloat(document.getElementById('f-rate').value)||7.0;
+  const term = parseFloat(document.getElementById('f-term').value)||30;
+  const dealType = document.getElementById('f-deal-type').value;
+  let ltv = 0, ltvBase = 0;
+  if(loan > 0) {
+    if((dealType==='Fix & Flip'||dealType==='New Construction') && arv>0) ltvBase=arv;
+    else if(dealType==='Cash-Out' && asIs>0) ltvBase=asIs;
+    else if(purchase>0) ltvBase=purchase;
+    else if(asIs>0) ltvBase=asIs;
+    else if(arv>0) ltvBase=arv;
+    if(ltvBase>0) ltv=(loan/ltvBase)*100;
+  }
+  document.getElementById('f-ltv').value = ltv>0 ? ltv.toFixed(1) : '';
+  let payment = 0;
+  if(loan>0 && rate>0 && term>0) {
+    const r = (rate/100)/12;
+    const n = term*12;
+    payment = loan * (r * Math.pow(1+r,n)) / (Math.pow(1+r,n)-1);
+  }
+  document.getElementById('f-monthly-payment').value = payment>0 ? Math.round(payment) : '';
+  let dscr = 0;
+  if(rent>0 && payment>0) dscr = rent/payment;
+  document.getElementById('f-dscr').value = dscr>0 ? dscr.toFixed(2) : '';
+}
+
+function buildPrompt(d) {
+  return `You are an expert real estate underwriter for Underlytix. Analyze this deal and return ONLY valid JSON, no markdown.
+
+DEAL: ${d.dealType} | ${d.propertyType} | ${d.state} | ${d.location}
+LOAN: $${d.loanAmount} | PURCHASE: $${d.purchasePrice||'N/A'} | ARV: $${d.arv||'N/A'} | AS-IS: $${d.asIsValue||'N/A'}
+REHAB: $${d.rehabBudget||0} | RENT: $${d.monthlyRent||0}/mo | PAYMENT: $${d.monthlyPayment||'N/A'}/mo
+LTV: ${d.ltv}% | DSCR: ${d.dscr||'N/A'} | CREDIT: ${d.creditScore} | EXP: ${d.investorExperience}
+NOTES: ${d.notes||'None'}
+
+Return this exact JSON with all string fields filled with detailed analysis (2-4 sentences each):
+{"fundabilityScore":0,"dealScore":"Pass","humanReviewRequired":false,"executiveSummary":"","strengthsAndRisks":"","lenderMatchingProfile":"","structuringRecommendations":"","marketContext":"","scoreBreakdown":"","nextSteps":""}`;
+}
+
+async function analyzeDeal() {
+  const access = await checkAccess();
+  updateUsageUI(access);
+  if (!access.canAnalyze) {
+    document.getElementById('upgrade-modal').classList.add('show');
+    return;
+  }
+  const errEl = document.getElementById('form-error');
+  const dealType = document.getElementById('f-deal-type').value;
+  const propType = document.getElementById('f-property-type').value;
+  const exp = document.getElementById('f-experience').value;
+  if(!document.getElementById('f-first-name').value.trim()){errEl.textContent='First name is required';errEl.style.display='block';document.getElementById('f-first-name').focus();return;}
+  if(!document.getElementById('f-last-name').value.trim()){errEl.textContent='Last name is required';errEl.style.display='block';document.getElementById('f-last-name').focus();return;}
+  const emailVal = document.getElementById('f-investor-email').value.trim();
+  if(!emailVal){errEl.textContent='Email address is required';errEl.style.display='block';document.getElementById('f-investor-email').focus();return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)){errEl.textContent='Please enter a valid email address';errEl.style.display='block';document.getElementById('f-investor-email').focus();return;}
+  const phoneVal = document.getElementById('f-investor-phone').value.trim();
+  if(phoneVal && !/^[\d\s\(\)\-\+\.]{7,15}$/.test(phoneVal)){errEl.textContent='Please enter a valid phone number';errEl.style.display='block';document.getElementById('f-investor-phone').focus();return;}
+  if(!exp){errEl.textContent='Please select your investment experience';errEl.style.display='block';document.getElementById('exp-pills').scrollIntoView({behavior:'smooth',block:'center'});return;}
+  if(!dealType){errEl.textContent='Please select a Deal Type';errEl.style.display='block';document.getElementById('deal-type-pills').scrollIntoView({behavior:'smooth',block:'center'});return;}
+  if(!propType){errEl.textContent='Please select a Property Type';errEl.style.display='block';document.getElementById('prop-type-pills').scrollIntoView({behavior:'smooth',block:'center'});return;}
+  if(!document.getElementById('f-street-number').value.trim()){errEl.textContent='Street number is required';errEl.style.display='block';document.getElementById('f-street-number').focus();return;}
+  if(!document.getElementById('f-street-name').value.trim()){errEl.textContent='Street name is required';errEl.style.display='block';document.getElementById('f-street-name').focus();return;}
+  if(!document.getElementById('f-street-type').value){errEl.textContent='Street type is required';errEl.style.display='block';return;}
+  if(!document.getElementById('f-city').value.trim()){errEl.textContent='City is required';errEl.style.display='block';document.getElementById('f-city').focus();return;}
+  if(!document.getElementById('f-state').value.trim()){errEl.textContent='State is required';errEl.style.display='block';document.getElementById('f-state').focus();return;}
+  if(propType==='Condo'&&!document.getElementById('f-unit').value.trim()){errEl.textContent='Unit number is required for Condo properties';errEl.style.display='block';document.getElementById('f-unit').focus();return;}
+  if(!document.getElementById('f-loan-amount').value){errEl.textContent='Loan amount is required';errEl.style.display='block';document.getElementById('f-loan-amount').focus();return;}
+  if(!document.getElementById('f-arv').value){errEl.textContent='ARV (After Repair Value) is required';errEl.style.display='block';document.getElementById('f-arv').focus();return;}
+  if(!document.getElementById('f-credit-score').value){errEl.textContent='Credit score is required';errEl.style.display='block';document.getElementById('f-credit-score').focus();return;}
+  if((dealType==='Fix & Flip'||dealType==='New Construction')&&!document.getElementById('f-rehab-budget').value){
+    errEl.textContent='Rehab Budget is required for Fix & Flip and New Construction';errEl.style.display='block';
+    document.getElementById('f-rehab-budget').focus();return;
+  }
+  if(dealType==='Rental'&&!document.getElementById('f-monthly-rent').value){
+    errEl.textContent='Monthly Rent is required for Rental / DSCR deals';errEl.style.display='block';
+    document.getElementById('f-monthly-rent').focus();return;
+  }
+  errEl.style.display='none';
+  buildAddress();
+  const city = document.getElementById('f-city').value.trim();
+  const stateVal = document.getElementById('f-state').value.toUpperCase().trim();
+  const streetAddr = document.getElementById('f-location').value;
+  const fullLocation = [streetAddr, city, stateVal].filter(Boolean).join(', ');
+  const dealData = {
+    dealType, propertyType:propType, state:stateVal, location:fullLocation,
+    loanAmount:parseFloat(document.getElementById('f-loan-amount').value)||0,
+    purchasePrice:parseFloat(document.getElementById('f-purchase-price').value)||0,
+    arv:parseFloat(document.getElementById('f-arv').value)||0,
+    asIsValue:parseFloat(document.getElementById('f-as-is-value').value)||0,
+    rehabBudget:parseFloat(document.getElementById('f-rehab-budget').value)||0,
+    monthlyRent:parseFloat(document.getElementById('f-monthly-rent').value)||0,
+    monthlyPayment:parseFloat(document.getElementById('f-monthly-payment').value)||0,
+    ltv:parseFloat(document.getElementById('f-ltv').value)||0,
+    dscr:parseFloat(document.getElementById('f-dscr').value)||0,
+    creditScore:parseFloat(document.getElementById('f-credit-score').value)||0,
+    investorExperience:exp,
+    notes:document.getElementById('f-notes').value,
+    investorName:document.getElementById('f-first-name').value.trim()+' '+document.getElementById('f-last-name').value.trim(),
+    investorEmail:document.getElementById('f-investor-email').value,
+    investorPhone:document.getElementById('f-investor-phone').value
+  };
+  const btn = document.getElementById('analyze-btn');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Analyzing...';
+  document.getElementById('loading').classList.add('show');
+  const msgs = ['Reviewing deal structure...','Running underwriting analysis...','Scoring fundability metrics...','Evaluating lender criteria...','Generating intelligence report...','Matching to lender network...','Finalizing recommendations...'];
+  let msgIdx = 0;
+  const loadingSub = document.querySelector('.loading-sub');
+  const msgInterval = setInterval(() => { msgIdx = (msgIdx + 1) % msgs.length; if(loadingSub) loadingSub.textContent = msgs[msgIdx]; }, 2500);
+  try {
+    const sessionForEmail = getSession();
+    const enrichedDealData = {
+      ...dealData,
+      investorEmail: sessionForEmail?.investor?.email || '',
+      investorName: sessionForEmail?.investor?.name || '',
+      dealCode: 'DL-' + Math.random().toString(36).substr(2, 8).toUpperCase(),
+    };
+    const res = await fetch('/.netlify/functions/capiq-analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dealData: enrichedDealData})});
+    if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error||e.detail||`Error ${res.status}`);}
+    const data = await res.json();
+    if(!data.success) throw new Error(data.error||'Analysis failed');
+    const analysis = data.analysis;
+    const deal = {id:Date.now(),dealName:streetAddr||'Deal '+(state.deals.length+1),dealData,analysis,timestamp:new Date().toISOString(),matches:matchDeal(dealData,analysis)};
+    state.deals.unshift(deal);
+    localStorage.setItem('capiq_deals',JSON.stringify(state.deals));
+    localStorage.setItem('capiq_version', STORAGE_VERSION);
+    renderResult(analysis,dealData);
+    updateStats(); renderDashboardRecent(); renderDealsTable();
+    document.getElementById('deal-count').textContent=state.deals.length;
+    showToast('Deal analyzed successfully','success');
+    fetch('/.netlify/functions/notion-sync', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({dealData, analysis})
+    }).then(r => r.json()).then(r => {
+      if(r.success) console.log('Synced to Notion:', r.notionUrl);
+    }).catch(e => console.warn('Notion sync error:', e.message));
+    const supabaseMatches = deal.matches || [];
+    const session = getSession();
+    if (session?.token) {
+      fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth-v3', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ action: 'increment_usage', token: session.token })
+      }).catch(() => {});
+    }
+    fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-save-deal', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ dealData, analysis, lenderMatches: supabaseMatches })
+    }).then(r => r.json()).then(r => {
+      if(r.success) {
+        console.log('Synced to Supabase:', r.dealCode);
+        const dcEl = document.getElementById('deal-code-badge');
+        if(dcEl) { dcEl.textContent = r.dealCode; dcEl.style.display = 'inline-flex'; }
+      }
+    }).catch(e => console.warn('Supabase sync error:', e.message));
+  } catch(err) {
+    showToast('Analysis failed: '+err.message,'error');
+    document.getElementById('result-content').innerHTML=`<div class="card"><div class="card-body"><p style="color:var(--red);font-size:13px;font-weight:500">Error: ${err.message}</p></div></div>`;
+    document.getElementById('result-panel').classList.add('show');
+  } finally {
+    clearInterval(msgInterval);
+    if(loadingSub) loadingSub.textContent = 'Running underwriting intelligence...';
+    btn.disabled=false; btn.innerHTML='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> Analyze Deal';
+    document.getElementById('loading').classList.remove('show');
+  }
+}
+
+function renderResult(a, d) {
+  const sc = a.fundabilityScore>=65?'var(--green)':a.fundabilityScore>=45?'var(--amber)':'var(--red)';
+  const circ = 2*Math.PI*52, fill=(a.fundabilityScore/100)*circ;
+  const vc = a.dealScore==='Pass'?'verdict-pass':a.dealScore==='Review'?'verdict-review':'verdict-reject';
+  const matches = matchDeal(d,a);
+  const mHtml = matches.length>0?matches.slice(0,3).map(m=>`
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)">
+      <div><div style="font-size:13px;font-weight:600;color:var(--text)">${m.name}</div><div style="font-size:11px;color:var(--text-4);margin-top:2px">${m.type}</div></div>
+      <div style="text-align:right"><div style="font-family:'DM Mono',monospace;font-size:16px;font-weight:700;color:var(--teal)">${m.score}</div><div style="font-size:10px;color:var(--text-4)">MATCH SCORE</div></div>
+    </div>`).join(''):'<p style="font-size:13px;color:var(--text-3);padding:16px 0">No qualifying lender matches found for this deal structure.</p>';
+  document.getElementById('result-content').innerHTML = `
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-header"><div class="card-title">Deal Intelligence Report</div><div style="display:flex;align-items:center;gap:10px"><span id="deal-code-badge" style="display:none;font-family:'DM Mono',monospace;font-size:11px;background:var(--teal-dim);color:var(--teal);border:1px solid var(--teal-border);padding:3px 10px;border-radius:4px"></span><span class="verdict-badge ${vc}">● ${a.dealScore.toUpperCase()}</span></div></div>
+      <div class="card-body">
+        <div style="display:grid;grid-template-columns:140px 1fr;gap:32px;align-items:start">
+          <div style="text-align:center">
+            <div class="score-ring">
+              <svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" fill="none" stroke="var(--bg-4)" stroke-width="8"/><circle cx="60" cy="60" r="52" fill="none" stroke="${sc}" stroke-width="8" stroke-dasharray="${fill} ${circ}" stroke-linecap="round"/></svg>
+              <div class="score-ring-num"><div class="score-big" style="color:${sc}">${a.fundabilityScore}</div><div class="score-label">Fundability</div></div>
+            </div>
+            ${a.humanReviewRequired?'<div style="margin-top:10px;font-size:11px;color:var(--amber);font-weight:600;background:var(--amber-dim);padding:4px 10px;border-radius:4px;border:1px solid rgba(217,119,6,0.2)">⚠ REVIEW REQUIRED</div>':''}
+          </div>
+          <div>
+            <div class="analysis-section"><div class="analysis-title">Executive Summary</div><div class="analysis-text">${a.executiveSummary}</div></div>
+            <div class="analysis-section"><div class="analysis-title">Score Breakdown</div><div class="analysis-text">${a.scoreBreakdown}</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="card"><div class="card-header"><div class="card-title">Strengths &amp; Risks</div></div><div class="card-body"><div class="analysis-text">${a.strengthsAndRisks}</div></div></div>
+      <div class="card"><div class="card-header"><div class="card-title">Market Context</div></div><div class="card-body"><div class="analysis-text">${a.marketContext}</div></div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
+      <div class="card"><div class="card-header"><div class="card-title">Structuring Recommendations</div></div><div class="card-body"><div class="analysis-text">${a.structuringRecommendations}</div></div></div>
+      <div class="card"><div class="card-header"><div class="card-title">Next Steps</div></div><div class="card-body"><div class="analysis-text">${a.nextSteps}</div></div></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Lender Matches</div><span style="font-size:12px;color:var(--text-4)">${matches.length} qualifying lenders</span></div>
+      <div class="card-body">
+        <p style="font-size:13px;color:var(--text-2);margin-bottom:12px">${a.lenderMatchingProfile}</p>
+        ${mHtml}
+        ${matches.length>0?'<div style="margin-top:16px"><button class="btn btn-ghost" style="width:100%" onclick="showPage(\'match\')">View Full Match Queue →</button></div>':''}
+      </div>
+    </div>`;
+  document.getElementById('result-panel').classList.add('show');
+  document.getElementById('result-panel').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function matchDeal(d,a) {
+  if(!d||!d.dealType) return [];
+  return LENDERS.map(l=>{
+    if(d.creditScore<l.minCredit||d.loanAmount<l.minLoan||d.loanAmount>l.maxLoan) return null;
+    if((d.propertyType==='Land'||d.dealType==='New Construction')&&l.type!=='Hard Money'&&l.type!=='Hard Money / DSCR') return null;
+    let score=0;
+    if(l.loans.some(lt=>d.dealType.toLowerCase().includes(lt.toLowerCase())||lt.toLowerCase().includes(d.dealType.toLowerCase()))) score+=25;
+    if(l.states.includes(d.state?.toUpperCase())) score+=25;
+    if(d.ltv<=l.maxLtv) score+=15;
+    const np=d.propertyType==='Condo'?'SFR':d.propertyType;
+    if(l.props.includes(d.propertyType)||l.props.includes(np)) score+=10;
+    if(!l.minDscr||d.dscr>=l.minDscr) score+=5;
+    if(d.loanAmount>=l.minLoan&&d.loanAmount<=l.maxLoan) score+=20;
+    if(score<50) return null;
+    return {name:l.name,type:l.type,score,notes:l.notes,dealScore:a?.dealScore||'—'};
+  }).filter(Boolean).sort((a,b)=>b.score-a.score);
+}
+
+function renderLenders() {
+  const el = document.getElementById('lender-grid');
+  if (!el) return;
+  el.innerHTML=LENDERS.map(l=>`
+    <div class="lender-card">
+      <div class="lender-header"><div class="lender-name">${l.name}</div><span class="lender-tier">${l.tier}</span></div>
+      <div class="lender-type">${l.type}</div>
+      <div class="lender-criteria">
+        <div class="criteria-row"><span class="criteria-key">Max LTV</span><span class="criteria-val">${l.maxLtv}%</span></div>
+        <div class="criteria-row"><span class="criteria-key">Min DSCR</span><span class="criteria-val">${l.minDscr||'N/A'}</span></div>
+        <div class="criteria-row"><span class="criteria-key">Min Credit</span><span class="criteria-val">${l.minCredit}</span></div>
+        <div class="criteria-row"><span class="criteria-key">Loan Range</span><span class="criteria-val">$${(l.minLoan/1000).toFixed(0)}K – $${(l.maxLoan/1000000).toFixed(1)}M</span></div>
+      </div>
+      <div style="margin-top:12px;font-size:11px;color:var(--text-3);line-height:1.5">${l.notes}</div>
+    </div>`).join('');
+}
+
+function updateStats() {
+  const d=state.deals;
+  document.getElementById('stat-total').textContent=d.length;
+  if(d.length){
+    const p=d.filter(x=>x.analysis?.dealScore==='Pass').length;
+    document.getElementById('stat-pass').textContent=Math.round(p/d.length*100)+'%';
+    document.getElementById('stat-avg').textContent=Math.round(d.reduce((s,x)=>s+(x.analysis?.fundabilityScore||0),0)/d.length);
+  }
+}
+
+function renderDashboardRecent() {
+  const el=document.getElementById('dashboard-recent');
+  if(!state.deals.length){el.innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><h3>No deals yet</h3><p>Submit your first deal to generate fundability intelligence.</p></div>';return;}
+  el.innerHTML=`<table class="deal-table"><thead><tr><th>Deal</th><th>Type</th><th>LTV</th><th>Score</th><th>Verdict</th><th>Date</th></tr></thead><tbody>${state.deals.slice(0,5).map(d=>{const vc=d.analysis?.dealScore==='Pass'?'verdict-pass':d.analysis?.dealScore==='Review'?'verdict-review':'verdict-reject';return`<tr onclick="viewDeal(${d.id})"><td class="deal-name">${d.dealName}</td><td class="mono">${d.dealData.dealType||'—'}</td><td class="mono">${d.dealData.ltv||'—'}%</td><td class="mono" style="color:var(--teal);font-weight:600">${d.analysis?.fundabilityScore||'—'}</td><td><span class="verdict-badge ${vc}" style="font-size:10px;padding:3px 10px">${d.analysis?.dealScore||'—'}</span></td><td class="mono" style="color:var(--text-4)">${new Date(d.timestamp).toLocaleDateString()}</td></tr>`;}).join('')}</tbody></table>`;
+}
+
+function renderDealsTable(f) {
+  f=f||state.currentFilter;
+  const deals=f==='all'?state.deals:state.deals.filter(d=>d.analysis?.dealScore===f);
+  const w=document.getElementById('deals-table-wrap');
+  if(!deals.length){w.innerHTML='<div class="empty-state"><h3>No deals</h3><p>No deals match this filter.</p></div>';return;}
+  w.innerHTML=`<table class="deal-table"><thead><tr><th>Address</th><th>Investor</th><th>Type</th><th>Loan</th><th>LTV</th><th>Score</th><th>Verdict</th></tr></thead><tbody>${deals.map(d=>{const vc=d.analysis?.dealScore==='Pass'?'verdict-pass':d.analysis?.dealScore==='Review'?'verdict-review':'verdict-reject';return`<tr onclick="viewDeal(${d.id})"><td class="deal-name">${d.dealName}</td><td>${d.dealData.investorName||'—'}</td><td class="mono">${d.dealData.dealType||'—'}</td><td class="mono">$${(d.dealData.loanAmount||0).toLocaleString()}</td><td class="mono">${d.dealData.ltv||'—'}%</td><td class="mono" style="color:var(--teal);font-weight:600">${d.analysis?.fundabilityScore||'—'}</td><td><span class="verdict-badge ${vc}" style="font-size:10px;padding:3px 10px">${d.analysis?.dealScore||'—'}</span></td></tr>`;}).join('')}</tbody></table>`;
+}
+
+function filterDeals(f,btn) {
+  state.currentFilter=f;
+  document.querySelectorAll('#page-deals .tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active'); renderDealsTable(f);
+}
+
+function renderMatchQueue() {
+  const el=document.getElementById('match-content');
+  const m=state.deals.flatMap(d=>(d.matches||[]).map(x=>({...x,deal:d.dealName,dealScore:d.analysis?.dealScore})));
+  if(!m.length){el.innerHTML='<div class="empty-state"><h3>No matches yet</h3><p>Analyze a deal and matches will appear here.</p></div>';return;}
+  el.innerHTML=`<div class="card"><div style="padding:0"><table class="deal-table"><thead><tr><th>Deal</th><th>Lender</th><th>Type</th><th>Match Score</th><th>Verdict</th></tr></thead><tbody>${m.map(x=>{const sc=x.score>=80?'var(--green)':x.score>=60?'var(--teal)':'var(--amber)';return`<tr><td class="deal-name">${x.deal}</td><td>${x.name}</td><td class="mono">${x.type}</td><td class="mono" style="color:${sc};font-weight:700">${x.score}</td><td><span class="verdict-badge ${x.dealScore==='Pass'?'verdict-pass':x.dealScore==='Review'?'verdict-review':'verdict-reject'}" style="font-size:10px;padding:3px 10px">${x.dealScore}</span></td></tr>`;}).join('')}</tbody></table></div></div>`;
+}
+
+function viewDeal(id) {
+  const deal=state.deals.find(d=>d.id===id); if(!deal) return;
+  showPage('submit');
+  const d=deal.dealData;
+  const nameParts=(d.investorName||'').split(' ');
+  document.getElementById('f-first-name').value=nameParts[0]||'';
+  document.getElementById('f-last-name').value=nameParts.slice(1).join(' ')||'';
+  document.getElementById('f-investor-email').value=d.investorEmail||'';
+  document.getElementById('f-investor-phone').value=d.investorPhone||'';
+  document.getElementById('f-city').value=d.location?.split(',')[1]?.trim()||'';
+  document.getElementById('f-state').value=d.state||'';
+  document.getElementById('f-loan-amount').value=d.loanAmount||'';
+  document.getElementById('f-purchase-price').value=d.purchasePrice||'';
+  document.getElementById('f-arv').value=d.arv||'';
+  document.getElementById('f-as-is-value').value=d.asIsValue||'';
+  document.getElementById('f-rehab-budget').value=d.rehabBudget||'';
+  document.getElementById('f-monthly-rent').value=d.monthlyRent||'';
+  document.getElementById('f-credit-score').value=d.creditScore||'';
+  document.getElementById('f-notes').value=d.notes||'';
+  document.querySelectorAll('#exp-pills .pill').forEach(p=>{if(p.getAttribute('onclick')?.includes(d.investorExperience)) p.classList.add('selected');});
+  document.getElementById('f-experience').value=d.investorExperience||'';
+  document.querySelectorAll('#deal-type-pills .pill').forEach(p=>{if(p.getAttribute('onclick')?.includes(d.dealType)) p.classList.add('selected');});
+  document.getElementById('f-deal-type').value=d.dealType||'';
+  document.querySelectorAll('#prop-type-pills .pill').forEach(p=>{if(p.getAttribute('onclick')?.includes(d.propertyType)) p.classList.add('selected');});
+  document.getElementById('f-property-type').value=d.propertyType||'';
+  autoCalc();
+  if(deal.analysis) renderResult(deal.analysis,d);
+}
+
+function clearForm() {
+  ['f-first-name','f-last-name','f-investor-email','f-investor-phone','f-address-search','f-street-number','f-street-name','f-unit','f-zip','f-city','f-notes','f-arv','f-as-is-value','f-rehab-budget','f-monthly-rent','f-loan-amount','f-purchase-price','f-credit-score','f-state','f-location'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('f-street-type').selectedIndex=0;
+  document.getElementById('f-street-dir').selectedIndex=0;
+  document.getElementById('f-rate').value='7.0';
+  document.getElementById('f-term').value='30';
+  document.getElementById('f-ltv').value='';
+  document.getElementById('f-dscr').value='';
+  document.getElementById('f-monthly-payment').value='';
+  document.getElementById('f-deal-type').value='';
+  document.getElementById('f-property-type').value='';
+  document.getElementById('f-experience').value='';
+  document.querySelectorAll('.pill').forEach(p=>p.classList.remove('selected'));
+  document.getElementById('result-panel').classList.remove('show');
+  document.getElementById('form-error').style.display='none';
+}
+
+// ─── LENDER PORTAL ───────────────────────────────────────────────────────────
+const LENDER_FN = 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-lender-portal-v4';
+const LENDER_SESSION_KEY = 'capiq_lender_session';
+let lenderMatches = [];
+let lenderFilter = 'all';
+
+function getLenderSession() {
+  try { return JSON.parse(localStorage.getItem(LENDER_SESSION_KEY) || 'null'); } catch { return null; }
+}
+function setLenderSession(token, user, refreshToken) {
+  localStorage.setItem(LENDER_SESSION_KEY, JSON.stringify({ token, user, refresh_token: refreshToken || null }));
+}
+function clearLenderSession() {
+  localStorage.removeItem(LENDER_SESSION_KEY);
+}
+
+async function initLenderPortal() {
+  const session = getLenderSession();
+  if (!session?.token) { showLenderLogin(); return; }
+  try {
+    const res = await fetch(LENDER_FN, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'verify', token: session.token })
+    });
+    const data = await res.json();
+    if (data.valid) { onLenderAuth(session.token, data.user, session.refresh_token); }
+    else if (session.refresh_token) {
+      const r2 = await fetch(LENDER_FN, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'refresh', refresh_token: session.refresh_token })
+      });
+      const rd = await r2.json();
+      if (rd.success) onLenderAuth(rd.token, rd.user, rd.refresh_token);
+      else { clearLenderSession(); showLenderLogin(); }
+    } else { clearLenderSession(); showLenderLogin(); }
+  } catch { if (session.user) onLenderAuth(session.token, session.user, session.refresh_token); else showLenderLogin(); }
+}
+
+function showLenderLogin() {
+  document.getElementById('lender-login-screen').style.display = 'block';
+  document.getElementById('lender-dashboard').style.display = 'none';
+  document.getElementById('lender-user-badge').style.display = 'none';
+  document.getElementById('lender-logout-btn').style.display = 'none';
+  document.getElementById('lender-billing-btn').style.display = 'none';
+}
+
+async function lenderLogin() {
+  const email = document.getElementById('lender-email').value.trim();
+  const password = document.getElementById('lender-password').value;
+  const btn = document.getElementById('lender-login-btn');
+  const errEl = document.getElementById('lender-login-error');
+  if (!email || !password) { errEl.textContent = 'Email and password required.'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  try {
+    const res = await fetch(LENDER_FN, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'login', email, password })
+    });
+    const data = await res.json();
+    if (data.success) { errEl.style.display = 'none'; onLenderAuth(data.token, data.user, data.refresh_token); }
+    else { errEl.textContent = data.error || 'Sign in failed.'; errEl.style.display = 'block'; }
+  } catch { errEl.textContent = 'Connection error.'; errEl.style.display = 'block'; }
+  finally { btn.disabled = false; btn.textContent = 'Sign In to Lender Portal'; }
+}
+
+async function onLenderAuth(token, user, refreshToken) {
+  setLenderSession(token, user, refreshToken);
+  document.getElementById('lender-login-screen').style.display = 'none';
+  document.getElementById('lender-dashboard').style.display = 'block';
+  document.getElementById('lender-user-badge').style.display = 'inline';
+  document.getElementById('lender-user-badge').textContent = (user.name || user.email) + ' · ' + (user.lender?.lender_name || '');
+  document.getElementById('lender-logout-btn').style.display = 'inline-flex';
+  const lpwBtn = document.getElementById('lender-changepw-btn'); if(lpwBtn) lpwBtn.style.display = 'inline-flex';
+  await loadLenderDeals(token);
+}
+
+async function lenderStartCheckout() {
+  const session = getLenderSession();
+  if (!session?.token) return;
+  try {
+    const res = await fetch(LENDER_FN, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'create_checkout', token: session.token, successUrl: window.location.origin + '/app?lender_upgraded=true', cancelUrl: window.location.origin + '/app' })
+    });
+    const data = await res.json();
+    if (data.checkoutUrl) window.location.href = data.checkoutUrl;
+    else showToast(data.error || 'Could not start checkout', 'error');
+  } catch(e) { showToast('Connection error', 'error'); }
+}
+
+if (window.location.search.includes('lender_upgraded=true')) {
+  window.history.replaceState({}, '', window.location.pathname);
+  setTimeout(() => showToast('Lender access activated! Welcome aboard.', 'success'), 1000);
+}
+
+async function loadLenderDeals(token) {
+  const session = getLenderSession();
+  const tok = token || session?.token;
+  if (!tok) return;
+  try {
+    const res = await fetch(LENDER_FN, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'get_deals', token: tok })
+    });
+    const data = await res.json();
+    if (data.success) {
+      lenderMatches = data.matches || [];
+      renderLenderStats();
+      renderLenderDeals();
+    } else if (data.requiresUpgrade) {
+      const grid = document.getElementById('lender-deals-grid');
+      if (grid) grid.innerHTML = `
+        <div class="card" style="max-width:500px;margin:40px auto;text-align:center">
+          <div style="background:var(--navy);padding:28px;border-radius:10px 10px 0 0">
+            <div style="font-size:20px;font-weight:700;color:white;margin-bottom:8px">Access Pre-Screened Deal Flow</div>
+            <div style="font-size:13px;color:rgba(255,255,255,0.5)">Your trial has ended</div>
+          </div>
+          <div class="card-body" style="text-align:left">
+            <p style="color:var(--text-2);font-size:14px;margin-bottom:20px">Subscribe to continue receiving qualified investor deals matched to your lending criteria.</p>
+            <ul style="list-style:none;padding:0;margin:0 0 24px;display:flex;flex-direction:column;gap:8px">
+              <li style="font-size:13px;color:var(--text-2)">✓ Pre-screened borrower profiles</li>
+              <li style="font-size:13px;color:var(--text-2)">✓ AI fundability scores on every deal</li>
+              <li style="font-size:13px;color:var(--text-2)">✓ Matched to your exact lending criteria</li>
+              <li style="font-size:13px;color:var(--text-2)">✓ One-click Interest / Term Sheet / Pass workflow</li>
+            </ul>
+            <button class="btn btn-primary" onclick="lenderStartCheckout()" style="width:100%;justify-content:center">Subscribe — $297/month</button>
+          </div>
+        </div>`;
+    }
+  } catch (e) { console.warn('Failed to load lender deals:', e.message); }
+}
+
+function renderLenderStats() {
+  const total = lenderMatches.length;
+  const interested = lenderMatches.filter(m => m.interest_level === 'interested' || m.interest_level === 'term_sheet_issued').length;
+  const termSheet = lenderMatches.filter(m => m.interest_level === 'term_sheet_issued').length;
+  const scores = lenderMatches.map(m => m.deal_scores?.total_fundability_score || 0).filter(s => s > 0);
+  const avg = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
+  document.getElementById('lp-stat-total').textContent = total;
+  document.getElementById('lp-stat-interested').textContent = interested;
+  document.getElementById('lp-stat-avg').textContent = avg || '—';
+  document.getElementById('lp-stat-term').textContent = termSheet;
+}
+
+function filterLenderDeals(filter, btn) {
+  lenderFilter = filter;
+  document.querySelectorAll('#page-lenders .tab').forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderLenderDeals();
+}
+
+function renderLenderDeals() {
+  const grid = document.getElementById('lender-deals-grid');
+  const filtered = lenderFilter === 'all' ? lenderMatches : lenderMatches.filter(m => m.interest_level === lenderFilter);
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="empty-state"><h3>No deals in this category</h3><p>Matched deals will appear here as investors submit for analysis.</p></div>';
+    return;
+  }
+  grid.innerHTML = filtered.map(m => {
+    const d = m.deal_submissions || {};
+    const s = m.deal_scores || {};
+    const score = s.total_fundability_score || 0;
+    const scoreColor = score >= 65 ? 'var(--green)' : score >= 45 ? 'var(--amber)' : 'var(--red)';
+    const band = s.score_band || 'pending';
+    const bandColor = band === 'strong' ? 'var(--green)' : band === 'conditional' ? 'var(--amber)' : 'var(--red)';
+    const interest = m.interest_level || 'pending';
+    const interestColors = { pending: 'var(--text-4)', interested: 'var(--green)', not_interested: 'var(--red)', term_sheet_issued: 'var(--teal)', closed: 'var(--navy)' };
+    const interestLabels = { pending: 'New', interested: 'Interested', not_interested: 'Passed', term_sheet_issued: 'Term Sheet Issued', closed: 'Closed' };
+    const borrower = d.borrowers || {};
+    return `
+      <div class="card" style="cursor:pointer" onclick="openDealModal('${m.id}')">
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:1fr auto;gap:16px;align-items:start">
+            <div>
+              <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+                <div style="font-size:15px;font-weight:700;color:var(--text)">${d.property_address || 'Undisclosed Address'}</div>
+                <span style="font-family:'DM Mono',monospace;font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(14,116,144,0.1);color:var(--teal);border:1px solid var(--teal-border)">${(d.deal_type||'').replace('_',' ').toUpperCase()}</span>
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(4,auto);gap:20px;margin-bottom:12px">
+                <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase">Loan</div><div style="font-size:13px;font-weight:600;color:var(--text)">$${((d.requested_loan_amount||0)/1000).toFixed(0)}K</div></div>
+                <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase">LTV</div><div style="font-size:13px;font-weight:600;color:var(--text)">${d.requested_ltv||'—'}%</div></div>
+                <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase">State</div><div style="font-size:13px;font-weight:600;color:var(--text)">${d.state||'—'}</div></div>
+                <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase">Asset</div><div style="font-size:13px;font-weight:600;color:var(--text)">${(d.asset_type||'—').replace('_',' ').toUpperCase()}</div></div>
+              </div>
+              <div style="display:flex;align-items:center;gap:12px">
+                <div style="font-size:12px;color:var(--text-3)">Borrower: <span style="color:var(--text);font-weight:500">${borrower.borrower_name||'Anonymous'}</span></div>
+                <div style="font-size:12px;color:var(--text-3)">FICO: <span style="color:var(--text);font-weight:500">${borrower.fico||'—'}</span></div>
+                <div style="font-size:12px;color:var(--text-3)">Experience: <span style="color:var(--text);font-weight:500">${borrower.experience_level||'—'}</span></div>
+              </div>
+            </div>
+            <div style="text-align:center;min-width:100px">
+              <div style="font-size:32px;font-weight:800;color:${scoreColor};line-height:1;letter-spacing:-2px">${score}</div>
+              <div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;margin:2px 0">FUNDABILITY</div>
+              <div style="font-size:10px;font-weight:600;color:${bandColor};text-transform:uppercase">${band}</div>
+              <div style="margin-top:10px;font-size:11px;font-weight:600;color:${interestColors[interest]}">${interestLabels[interest]||interest}</div>
+            </div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+            <button class="btn btn-ghost" style="flex:1;font-size:12px;padding:7px" onclick="event.stopPropagation();setInterest('${m.id}','interested')">✓ Interested</button>
+            <button class="btn btn-ghost" style="flex:1;font-size:12px;padding:7px" onclick="event.stopPropagation();setInterest('${m.id}','term_sheet_issued')">📄 Term Sheet</button>
+            <button class="btn btn-ghost" style="flex:1;font-size:12px;padding:7px;color:var(--red)" onclick="event.stopPropagation();setInterest('${m.id}','not_interested')">✗ Pass</button>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+async function setInterest(matchId, status) {
+  const session = getLenderSession();
+  if (!session?.token) return;
+  await fetch(LENDER_FN, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'update_match', token: session.token, matchId, status })
+  });
+  const m = lenderMatches.find(x => x.id === matchId);
+  if (m) m.interest_level = status;
+  renderLenderStats(); renderLenderDeals();
+  showToast('Deal status updated', 'success');
+  if (status === 'interested' || status === 'term_sheet_issued') {
+    const deal = m?.deals;
+    fetch('/.netlify/functions/notion-lender-sync', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({
+        event: 'lender_interest',
+        lender: { name: session?.user?.lender?.lender_name || session?.user?.name || '' },
+        deal: { address: deal?.full_address || deal?.city || '', dealType: deal?.deal_type || '', loanAmount: deal?.requested_loan_amount, state: deal?.state || '', score: m?.deal_scores?.total_fundability_score, interestLevel: status }
+      })
+    }).catch(() => {});
+  }
+}
+
+function openDealModal(matchId) {
+  const m = lenderMatches.find(x => x.id === matchId);
+  if (!m) return;
+  const d = m.deal_submissions || {};
+  const s = m.deal_scores || {};
+  const borrower = d.borrowers || {};
+  const rationaleItems = (() => { try { return JSON.parse(s.rationale_json || '[]'); } catch { return []; } })();
+  const summary = rationaleItems.find(r => r.section === 'executive_summary')?.text || '';
+  const recs = rationaleItems.find(r => r.section === 'structuring')?.text || '';
+  const flags = (() => { try { return JSON.parse(s.risk_flags_json || '[]'); } catch { return []; } })();
+  document.getElementById('modal-deal-title').textContent = d.property_address || 'Deal Details';
+  document.getElementById('modal-deal-body').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
+      <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">Loan Amount</div><div style="font-size:16px;font-weight:700;color:var(--text)">$${((d.requested_loan_amount||0)).toLocaleString()}</div></div>
+      <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">Fundability Score</div><div style="font-size:16px;font-weight:700;color:var(--teal)">${s.total_fundability_score||'—'} / 100</div></div>
+      <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">LTV</div><div style="font-size:14px;font-weight:600;color:var(--text)">${d.requested_ltv||'—'}%</div></div>
+      <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">DSCR</div><div style="font-size:14px;font-weight:600;color:var(--text)">${d.dscr||'—'}</div></div>
+      <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">ARV</div><div style="font-size:14px;font-weight:600;color:var(--text)">$${((d.arv||0)).toLocaleString()}</div></div>
+      <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">Rehab Budget</div><div style="font-size:14px;font-weight:600;color:var(--text)">$${((d.rehab_budget||0)).toLocaleString()}</div></div>
+    </div>
+    <div style="margin-bottom:14px;padding:12px;background:var(--bg-3);border-radius:6px">
+      <div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:6px">Borrower Profile</div>
+      <div style="font-size:13px;color:var(--text-2)"><strong>${borrower.borrower_name||'Anonymous'}</strong> · FICO ${borrower.fico||'—'} · ${borrower.experience_level||'—'} experience · ${borrower.experience_count||0} deals completed</div>
+    </div>
+    ${flags.length ? `<div style="margin-bottom:14px"><div style="font-size:10px;color:var(--red);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:6px">Risk Flags</div>${flags.map(f=>`<div style="font-size:12px;color:var(--red);margin-bottom:3px">⚠ ${f.flag?.replace(/_/g,' ')} (${f.severity})</div>`).join('')}</div>` : ''}
+    ${summary ? `<div style="margin-bottom:14px"><div style="font-size:10px;color:var(--teal);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:6px">AI Summary</div><div style="font-size:13px;color:var(--text-2);line-height:1.6">${summary}</div></div>` : ''}
+    ${recs ? `<div style="margin-bottom:14px"><div style="font-size:10px;color:var(--teal);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:6px">Structuring Notes</div><div style="font-size:13px;color:var(--text-2);line-height:1.6">${recs}</div></div>` : ''}
+    <div style="display:flex;gap:8px;margin-top:16px">
+      <button class="btn btn-primary" style="flex:1" onclick="setInterest('${matchId}','interested');document.getElementById('lender-deal-modal').classList.remove('show')">✓ Mark Interested</button>
+      <button class="btn btn-ghost" style="flex:1" onclick="setInterest('${matchId}','term_sheet_issued');document.getElementById('lender-deal-modal').classList.remove('show')">📄 Issue Term Sheet</button>
+    </div>`;
+  document.getElementById('lender-deal-modal').classList.add('show');
+}
+
+function lenderLogout() {
+  clearLenderSession(); lenderMatches = []; showLenderLogin();
+  showToast('Signed out of lender portal', 'success');
+}
+
+function showLenderSignup() {
+  document.getElementById('lender-signup-modal').classList.add('show');
+}
+
+async function lenderSignup() {
+  const company = document.getElementById('ls-company').value.trim();
+  const contact = document.getElementById('ls-contact').value.trim();
+  const email = document.getElementById('ls-email').value.trim();
+  const phone = document.getElementById('ls-phone').value.trim();
+  const password = document.getElementById('ls-password').value;
+  const lenderType = document.getElementById('ls-type').value;
+  const lsState = document.getElementById('ls-state').value.trim().toUpperCase();
+  const minLoan = document.getElementById('ls-min-loan').value;
+  const maxLoan = document.getElementById('ls-max-loan').value;
+  const errEl = document.getElementById('lender-signup-error');
+  const btn = document.getElementById('ls-btn');
+  if (!company || !contact || !email || !password) { errEl.textContent = 'All required fields must be filled.'; errEl.style.display = 'block'; return; }
+  if (password.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Creating account...';
+  try {
+    const res = await fetch('/.netlify/functions/lender-signup', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ companyName: company, contactName: contact, email, phone, password, lenderType, states: lsState ? [lsState] : ['FL'], minLoan, maxLoan })
+    });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('lender-signup-modal').classList.remove('show');
+      showToast('Account created! Check your email to get started.', 'success');
+      document.getElementById('lender-email').value = email;
+      showPage('lenders');
+    } else { errEl.textContent = data.error || 'Signup failed.'; errEl.style.display = 'block'; }
+  } catch(e) { errEl.textContent = 'Connection error.'; errEl.style.display = 'block'; }
+  finally { btn.disabled = false; btn.textContent = 'Start 14-Day Free Trial'; }
+}
+
+function showAdminPanel() {
+  document.getElementById('admin-modal').classList.add('show');
+}
+
+async function loadAdminData() {
+  const secret = document.getElementById('admin-secret-input').value;
+  if (!secret) return;
+  try {
+    const res = await fetch('/.netlify/functions/admin-dashboard', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ secret })
+    });
+    const data = await res.json();
+    if (!data.success) { alert(data.error || 'Unauthorized'); return; }
+    document.getElementById('admin-login-section').style.display = 'none';
+    document.getElementById('admin-data-section').style.display = 'block';
+    const s = data.summary;
+    document.getElementById('admin-stats-grid').innerHTML = `
+      <div class="stat-card"><div class="stat-top"><span class="stat-label">Total Investors</span></div><div class="stat-value teal">${s.totalInvestors}</div><div class="stat-sub">${s.proInvestors} Pro / ${s.starterInvestors} Free</div></div>
+      <div class="stat-card green"><div class="stat-top"><span class="stat-label">Investor MRR</span></div><div class="stat-value green">$${s.estimatedMRR.toLocaleString()}</div><div class="stat-sub">$97/month × ${s.proInvestors} Pro</div></div>
+      <div class="stat-card"><div class="stat-top"><span class="stat-label">Total Deals</span></div><div class="stat-value teal">${s.totalDeals}</div><div class="stat-sub">${s.totalAnalysesThisMonth} analyses this month</div></div>
+      <div class="stat-card"><div class="stat-top"><span class="stat-label">Lender Activity</span></div><div class="stat-value teal">${s.interestedMatches}</div><div class="stat-sub">${s.termSheets} term sheets • ${s.totalMatches} total matches</div></div>
+      <div class="stat-card green"><div class="stat-top"><span class="stat-label">Lender MRR</span></div><div class="stat-value green">$${s.estimatedLenderMRR.toLocaleString()}</div><div class="stat-sub">$297/month × ${s.activeLenderUsers} active</div></div>
+      <div class="stat-card"><div class="stat-top"><span class="stat-label">Total MRR</span></div><div class="stat-value teal">$${(s.estimatedMRR + s.estimatedLenderMRR).toLocaleString()}</div><div class="stat-sub">Combined revenue</div></div>
+    `;
+    const stateRows = Object.entries(data.stateBreakdown).sort((a,b)=>b[1]-a[1]).map(([st,n])=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;border-bottom:1px solid var(--border)"><span style="color:var(--text-2)">${st}</span><span style="font-weight:600;color:var(--teal)">${n}</span></div>`).join('');
+    document.getElementById('admin-state-breakdown').innerHTML = '<div class="label" style="margin-bottom:8px">Deal Volume by State</div>' + stateRows;
+    const typeRows = Object.entries(data.dealTypeBreakdown).sort((a,b)=>b[1]-a[1]).map(([t,n])=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;border-bottom:1px solid var(--border)"><span style="color:var(--text-2)">${t}</span><span style="font-weight:600;color:var(--teal)">${n}</span></div>`).join('');
+    document.getElementById('admin-type-breakdown').innerHTML = '<div class="label" style="margin-bottom:8px">Deal Volume by Type</div>' + typeRows;
+    const invRows = (data.recentInvestors||[]).map(i=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:12px;border-bottom:1px solid var(--border)"><div><div style="font-weight:500;color:var(--text-2)">${i.email}</div><div style="color:var(--text-4);font-size:11px">${new Date(i.created_at).toLocaleDateString()}</div></div><span class="chip ${i.plan==='pro'?'chip-green':'chip-teal'}">${i.plan?.toUpperCase()}</span></div>`).join('');
+    document.getElementById('admin-investors-table').innerHTML = invRows;
+  } catch(e) { alert('Error: ' + e.message); }
+}
+
+function showUpgradePrompt() {
+  const plan = document.getElementById('sidebar-plan')?.textContent?.trim();
+  if (plan === 'PRO') {
+    showToast('You are on Pro. Use the billing portal to manage your subscription.', 'success');
+    return;
+  }
+  const modal = document.getElementById('upgrade-modal');
+  if (modal) modal.classList.add('show');
+}
+</script>
+</body>
+</html>
+
