@@ -384,7 +384,7 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
     <div class="auth-tabs">
       <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Sign In</button>
       <button class="auth-tab" id="tab-signup" onclick="switchAuthTab('signup')">Create Account</button>
-      <a href="/realtor" class="auth-tab" style="color:var(--teal);text-decoration:none;font-size:12px">🏠 Realtor</a>
+      <a href="/realtor" class="auth-tab" style="color:var(--teal);text-decoration:none;font-size:12px" onclick="window.location.href='/realtor';return false;">🏠 Realtor →</a>
       <a href="/lender" class="auth-tab" style="color:var(--teal);text-decoration:none;font-size:12px">🏦 Lender</a>
     </div>
     <div class="auth-error" id="auth-error"></div>
@@ -428,42 +428,24 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
 
     <!-- REALTOR LOGIN FORM -->
     <div id="form-realtor" style="display:none">
-      <div style="text-align:center;margin-bottom:16px">
-        <div style="font-size:24px;margin-bottom:6px">🏠</div>
-        <div style="font-size:12px;color:var(--text-4)">Sign in as a licensed real estate agent</div>
-      </div>
-      <div class="auth-field"><label class="auth-label">Email</label><input class="auth-input" id="realtor-auth-email" type="email" placeholder="you@brokerage.com" onkeydown="if(event.key==='Enter')doRealtorAuth()"></div>
-      <div class="auth-field"><label class="auth-label">Password</label><div class="pw-wrap"><input class="auth-input" id="realtor-auth-password" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doRealtorAuth()"><span class="pw-eye" onclick="togglePw(this)">👁</span></div></div>
-      <button class="auth-btn" id="realtor-auth-btn" onclick="doRealtorAuth()">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        Sign In as Realtor
-      </button>
-      <div class="auth-divider">
-        No account? <span style="color:var(--teal);cursor:pointer" onclick="showRealtorSignupFromAuth()">Create free realtor account →</span>
+      <div style="text-align:center;padding:20px 0">
+        <div style="font-size:32px;margin-bottom:12px">🏠</div>
+        <div style="font-size:16px;font-weight:700;color:white;margin-bottom:8px">Realtor Portal</div>
+        <div style="font-size:13px;color:var(--text-4);margin-bottom:24px">The Realtor Portal has moved to its own dedicated page.</div>
+        <a href="/realtor" style="display:inline-block;padding:12px 28px;background:var(--teal);color:var(--navy);font-weight:700;font-size:14px;border-radius:8px;text-decoration:none">
+          Go to Realtor Portal →
+        </a>
+        <div style="margin-top:16px;font-size:12px;color:var(--text-4)">underlytix.com/realtor</div>
       </div>
     </div>
 
-    <!-- REALTOR SIGNUP FORM (in auth screen) -->
+    <!-- REALTOR SIGNUP FORM (in auth screen) - redirects to dedicated portal -->
     <div id="form-realtor-signup" style="display:none">
-      <div style="text-align:center;margin-bottom:14px">
-        <div style="font-size:12px;color:var(--text-4)">14-day free trial · $49/month after · No credit card required</div>
+      <div style="text-align:center;padding:20px 0">
+        <a href="/realtor" style="display:inline-block;padding:12px 28px;background:var(--teal);color:var(--navy);font-weight:700;font-size:14px;border-radius:8px;text-decoration:none">
+          Go to Realtor Portal →
+        </a>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="auth-field"><label class="auth-label">Full Name</label><input class="auth-input" id="ras-name" type="text" placeholder="Jane Smith"></div>
-        <div class="auth-field"><label class="auth-label">Phone</label><input class="auth-input" id="ras-phone" type="tel" placeholder="(305) 555-0100"></div>
-      </div>
-      <div class="auth-field"><label class="auth-label">Work Email</label><input class="auth-input" id="ras-email" type="email" placeholder="jane@brokerage.com"></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-        <div class="auth-field"><label class="auth-label">License #</label><input class="auth-input" id="ras-license" type="text" placeholder="SL3456789"></div>
-        <div class="auth-field"><label class="auth-label">Brokerage</label><input class="auth-input" id="ras-brokerage" type="text" placeholder="EXP Realty"></div>
-      </div>
-      <div class="auth-field"><label class="auth-label">Password</label><div class="pw-wrap"><input class="auth-input" id="ras-password" type="password" placeholder="Min 8 characters"><span class="pw-eye" onclick="togglePw(this)">👁</span></div></div>
-      <button class="auth-btn" id="ras-btn" onclick="doRealtorSignupFromAuth()">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        Start Free Trial
-      </button>
-      <div class="auth-divider"><span style="cursor:pointer;color:var(--teal)" onclick="switchAuthTab('realtor')">← Back to realtor sign in</span></div>
-      <div style="text-align:center;margin-top:8px;font-size:11px;color:var(--text-4)">By signing up you agree to our <a href="/terms" target="_blank" style="color:var(--teal)">Terms</a> and <a href="/privacy" target="_blank" style="color:var(--teal)">Privacy Policy</a>.</div>
     </div>
   </div>
 </div>
