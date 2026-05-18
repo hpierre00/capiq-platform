@@ -351,6 +351,7 @@ async function realtorCheckout() {
 function startNewPrequal() {
   prequaMessages = [];
   currentPrequal = null;
+  _prequal_saved = false;
   const messagesEl = document.getElementById('prequal-chat-messages');
   messagesEl.innerHTML = `<div style="background:var(--bg-3);border-radius:12px;padding:14px 16px;font-size:14px;color:var(--text-2);max-width:90%;line-height:1.6">Hi! Tell me about your client. You can start with something like: <em>"I have a buyer looking at a $350k home in Tampa, puts down 20%, W-2 income around $7k/month, credit around 700, no major debts."</em></div>`;
   document.getElementById('prequal-result-banner').style.display = 'none';
@@ -407,6 +408,7 @@ async function sendPrequal() {
         banner.style.display = 'block';
         banner.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="font-size:13px;font-weight:700;color:${resultColors[data.prequal.result]||'var(--teal)'};margin-bottom:6px">${resultLabels[data.prequal.result]||data.prequal.result}</div><div style="font-size:12px;color:var(--text-3);margin-bottom:4px">${data.prequal.loanType?.toUpperCase()||'—'} · Max Loan $${data.prequal.maxLoanAmount?.toLocaleString()||'—'} · Back-end DTI ${data.prequal.backEndDTI||'—'}% · Front-end DTI ${data.prequal.frontEndDTI||'—'}%</div>${data.prequal.monthlyPITIA?`<div style="font-size:11px;color:var(--text-4);margin-bottom:4px">P&amp;I $${data.prequal.monthlyPI?.toLocaleString()||'—'} + Taxes $${data.prequal.monthlyTaxes?.toLocaleString()||'—'} + Insurance $${data.prequal.monthlyInsurance?.toLocaleString()||'—'} + HOA $${data.prequal.monthlyHOA?.toLocaleString()||'0'} = <strong style="color:var(--text-2)">PITIA $${data.prequal.monthlyPITIA?.toLocaleString()}/mo</strong></div>`:''} ${data.prequal.riskFlags?.length?`<div style="font-size:11px;color:var(--red);margin-top:2px">⚠ ${data.prequal.riskFlags.join(' · ')}</div>`:''}<div style="font-size:10px;color:var(--text-4);margin-top:6px;font-style:italic">Not a commitment to lend. Subject to full lender underwriting and approval.</div></div><div style="font-size:10px;color:var(--text-4);text-align:right;line-height:1.4">Based on<br>provided data</div></div>`;
         document.getElementById('prequal-save-btn').style.display = 'block';
+      setTimeout(() => savePrequal(true), 1000);
       }
     } else {
       document.getElementById('typing-indicator')?.remove();
@@ -418,25 +420,48 @@ async function sendPrequal() {
   } finally { btn.disabled = false; btn.textContent = 'Send'; }
 }
 
-async function savePrequal() {
+let _prequal_saved = false;
+
+async function savePrequal(silent = false) {
   const sess = getRealtorSession();
   if (!sess?.token || !currentPrequal) return;
-  const clientName = prompt('Client name or reference (optional):') || 'Client';
+  if (_prequal_saved) {
+    if (!silent) showToast('Already saved to pipeline.', 'success');
+    return;
+  }
+  _prequal_saved = true;
+  const clientName = 'Client ' + new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'});
+  const btn = document.getElementById('prequal-save-btn');
+  if (btn) { btn.textContent = 'Saving...'; btn.disabled = true; }
   try {
     const res = await fetch(REALTOR_PREQUAL_FN, {
       method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ action: 'save', token: sess.token, clientData: { clientName, prequal: currentPrequal, messages: prequaMessages } })
+      body: JSON.stringify({ action: 'save', token: sess.token, clientData: { clientName, prequal: currentPrequal, messages: prequaMessages || [] } })
     });
     const data = await res.json();
     if (data.success) {
-      showToast('Prequal saved to your pipeline', 'success');
-      document.getElementById('prequal-save-btn').textContent = '✓ Saved';
-      document.getElementById('prequal-save-btn').disabled = true;
-      loadRealtorHistory();
-      const countEl = document.getElementById('rs-prequal-count');
-      if (countEl) countEl.textContent = parseInt(countEl.textContent || 0) + 1;
+      if (btn) { btn.textContent = '✓ Saved'; btn.disabled = true; }
+      if (!silent) {
+        showToast('Saved to pipeline!', 'success');
+        setTimeout(() => {
+          document.getElementById('prequal-chat-modal').classList.remove('show');
+          loadRealtorHistory();
+        }, 1500);
+      } else {
+        loadRealtorHistory();
+        const countEl = document.getElementById('rs-prequal-count');
+        if (countEl) countEl.textContent = parseInt(countEl.textContent || 0) + 1;
+      }
+    } else {
+      _prequal_saved = false;
+      if (btn) { btn.textContent = '💾 Save & Add to Pipeline'; btn.disabled = false; }
+      if (!silent) showToast(data.error || 'Save failed. Try again.', 'error');
     }
-  } catch(e) { showToast('Save failed', 'error'); }
+  } catch(e) {
+    _prequal_saved = false;
+    if (btn) { btn.textContent = '💾 Save & Add to Pipeline'; btn.disabled = false; }
+    if (!silent) showToast('Connection error: ' + e.message, 'error');
+  }
 }
 
 async function loadRealtorHistory() {
