@@ -389,7 +389,7 @@ async function loadLenderDeals(token) {
             <p style="color:var(--text-2);font-size:14px;margin-bottom:20px">Subscribe to continue receiving qualified investor deals matched to your lending criteria.</p>
             <ul style="list-style:none;padding:0;margin:0 0 24px;display:flex;flex-direction:column;gap:8px">
               <li style="font-size:13px;color:var(--text-2)">✓ Pre-screened borrower profiles</li>
-              <li style="font-size:13px;color:var(--text-2)">✓ AI fundability scores on every deal</li>
+              <li style="font-size:13px;color:var(--text-2)">✓ AI capital readiness scores on every deal</li>
               <li style="font-size:13px;color:var(--text-2)">✓ Matched to your exact lending criteria</li>
               <li style="font-size:13px;color:var(--text-2)">✓ One-click Interest / Term Sheet / Pass workflow</li>
             </ul>
@@ -521,7 +521,7 @@ function openDealModal(matchId) {
   document.getElementById('modal-deal-body').innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
       <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">Loan Amount</div><div style="font-size:16px;font-weight:700;color:var(--text)">$${((d.requested_loan_amount||0)).toLocaleString()}</div></div>
-      <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">Fundability Score</div><div style="font-size:16px;font-weight:700;color:var(--teal)">${s.total_fundability_score||'—'} / 100</div></div>
+      <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">Capital Readiness Score</div><div style="font-size:16px;font-weight:700;color:var(--teal)">${s.total_fundability_score||'—'} / 100</div></div>
       <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">LTV</div><div style="font-size:14px;font-weight:600;color:var(--text)">${d.requested_ltv||'—'}%</div></div>
       <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">DSCR</div><div style="font-size:14px;font-weight:600;color:var(--text)">${d.dscr||'—'}</div></div>
       <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">ARV</div><div style="font-size:14px;font-weight:600;color:var(--text)">$${((d.arv||0)).toLocaleString()}</div></div>

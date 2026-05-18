@@ -207,6 +207,7 @@ When you have enough information to make a determination, respond with a JSON bl
   "ready": true,
   "loanType": "conventional|fha|va|usda|jumbo|dscr|hard_money|bank_statement|non_qm",
   "result": "likely_qualifies|borderline|unlikely|needs_review",
+  // result labels: likely_qualifies="Strong Alignment", borderline="Needs Review", unlikely="Low Compatibility", needs_review="Needs Review"
   "maxLoanAmount": 0,
   "estimatedMonthlyPayment": 0,
   "monthlyPI": 0,

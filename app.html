@@ -688,7 +688,7 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
         <div class="hero fade-up">
           <div class="hero-eyebrow">Capital Intelligence Platform</div>
           <div class="hero-title">Know if your deal is fundable<br><em>before</em> approaching a lender.</div>
-          <div class="hero-sub">Underlytix analyzes deals against real lending criteria, scores fundability, and matches investors to the right capital source — before wasting time on applications.</div>
+          <div class="hero-sub">Underlytix analyzes deals against real lending criteria, scores capital readiness, and matches investors to the right capital source — before wasting time on applications.</div>
         </div>
         <div class="stats-grid">
           <div class="stat-card fade-up">
@@ -711,7 +711,7 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
         <div class="card fade-up">
           <div class="card-header"><div class="card-title">Recent Deal Activity</div><button class="btn btn-ghost" onclick="showPage('submit')" style="padding:6px 14px;font-size:12px">+ Submit Deal</button></div>
           <div class="card-body" id="dashboard-recent">
-            <div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><h3>No deals yet</h3><p>Submit your first deal to generate fundability intelligence.</p></div>
+            <div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><h3>No deals yet</h3><p>Submit your first deal to generate capital readiness intelligence.</p></div>
           </div>
         </div>
       </div>
@@ -2032,7 +2032,7 @@ async function analyzeDeal() {
   const msgs = [
     'Reviewing deal structure...',
     'Running underwriting analysis...',
-    'Scoring fundability metrics...',
+    'Scoring capital readiness metrics...',
     'Evaluating lender criteria...',
     'Generating intelligence report...',
     'Matching to lender network...',
@@ -2130,7 +2130,7 @@ function renderResult(a, d) {
           <div style="text-align:center">
             <div class="score-ring">
               <svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" fill="none" stroke="var(--bg-4)" stroke-width="8"/><circle cx="60" cy="60" r="52" fill="none" stroke="${sc}" stroke-width="8" stroke-dasharray="${fill} ${circ}" stroke-linecap="round"/></svg>
-              <div class="score-ring-num"><div class="score-big" style="color:${sc}">${a.fundabilityScore}</div><div class="score-label">Fundability</div></div>
+              <div class="score-ring-num"><div class="score-big" style="color:${sc}">${a.fundabilityScore}</div><div class="score-label">Capital Readiness</div></div>
             </div>
             ${a.humanReviewRequired?'<div style="margin-top:10px;font-size:11px;color:var(--amber);font-weight:600;background:var(--amber-dim);padding:4px 10px;border-radius:4px;border:1px solid rgba(217,119,6,0.2)">⚠ REVIEW REQUIRED</div>':''}
           </div>
@@ -2206,7 +2206,7 @@ function updateStats() {
 
 function renderDashboardRecent() {
   const el=document.getElementById('dashboard-recent');
-  if(!state.deals.length){el.innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><h3>No deals yet</h3><p>Submit your first deal to generate fundability intelligence.</p></div>';return;}
+  if(!state.deals.length){el.innerHTML='<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg><h3>No deals yet</h3><p>Submit your first deal to generate capital readiness intelligence.</p></div>';return;}
   el.innerHTML=`<table class="deal-table"><thead><tr><th>Deal</th><th>Type</th><th>LTV</th><th>Score</th><th>Verdict</th><th>Date</th></tr></thead><tbody>${state.deals.slice(0,5).map(d=>{const vc=d.analysis?.dealScore==='Pass'?'verdict-pass':d.analysis?.dealScore==='Review'?'verdict-review':'verdict-reject';return`<tr onclick="viewDeal(${d.id})"><td class="deal-name">${d.dealName}</td><td class="mono">${d.dealData.dealType||'—'}</td><td class="mono">${d.dealData.ltv||'—'}%</td><td class="mono" style="color:var(--teal);font-weight:600">${d.analysis?.fundabilityScore||'—'}</td><td><span class="verdict-badge ${vc}" style="font-size:10px;padding:3px 10px">${d.analysis?.dealScore||'—'}</span></td><td class="mono" style="color:var(--text-4)">${new Date(d.timestamp).toLocaleDateString()}</td></tr>`;}).join('')}</tbody></table>`;
 }
 
@@ -2400,7 +2400,7 @@ async function loadLenderDeals(token) {
             <p style="color:var(--text-2);font-size:14px;margin-bottom:20px">Subscribe to continue receiving qualified investor deals matched to your lending criteria.</p>
             <ul style="list-style:none;padding:0;margin:0 0 24px;display:flex;flex-direction:column;gap:8px">
               <li style="font-size:13px;color:var(--text-2)">✓ Pre-screened borrower profiles</li>
-              <li style="font-size:13px;color:var(--text-2)">✓ AI fundability scores on every deal</li>
+              <li style="font-size:13px;color:var(--text-2)">✓ AI capital readiness scores on every deal</li>
               <li style="font-size:13px;color:var(--text-2)">✓ Matched to your exact lending criteria</li>
               <li style="font-size:13px;color:var(--text-2)">✓ One-click Interest / Term Sheet / Pass workflow</li>
             </ul>
@@ -2535,7 +2535,7 @@ function openDealModal(matchId) {
   document.getElementById('modal-deal-body').innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
       <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">Loan Amount</div><div style="font-size:16px;font-weight:700;color:var(--text)">$${((d.requested_loan_amount||0)).toLocaleString()}</div></div>
-      <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">Fundability Score</div><div style="font-size:16px;font-weight:700;color:var(--teal)">${s.total_fundability_score||'—'} / 100</div></div>
+      <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">Capital Readiness Score</div><div style="font-size:16px;font-weight:700;color:var(--teal)">${s.total_fundability_score||'—'} / 100</div></div>
       <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">LTV</div><div style="font-size:14px;font-weight:600;color:var(--text)">${d.requested_ltv||'—'}%</div></div>
       <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">DSCR</div><div style="font-size:14px;font-weight:600;color:var(--text)">${d.dscr||'—'}</div></div>
       <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">ARV</div><div style="font-size:14px;font-weight:600;color:var(--text)">$${((d.arv||0)).toLocaleString()}</div></div>
@@ -3006,7 +3006,7 @@ async function sendPrequal() {
         currentPrequal = data.prequal;
         const p = data.prequal;
         const resultColors = { likely_qualifies: '#00bfa5', borderline: '#f59e0b', unlikely: '#ef4444', needs_review: '#6b7280' };
-        const resultLabels = { likely_qualifies: '✓ Likely Qualifies', borderline: '⚠ Borderline', unlikely: '✗ Unlikely to Qualify', needs_review: '? Needs Review' };
+        const resultLabels = { likely_qualifies: '✓ Strong Alignment', borderline: '⚠ Needs Review', unlikely: '✗ Low Compatibility', needs_review: '? Needs Review' };
         const banner = document.getElementById('prequal-result-banner');
         banner.style.display = 'block';
 
@@ -3202,7 +3202,7 @@ async function loadRealtorStandaloneHistory() {
       return;
     }
     const resultColors = { likely_qualifies: 'chip-green', borderline: 'chip-yellow', unlikely: 'chip-red', needs_review: 'chip-gray' };
-    const resultLabels = { likely_qualifies: 'Likely Qualifies', borderline: 'Borderline', unlikely: 'Unlikely', needs_review: 'Needs Review' };
+    const resultLabels = { likely_qualifies: 'Strong Alignment', borderline: 'Needs Review', unlikely: 'Low Compatibility', needs_review: 'Needs Review' };
     container.innerHTML = data.history.map(p => `
       <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)">
         <div>
