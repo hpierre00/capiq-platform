@@ -481,6 +481,16 @@ footer{
       </a>
       <a href="/realtor" class="btn-teal-lg">Find Matching Lenders →</a>
     </div>
+    <div style="display:flex;gap:32px;justify-content:center;margin-top:24px;flex-wrap:wrap">
+  <div style="text-align:center">
+    <div id="scenarios-count" style="font-size:28px;font-weight:800;color:#0e7490">—</div>
+    <div style="font-size:12px;color:#64748b;margin-top:2px">Scenarios Analyzed</div>
+  </div>
+  <div style="text-align:center">
+    <div id="lenders-count" style="font-size:28px;font-weight:800;color:#0e7490">—</div>
+    <div style="font-size:12px;color:#64748b;margin-top:2px">Lender Criteria Modeled</div>
+  </div>
+</div>
     <div class="hero-proof">
       <div class="proof-item">
         <div class="proof-check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg></div>
@@ -779,6 +789,17 @@ document.querySelectorAll('.prob-card,.price-card,.proof-card,.time-card').forEa
   el.style.transition='opacity .45s ease, transform .45s ease';
   obs.observe(el);
 });
+</script>
+<script>
+async function loadStats() {
+  try {
+    const res = await fetch('/.netlify/functions/platform-stats');
+    const data = await res.json();
+    if (data.scenarios) document.getElementById('scenarios-count').textContent = data.scenarios.toLocaleString();
+    if (data.lenders) document.getElementById('lenders-count').textContent = data.lenders.toLocaleString();
+  } catch(e) {}
+}
+loadStats();
 </script>
 </body>
 </html>
