@@ -54,16 +54,16 @@
 # /app serves the investor portal
 [[redirects]]
   from = "/app"
-  to = "/app.html"
+  to = "/investor.html"
   status = 200
 
 [[redirects]]
   from = "/app/*"
-  to = "/app.html"
+  to = "/investor.html"
   status = 200
 
 # SPA fallback — only for /app subroutes, not root
 [[redirects]]
   from = "/app/**"
-  to = "/app.html"
+  to = "/investor.html"
   status = 200
