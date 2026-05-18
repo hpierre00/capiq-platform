@@ -524,8 +524,7 @@ async function loadRealtorHistory() {
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
         <span class="chip ${resultColors[p.prequal_result] || 'chip-gray'}">${resultLabels[p.prequal_result] || p.prequal_result || '—'}</span>
-        <button onclick="viewSavedPrequal('${(p.client_name||'Client').replace(/'/g,'\\'')}','${p.loan_type||''}','${p.state||''}',${p.max_loan_amount||0},'${(p.ai_summary||'').slice(0,200).replace(/'/g,'\\'').replace(/
-/g,' ')}','${p.prequal_result||''}')" style="font-size:11px;padding:4px 10px;border-radius:5px;background:rgba(0,212,188,0.1);border:1px solid rgba(0,212,188,0.25);color:var(--teal);cursor:pointer;white-space:nowrap">View</button>
+        <button onclick="viewSavedPrequal('${(p.client_name||'Client').replace(/'/g,"\\'")}','${p.loan_type||''}','${p.state||''}',${p.max_loan_amount||0},'${(p.ai_summary||'').slice(0,200).replace(/'/g,"\\'").replace(/\n/g,' ')}','${p.prequal_result||''}')" style="font-size:11px;padding:4px 10px;border-radius:5px;background:rgba(0,212,188,0.1);border:1px solid rgba(0,212,188,0.25);color:var(--teal);cursor:pointer;white-space:nowrap">View</button>
       </div>
     </div>`).join('');
   } catch(e) {}
