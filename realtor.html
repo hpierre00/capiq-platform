@@ -516,26 +516,33 @@ async function loadRealtorHistory() {
     }
     const resultColors = { likely_qualifies: 'chip-green', borderline: 'chip-yellow', unlikely: 'chip-red', needs_review: 'chip-gray' };
     const resultLabels = { likely_qualifies: 'Strong Alignment', borderline: 'Needs Review', unlikely: 'Low Compatibility', needs_review: 'Needs Review' };
-    container.innerHTML = data.history.map(p => `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);gap:10px">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:13px;font-weight:600;color:var(--text)">${p.client_name || 'Client'}</div>
-        <div style="font-size:11px;color:var(--text-4);margin-top:2px">${p.loan_type || '—'} · ${p.state || '—'} · ${p.max_loan_amount ? '$'+parseInt(p.max_loan_amount).toLocaleString() : '—'} · ${new Date(p.created_at).toLocaleDateString()}</div>
-        ${p.ai_summary ? `<div style="font-size:11px;color:var(--text-3);margin-top:3px">${p.ai_summary.slice(0,100)}...</div>` : ''}
-      </div>
-      <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
-        <span class="chip ${resultColors[p.prequal_result] || 'chip-gray'}">${resultLabels[p.prequal_result] || p.prequal_result || '—'}</span>
-        <button 
-          data-name="${(p.client_name||'Client')}"
-          data-loan="${p.loan_type||''}"
-          data-state="${p.state||''}"
-          data-loan-amt="${p.max_loan_amount||0}"
-          data-summary="${(p.ai_summary||'').slice(0,200)}"
-          data-result="${p.prequal_result||''}"
-          onclick="viewSavedPrequalFromEl(this)"
-          style="font-size:11px;padding:4px 10px;border-radius:5px;background:rgba(0,212,188,0.1);border:1px solid rgba(0,212,188,0.25);color:var(--teal);cursor:pointer;white-space:nowrap">View</button>
-      </div>
-    </div>`).join('');
-  } catch(e) {}
+    container.innerHTML = data.history.map(function(p) {
+      var summaryHtml = p.ai_summary ? '<div style="font-size:11px;color:var(--text-3);margin-top:3px">' + p.ai_summary.slice(0,100) + '...</div>' : '';
+      var loanAmt = p.max_loan_amount ? '$' + parseInt(p.max_loan_amount).toLocaleString() : '—';
+      var resultColor = resultColors[p.prequal_result] || 'chip-gray';
+      var resultLabel = resultLabels[p.prequal_result] || p.prequal_result || '—';
+      var clientName = (p.client_name || 'Client').replace(/"/g, '&quot;');
+      var summary = (p.ai_summary || '').slice(0, 200).replace(/"/g, '&quot;');
+      var date = new Date(p.created_at).toLocaleDateString();
+      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);gap:10px">' +
+        '<div style="flex:1;min-width:0">' +
+          '<div style="font-size:13px;font-weight:600;color:var(--text)">' + (p.client_name || 'Client') + '</div>' +
+          '<div style="font-size:11px;color:var(--text-4);margin-top:2px">' + (p.loan_type || '—') + ' · ' + (p.state || '—') + ' · ' + loanAmt + ' · ' + date + '</div>' +
+          summaryHtml +
+        '</div>' +
+        '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">' +
+          '<span class="chip ' + resultColor + '">' + resultLabel + '</span>' +
+          '<button data-name="' + clientName + '" data-loan="' + (p.loan_type||'') + '" data-state="' + (p.state||'') + '" data-loan-amt="' + (p.max_loan_amount||0) + '" data-summary="' + summary + '" data-result="' + (p.prequal_result||'') + '" onclick="viewSavedPrequalFromEl(this)" style="font-size:11px;padding:4px 10px;border-radius:5px;background:rgba(0,212,188,0.1);border:1px solid rgba(0,212,188,0.25);color:var(--teal);cursor:pointer;white-space:nowrap">View</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  } catch(e) {
+    console.error('loadRealtorHistory error:', e);
+    try {
+      const container = document.getElementById('rs-history-list');
+      if (container) container.innerHTML = '<div style="padding:20px;color:#ef4444;font-size:13px">Unable to load pipeline. Error: ' + e.message + '</div>';
+    } catch(e2) {}
+  }
 }
 
 
@@ -587,10 +594,16 @@ async function toggleVoiceInput() {
     showToast('🎤 Listening — speak now', 'success');
   };
   voiceRecognition.onresult = (ev) => {
+    // Only process from resultIndex to avoid reprocessing old finals
     let interim = '';
     for (let i = ev.resultIndex; i < ev.results.length; i++) {
       const t = ev.results[i][0].transcript;
-      if (ev.results[i].isFinal) base += t + ' '; else interim = t;
+      if (ev.results[i].isFinal) {
+        base += t + ' ';
+        interim = ''; // Clear interim when this segment is final
+      } else {
+        interim = t; // Only show the current interim segment
+      }
     }
     input.value = base + interim;
     input.style.borderColor = 'var(--teal)';
