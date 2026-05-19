@@ -524,7 +524,15 @@ async function loadRealtorHistory() {
       </div>
       <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
         <span class="chip ${resultColors[p.prequal_result] || 'chip-gray'}">${resultLabels[p.prequal_result] || p.prequal_result || '—'}</span>
-        <button onclick="viewSavedPrequal('${(p.client_name||'Client').replace(/'/g,"\\'")}','${p.loan_type||''}','${p.state||''}',${p.max_loan_amount||0},'${(p.ai_summary||'').slice(0,200).replace(/'/g,"\\'").replace(/\n/g,' ')}','${p.prequal_result||''}')" style="font-size:11px;padding:4px 10px;border-radius:5px;background:rgba(0,212,188,0.1);border:1px solid rgba(0,212,188,0.25);color:var(--teal);cursor:pointer;white-space:nowrap">View</button>
+        <button 
+          data-name="${(p.client_name||'Client')}"
+          data-loan="${p.loan_type||''}"
+          data-state="${p.state||''}"
+          data-loan-amt="${p.max_loan_amount||0}"
+          data-summary="${(p.ai_summary||'').slice(0,200)}"
+          data-result="${p.prequal_result||''}"
+          onclick="viewSavedPrequalFromEl(this)"
+          style="font-size:11px;padding:4px 10px;border-radius:5px;background:rgba(0,212,188,0.1);border:1px solid rgba(0,212,188,0.25);color:var(--teal);cursor:pointer;white-space:nowrap">View</button>
       </div>
     </div>`).join('');
   } catch(e) {}
@@ -669,6 +677,16 @@ async function doRealtorForgotPassword() {
 }
 
 // ── VIEW SAVED PREQUAL FROM PIPELINE ─────────────────────────────────────────
+function viewSavedPrequalFromEl(btn) {
+  const name = btn.getAttribute('data-name') || 'Client';
+  const loan = btn.getAttribute('data-loan') || '';
+  const state = btn.getAttribute('data-state') || '';
+  const amt = parseFloat(btn.getAttribute('data-loan-amt')) || 0;
+  const summary = btn.getAttribute('data-summary') || '';
+  const result = btn.getAttribute('data-result') || '';
+  viewSavedPrequal(name, loan, state, amt, summary, result);
+}
+
 function viewSavedPrequal(clientName, loanType, state, maxLoan, summary, result) {
   // Open prequal chat modal showing the saved result
   _prequal_saved = true; // don't re-save
