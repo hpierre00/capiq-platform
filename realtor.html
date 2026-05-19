@@ -576,10 +576,14 @@ async function toggleVoiceInput() {
     showToast(msgs[e.name] || 'Mic error: ' + e.message, 'error'); return;
   }
   voiceRecognition = new SR();
-  voiceRecognition.continuous = true;
+  voiceRecognition.continuous = false;  // false prevents auto-restart that causes duplicates
   voiceRecognition.interimResults = true;
   voiceRecognition.lang = 'en-US';
-  let base = input.value.trim() ? input.value.trimEnd() + ' ' : '';
+  voiceRecognition.maxAlternatives = 1;
+  // Capture existing text ONCE before starting — do NOT re-seed in onresult
+  const existingText = input.value.trim() ? input.value.trimEnd() + ' ' : '';
+  let base = existingText;
+  let lastFinalLength = existingText.length;
   voiceRecognition.onstart = () => {
     isRecording = true;
     if (!document.getElementById('pulse-style')) {
@@ -594,15 +598,14 @@ async function toggleVoiceInput() {
     showToast('🎤 Listening — speak now', 'success');
   };
   voiceRecognition.onresult = (ev) => {
-    // Only process from resultIndex to avoid reprocessing old finals
     let interim = '';
     for (let i = ev.resultIndex; i < ev.results.length; i++) {
       const t = ev.results[i][0].transcript;
       if (ev.results[i].isFinal) {
         base += t + ' ';
-        interim = ''; // Clear interim when this segment is final
+        interim = '';
       } else {
-        interim = t; // Only show the current interim segment
+        interim = t;
       }
     }
     input.value = base + interim;
@@ -701,25 +704,36 @@ function viewSavedPrequalFromEl(btn) {
 }
 
 function viewSavedPrequal(clientName, loanType, state, maxLoan, summary, result) {
-  // Open prequal chat modal showing the saved result
-  _prequal_saved = true; // don't re-save
+  _prequal_saved = true;
   currentPrequal = { loanType, state, maxLoanAmount: maxLoan, result, summary };
   prequaMessages = [];
-  const messagesEl = document.getElementById('prequal-chat-messages');
-  messagesEl.innerHTML = `
-    <div style="background:var(--bg-3);border-radius:12px;padding:14px 16px;font-size:14px;color:var(--text-2);max-width:90%;line-height:1.6">
-      <strong>${clientName}</strong> — saved prequalification
-    </div>
-    <div style="background:rgba(0,191,165,0.08);border:1px solid rgba(0,191,165,0.2);border-radius:12px;padding:14px 16px;font-size:13px;color:var(--text-2);line-height:1.6">
-      <strong>${loanType || '—'}</strong> · ${state || '—'} · Max Loan: ${maxLoan ? '$'+parseInt(maxLoan).toLocaleString() : '—'}<br>
-      <span style="font-size:12px;color:var(--text-3);margin-top:6px;display:block">${summary || 'No summary available.'}</span>
-    </div>`;
-  document.getElementById('prequal-result-banner').style.display = 'none';
-  const af = document.getElementById('prequal-action-footer');
-  if (af) { af.style.display = 'flex'; }
-  document.getElementById('prequal-save-btn').style.display = 'none';
-  document.getElementById('prequal-input').value = '';
+
+  // Ensure modal is open first so elements are accessible
   document.getElementById('prequal-chat-modal').classList.add('show');
+
+  const messagesEl = document.getElementById('prequal-chat-messages');
+  if (messagesEl) {
+    messagesEl.innerHTML =
+      '<div style="background:var(--bg-3);border-radius:12px;padding:14px 16px;font-size:14px;color:var(--text-2);max-width:90%;line-height:1.6">' +
+        '<strong>' + clientName + '</strong> — saved prequalification' +
+      '</div>' +
+      '<div style="background:rgba(0,191,165,0.08);border:1px solid rgba(0,191,165,0.2);border-radius:12px;padding:14px 16px;font-size:13px;color:var(--text-2);line-height:1.6;margin-top:8px">' +
+        '<strong>' + (loanType || '—') + '</strong> · ' + (state || '—') + ' · Max Loan: ' + (maxLoan ? '$' + parseInt(maxLoan).toLocaleString() : '—') + '<br>' +
+        '<span style="font-size:12px;color:var(--text-3);margin-top:6px;display:block">' + (summary || 'No summary available.') + '</span>' +
+      '</div>';
+  }
+
+  const rb = document.getElementById('prequal-result-banner');
+  if (rb) rb.style.display = 'none';
+
+  const af = document.getElementById('prequal-action-footer');
+  if (af) af.style.display = 'flex';
+
+  const saveBtn = document.getElementById('prequal-save-btn');
+  if (saveBtn) saveBtn.style.display = 'none';
+
+  const inputEl = document.getElementById('prequal-input');
+  if (inputEl) inputEl.value = '';
 }
 
 if (window.location.search.includes('realtor_upgraded=true')) {
