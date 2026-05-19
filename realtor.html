@@ -576,14 +576,13 @@ async function toggleVoiceInput() {
     showToast(msgs[e.name] || 'Mic error: ' + e.message, 'error'); return;
   }
   voiceRecognition = new SR();
-  voiceRecognition.continuous = false;  // false prevents auto-restart that causes duplicates
-  voiceRecognition.interimResults = true;
+  voiceRecognition.continuous = false;
+  voiceRecognition.interimResults = false; // NO interim — only fire on complete utterances, zero duplicates
   voiceRecognition.lang = 'en-US';
   voiceRecognition.maxAlternatives = 1;
-  // Capture existing text ONCE before starting — do NOT re-seed in onresult
+  // Capture existing text ONCE before starting
   const existingText = input.value.trim() ? input.value.trimEnd() + ' ' : '';
   let base = existingText;
-  let lastFinalLength = existingText.length;
   voiceRecognition.onstart = () => {
     isRecording = true;
     if (!document.getElementById('pulse-style')) {
@@ -595,20 +594,16 @@ async function toggleVoiceInput() {
     btn.style.background = 'rgba(239,68,68,0.12)';
     btn.style.borderColor = 'rgba(239,68,68,0.35)';
     btn.title = 'Click to stop';
-    showToast('🎤 Listening — speak now', 'success');
+    showToast('🎤 Listening — speak now. Click ⏹ when done.', 'success');
   };
   voiceRecognition.onresult = (ev) => {
-    let interim = '';
+    // With interimResults=false, every result is final — no duplicates possible
     for (let i = ev.resultIndex; i < ev.results.length; i++) {
-      const t = ev.results[i][0].transcript;
       if (ev.results[i].isFinal) {
-        base += t + ' ';
-        interim = '';
-      } else {
-        interim = t;
+        base += ev.results[i][0].transcript.trim() + ' ';
       }
     }
-    input.value = base + interim;
+    input.value = base.trim();
     input.style.borderColor = 'var(--teal)';
   };
   voiceRecognition.onend = () => {
