@@ -36,6 +36,7 @@ export default async (req) => {
             email: body.email,
             phone: body.phone,
             lenderType: body.lenderType,
+          qmCategory: body.qmCategory,
             states: body.states,
             minLoan: body.minLoan,
             maxLoan: body.maxLoan,

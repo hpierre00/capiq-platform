@@ -71,6 +71,59 @@ Return exactly this JSON:
       body: JSON.stringify({ dealData: d, analysis }),
     }).catch(() => {});
 
+    // Save deal to Supabase + create lender_matches (non-blocking)
+    const SVC_KEY = Netlify.env.get("SUPABASE_SERVICE_KEY");
+    const SUPABASE_URL = "https://mxyepucitjzleaziizkr.supabase.co";
+    if (SVC_KEY) {
+      (async () => {
+        try {
+          const qmDealTypes = ['conventional','fha','va','usda','jumbo'];
+          const dealCategory = qmDealTypes.includes((d.dealType||'').toLowerCase()) ? 'qm' : 'non_qm';
+
+          const dealInsert = await fetch(`${SUPABASE_URL}/rest/v1/deal_submissions`, {
+            method: 'POST',
+            headers: { apikey: SVC_KEY, Authorization: `Bearer ${SVC_KEY}`, 'Content-Type': 'application/json', Prefer: 'return=representation' },
+            body: JSON.stringify({
+              deal_type: d.dealType, asset_type: d.propertyType, state: d.state,
+              city: d.location, purchase_price: parseFloat(d.purchasePrice)||null,
+              current_value: parseFloat(d.asIsValue)||null, arv: parseFloat(d.arv)||null,
+              requested_loan_amount: parseFloat(d.loanAmount)||null,
+              requested_ltv: parseFloat(d.ltv)||null, dscr: parseFloat(d.dscr)||null,
+              monthly_rent: parseFloat(d.monthlyRent)||null, rehab_budget: parseFloat(d.rehabBudget)||null,
+              exit_strategy: d.exitStrategy, deal_category: dealCategory,
+              investor_id: d.investorId||null, investor_name: d.investorName||null, investor_email: d.investorEmail||null,
+              ai_analysis: analysis,
+            }),
+          });
+          if (!dealInsert.ok) return;
+          const [savedDeal] = await dealInsert.json();
+          if (!savedDeal?.id) return;
+
+          // Find matching lenders based on qm_category and basic criteria
+          const lendersRes = await fetch(
+            `${SUPABASE_URL}/rest/v1/lender_users?select=id,qm_category&or=(qm_category.eq.${dealCategory},qm_category.eq.both)&limit=50`,
+            { headers: { apikey: SVC_KEY, Authorization: `Bearer ${SVC_KEY}` } }
+          );
+          const lenders = lendersRes.ok ? await lendersRes.json() : [];
+
+          if (lenders.length) {
+            const matchRows = lenders.map(l => ({
+              deal_id: savedDeal.id, lender_id: l.id,
+              match_status: 'pending', interest_level: 'pending',
+              match_score: analysis.fundabilityScore || 0,
+              deal_score_val: analysis.fundabilityScore || 0,
+              routed_at: new Date().toISOString(),
+            }));
+            await fetch(`${SUPABASE_URL}/rest/v1/lender_matches`, {
+              method: 'POST',
+              headers: { apikey: SVC_KEY, Authorization: `Bearer ${SVC_KEY}`, 'Content-Type': 'application/json' },
+              body: JSON.stringify(matchRows),
+            }).catch(() => {});
+          }
+        } catch(e) { console.warn('deal save error:', e.message); }
+      })();
+    }
+
     return new Response(JSON.stringify({ success: true, analysis }), { status: 200, headers: cors });
 
   } catch (err) {

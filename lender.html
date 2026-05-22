@@ -116,7 +116,8 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
     </div>
     <div style="display:flex;gap:10px;align-items:center">
       <span id="lender-user-badge" style="display:none;font-family:'DM Mono',monospace;font-size:11px;color:rgba(255,255,255,0.6)"></span>
-      <button id="lender-billing-btn" onclick="lenderStartCheckout()" style="display:none" class="btn btn-primary">Manage Billing</button>
+      <button id="lender-billing-btn" onclick="lenderStartCheckout()" style="display:none" class="btn btn-ghost" style="font-size:12px">Billing</button>
+      <button id="lender-changepw-btn" onclick="showLenderChangePassword()" style="display:none;padding:6px 10px" class="btn btn-ghost" title="Change Password">🔑</button>
       <button id="lender-logout-btn" onclick="lenderLogout()" style="display:none" class="btn btn-ghost">Sign Out</button>
       <span class="chip chip-green">● LIVE</span>
       <a href="/app" style="font-size:11px;color:rgba(255,255,255,0.3);text-decoration:none;font-family:'DM Mono',monospace">Investor Portal →</a>
@@ -147,7 +148,7 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
           <button class="btn btn-primary" id="lender-login-btn" onclick="lenderLogin()" style="width:100%;justify-content:center">Sign In to Lender Portal</button>
           <div style="margin-top:12px;text-align:center;display:flex;justify-content:center;gap:16px">
             <a href="/app" style="font-size:11px;color:var(--text-4);text-decoration:none">Investor Portal →</a>
-            <a href="/realtor" style="font-size:11px;color:var(--text-4);text-decoration:none">Realtor Portal →</a>
+            <a href="/admin" style="font-size:11px;color:var(--text-4);text-decoration:none">Admin Portal →</a>
           </div>
           <div style="margin-top:16px;padding:12px;background:var(--bg-3);border-radius:6px;font-size:11px;color:var(--text-4);text-align:center;font-family:'DM Mono',monospace">
             DEMO: portal@coastalcapital.com / demo123<br>portal@summitbridge.com / demo123<br>portal@flexlend.com / demo123
@@ -177,7 +178,7 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
             <div class="field"><label class="label">Work Email</label><input class="input" id="ls-email" type="email" placeholder="jane@yourlender.com"></div>
-            <div class="field"><label class="label">Phone</label><input class="input" id="ls-phone" type="tel" placeholder="(305) 555-0100"></div>
+            <div class="field"><label class="label">Phone</label><input class="input" id="ls-phone" type="tel" placeholder="(305) 555-0100" oninput="this.value=formatPhone(this.value)"></div>
           </div>
           <div class="field" style="margin-bottom:14px"><label class="label">Password</label><input class="input" id="ls-password" type="password" placeholder="Min 8 characters"></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
@@ -188,9 +189,21 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
                 <option value="non_qm">Non-QM</option>
                 <option value="bridge">Bridge</option>
                 <option value="construction">Construction</option>
+                <option value="conventional">Conventional / QM</option>
               </select>
             </div>
             <div class="field"><label class="label">Primary State</label><input class="input" id="ls-state" type="text" placeholder="FL"></div>
+          </div>
+          <div class="field" style="margin-bottom:14px">
+            <label class="label">Deal Access</label>
+            <select class="input" id="ls-qm-category" style="appearance:auto" onchange="document.getElementById('ls-qm-note').style.display=this.value==='both'?'block':'none'">
+              <option value="non_qm">Non-QM Deals Only (DSCR, Hard Money, Bridge, Fix &amp; Flip)</option>
+              <option value="qm">QM Deals Only (Conventional, FHA, VA, Jumbo)</option>
+              <option value="both">Both QM + Non-QM — +$99/month add-on</option>
+            </select>
+            <div id="ls-qm-note" style="display:none;margin-top:6px;padding:8px 12px;background:rgba(14,116,144,0.08);border:1px solid rgba(14,116,144,0.2);border-radius:6px;font-size:11px;color:var(--teal)">
+              ✓ Full deal access unlocked. The $99/month add-on is billed on top of your base $297/month plan and activates after your free trial.
+            </div>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
             <div class="field"><label class="label">Min Loan ($)</label><input class="input" id="ls-min-loan" type="number" placeholder="100000"></div>
@@ -218,6 +231,15 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
         <div class="stat-card"><div class="stat-top"><span class="stat-label">Interested</span><div class="stat-icon green"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div></div><div class="stat-value green" id="lp-stat-interested">—</div><div class="stat-sub">Flagged interested</div></div>
         <div class="stat-card"><div class="stat-top"><span class="stat-label">Avg Score</span><div class="stat-icon teal"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div></div><div class="stat-value teal" id="lp-stat-avg">—</div><div class="stat-sub">Fundability avg</div></div>
         <div class="stat-card"><div class="stat-top"><span class="stat-label">Term Sheets</span><div class="stat-icon teal"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div></div><div class="stat-value teal" id="lp-stat-term">—</div><div class="stat-sub">Issued</div></div>
+      </div>
+
+      <!-- QM Upgrade CTA (shown only when qm_category !== 'both') -->
+      <div id="lender-qm-upgrade-cta" style="display:none;background:linear-gradient(135deg,rgba(14,116,144,0.08),rgba(14,116,144,0.03));border:1px solid rgba(14,116,144,0.2);border-radius:8px;padding:16px 20px;margin-bottom:20px;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:13px;font-weight:700;color:var(--text)">Unlock Full Deal Access — Both QM &amp; Non-QM</div>
+          <div style="font-size:12px;color:var(--text-3);margin-top:3px">You're currently seeing <span id="lender-deal-type-label" style="color:var(--teal);font-weight:600">one deal category</span>. Add the other for +$99/month.</div>
+        </div>
+        <button onclick="lenderStartQMAddonCheckout()" class="btn btn-primary" style="font-size:12px;padding:8px 18px;white-space:nowrap">Upgrade — +$99/mo</button>
       </div>
 
       <!-- Filter tabs -->
@@ -270,6 +292,7 @@ function showLenderLoginView() {
   document.getElementById('lender-user-badge').style.display = 'none';
   document.getElementById('lender-logout-btn').style.display = 'none';
   document.getElementById('lender-billing-btn').style.display = 'none';
+  document.getElementById('lender-changepw-btn').style.display = 'none';
 }
 
 function showLenderSignupView() {
@@ -310,7 +333,26 @@ async function onLenderAuth(token, user, refreshToken) {
   badge.style.display = 'inline';
   badge.textContent = (user.name || user.email) + ' · ' + (user.lender?.lender_name || '');
   document.getElementById('lender-logout-btn').style.display = 'inline-flex';
+  document.getElementById('lender-billing-btn').style.display = 'inline-flex';
+  document.getElementById('lender-changepw-btn').style.display = 'inline-flex';
+  const qmCat = user?.qm_category || 'non_qm';
+  const ctaEl = document.getElementById('lender-qm-upgrade-cta');
+  if (ctaEl) {
+    if (qmCat !== 'both') {
+      ctaEl.style.display = 'flex';
+      const labelEl = document.getElementById('lender-deal-type-label');
+      if (labelEl) labelEl.textContent = qmCat === 'qm' ? 'QM deals only' : 'Non-QM deals only';
+    } else {
+      ctaEl.style.display = 'none';
+    }
+  }
   await loadLenderDeals(token);
+}
+
+async function lenderStartQMAddonCheckout() {
+  const session = getLenderSession();
+  if (!session?.token) return;
+  document.getElementById('lender-upgrade-modal').classList.add('show');
 }
 
 function lenderLogout() {
@@ -322,15 +364,7 @@ function lenderLogout() {
 async function lenderStartCheckout() {
   const session = getLenderSession();
   if (!session?.token) return;
-  try {
-    const res = await fetch(LENDER_FN, {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'create_checkout', token: session.token, successUrl: window.location.origin + '/lender?lender_upgraded=true', cancelUrl: window.location.origin + '/lender' })
-    });
-    const data = await res.json();
-    if (data.checkoutUrl) window.location.href = data.checkoutUrl;
-    else showToast(data.error || 'Could not start checkout', 'error');
-  } catch { showToast('Connection error', 'error'); }
+  document.getElementById('lender-upgrade-modal').classList.add('show');
 }
 
 async function lenderSignup() {
@@ -340,6 +374,7 @@ async function lenderSignup() {
   const phone = document.getElementById('ls-phone').value.trim();
   const password = document.getElementById('ls-password').value;
   const lenderType = document.getElementById('ls-type').value;
+  const qmCategory = document.getElementById('ls-qm-category').value;
   const state = document.getElementById('ls-state').value.trim().toUpperCase();
   const minLoan = document.getElementById('ls-min-loan').value;
   const maxLoan = document.getElementById('ls-max-loan').value;
@@ -351,7 +386,7 @@ async function lenderSignup() {
   try {
     const res = await fetch('/.netlify/functions/lender-signup', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ companyName: company, contactName: contact, email, phone, password, lenderType, states: state ? [state] : ['FL'], minLoan, maxLoan })
+      body: JSON.stringify({ companyName: company, contactName: contact, email, phone, password, lenderType, qmCategory, states: state ? [state] : ['FL'], minLoan, maxLoan })
     });
     const data = await res.json();
     if (data.success) {
@@ -572,6 +607,88 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 </script>
 
+<!-- LENDER CHANGE PASSWORD MODAL -->
+<div class="modal-overlay" id="lender-changepw-modal" style="z-index:10002">
+  <div style="background:var(--bg-2);border-radius:14px;max-width:440px;width:90%;overflow:hidden">
+    <div style="background:var(--navy);padding:20px 24px;display:flex;justify-content:space-between;align-items:center">
+      <div style="color:white;font-size:15px;font-weight:700">Change Password</div>
+      <span onclick="document.getElementById('lender-changepw-modal').classList.remove('show')" style="color:rgba(255,255,255,0.5);cursor:pointer;font-size:20px">×</span>
+    </div>
+    <div style="padding:20px">
+      <div id="lender-cpw-error" style="display:none;font-size:12px;color:#ef4444;background:rgba(239,68,68,0.08);border-radius:6px;padding:10px;margin-bottom:12px"></div>
+      <div id="lender-cpw-success" style="display:none;font-size:12px;color:var(--teal);background:rgba(0,212,188,0.08);border:1px solid rgba(0,212,188,0.2);border-radius:6px;padding:10px;margin-bottom:12px"></div>
+      <div style="margin-bottom:14px"><label style="font-size:11px;color:var(--text-4);display:block;margin-bottom:4px">CURRENT PASSWORD</label><input class="input" id="lender-cpw-current" type="password" placeholder="Your current password"></div>
+      <div style="margin-bottom:14px">
+        <label style="font-size:11px;color:var(--text-4);display:block;margin-bottom:4px">NEW PASSWORD</label>
+        <input class="input" id="lender-cpw-new" type="password" placeholder="Min 8 characters" oninput="lenderCheckPwStrength(this.value)">
+        <div style="height:3px;border-radius:2px;margin-top:6px;background:var(--border);overflow:hidden"><div id="lender-cpw-strength-fill" style="height:100%;width:0%;border-radius:2px;transition:width .3s,background .3s"></div></div>
+        <div id="lender-cpw-strength-label" style="font-size:10px;color:var(--text-4);margin-top:4px"></div>
+      </div>
+      <div style="margin-bottom:20px"><label style="font-size:11px;color:var(--text-4);display:block;margin-bottom:4px">CONFIRM NEW PASSWORD</label><input class="input" id="lender-cpw-confirm" type="password" placeholder="Repeat new password"></div>
+      <button class="btn btn-primary" id="lender-cpw-btn" onclick="submitLenderChangePassword()" style="width:100%;justify-content:center">Update Password</button>
+    </div>
+  </div>
+</div>
+<script>
+function lenderCheckPwStrength(pw) {
+  const fill = document.getElementById('lender-cpw-strength-fill');
+  const label = document.getElementById('lender-cpw-strength-label');
+  let score = 0;
+  if (pw.length >= 8) score++;
+  if (pw.length >= 12) score++;
+  if (/[A-Z]/.test(pw)) score++;
+  if (/[0-9]/.test(pw)) score++;
+  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  const levels = [{w:'0%',c:'#ef4444',t:''},{w:'25%',c:'#ef4444',t:'Weak'},{w:'50%',c:'#f59e0b',t:'Fair'},{w:'75%',c:'#3b82f6',t:'Good'},{w:'100%',c:'#00bfa5',t:'Strong'}];
+  const l = levels[Math.min(score, 4)];
+  fill.style.width = l.w; fill.style.background = l.c;
+  label.textContent = l.t; label.style.color = l.c;
+}
+function showLenderChangePassword() {
+  document.getElementById('lender-cpw-current').value = '';
+  document.getElementById('lender-cpw-new').value = '';
+  document.getElementById('lender-cpw-confirm').value = '';
+  document.getElementById('lender-cpw-error').style.display = 'none';
+  document.getElementById('lender-cpw-success').style.display = 'none';
+  document.getElementById('lender-cpw-strength-fill').style.width = '0%';
+  document.getElementById('lender-cpw-strength-label').textContent = '';
+  document.getElementById('lender-changepw-modal').classList.add('show');
+}
+async function submitLenderChangePassword() {
+  const current = document.getElementById('lender-cpw-current').value;
+  const newPw = document.getElementById('lender-cpw-new').value;
+  const confirm = document.getElementById('lender-cpw-confirm').value;
+  const errEl = document.getElementById('lender-cpw-error');
+  const successEl = document.getElementById('lender-cpw-success');
+  const btn = document.getElementById('lender-cpw-btn');
+  errEl.style.display = 'none'; successEl.style.display = 'none';
+  if (!current) { errEl.textContent = 'Current password required.'; errEl.style.display = 'block'; return; }
+  if (newPw.length < 8) { errEl.textContent = 'New password must be at least 8 characters.'; errEl.style.display = 'block'; return; }
+  if (newPw !== confirm) { errEl.textContent = 'Passwords do not match.'; errEl.style.display = 'block'; return; }
+  if (current === newPw) { errEl.textContent = 'New password must differ from current.'; errEl.style.display = 'block'; return; }
+  const session = getLenderSession();
+  if (!session?.token) { errEl.textContent = 'Session expired — please sign in again.'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Updating...';
+  try {
+    const res = await fetch(LENDER_FN, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'change_password', token: session.token, currentPassword: current, newPassword: newPw })
+    });
+    const data = await res.json();
+    if (data.success) {
+      successEl.textContent = '✓ Password updated successfully.';
+      successEl.style.display = 'block';
+      btn.textContent = '✓ Updated';
+      setTimeout(() => { document.getElementById('lender-changepw-modal').classList.remove('show'); btn.disabled = false; btn.textContent = 'Update Password'; }, 2000);
+    } else {
+      errEl.textContent = data.error || 'Password update failed.';
+      errEl.style.display = 'block';
+      btn.disabled = false; btn.textContent = 'Update Password';
+    }
+  } catch { errEl.textContent = 'Connection error.'; errEl.style.display = 'block'; btn.disabled = false; btn.textContent = 'Update Password'; }
+}
+</script>
+
 <!-- LENDER FORGOT PASSWORD MODAL -->
 <div class="modal-overlay" id="lender-forgot-modal" style="z-index:10001">
   <div style="background:var(--bg-2);border-radius:14px;max-width:420px;width:90%;overflow:hidden">
@@ -588,6 +705,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     </div>
   </div>
 </div>
+<!-- UPGRADE MODAL -->
+<div class="modal-overlay" id="lender-upgrade-modal" style="z-index:10003">
+  <div style="background:var(--bg-2);border-radius:14px;max-width:460px;width:90%;overflow:hidden">
+    <div style="background:var(--navy);padding:20px 24px;display:flex;justify-content:space-between;align-items:center">
+      <div style="color:white;font-size:15px;font-weight:700">Upgrade Deal Access</div>
+      <span onclick="document.getElementById('lender-upgrade-modal').classList.remove('show')" style="color:rgba(255,255,255,0.5);cursor:pointer;font-size:20px">×</span>
+    </div>
+    <div style="padding:24px">
+      <div style="background:var(--teal-dim);border:1px solid var(--teal-border);border-radius:8px;padding:16px;margin-bottom:20px">
+        <div style="font-size:14px;font-weight:700;color:var(--teal);margin-bottom:6px">Full Deal Access — +$99/month</div>
+        <div style="font-size:13px;color:var(--text-2);line-height:1.6">Unlock both QM and Non-QM deals. See every investor deal submitted to the platform that matches your lending criteria.</div>
+      </div>
+      <div style="font-size:13px;color:var(--text-2);margin-bottom:20px;line-height:1.6">To activate, contact us and we'll upgrade your account within 1 business day:</div>
+      <a href="mailto:support@underlytix.com?subject=QM+Addon+Upgrade+Request&body=Please upgrade my lender account to full deal access (QM %2B Non-QM) for +$99/month." style="display:block;background:var(--teal);color:white;font-weight:600;padding:12px 20px;border-radius:8px;text-decoration:none;text-align:center;font-size:14px">Email support@underlytix.com to Upgrade</a>
+      <div style="text-align:center;margin-top:14px"><span onclick="document.getElementById('lender-upgrade-modal').classList.remove('show')" style="font-size:12px;color:var(--text-4);cursor:pointer">Close</span></div>
+    </div>
+  </div>
+</div>
+
 <script>
 function showLenderForgotPassword() {
   document.getElementById('lender-forgot-error').style.display = 'none';

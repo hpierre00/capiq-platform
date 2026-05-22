@@ -15,7 +15,7 @@ export default async (req) => {
   try {
     const ANTHROPIC_KEY = Netlify.env.get("ANTHROPIC_API_KEY");
     const SUPABASE_URL = "https://mxyepucitjzleaziizkr.supabase.co";
-    const REALTOR_AUTH_FN = `${SUPABASE_URL}/functions/v1/capiq-realtor-auth-v4`;
+    const REALTOR_AUTH_FN = `${SUPABASE_URL}/functions/v1/capiq-realtor-auth-v2`;
     const SVC_KEY = Netlify.env.get("SUPABASE_SERVICE_KEY");
 
     const body = await req.json();
@@ -123,6 +123,13 @@ HOA / ASSOCIATION DUES:
 `;
 
       const systemPrompt = `You are an expert mortgage prequalification assistant for Underlytix, helping real estate agents quickly assess their clients' financing eligibility. You are NOT a lender and you do NOT verify documents. The realtor provides data — you apply lending guidelines accurately.
+
+LANGUAGE RULE (highest priority):
+Detect the language of each incoming message and respond entirely in that same language.
+If the conversation switches languages mid-session, switch your responses to match immediately.
+All JSON field keys inside <PREQUAL_RESULT> must stay in English (loanType, result, maxLoanAmount, etc.) but all human-readable text values (summary, nextSteps, improvementStrategies actions/labels, etc.) must be written in the detected language.
+Loan product names should follow their common name in the target language where one exists (e.g. "prêt conventionnel" in French, "préstamo convencional" in Spanish).
+Financial calculations, US lending limits, and guidelines remain identical regardless of language.
 
 ${GUIDELINES}
 
@@ -336,6 +343,8 @@ If you don't have enough information yet, set "ready": false and omit the other 
         body: JSON.stringify({
           realtor_id: realtorId,
           client_name: clientData?.clientName || "Client",
+          client_email: clientData?.clientEmail || null,
+          client_phone: clientData?.clientPhone || null,
           loan_type: p.loanType,
           property_type: clientData?.propertyType,
           purchase_price: clientData?.purchasePrice,
@@ -494,39 +503,97 @@ If you don't have enough information yet, set "ready": false and omit the other 
       const SUPABASE_URL_L = "https://mxyepucitjzleaziizkr.supabase.co";
       const SK_LOCAL = Netlify.env.get("SUPABASE_SERVICE_KEY") || "";
 
-      // Save capital match request to client_prequals with match_requested flag
+      // Write to deal_submissions so admin dashboard shows this match request
       if (SK_LOCAL) {
-        await fetch(`${SUPABASE_URL_L}/rest/v1/client_prequals?id=eq.${body.prequal_id || "none"}`, {
-          method: "PATCH",
-          headers: { "apikey": SK_LOCAL, "Authorization": `Bearer ${SK_LOCAL}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ match_requested: true, match_requested_at: new Date().toISOString() }),
+        const loanType = p.loanType || "";
+        const qmTypes = ["conventional", "fha", "va", "usda", "jumbo"];
+        const dealCode = "RM-" + Date.now().toString(36).toUpperCase();
+        await fetch(`${SUPABASE_URL_L}/rest/v1/deal_submissions`, {
+          method: "POST",
+          headers: { "apikey": SK_LOCAL, "Authorization": `Bearer ${SK_LOCAL}`, "Content-Type": "application/json", "Prefer": "return=minimal" },
+          body: JSON.stringify({
+            deal_code: dealCode,
+            deal_type: "realtor_match",
+            asset_type: "residential",
+            state: p.state || null,
+            requested_loan_amount: p.maxLoanAmount || null,
+            requested_ltv: p.ltv || null,
+            deal_category: qmTypes.includes(loanType) ? "qm" : "non_qm",
+            investor_name: clientName,
+            investor_email: clientEmail,
+            ai_analysis: {
+              source: "realtor_portal",
+              realtor_email: authData.realtor?.email || null,
+              client_phone: clientPhone,
+              loan_type: loanType,
+              prequal_result: p.result,
+              max_loan_amount: p.maxLoanAmount,
+              monthly_pitia: p.monthlyPITIA,
+              back_end_dti: p.backEndDTI,
+              front_end_dti: p.frontEndDTI,
+              risk_flags: p.riskFlags || [],
+              summary: p.summary || "",
+            },
+          }),
         }).catch(() => {});
+
+        // Also flag the prequal record if an ID was provided
+        if (body.prequal_id) {
+          await fetch(`${SUPABASE_URL_L}/rest/v1/client_prequals?id=eq.${body.prequal_id}`, {
+            method: "PATCH",
+            headers: { "apikey": SK_LOCAL, "Authorization": `Bearer ${SK_LOCAL}`, "Content-Type": "application/json" },
+            body: JSON.stringify({ match_requested: true, match_requested_at: new Date().toISOString() }),
+          }).catch(() => {});
+        }
       }
 
-      // Send notification email to admin
+      // Fetch active lender emails from Supabase
+      let lenderEmails = [];
+      if (SK_LOCAL) {
+        const lRes = await fetch(`${SUPABASE_URL_L}/rest/v1/lender_users?select=email&limit=50`, {
+          headers: { "apikey": SK_LOCAL, "Authorization": `Bearer ${SK_LOCAL}` }
+        }).catch(() => null);
+        if (lRes?.ok) {
+          const lenders = await lRes.json().catch(() => []);
+          lenderEmails = lenders.map(l => l.email).filter(Boolean);
+        }
+      }
+
+      const emailHtml = `<div style="font-family:sans-serif;padding:20px;max-width:600px">
+        <div style="background:#0f172a;padding:20px;border-radius:8px;margin-bottom:20px">
+          <h2 style="color:white;margin:0;font-size:18px">🔗 New Client Match Request</h2>
+          <p style="color:rgba(255,255,255,0.5);margin:4px 0 0;font-size:12px">Underlytix Lender Network</p>
+        </div>
+        <p style="color:#374151;font-size:13px;line-height:1.6">A realtor on the Underlytix platform has submitted a client scenario for preliminary lender review.</p>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;margin:16px 0">
+          <tr style="background:#f9fafb"><td style="padding:8px 12px;color:#6b7280;width:140px">Loan Type</td><td style="padding:8px 12px;font-weight:600">${p.loanType || "—"}</td></tr>
+          <tr><td style="padding:8px 12px;color:#6b7280">Prequal Result</td><td style="padding:8px 12px;font-weight:600;color:${p.result === 'likely_qualifies' ? '#059669' : p.result === 'borderline' ? '#d97706' : '#dc2626'}">${p.result === 'likely_qualifies' ? '✓ Strong Alignment' : p.result === 'borderline' ? '⚠ Needs Review' : p.result || '—'}</td></tr>
+          <tr style="background:#f9fafb"><td style="padding:8px 12px;color:#6b7280">Max Loan</td><td style="padding:8px 12px;font-weight:600">$${(p.maxLoanAmount || 0).toLocaleString()}</td></tr>
+          <tr><td style="padding:8px 12px;color:#6b7280">PITIA</td><td style="padding:8px 12px">$${(p.monthlyPITIA || 0).toLocaleString()}/mo</td></tr>
+          <tr style="background:#f9fafb"><td style="padding:8px 12px;color:#6b7280">Back-end DTI</td><td style="padding:8px 12px">${p.backEndDTI || "—"}%</td></tr>
+          <tr><td style="padding:8px 12px;color:#6b7280">Risk Flags</td><td style="padding:8px 12px;color:#dc2626">${(p.riskFlags || []).join(", ") || "None"}</td></tr>
+          <tr style="background:#f9fafb"><td style="padding:8px 12px;color:#6b7280">Client</td><td style="padding:8px 12px">${clientName}${clientEmail ? ` · ${clientEmail}` : ""}${clientPhone ? ` · ${clientPhone}` : ""}</td></tr>
+          <tr><td style="padding:8px 12px;color:#6b7280">Realtor</td><td style="padding:8px 12px">${authData.realtor?.email || "—"}</td></tr>
+        </table>
+        <p style="font-size:13px;color:#374151;line-height:1.6"><strong>Summary:</strong> ${p.summary || "—"}</p>
+        <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:12px;margin-top:16px;font-size:12px;color:#166534">
+          To respond to this inquiry, reply directly to the realtor at <strong>${authData.realtor?.email || "—"}</strong>
+        </div>
+        <p style="font-size:11px;color:#9ca3af;margin-top:16px">This is a preliminary review request only. No commitment to lend is implied. Client contact info shared with realtor's authorization.</p>
+      </div>`;
+
       const RESEND_KEY = Netlify.env.get("RESEND_API_KEY") || "";
       if (RESEND_KEY) {
+        const allRecipients = [...new Set(["heroldpierre@sofloam.com", ...lenderEmails])];
         await fetch("https://api.resend.com/emails", {
           method: "POST",
           headers: { "Authorization": `Bearer ${RESEND_KEY}`, "Content-Type": "application/json" },
           body: JSON.stringify({
             from: "Underlytix <noreply@underlytix.com>",
-            to: ["heroldpierre@sofloam.com"],
-            subject: `Capital Match Assessment Request — ${p.loanType || "Unknown"} | ${p.result || "—"}`,
-            html: `<div style="font-family:sans-serif;padding:20px">
-              <h2>Capital Match Assessment Request</h2>
-              <p><b>Realtor:</b> ${authData.realtor?.email || "—"}</p>
-              <p><b>Client:</b> ${clientName}</p>
-              <p><b>Loan Type:</b> ${p.loanType || "—"}</p>
-              <p><b>Result:</b> ${p.result || "—"}</p>
-              <p><b>Max Loan:</b> $${(p.maxLoanAmount || 0).toLocaleString()}</p>
-              <p><b>Back-end DTI:</b> ${p.backEndDTI || "—"}%</p>
-              <p><b>PITIA:</b> $${(p.monthlyPITIA || 0).toLocaleString()}/mo</p>
-              <p><b>Risk Flags:</b> ${(p.riskFlags || []).join(", ") || "None"}</p>
-              <p><b>Summary:</b> ${p.summary || "—"}</p>
-              <hr>
-              <p style="font-size:12px;color:#666">This is a preliminary review request. No commitment to lend is implied.</p>
-            </div>`,
+            to: allRecipients,
+            reply_to: authData.realtor?.email || "noreply@underlytix.com",
+            subject: `New Client Match — ${p.loanType?.toUpperCase() || "Loan"} · $${(p.maxLoanAmount || 0).toLocaleString()} · ${p.result === 'likely_qualifies' ? 'Strong Alignment' : p.result === 'borderline' ? 'Needs Review' : p.result || '—'}`,
+            html: emailHtml,
           }),
         }).catch(() => {});
       }

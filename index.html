@@ -411,26 +411,6 @@ section{padding:88px 24px}
 .proof-name{font-size:13px;font-weight:600;color:var(--text)}
 .proof-role{font-size:11px;color:var(--text-4);margin-top:1px}
 
-/* ── FAQ ── */
-.faq-sec{background:var(--bg);padding:80px 24px}
-.faq-sec .sec-inner{max-width:720px;margin:0 auto}
-.faq-list{margin-top:40px;display:flex;flex-direction:column;gap:2px}
-.faq-list details{border:1px solid var(--border);border-radius:var(--r);background:var(--bg-2);overflow:hidden}
-.faq-list details+details{border-top:none;border-radius:0}
-.faq-list details:first-child{border-radius:var(--r) var(--r) 0 0}
-.faq-list details:last-child{border-radius:0 0 var(--r) var(--r)}
-.faq-list summary{
-  padding:18px 20px;font-size:14px;font-weight:600;color:var(--text);
-  cursor:pointer;list-style:none;display:flex;justify-content:space-between;align-items:center;
-  transition:background .15s;
-}
-.faq-list summary:hover{background:var(--bg-3)}
-.faq-list summary::-webkit-details-marker{display:none}
-.faq-list summary::after{content:'+';font-size:18px;color:var(--teal);font-weight:400;flex-shrink:0;margin-left:12px}
-.faq-list details[open] summary::after{content:'−'}
-.faq-list details[open] summary{background:var(--bg-3)}
-.faq-list details p{padding:0 20px 18px;font-size:13px;color:var(--text-2);line-height:1.75}
-
 /* ── FINAL CTA ── */
 .cta-sec{
   background:var(--navy);padding:100px 24px;text-align:center;
@@ -815,37 +795,66 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </div>
 </section>
 
-<!-- FAQ -->
-<section id="faq" class="faq-sec" aria-label="Frequently Asked Questions">
-  <div class="sec-inner">
-    <div class="sec-label">FAQ</div>
-    <h2 class="sec-h2">Common questions answered.</h2>
-    <div class="faq-list">
-      <details>
-        <summary>How is Underlytix different from a mortgage calculator?</summary>
-        <p>A mortgage calculator estimates payments. Underlytix runs your deal against real lender underwriting parameters — LTV limits, DSCR thresholds, credit minimums, DTI requirements — and tells you whether your deal will actually qualify, and exactly what to change if it won't.</p>
-      </details>
-      <details>
-        <summary>What is a capital readiness score?</summary>
-        <p>It's a 0–100 rating that reflects how closely your deal aligns with real lender underwriting criteria. A score above 70 typically indicates strong alignment. You receive the score, an executive summary, risk flags, and specific structuring recommendations — instantly.</p>
-      </details>
-      <details>
-        <summary>What loan types does Underlytix analyze?</summary>
-        <p>Fix and flip, DSCR, bridge, cash-out refinance, new construction, conventional, FHA, VA, and jumbo.</p>
-      </details>
-      <details>
-        <summary>Is Underlytix a lender?</summary>
-        <p>No. Underlytix is not a lender, a mortgage origination system, or a pre-approval platform. It is the intelligence layer before underwriting — helping you prepare deals before any application is submitted.</p>
-      </details>
-      <details>
-        <summary>Do I need documents to use Underlytix?</summary>
-        <p>No documents required. You enter deal type, property info, loan amount, and borrower profile. The entire intake takes under 3 minutes, and results come back in under 60 seconds.</p>
-      </details>
-      <details>
-        <summary>How much does it cost?</summary>
-        <p>The free plan includes 3 analyses per month — no credit card required. Investor Pro is $97/month, Realtor is $49/month, and Lender is $297/month. All paid plans include a free trial.</p>
-      </details>
-    </div>
+<style>
+.faq-section{padding:80px 24px;background:#fff;border-top:1px solid #e2e8f0}
+.faq-section .faq-inner{max-width:760px;margin:0 auto}
+.faq-section .faq-label{font-size:11px;font-weight:700;letter-spacing:.12em;color:#0e7490;text-transform:uppercase;text-align:center;margin-bottom:12px}
+.faq-section h2{font-size:34px;font-weight:800;color:#0f172a;text-align:center;margin:0 0 48px;letter-spacing:-0.5px}
+details.faq-item{border:1px solid #e2e8f0;border-radius:10px;margin-bottom:12px;overflow:hidden;transition:box-shadow .2s}
+details.faq-item[open]{box-shadow:0 4px 20px rgba(14,116,144,0.08)}
+details.faq-item summary{list-style:none;padding:20px 24px;font-size:15px;font-weight:600;color:#0f172a;cursor:pointer;display:flex;justify-content:space-between;align-items:center;user-select:none}
+details.faq-item summary::-webkit-details-marker{display:none}
+details.faq-item summary::after{content:'+';font-size:20px;font-weight:400;color:#0e7490;transition:transform .2s;flex-shrink:0;margin-left:16px}
+details.faq-item[open] summary::after{transform:rotate(45deg)}
+details.faq-item[open] summary{color:#0e7490}
+.faq-answer{padding:0 24px 20px;font-size:14px;color:#475569;line-height:1.75}
+</style>
+
+<section class="faq-section">
+  <div class="faq-inner">
+    <div class="faq-label">Got Questions</div>
+    <h2>Frequently Asked Questions</h2>
+
+    <details class="faq-item">
+      <summary>Is Underlytix a lender or mortgage company?</summary>
+      <div class="faq-answer">No. Underlytix is not a lender, broker, or mortgage originator. We are a pre-application intelligence platform — we analyze deal scenarios against real lending criteria before any lender interaction takes place. We do not originate loans, issue preapprovals, or guarantee financing. All financing decisions are made by lenders through their own underwriting process.</div>
+    </details>
+
+    <details class="faq-item">
+      <summary>How is this different from a mortgage calculator?</summary>
+      <div class="faq-answer">A mortgage calculator estimates a monthly payment. Underlytix analyzes whether a specific buyer or deal scenario is likely to meet actual lender underwriting criteria — including DTI limits, LTV thresholds, credit minimums, reserve requirements, loan type matching, and full PITIA calculation. When a scenario doesn't qualify, we calculate the exact remediation path: which debt to pay off, what co-borrower income is needed, or what price reduction closes the gap.</div>
+    </details>
+
+    <details class="faq-item">
+      <summary>What does the Capital Readiness Score mean?</summary>
+      <div class="faq-answer">The Capital Readiness Score reflects how well a deal or buyer scenario aligns with the lending criteria typically required for the most likely loan type. Strong Alignment means the scenario meets standard criteria and is ready to present to lenders. Needs Review means one or more factors require attention before approaching a lender. Low Compatibility means significant changes are needed — and we'll tell you exactly what those are.</div>
+    </details>
+
+    <details class="faq-item">
+      <summary>How does the realtor prequalification work?</summary>
+      <div class="faq-answer">Realtors describe their client's situation in plain language — income, credit range, purchase price, down payment, debts, and property type. The AI asks clarifying questions if anything is missing, calculates full PITIA (principal, interest, taxes, insurance, and HOA), and runs the scenario against underwriting parameters for the most likely loan type. The result is a Capital Readiness Score with a full breakdown — and if the client doesn't qualify, three specific paths to get them there.</div>
+    </details>
+
+    <details class="faq-item">
+      <summary>Is my client's information shared with lenders automatically?</summary>
+      <div class="faq-answer">No. Client information is never shared without your explicit action. After a prequalification runs, you choose whether to submit the scenario to our lender network using the "Find Matching Lenders" button. That submission requires you to confirm your client's name, contact information, and their consent. Nothing is sent automatically.</div>
+    </details>
+
+    <details class="faq-item">
+      <summary>How do lenders use the platform?</summary>
+      <div class="faq-answer">Lenders in the Underlytix network receive pre-screened deal scenarios that have already been run through the Capital Readiness engine. They can review the scenario details, fundability score, borrower profile, and DTI analysis before deciding whether to pursue the deal. This reduces the time lenders spend reviewing unqualified leads and improves the quality of deals in their pipeline.</div>
+    </details>
+
+    <details class="faq-item">
+      <summary>Does Underlytix guarantee loan approval?</summary>
+      <div class="faq-answer">No. Underlytix results are based solely on the information provided and do not constitute a commitment to lend, a preapproval, or a guarantee of financing. All loan approvals are subject to full lender underwriting, credit review, income verification, appraisal, and final lender decision. Underlytix is a pre-application screening tool, not a lending decision system.</div>
+    </details>
+
+    <details class="faq-item">
+      <summary>What does the 14-day free trial include?</summary>
+      <div class="faq-answer">Realtors get full access to the prequalification engine for 14 days at no cost — no credit card required. You can run unlimited client scenarios, access the Capital Readiness results, receive remediation paths for non-qualifying clients, and submit scenarios to the lender network. After 14 days, the plan is $49/month.</div>
+    </details>
+
   </div>
 </section>
 
