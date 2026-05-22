@@ -492,7 +492,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <a href="#availability">Availability</a>
   </div>
   <div class="nav-cta">
-    <a href="/app" class="btn-ghost-nav">Sign In</a>
+    <a href="#" onclick="openLoginPortal();return false;" class="btn-ghost-nav">Sign In</a>
     <a href="/app" class="btn-navy-nav">Get Started Free</a>
   </div>
 </nav>
@@ -931,6 +931,69 @@ async function loadStats() {
   } catch(e) {}
 }
 loadStats();
+</script>
+
+<!-- LOGIN PORTAL MODAL -->
+<div id="login-portal-overlay" onclick="if(event.target===this)closeLoginPortal()" style="display:none;position:fixed;inset:0;background:rgba(15,34,64,0.82);z-index:9999;align-items:center;justify-content:center;padding:24px">
+  <div style="background:white;border-radius:16px;max-width:500px;width:100%;padding:40px 36px;box-shadow:0 24px 64px rgba(0,0,0,0.35)">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
+      <div style="font-size:20px;font-weight:700;color:#0f172a;letter-spacing:-.3px">Sign in to Underlytix</div>
+      <span onclick="closeLoginPortal()" style="cursor:pointer;font-size:24px;color:#94a3b8;line-height:1;margin-left:16px">×</span>
+    </div>
+    <div style="font-size:13px;color:#64748b;margin-bottom:28px">Select your account type to continue.</div>
+
+    <div style="display:flex;flex-direction:column;gap:10px">
+
+      <a href="/app" style="display:flex;align-items:center;gap:16px;padding:18px 20px;border:2px solid #e2e8f0;border-radius:12px;text-decoration:none;background:#fff;transition:all .15s" onmouseover="this.style.borderColor='#0e7490';this.style.background='rgba(14,116,144,0.03)'" onmouseout="this.style.borderColor='#e2e8f0';this.style.background='#fff'">
+        <div style="width:46px;height:46px;background:#0f2240;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:700;color:#0f172a">Investor Portal</div>
+          <div style="font-size:12px;color:#64748b;margin-top:2px">Deal analysis, DSCR scoring, lender matching</div>
+        </div>
+        <svg style="color:#cbd5e1;flex-shrink:0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+      </a>
+
+      <a href="/realtor" style="display:flex;align-items:center;gap:16px;padding:18px 20px;border:2px solid #e2e8f0;border-radius:12px;text-decoration:none;background:#fff;transition:all .15s" onmouseover="this.style.borderColor='#0e7490';this.style.background='rgba(14,116,144,0.03)'" onmouseout="this.style.borderColor='#e2e8f0';this.style.background='#fff'">
+        <div style="width:46px;height:46px;background:#0e7490;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:700;color:#0f172a">Realtor Portal</div>
+          <div style="font-size:12px;color:#64748b;margin-top:2px">Client prequalification, PITIA analysis, lender referral</div>
+        </div>
+        <svg style="color:#cbd5e1;flex-shrink:0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+      </a>
+
+      <a href="/lender" style="display:flex;align-items:center;gap:16px;padding:18px 20px;border:2px solid #e2e8f0;border-radius:12px;text-decoration:none;background:#fff;transition:all .15s" onmouseover="this.style.borderColor='#0e7490';this.style.background='rgba(14,116,144,0.03)'" onmouseout="this.style.borderColor='#e2e8f0';this.style.background='#fff'">
+        <div style="width:46px;height:46px;background:#1a3355;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+        </div>
+        <div style="flex:1">
+          <div style="font-size:15px;font-weight:700;color:#0f172a">Lender Portal</div>
+          <div style="font-size:12px;color:#64748b;margin-top:2px">Review pre-screened deals, manage your pipeline</div>
+        </div>
+        <svg style="color:#cbd5e1;flex-shrink:0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+      </a>
+
+    </div>
+
+    <div style="margin-top:24px;text-align:center;font-size:12px;color:#94a3b8">
+      New to Underlytix? <a href="/app" style="color:#0e7490;font-weight:600;text-decoration:none">Create a free account →</a>
+    </div>
+  </div>
+</div>
+<script>
+function openLoginPortal(){
+  document.getElementById('login-portal-overlay').style.display='flex';
+  document.body.style.overflow='hidden';
+}
+function closeLoginPortal(){
+  document.getElementById('login-portal-overlay').style.display='none';
+  document.body.style.overflow='';
+}
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeLoginPortal();});
 </script>
 
 <script type="application/ld+json">
