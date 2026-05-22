@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+Disallow: /app/
+Disallow: /app
+
+Sitemap: https://underlytix.com/sitemap.xml

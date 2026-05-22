@@ -3,8 +3,48 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Underlytix — Realtor Portal</title>
+
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-XXXXXXX');</script>
+<!-- End Google Tag Manager -->
+
+<!-- PRIMARY SEO -->
+<title>AI Client Prequalification Tool for Realtors | Underlytix</title>
+<meta name="description" content="Prequalify residential, commercial, and investor clients in minutes — Friday at midnight, Saturday at 8pm, any time. Full PITIA, DTI analysis, conventional, FHA, VA, DSCR and more." />
+<meta name="robots" content="index, follow" />
+<link rel="canonical" href="https://underlytix.com/realtor" />
+<meta name="author" content="Underlytix LLC" />
+
+<!-- OPEN GRAPH -->
+<meta property="og:type" content="website" />
+<meta property="og:url" content="https://underlytix.com/realtor" />
+<meta property="og:title" content="AI Client Prequalification Tool for Realtors | Underlytix" />
+<meta property="og:description" content="Prequalify residential, commercial, and investor clients in minutes — Friday at midnight, Saturday at 8pm, any time. Full PITIA, DTI analysis, conventional, FHA, VA, DSCR and more." />
+<meta property="og:image" content="https://underlytix.com/og-image-realtor.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:site_name" content="Underlytix" />
+<meta property="og:locale" content="en_US" />
+
+<!-- TWITTER / X CARD -->
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:site" content="@underlytix" />
+<meta name="twitter:title" content="AI Client Prequalification Tool for Realtors | Underlytix" />
+<meta name="twitter:description" content="Prequalify residential, commercial, and investor clients in minutes — Friday at midnight, Saturday at 8pm, any time." />
+<meta name="twitter:image" content="https://underlytix.com/og-image-realtor.png" />
+
+<!-- SITEMAP & FAVICON -->
+<link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+<link rel="icon" type="image/png" href="/favicon.png" />
+<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+
+<!-- FONTS -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=DM+Mono:wght@300;400;500&display=swap" />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap">
 <style>
 :root {
@@ -97,6 +137,10 @@ input::placeholder,textarea::placeholder{color:var(--text-4)}
 </style>
 </head>
 <body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-XXXXXXX"
+height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<!-- End Google Tag Manager (noscript) -->
 <div class="toast" id="toast"></div>
 
 <div class="portal-shell">
@@ -166,7 +210,7 @@ input::placeholder,textarea::placeholder{color:var(--text-4)}
           <div id="rs-signup-error" style="display:none;font-size:12px;color:var(--red);background:var(--red-dim);border:1px solid rgba(220,38,38,0.15);border-radius:6px;padding:10px;margin-bottom:16px"></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
             <div class="field"><label class="label">Full Name</label><input id="rs-name" type="text" placeholder="Jane Smith"></div>
-            <div class="field"><label class="label">Phone</label><input id="rs-phone" type="tel" placeholder="(305) 555-0100"></div>
+            <div class="field"><label class="label">Phone</label><input id="rs-phone" type="tel" placeholder="(305) 555-0100" oninput="this.value=formatPhone(this.value)"></div>
           </div>
           <div class="field" style="margin-top:12px"><label class="label">Work Email</label><input id="rs-email" type="email" placeholder="jane@brokerage.com"></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
@@ -204,6 +248,10 @@ input::placeholder,textarea::placeholder{color:var(--text-4)}
               New Prequal
             </button>
           </div>
+          <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px">
+            <input id="rs-search-input" type="text" placeholder="Search clients..." oninput="filterHistory()" style="flex:1;background:var(--bg-3);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit">
+            <button onclick="exportHistoryCSV()" class="btn btn-ghost" style="font-size:12px;padding:7px 14px;white-space:nowrap">⬇ Export CSV</button>
+          </div>
           <div id="rs-history-list"><div style="text-align:center;padding:40px;color:var(--text-4);font-size:13px">No prequalifications yet. Click "New Prequal" to get started.</div></div>
         </div>
       </div>
@@ -227,10 +275,9 @@ input::placeholder,textarea::placeholder{color:var(--text-4)}
       </div>
     </div>
     <div id="prequal-result-banner" style="display:none;flex-shrink:0;padding:14px 20px;background:linear-gradient(135deg,rgba(0,191,165,0.1),rgba(0,191,165,0.05));border-top:1px solid rgba(0,191,165,0.2)"></div>
-    <div id="prequal-action-footer" style="display:none;padding:10px 20px;border-top:1px solid var(--border);background:var(--bg-2);flex-wrap:wrap;gap:8px;align-items:center">
-      <button id="prequal-save-btn-footer" onclick="savePrequal()" class="btn btn-ghost" style="font-size:12px;padding:7px 14px">💾 Save to Pipeline</button>
-      <button onclick="showLenderMatchModal()" class="btn btn-primary" style="font-size:12px;padding:7px 18px">🔗 Find Matching Lenders</button>
-      <button onclick="showLenderMatchModal()" style="padding:7px 14px;border-radius:7px;background:transparent;border:1px solid rgba(0,212,188,0.3);color:var(--teal);font-size:12px;font-weight:600;cursor:pointer;font-family:inherit">Submit for Financing Review</button>
+    <div id="prequal-action-footer" style="display:none;padding:12px 20px;border-top:1px solid var(--border);background:var(--bg-2);flex-shrink:0;display:flex;gap:10px;align-items:center">
+      <button onclick="showSaveClientModal()" class="btn btn-ghost" style="font-size:13px;padding:9px 20px">💾 Save Client</button>
+      <button onclick="showLenderMatchModal()" class="btn btn-primary" style="font-size:13px;padding:9px 22px">🔗 Find Matching Lenders</button>
     </div>
     <div style="padding:16px 20px;border-top:1px solid var(--border);flex-shrink:0">
       <div style="display:flex;gap:10px">
@@ -240,9 +287,8 @@ input::placeholder,textarea::placeholder{color:var(--text-4)}
           <button onclick="sendPrequal()" id="prequal-send-btn" class="btn btn-primary" style="padding:10px 20px">Send</button>
         </div>
       </div>
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px">
+      <div style="margin-top:10px">
         <span style="font-size:11px;color:var(--text-4)">Press Enter to send, Shift+Enter for new line</span>
-        <button id="prequal-save-btn" onclick="savePrequal()" style="display:none" class="btn btn-ghost">💾 Save &amp; Add to Pipeline</button>
       </div>
     </div>
   </div>
@@ -250,12 +296,13 @@ input::placeholder,textarea::placeholder{color:var(--text-4)}
 
 <script src="/portal-common.js"></script>
 <script>
-const REALTOR_AUTH_FN = 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-realtor-auth-v4';
+const REALTOR_AUTH_FN = 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-realtor-auth-v2';
 const REALTOR_PREQUAL_FN = '/.netlify/functions/realtor-prequal';
 
 let realtorSession = null;
 let prequaMessages = [];
 let currentPrequal = null;
+let _savedClientInfo = null;
 
 function getRealtorSession() {
   if (realtorSession) return realtorSession;
@@ -384,10 +431,10 @@ function startNewPrequal() {
   prequaMessages = [];
   currentPrequal = null;
   _prequal_saved = false;
+  _savedClientInfo = null;
   const messagesEl = document.getElementById('prequal-chat-messages');
   messagesEl.innerHTML = `<div style="background:var(--bg-3);border-radius:12px;padding:14px 16px;font-size:14px;color:var(--text-2);max-width:90%;line-height:1.6">Hi! Tell me about your client. You can start with something like: <em>"I have a buyer looking at a $350k home in Tampa, puts down 20%, W-2 income around $7k/month, credit around 700, no major debts."</em></div>`;
   document.getElementById('prequal-result-banner').style.display = 'none';
-  document.getElementById('prequal-save-btn').style.display = 'none';
   document.getElementById('prequal-input').value = '';
   document.getElementById('prequal-chat-modal').classList.add('show');
 }
@@ -439,11 +486,8 @@ async function sendPrequal() {
         const banner = document.getElementById('prequal-result-banner');
         banner.style.display = 'block';
         banner.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="font-size:13px;font-weight:700;color:${resultColors[data.prequal.result]||'var(--teal)'};margin-bottom:6px">${resultLabels[data.prequal.result]||data.prequal.result}</div><div style="font-size:12px;color:var(--text-3);margin-bottom:4px">${data.prequal.loanType?.toUpperCase()||'—'} · Max Loan $${data.prequal.maxLoanAmount?.toLocaleString()||'—'} · Back-end DTI ${data.prequal.backEndDTI||'—'}% · Front-end DTI ${data.prequal.frontEndDTI||'—'}%</div>${data.prequal.monthlyPITIA?`<div style="font-size:11px;color:var(--text-4);margin-bottom:4px">P&amp;I $${data.prequal.monthlyPI?.toLocaleString()||'—'} + Taxes $${data.prequal.monthlyTaxes?.toLocaleString()||'—'} + Insurance $${data.prequal.monthlyInsurance?.toLocaleString()||'—'} + HOA $${data.prequal.monthlyHOA?.toLocaleString()||'0'} = <strong style="color:var(--text-2)">PITIA $${data.prequal.monthlyPITIA?.toLocaleString()}/mo</strong></div>`:''} ${data.prequal.riskFlags?.length?`<div style="font-size:11px;color:var(--red);margin-top:2px">⚠ ${data.prequal.riskFlags.join(' · ')}</div>`:''}<div style="font-size:10px;color:var(--text-4);margin-top:6px;font-style:italic">Not a commitment to lend. Subject to full lender underwriting and approval.</div></div><div style="font-size:10px;color:var(--text-4);text-align:right;line-height:1.4">Based on<br>provided data</div></div>`;
-        document.getElementById('prequal-save-btn').style.display = 'block';
       const _af = document.getElementById('prequal-action-footer');
       if (_af) _af.style.display = 'flex';
-      setTimeout(() => savePrequal(true), 1000);
-      setTimeout(() => savePrequal(true), 1000);
       }
     } else {
       document.getElementById('typing-indicator')?.remove();
@@ -457,7 +501,7 @@ async function sendPrequal() {
 
 let _prequal_saved = false;
 
-async function savePrequal(silent = false) {
+async function savePrequal(silent = false, clientInfo = null) {
   const sess = getRealtorSession();
   if (!sess?.token || !currentPrequal) return;
   if (_prequal_saved) {
@@ -465,17 +509,23 @@ async function savePrequal(silent = false) {
     return;
   }
   _prequal_saved = true;
-  const clientName = 'Client ' + new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'});
-  const btn = document.getElementById('prequal-save-btn');
-  if (btn) { btn.textContent = 'Saving...'; btn.disabled = true; }
+  const clientName = clientInfo?.name || ('Client ' + new Date().toLocaleDateString('en-US', {month:'short', day:'numeric'}));
   try {
     const res = await fetch(REALTOR_PREQUAL_FN, {
       method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ action: 'save', token: sess.token, clientData: { clientName, prequal: currentPrequal, messages: prequaMessages || [] } })
+      body: JSON.stringify({
+        action: 'save', token: sess.token,
+        clientData: {
+          clientName,
+          clientEmail: clientInfo?.email || null,
+          clientPhone: clientInfo?.phone || null,
+          prequal: currentPrequal,
+          messages: prequaMessages || []
+        }
+      })
     });
     const data = await res.json();
     if (data.success) {
-      if (btn) { btn.textContent = '✓ Saved'; btn.disabled = true; }
       if (!silent) {
         showToast('Saved to pipeline!', 'success');
         setTimeout(() => {
@@ -489,15 +539,15 @@ async function savePrequal(silent = false) {
       }
     } else {
       _prequal_saved = false;
-      if (btn) { btn.textContent = '💾 Save & Add to Pipeline'; btn.disabled = false; }
       if (!silent) showToast(data.error || 'Save failed. Try again.', 'error');
     }
   } catch(e) {
     _prequal_saved = false;
-    if (btn) { btn.textContent = '💾 Save & Add to Pipeline'; btn.disabled = false; }
     if (!silent) showToast('Connection error: ' + e.message, 'error');
   }
 }
+
+let _historyData = [];
 
 async function loadRealtorHistory() {
   const sess = getRealtorSession();
@@ -508,47 +558,99 @@ async function loadRealtorHistory() {
       body: JSON.stringify({ action: 'history', token: sess.token })
     });
     const data = await res.json();
-    const container = document.getElementById('rs-history-list');
-    if (!container) return;
-    if (!data.success || !data.history?.length) {
-      container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-4);font-size:13px">No prequalifications yet. Click "New Prequal" to get started.</div>';
-      return;
+    if (data.success && data.history?.length) {
+      _historyData = data.history;
+    } else {
+      _historyData = [];
     }
-    const resultColors = { likely_qualifies: 'chip-green', borderline: 'chip-yellow', unlikely: 'chip-red', needs_review: 'chip-gray' };
-    const resultLabels = { likely_qualifies: 'Strong Alignment', borderline: 'Needs Review', unlikely: 'Low Compatibility', needs_review: 'Needs Review' };
-    container.innerHTML = data.history.map(function(p) {
-      var summaryHtml = p.ai_summary ? '<div style="font-size:11px;color:var(--text-3);margin-top:3px">' + p.ai_summary.slice(0,100) + '...</div>' : '';
-      var loanAmt = p.max_loan_amount ? '$' + parseInt(p.max_loan_amount).toLocaleString() : '—';
-      var resultColor = resultColors[p.prequal_result] || 'chip-gray';
-      var resultLabel = resultLabels[p.prequal_result] || p.prequal_result || '—';
-      var clientName = (p.client_name || 'Client').replace(/"/g, '&quot;');
-      var summary = (p.ai_summary || '').slice(0, 200).replace(/"/g, '&quot;');
-      var date = new Date(p.created_at).toLocaleDateString();
-      return '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);gap:10px">' +
-        '<div style="flex:1;min-width:0">' +
-          '<div style="font-size:13px;font-weight:600;color:var(--text)">' + (p.client_name || 'Client') + '</div>' +
-          '<div style="font-size:11px;color:var(--text-4);margin-top:2px">' + (p.loan_type || '—') + ' · ' + (p.state || '—') + ' · ' + loanAmt + ' · ' + date + '</div>' +
-          summaryHtml +
-        '</div>' +
-        '<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">' +
-          '<span class="chip ' + resultColor + '">' + resultLabel + '</span>' +
-          '<button data-name="' + clientName + '" data-loan="' + (p.loan_type||'') + '" data-state="' + (p.state||'') + '" data-loan-amt="' + (p.max_loan_amount||0) + '" data-summary="' + summary + '" data-result="' + (p.prequal_result||'') + '" onclick="viewSavedPrequalFromEl(this)" style="font-size:11px;padding:4px 10px;border-radius:5px;background:rgba(0,212,188,0.1);border:1px solid rgba(0,212,188,0.25);color:var(--teal);cursor:pointer;white-space:nowrap">View</button>' +
-        '</div>' +
-      '</div>';
-    }).join('');
+    renderHistory(_historyData);
   } catch(e) {
-    console.error('loadRealtorHistory error:', e);
-    try {
-      const container = document.getElementById('rs-history-list');
-      if (container) container.innerHTML = '<div style="padding:20px;color:#ef4444;font-size:13px">Unable to load pipeline. Error: ' + e.message + '</div>';
-    } catch(e2) {}
+    const container = document.getElementById('rs-history-list');
+    if (container) container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--red);font-size:13px">Could not load history. Try signing out and back in.</div>';
   }
 }
 
+function renderHistory(list) {
+  const container = document.getElementById('rs-history-list');
+  if (!container) return;
+  if (!list.length) {
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-4);font-size:13px">No prequalifications yet. Click "New Prequal" to get started.</div>';
+    return;
+  }
+  const resultColors = { likely_qualifies: 'chip-green', borderline: 'chip-yellow', unlikely: 'chip-red', needs_review: 'chip-gray' };
+  const resultLabels = { likely_qualifies: 'Strong Alignment', borderline: 'Needs Review', unlikely: 'Low Compatibility', needs_review: 'Needs Review' };
+  container.innerHTML = list.map(p => `<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border);gap:10px">
+    <div style="flex:1;min-width:0">
+      <div style="font-size:13px;font-weight:600;color:var(--text)">${p.client_name || 'Client'}</div>
+      <div style="font-size:11px;color:var(--text-4);margin-top:2px">
+        ${p.client_email ? `<a href="mailto:${p.client_email}" style="color:var(--teal);text-decoration:none">${p.client_email}</a> · ` : ''}${p.client_phone ? `${p.client_phone} · ` : ''}${p.loan_type || '—'} · ${p.state || '—'} · ${p.max_loan_amount ? '$'+parseInt(p.max_loan_amount).toLocaleString() : '—'} · ${new Date(p.created_at).toLocaleDateString()}
+      </div>
+      ${p.ai_summary ? `<div style="font-size:11px;color:var(--text-3);margin-top:3px">${p.ai_summary.slice(0,100)}...</div>` : ''}
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+      <span class="chip ${resultColors[p.prequal_result] || 'chip-gray'}">${resultLabels[p.prequal_result] || p.prequal_result || '—'}</span>
+      <button onclick="viewSavedPrequal('${(p.client_name||'Client').replace(/'/g,"\\'")}','${p.loan_type||''}','${p.state||''}',${p.max_loan_amount||0},'${(p.ai_summary||'').slice(0,200).replace(/'/g,"\\'").replace(/\n/g,' ')}','${p.prequal_result||''}')" style="font-size:11px;padding:4px 10px;border-radius:5px;background:rgba(0,212,188,0.1);border:1px solid rgba(0,212,188,0.25);color:var(--teal);cursor:pointer;white-space:nowrap">View</button>
+    </div>
+  </div>`).join('');
+}
 
-// ── SHOW ACTION FOOTER after result ────────────────────────────────────────
-// Patch into existing result rendering — show footer when save btn shows
-const _origSaveShow = document.getElementById.bind(document);
+function filterHistory() {
+  const q = (document.getElementById('rs-search-input')?.value || '').toLowerCase();
+  if (!q) { renderHistory(_historyData); return; }
+  renderHistory(_historyData.filter(p =>
+    (p.client_name||'').toLowerCase().includes(q) ||
+    (p.client_email||'').toLowerCase().includes(q) ||
+    (p.client_phone||'').toLowerCase().includes(q) ||
+    (p.loan_type||'').toLowerCase().includes(q) ||
+    (p.state||'').toLowerCase().includes(q)
+  ));
+}
+
+function exportHistoryCSV() {
+  if (!_historyData.length) { showToast('No data to export.', 'error'); return; }
+  const headers = ['Client Name','Email','Phone','Loan Type','State','Max Loan','DTI Back','Result','Date'];
+  const rows = _historyData.map(p => [
+    p.client_name || '',
+    p.client_email || '',
+    p.client_phone || '',
+    p.loan_type || '',
+    p.state || '',
+    p.max_loan_amount || '',
+    p.back_end_dti || '',
+    p.prequal_result || '',
+    p.created_at ? new Date(p.created_at).toLocaleDateString() : ''
+  ].map(v => `"${String(v).replace(/"/g,'""')}"`));
+  const csv = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  a.download = 'clients_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+}
+
+
+// ── SAVE CLIENT MODAL ────────────────────────────────────────────────────────
+function showSaveClientModal() {
+  if (!currentPrequal) { showToast('Complete a prequalification first.', 'error'); return; }
+  ['sc-name','sc-email','sc-phone'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  const e = document.getElementById('sc-error'); if(e) e.style.display = 'none';
+  document.getElementById('save-client-modal').classList.add('show');
+}
+
+async function doSaveClient() {
+  const name = document.getElementById('sc-name').value.trim();
+  const email = document.getElementById('sc-email').value.trim();
+  const phone = document.getElementById('sc-phone').value.trim();
+  const errEl = document.getElementById('sc-error');
+  const btn = document.getElementById('sc-submit-btn');
+  errEl.style.display = 'none';
+  if (!name) { errEl.textContent = 'Client name is required.'; errEl.style.display = 'block'; return; }
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errEl.textContent = 'Enter a valid email or leave blank.'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Saving...';
+  _savedClientInfo = { name, email, phone };
+  document.getElementById('save-client-modal').classList.remove('show');
+  await savePrequal(false, _savedClientInfo);
+  btn.disabled = false; btn.textContent = 'Save Client';
+}
 
 // ── VOICE INPUT ─────────────────────────────────────────────────────────────
 let voiceRecognition = null;
@@ -567,7 +669,7 @@ async function toggleVoiceInput() {
     return;
   }
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SR) { showToast('Voice input requires Chrome on desktop.', 'error'); return; }
+  if (!SR) { showToast('Voice recognition requires Chrome. On other browsers, use your device keyboard mic 🎤 or dictation feature.', 'error'); return; }
   try {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
     stream.getTracks().forEach(t => t.stop());
@@ -625,9 +727,15 @@ async function toggleVoiceInput() {
 // ── LENDER MATCH MODAL ───────────────────────────────────────────────────────
 function showLenderMatchModal() {
   if (!currentPrequal) { showToast('Complete a prequalification first.', 'error'); return; }
-  ['lm-name','lm-email','lm-phone'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
-  const c = document.getElementById('lm-consent'); if(c) c.checked = false;
   const e = document.getElementById('lm-error'); if(e) e.style.display = 'none';
+  if (_savedClientInfo) {
+    const n = document.getElementById('lm-name'); if(n) n.value = _savedClientInfo.name || '';
+    const em = document.getElementById('lm-email'); if(em) em.value = _savedClientInfo.email || '';
+    const ph = document.getElementById('lm-phone'); if(ph) ph.value = _savedClientInfo.phone || '';
+  } else {
+    ['lm-name','lm-email','lm-phone'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
+  }
+  const c = document.getElementById('lm-consent'); if(c) c.checked = false;
   document.getElementById('lender-match-modal').classList.add('show');
 }
 
@@ -653,10 +761,11 @@ async function submitLenderMatch() {
     });
     const data = await res.json();
     if (data.success) {
+      _savedClientInfo = { name, email, phone };
       document.getElementById('lender-match-modal').classList.remove('show');
-      showToast('Submitted. Lenders will review and may contact ' + name + ' within 24-48 hours.', 'success');
+      showToast('Submitted to lenders. They may contact ' + name + ' within 24-48 hours.', 'success');
       document.querySelectorAll('[onclick="showLenderMatchModal()"]').forEach(b => { b.textContent = '✓ Submitted'; b.disabled = true; b.style.opacity = '0.7'; });
-      setTimeout(() => { savePrequal(true); closePrequalChat(); }, 1200);
+      setTimeout(() => { savePrequal(true, _savedClientInfo); closePrequalChat(); }, 1200);
     } else { errEl.textContent = data.error || 'Submission failed.'; errEl.style.display = 'block'; }
   } catch(e) { errEl.textContent = 'Connection error.'; errEl.style.display = 'block'; }
   finally { btn.disabled = false; btn.textContent = 'Find Matching Lenders'; }
@@ -760,6 +869,38 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 </script>
+
+<!-- SAVE CLIENT MODAL -->
+<div class="modal-overlay" id="save-client-modal" style="z-index:10001">
+  <div class="modal-box" style="max-width:440px">
+    <div style="background:var(--navy);padding:18px 24px;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div style="color:white;font-size:15px;font-weight:700">💾 Save Client</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">Add to your CRM pipeline</div>
+      </div>
+      <span onclick="document.getElementById('save-client-modal').classList.remove('show')" style="color:rgba(255,255,255,0.5);cursor:pointer;font-size:20px">×</span>
+    </div>
+    <div style="padding:24px">
+      <div id="sc-error" style="display:none;font-size:12px;color:var(--red);background:var(--red-dim);border:1px solid rgba(220,38,38,0.15);border-radius:6px;padding:10px;margin-bottom:16px"></div>
+      <div class="field" style="margin-bottom:14px">
+        <label class="label">Client Name <span style="color:var(--red)">*</span></label>
+        <input class="input" id="sc-name" type="text" placeholder="Jane Smith" onkeydown="if(event.key==='Enter')doSaveClient()">
+      </div>
+      <div class="field" style="margin-bottom:14px">
+        <label class="label">Phone</label>
+        <input class="input" id="sc-phone" type="tel" placeholder="(305) 555-0100">
+      </div>
+      <div class="field" style="margin-bottom:20px">
+        <label class="label">Email</label>
+        <input class="input" id="sc-email" type="email" placeholder="client@email.com">
+      </div>
+      <div style="display:flex;gap:10px">
+        <button onclick="document.getElementById('save-client-modal').classList.remove('show')" class="btn btn-ghost" style="flex:1">Cancel</button>
+        <button id="sc-submit-btn" onclick="doSaveClient()" class="btn btn-primary" style="flex:2">Save Client</button>
+      </div>
+    </div>
+  </div>
+</div>
 
 <!-- LENDER MATCH MODAL -->
 <div class="modal-overlay" id="lender-match-modal" style="z-index:10001">
