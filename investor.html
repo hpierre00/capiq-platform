@@ -296,6 +296,13 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
 .usage-bar{background:var(--bg-4);border-radius:6px;height:6px;overflow:hidden;margin-top:6px}
 .usage-bar-fill{height:100%;border-radius:6px;background:var(--teal);transition:width .4s ease}
 .usage-bar-fill.danger{background:var(--red)}
+/* MIC BUTTON */
+.mic-btn{background:none;border:1px solid var(--border-dark);cursor:pointer;padding:6px 8px;border-radius:6px;color:var(--text-4);transition:all .15s;display:inline-flex;align-items:center;flex-shrink:0;height:38px;margin-top:0}
+.mic-btn:hover{color:var(--teal);border-color:var(--teal);background:var(--teal-dim)}
+.mic-btn.listening{color:var(--red);border-color:rgba(220,38,38,0.4);background:var(--red-dim);animation:pulse 1s infinite}
+.mic-btn svg{width:14px;height:14px}
+.field-with-mic{display:flex;gap:6px;align-items:flex-end}
+.field-with-mic>:first-child{flex:1}
 /* WIZARD */
 .wizard-progress{display:flex;align-items:flex-start;margin-bottom:28px;position:relative}
 .wizard-step{display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;position:relative;cursor:default}
@@ -503,7 +510,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <div class="shell" id="app-shell">
   <aside class="sidebar">
     <div class="logo">
-      <a class="logo-mark" href="#">
+      <a class="logo-mark" href="#" onclick="handleLogoClick();return false;" title="Underlytix">
         <div class="logo-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
         <div><div class="logo-text">Underlytix</div><div class="logo-sub">Capital Intelligence</div></div>
       </a>
@@ -619,10 +626,17 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
               </div>
             </div>
 
-            <!-- STEP 1: Deal Type + Property Type -->
+            <!-- STEP 1: Market + Deal Type + Property Type -->
             <div class="wizard-panel active" id="wp-1">
-              <div class="section-divider"><div class="section-divider-label">Deal Type</div><div class="section-divider-line"></div></div>
-              <div class="pill-group" id="deal-type-pills">
+              <div class="section-divider"><div class="section-divider-label">Market</div><div class="section-divider-line"></div></div>
+              <div class="pill-group" id="market-pills">
+                <div class="pill selected" onclick="selectMarket('Residential',this)">Residential Investment</div>
+                <div class="pill" onclick="selectMarket('Commercial',this)">Commercial</div>
+              </div>
+              <input type="hidden" id="f-market" value="Residential">
+              <div class="section-divider" style="margin-top:20px"><div class="section-divider-label">Deal Type</div><div class="section-divider-line"></div></div>
+              <!-- Residential deal types -->
+              <div class="pill-group" id="deal-type-pills" style="display:flex">
                 <div class="pill" onclick="selectPill('deal-type-pills','Purchase','f-deal-type')">Purchase</div>
                 <div class="pill" onclick="selectPill('deal-type-pills','Fix & Flip','f-deal-type')">Fix &amp; Flip</div>
                 <div class="pill" onclick="selectPill('deal-type-pills','Rental','f-deal-type')">Rental / DSCR</div>
@@ -630,15 +644,31 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 <div class="pill" onclick="selectPill('deal-type-pills','Bridge','f-deal-type')">Bridge</div>
                 <div class="pill" onclick="selectPill('deal-type-pills','New Construction','f-deal-type')">New Construction</div>
               </div>
+              <!-- Commercial deal types -->
+              <div class="pill-group" id="deal-type-pills-comm" style="display:none">
+                <div class="pill" onclick="selectPill('deal-type-pills-comm','Acquisition','f-deal-type')">Acquisition</div>
+                <div class="pill" onclick="selectPill('deal-type-pills-comm','Refinance','f-deal-type')">Refinance</div>
+                <div class="pill" onclick="selectPill('deal-type-pills-comm','Bridge','f-deal-type')">Bridge</div>
+                <div class="pill" onclick="selectPill('deal-type-pills-comm','Construction','f-deal-type')">Construction</div>
+                <div class="pill" onclick="selectPill('deal-type-pills-comm','Cash-Out','f-deal-type')">Cash-Out</div>
+              </div>
               <input type="hidden" id="f-deal-type">
               <div class="section-divider" style="margin-top:24px"><div class="section-divider-label">Property Type</div><div class="section-divider-line"></div></div>
-              <div class="pill-group" id="prop-type-pills">
+              <!-- Residential property types -->
+              <div class="pill-group" id="prop-type-pills" style="display:flex">
                 <div class="pill" onclick="selectPill('prop-type-pills','SFR','f-property-type')">SFR</div>
                 <div class="pill" onclick="selectPill('prop-type-pills','Condo','f-property-type')">Condo</div>
                 <div class="pill" onclick="selectPill('prop-type-pills','2-4 Unit','f-property-type')">2–4 Unit</div>
                 <div class="pill" onclick="selectPill('prop-type-pills','Multifamily 5+','f-property-type')">Multifamily 5+</div>
-                <div class="pill" onclick="selectPill('prop-type-pills','Commercial','f-property-type')">Commercial</div>
-                <div class="pill" onclick="selectPill('prop-type-pills','Land','f-property-type')">Land</div>
+              </div>
+              <!-- Commercial property types -->
+              <div class="pill-group" id="prop-type-pills-comm" style="display:none">
+                <div class="pill" onclick="selectPill('prop-type-pills-comm','Multifamily 5+','f-property-type')">Multifamily 5+</div>
+                <div class="pill" onclick="selectPill('prop-type-pills-comm','Office','f-property-type')">Office</div>
+                <div class="pill" onclick="selectPill('prop-type-pills-comm','Retail','f-property-type')">Retail</div>
+                <div class="pill" onclick="selectPill('prop-type-pills-comm','Industrial','f-property-type')">Industrial</div>
+                <div class="pill" onclick="selectPill('prop-type-pills-comm','Mixed Use','f-property-type')">Mixed Use</div>
+                <div class="pill" onclick="selectPill('prop-type-pills-comm','Self Storage','f-property-type')">Self Storage</div>
               </div>
               <input type="hidden" id="f-property-type">
               <div class="wizard-nav">
@@ -655,9 +685,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
               <div class="section-divider"><div class="section-divider-label">Property Address</div><div class="section-divider-line"></div></div>
               <div class="field field-full" style="margin-bottom:16px">
                 <label class="label">Search Address <span class="req">*</span></label>
-                <div class="autocomplete-wrap">
-                  <input id="f-address-search" type="text" placeholder="Start typing address e.g. 5521 Hawkes..." autocomplete="off" oninput="addressSearch(this.value)" onkeydown="addressKeyNav(event)">
-                  <div class="autocomplete-list" id="address-suggestions" style="display:none"></div>
+                <div class="field-with-mic">
+                  <div class="autocomplete-wrap">
+                    <input id="f-address-search" type="text" placeholder="Start typing address e.g. 5521 Hawkes..." autocomplete="off" oninput="addressSearch(this.value)" onkeydown="addressKeyNav(event)">
+                    <div class="autocomplete-list" id="address-suggestions" style="display:none"></div>
+                  </div>
+                  <button class="mic-btn" data-mic="f-address-search" onclick="startMic('f-address-search')" title="Speak address" type="button">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0014 0M12 19v4M8 23h8"/></svg>
+                  </button>
                 </div>
                 <div style="font-size:11px;color:var(--text-4);margin-top:4px">Type to search — select from suggestions to auto-fill fields below</div>
               </div>
@@ -710,27 +745,43 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <!-- STEP 3: Financial Details -->
             <div class="wizard-panel" id="wp-3">
               <div class="section-divider"><div class="section-divider-label">Financial Details</div><div class="section-divider-line"></div></div>
-              <div class="form-grid-3" style="margin-bottom:14px">
-                <div class="field"><label class="label">Loan Amount ($) <span class="req">*</span></label><input id="f-loan-amount" type="number" placeholder="600000" oninput="autoCalc()"></div>
-                <div class="field" id="purchase-price-field"><label class="label">Purchase Price ($) <span class="req" id="pp-req">*</span></label><input id="f-purchase-price" type="number" placeholder="750000" oninput="autoCalc()"></div>
-                <div class="field"><label class="label">ARV ($) <span class="req">*</span></label><input id="f-arv" type="number" placeholder="850000" oninput="autoCalc()"></div>
-                <div class="field"><label class="label">As-Is Value ($)</label><input id="f-as-is-value" type="number" placeholder="750000" oninput="autoCalc()"></div>
-                <div class="field"><label class="label">Rehab Budget ($) <span class="req" id="rehab-req" style="display:none">*</span> <span id="rehab-hint" style="font-size:10px;color:var(--amber);display:none">Required for Fix &amp; Flip</span></label><input id="f-rehab-budget" type="number" placeholder="0"></div>
-                <div class="field"><label class="label">Monthly Rent ($) <span class="req" id="rent-req" style="display:none">*</span> <span id="rent-hint" style="font-size:10px;color:var(--amber);display:none">Required for Rental/DSCR</span></label><input id="f-monthly-rent" type="number" placeholder="5800" oninput="autoCalc()"></div>
+              <!-- RESIDENTIAL FINANCIALS -->
+              <div id="financials-residential">
+                <div class="form-grid-3" style="margin-bottom:14px">
+                  <div class="field"><label class="label">Loan Amount ($) <span class="req">*</span></label><input id="f-loan-amount" type="number" placeholder="600000" oninput="autoCalc()"></div>
+                  <div class="field" id="purchase-price-field"><label class="label">Purchase Price ($) <span class="req" id="pp-req">*</span></label><input id="f-purchase-price" type="number" placeholder="750000" oninput="autoCalc()"></div>
+                  <div class="field"><label class="label">ARV ($) <span class="req">*</span></label><input id="f-arv" type="number" placeholder="850000" oninput="autoCalc()"></div>
+                  <div class="field"><label class="label">As-Is Value ($)</label><input id="f-as-is-value" type="number" placeholder="750000" oninput="autoCalc()"></div>
+                  <div class="field"><label class="label">Rehab Budget ($) <span class="req" id="rehab-req" style="display:none">*</span> <span id="rehab-hint" style="font-size:10px;color:var(--amber);display:none">Required for Fix &amp; Flip</span></label><input id="f-rehab-budget" type="number" placeholder="0"></div>
+                  <div class="field"><label class="label">Monthly Rent ($) <span class="req" id="rent-req" style="display:none">*</span> <span id="rent-hint" style="font-size:10px;color:var(--amber);display:none">Required for Rental/DSCR</span></label><input id="f-monthly-rent" type="number" placeholder="5800" oninput="autoCalc()"></div>
+                </div>
+                <div class="form-grid-3">
+                  <div class="field"><label class="label">LTV (%) <span class="req">*</span> <span class="auto-badge">AUTO-CALC</span></label><input id="f-ltv" type="number" placeholder="Auto-calculated" step="0.1" class="auto-calc" readonly></div>
+                  <div class="field"><label class="label">DSCR <span class="auto-badge">AUTO-CALC</span></label><input id="f-dscr" type="number" placeholder="Auto-calculated" step="0.01" class="auto-calc" readonly></div>
+                  <div class="field"><label class="label">Credit Score <span class="req">*</span></label><input id="f-credit-score" type="number" placeholder="730"></div>
+                  <div class="field"><label class="label">Interest Rate (%) <span class="auto-badge">FOR DSCR</span></label><input id="f-rate" type="number" placeholder="7.0" step="0.1" value="7.0" oninput="autoCalc()"></div>
+                  <div class="field"><label class="label">Loan Term (yrs) <span class="auto-badge">FOR DSCR</span></label><input id="f-term" type="number" placeholder="30" value="30" oninput="autoCalc()"></div>
+                  <div class="field"><label class="label">Monthly Payment ($) <span class="auto-badge">AUTO-CALC</span></label><input id="f-monthly-payment" type="number" placeholder="Auto-calculated" class="auto-calc" readonly></div>
+                </div>
               </div>
-              <div class="form-grid-3">
-                <div class="field">
-                  <label class="label">LTV (%) <span class="req">*</span> <span class="auto-badge">AUTO-CALC</span></label>
-                  <input id="f-ltv" type="number" placeholder="Auto-calculated" step="0.1" class="auto-calc" readonly>
+              <!-- COMMERCIAL FINANCIALS -->
+              <div id="financials-commercial" style="display:none">
+                <div class="form-grid-3" style="margin-bottom:14px">
+                  <div class="field"><label class="label">Loan Amount ($) <span class="req">*</span></label><input id="fc-loan-amount" type="number" placeholder="2500000"></div>
+                  <div class="field"><label class="label">Purchase Price ($) <span class="req">*</span></label><input id="fc-purchase-price" type="number" placeholder="3200000"></div>
+                  <div class="field"><label class="label">As-Is / Appraised Value ($)</label><input id="fc-as-is" type="number" placeholder="3000000"></div>
+                  <div class="field"><label class="label">Gross Annual Income ($) <span class="req">*</span></label><input id="fc-gross-income" type="number" placeholder="320000" oninput="autoCalcComm()"></div>
+                  <div class="field"><label class="label">Annual Operating Expenses ($) <span class="req">*</span></label><input id="fc-expenses" type="number" placeholder="96000" oninput="autoCalcComm()"></div>
+                  <div class="field"><label class="label">NOI ($) <span class="auto-badge">AUTO-CALC</span></label><input id="fc-noi" type="number" placeholder="Auto-calculated" class="auto-calc" readonly></div>
+                  <div class="field"><label class="label">Cap Rate (%) <span class="auto-badge">AUTO-CALC</span></label><input id="fc-cap-rate" type="number" placeholder="Auto-calculated" step="0.01" class="auto-calc" readonly></div>
+                  <div class="field"><label class="label">Occupancy Rate (%)</label><input id="fc-occupancy" type="number" placeholder="92" min="0" max="100"></div>
+                  <div class="field"><label class="label">Units / SF</label><input id="fc-units" type="text" placeholder="24 units or 15,000 SF"></div>
                 </div>
-                <div class="field">
-                  <label class="label">DSCR <span class="auto-badge">AUTO-CALC</span></label>
-                  <input id="f-dscr" type="number" placeholder="Auto-calculated" step="0.01" class="auto-calc" readonly>
+                <div class="form-grid-3">
+                  <div class="field"><label class="label">Requested LTV (%)</label><input id="fc-ltv" type="number" placeholder="65" step="0.1"></div>
+                  <div class="field"><label class="label">Interest Rate (%)</label><input id="fc-rate" type="number" placeholder="6.5" step="0.1"></div>
+                  <div class="field"><label class="label">Credit Score <span class="req">*</span></label><input id="fc-credit-score" type="number" placeholder="720"></div>
                 </div>
-                <div class="field"><label class="label">Credit Score <span class="req">*</span></label><input id="f-credit-score" type="number" placeholder="730"></div>
-                <div class="field"><label class="label">Interest Rate (%) <span class="auto-badge">FOR DSCR</span></label><input id="f-rate" type="number" placeholder="7.0" step="0.1" value="7.0" oninput="autoCalc()"></div>
-                <div class="field"><label class="label">Loan Term (yrs) <span class="auto-badge">FOR DSCR</span></label><input id="f-term" type="number" placeholder="30" value="30" oninput="autoCalc()"></div>
-                <div class="field"><label class="label">Monthly Payment ($) <span class="auto-badge">AUTO-CALC</span></label><input id="f-monthly-payment" type="number" placeholder="Auto-calculated" class="auto-calc" readonly></div>
               </div>
               <div class="wizard-nav">
                 <button class="btn btn-ghost" onclick="wizardBack(3)">← Back</button>
@@ -763,7 +814,15 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 </div>
               </div>
               <div class="section-divider" style="margin-top:24px"><div class="section-divider-label">Additional Context</div><div class="section-divider-line"></div></div>
-              <div class="field"><label class="label">Notes</label><textarea id="f-notes" placeholder="Any additional details about the deal, borrower situation, or special circumstances..."></textarea></div>
+              <div class="field">
+                <label class="label">Notes</label>
+                <div class="field-with-mic" style="align-items:flex-start">
+                  <textarea id="f-notes" style="flex:1" placeholder="Any additional details about the deal, borrower situation, or special circumstances..."></textarea>
+                  <button class="mic-btn" data-mic="f-notes" onclick="startMic('f-notes')" title="Speak notes" type="button" style="margin-top:0;align-self:flex-start">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0014 0M12 19v4M8 23h8"/></svg>
+                  </button>
+                </div>
+              </div>
               <div class="wizard-nav">
                 <button class="btn btn-ghost" onclick="wizardBack(4)">← Back</button>
                 <div class="wizard-nav-spacer"></div>
@@ -1715,9 +1774,13 @@ async function analyzeDeal() {
     return;
   }
   const errEl = document.getElementById('form-error');
+  const market = document.getElementById('f-market').value || 'Residential';
+  const isComm = market === 'Commercial';
   const dealType = document.getElementById('f-deal-type').value;
   const propType = document.getElementById('f-property-type').value;
   const exp = document.getElementById('f-experience').value;
+
+  // Profile validation (step 4)
   if(!document.getElementById('f-first-name').value.trim()){errEl.textContent='First name is required';errEl.style.display='block';document.getElementById('f-first-name').focus();return;}
   if(!document.getElementById('f-last-name').value.trim()){errEl.textContent='Last name is required';errEl.style.display='block';document.getElementById('f-last-name').focus();return;}
   const emailVal = document.getElementById('f-investor-email').value.trim();
@@ -1725,50 +1788,71 @@ async function analyzeDeal() {
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)){errEl.textContent='Please enter a valid email address';errEl.style.display='block';document.getElementById('f-investor-email').focus();return;}
   const phoneVal = document.getElementById('f-investor-phone').value.trim();
   if(phoneVal && !/^[\d\s\(\)\-\+\.]{7,15}$/.test(phoneVal)){errEl.textContent='Please enter a valid phone number';errEl.style.display='block';document.getElementById('f-investor-phone').focus();return;}
-  if(!exp){errEl.textContent='Please select your investment experience';errEl.style.display='block';document.getElementById('exp-pills').scrollIntoView({behavior:'smooth',block:'center'});return;}
-  if(!dealType){errEl.textContent='Please select a Deal Type';errEl.style.display='block';document.getElementById('deal-type-pills').scrollIntoView({behavior:'smooth',block:'center'});return;}
-  if(!propType){errEl.textContent='Please select a Property Type';errEl.style.display='block';document.getElementById('prop-type-pills').scrollIntoView({behavior:'smooth',block:'center'});return;}
-  if(!document.getElementById('f-street-number').value.trim()){errEl.textContent='Street number is required';errEl.style.display='block';document.getElementById('f-street-number').focus();return;}
-  if(!document.getElementById('f-street-name').value.trim()){errEl.textContent='Street name is required';errEl.style.display='block';document.getElementById('f-street-name').focus();return;}
-  if(!document.getElementById('f-street-type').value){errEl.textContent='Street type is required';errEl.style.display='block';return;}
-  if(!document.getElementById('f-city').value.trim()){errEl.textContent='City is required';errEl.style.display='block';document.getElementById('f-city').focus();return;}
-  if(!document.getElementById('f-state').value.trim()){errEl.textContent='State is required';errEl.style.display='block';document.getElementById('f-state').focus();return;}
-  if(propType==='Condo'&&!document.getElementById('f-unit').value.trim()){errEl.textContent='Unit number is required for Condo properties';errEl.style.display='block';document.getElementById('f-unit').focus();return;}
-  if(!document.getElementById('f-loan-amount').value){errEl.textContent='Loan amount is required';errEl.style.display='block';document.getElementById('f-loan-amount').focus();return;}
-  if(!document.getElementById('f-arv').value){errEl.textContent='ARV (After Repair Value) is required';errEl.style.display='block';document.getElementById('f-arv').focus();return;}
-  if(!document.getElementById('f-credit-score').value){errEl.textContent='Credit score is required';errEl.style.display='block';document.getElementById('f-credit-score').focus();return;}
-  if((dealType==='Fix & Flip'||dealType==='New Construction')&&!document.getElementById('f-rehab-budget').value){
-    errEl.textContent='Rehab Budget is required for Fix & Flip and New Construction';errEl.style.display='block';
-    document.getElementById('f-rehab-budget').focus();return;
+  if(!exp){errEl.textContent='Please select your investment experience';errEl.style.display='block';return;}
+
+  // Commercial-specific validation
+  if(isComm) {
+    if(!document.getElementById('fc-loan-amount').value){errEl.textContent='Loan amount is required';errEl.style.display='block';document.getElementById('fc-loan-amount').focus();return;}
+    if(!document.getElementById('fc-gross-income').value){errEl.textContent='Gross annual income is required';errEl.style.display='block';document.getElementById('fc-gross-income').focus();return;}
+    if(!document.getElementById('fc-credit-score').value){errEl.textContent='Credit score is required';errEl.style.display='block';document.getElementById('fc-credit-score').focus();return;}
+  } else {
+    // Residential validation
+    if(!document.getElementById('f-loan-amount').value){errEl.textContent='Loan amount is required';errEl.style.display='block';document.getElementById('f-loan-amount').focus();return;}
+    if(!document.getElementById('f-arv').value){errEl.textContent='ARV is required';errEl.style.display='block';document.getElementById('f-arv').focus();return;}
+    if(!document.getElementById('f-credit-score').value){errEl.textContent='Credit score is required';errEl.style.display='block';document.getElementById('f-credit-score').focus();return;}
+    if((dealType==='Fix & Flip'||dealType==='New Construction')&&!document.getElementById('f-rehab-budget').value){errEl.textContent='Rehab Budget is required for Fix & Flip and New Construction';errEl.style.display='block';return;}
+    if(dealType==='Rental'&&!document.getElementById('f-monthly-rent').value){errEl.textContent='Monthly Rent is required for Rental / DSCR deals';errEl.style.display='block';return;}
   }
-  if(dealType==='Rental'&&!document.getElementById('f-monthly-rent').value){
-    errEl.textContent='Monthly Rent is required for Rental / DSCR deals';errEl.style.display='block';
-    document.getElementById('f-monthly-rent').focus();return;
-  }
+
   errEl.style.display='none';
   buildAddress();
   const city = document.getElementById('f-city').value.trim();
   const stateVal = document.getElementById('f-state').value.toUpperCase().trim();
   const streetAddr = document.getElementById('f-location').value;
   const fullLocation = [streetAddr, city, stateVal].filter(Boolean).join(', ');
-  const dealData = {
-    dealType, propertyType:propType, state:stateVal, location:fullLocation,
-    loanAmount:parseFloat(document.getElementById('f-loan-amount').value)||0,
-    purchasePrice:parseFloat(document.getElementById('f-purchase-price').value)||0,
-    arv:parseFloat(document.getElementById('f-arv').value)||0,
-    asIsValue:parseFloat(document.getElementById('f-as-is-value').value)||0,
-    rehabBudget:parseFloat(document.getElementById('f-rehab-budget').value)||0,
-    monthlyRent:parseFloat(document.getElementById('f-monthly-rent').value)||0,
-    monthlyPayment:parseFloat(document.getElementById('f-monthly-payment').value)||0,
-    ltv:parseFloat(document.getElementById('f-ltv').value)||0,
-    dscr:parseFloat(document.getElementById('f-dscr').value)||0,
-    creditScore:parseFloat(document.getElementById('f-credit-score').value)||0,
-    investorExperience:exp,
-    notes:document.getElementById('f-notes').value,
-    investorName:document.getElementById('f-first-name').value.trim()+' '+document.getElementById('f-last-name').value.trim(),
-    investorEmail:document.getElementById('f-investor-email').value,
-    investorPhone:document.getElementById('f-investor-phone').value
-  };
+
+  // Build dealData — residential or commercial fields
+  let dealData;
+  if (isComm) {
+    const grossIncome = parseFloat(document.getElementById('fc-gross-income').value)||0;
+    const expenses = parseFloat(document.getElementById('fc-expenses').value)||0;
+    const noi = grossIncome - expenses;
+    const purchasePrice = parseFloat(document.getElementById('fc-purchase-price').value)||0;
+    const capRate = (purchasePrice > 0 && noi > 0) ? parseFloat(((noi/purchasePrice)*100).toFixed(2)) : 0;
+    dealData = {
+      market:'Commercial', dealType, propertyType:propType, state:stateVal, location:fullLocation,
+      loanAmount:parseFloat(document.getElementById('fc-loan-amount').value)||0,
+      purchasePrice, asIsValue:parseFloat(document.getElementById('fc-as-is').value)||0,
+      grossIncome, expenses, noi, capRate,
+      occupancy:parseFloat(document.getElementById('fc-occupancy').value)||0,
+      units:document.getElementById('fc-units').value,
+      ltv:parseFloat(document.getElementById('fc-ltv').value)||0,
+      rate:parseFloat(document.getElementById('fc-rate').value)||0,
+      creditScore:parseFloat(document.getElementById('fc-credit-score').value)||0,
+      investorExperience:exp, notes:document.getElementById('f-notes').value,
+      investorName:document.getElementById('f-first-name').value.trim()+' '+document.getElementById('f-last-name').value.trim(),
+      investorEmail:document.getElementById('f-investor-email').value,
+      investorPhone:document.getElementById('f-investor-phone').value
+    };
+  } else {
+    dealData = {
+      market:'Residential', dealType, propertyType:propType, state:stateVal, location:fullLocation,
+      loanAmount:parseFloat(document.getElementById('f-loan-amount').value)||0,
+      purchasePrice:parseFloat(document.getElementById('f-purchase-price').value)||0,
+      arv:parseFloat(document.getElementById('f-arv').value)||0,
+      asIsValue:parseFloat(document.getElementById('f-as-is-value').value)||0,
+      rehabBudget:parseFloat(document.getElementById('f-rehab-budget').value)||0,
+      monthlyRent:parseFloat(document.getElementById('f-monthly-rent').value)||0,
+      monthlyPayment:parseFloat(document.getElementById('f-monthly-payment').value)||0,
+      ltv:parseFloat(document.getElementById('f-ltv').value)||0,
+      dscr:parseFloat(document.getElementById('f-dscr').value)||0,
+      creditScore:parseFloat(document.getElementById('f-credit-score').value)||0,
+      investorExperience:exp, notes:document.getElementById('f-notes').value,
+      investorName:document.getElementById('f-first-name').value.trim()+' '+document.getElementById('f-last-name').value.trim(),
+      investorEmail:document.getElementById('f-investor-email').value,
+      investorPhone:document.getElementById('f-investor-phone').value
+    };
+  }
   const btn = document.getElementById('analyze-btn');
   btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Analyzing...';
   document.getElementById('loading').classList.add('show');
@@ -1784,7 +1868,8 @@ async function analyzeDeal() {
       investorName: sessionForEmail?.investor?.name || '',
       dealCode: 'DL-' + Math.random().toString(36).substr(2, 8).toUpperCase(),
     };
-    const res = await fetch('/.netlify/functions/capiq-analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dealData: enrichedDealData})});
+    const analysisPrompt = isComm ? buildCommercialPrompt(enrichedDealData) : buildPrompt(enrichedDealData);
+    const res = await fetch('/.netlify/functions/capiq-analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dealData: enrichedDealData, prompt: analysisPrompt})});
     if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error||e.detail||`Error ${res.status}`);}
     const data = await res.json();
     if(!data.success) throw new Error(data.error||'Analysis failed');
@@ -2352,6 +2437,95 @@ function showUpgradePrompt() {
   }
   const modal = document.getElementById('upgrade-modal');
   if (modal) modal.classList.add('show');
+}
+
+// ─── 5-CLICK LOGO → ADMIN ────────────────────────────────────────────────────
+var _logoClicks = 0, _logoTimer = null;
+function handleLogoClick() {
+  _logoClicks++;
+  clearTimeout(_logoTimer);
+  _logoTimer = setTimeout(() => { _logoClicks = 0; }, 1500);
+  if (_logoClicks >= 5) { _logoClicks = 0; showAdminPanel(); }
+}
+
+// ─── MIC / VOICE INPUT ───────────────────────────────────────────────────────
+function startMic(inputId) {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { showToast('Voice input requires Chrome or Edge.', 'error'); return; }
+  const btn = document.querySelector('[data-mic="' + inputId + '"]');
+  const recognition = new SR();
+  recognition.continuous = false;
+  recognition.interimResults = false;
+  recognition.lang = 'en-US';
+  if (btn) { btn.classList.add('listening'); btn.title = 'Listening…'; }
+  recognition.onresult = (e) => {
+    const transcript = e.results[0][0].transcript;
+    const input = document.getElementById(inputId);
+    if (input) {
+      input.value = (input.value ? input.value + ' ' : '') + transcript;
+      input.dispatchEvent(new Event('input'));
+      if (inputId === 'f-address-search') addressSearch(input.value);
+    }
+    if (btn) { btn.classList.remove('listening'); btn.title = 'Speak input'; }
+  };
+  recognition.onerror = (e) => {
+    if (btn) { btn.classList.remove('listening'); btn.title = 'Speak input'; }
+    if (e.error !== 'no-speech') showToast('Could not capture voice — try again.', 'error');
+  };
+  recognition.onend = () => {
+    if (btn) { btn.classList.remove('listening'); btn.title = 'Speak input'; }
+  };
+  recognition.start();
+}
+
+// ─── COMMERCIAL MARKET SWITCHER ──────────────────────────────────────────────
+function selectMarket(market, el) {
+  document.getElementById('f-market').value = market;
+  document.querySelectorAll('#market-pills .pill').forEach(p => p.classList.remove('selected'));
+  el.classList.add('selected');
+  const isComm = market === 'Commercial';
+  document.getElementById('deal-type-pills').style.display = isComm ? 'none' : 'flex';
+  document.getElementById('deal-type-pills-comm').style.display = isComm ? 'flex' : 'none';
+  document.getElementById('prop-type-pills').style.display = isComm ? 'none' : 'flex';
+  document.getElementById('prop-type-pills-comm').style.display = isComm ? 'flex' : 'none';
+  // clear prior pill selections on the hidden group
+  document.getElementById('f-deal-type').value = '';
+  document.getElementById('f-property-type').value = '';
+  document.querySelectorAll('#deal-type-pills .pill, #deal-type-pills-comm .pill, #prop-type-pills .pill, #prop-type-pills-comm .pill').forEach(p => p.classList.remove('selected'));
+  // step 3: toggle residential vs commercial financials
+  document.getElementById('financials-residential').style.display = isComm ? 'none' : 'block';
+  document.getElementById('financials-commercial').style.display = isComm ? 'block' : 'none';
+  // update wizard step title hints
+  const titleEl = document.getElementById('wizard-card-title');
+  if (titleEl && _wizardStep === 1) titleEl.textContent = 'What are you analyzing?';
+}
+
+// ─── COMMERCIAL AUTO-CALC ────────────────────────────────────────────────────
+function autoCalcComm() {
+  const gross = parseFloat(document.getElementById('fc-gross-income')?.value) || 0;
+  const expenses = parseFloat(document.getElementById('fc-expenses')?.value) || 0;
+  const price = parseFloat(document.getElementById('fc-purchase-price')?.value) || 0;
+  const noi = gross - expenses;
+  const capRate = (price > 0 && noi > 0) ? (noi / price) * 100 : 0;
+  const noiEl = document.getElementById('fc-noi');
+  const capEl = document.getElementById('fc-cap-rate');
+  if (noiEl) noiEl.value = noi > 0 ? noi : '';
+  if (capEl) capEl.value = capRate > 0 ? capRate.toFixed(2) : '';
+}
+
+// ─── COMMERCIAL PROMPT ───────────────────────────────────────────────────────
+function buildCommercialPrompt(d) {
+  return `You are an expert commercial real estate underwriter for Underlytix. Analyze this commercial deal and return ONLY valid JSON, no markdown.
+
+DEAL: ${d.dealType} | ${d.propertyType} | ${d.state} | ${d.location}
+LOAN: $${d.loanAmount?.toLocaleString()} | PURCHASE: $${d.purchasePrice?.toLocaleString()} | AS-IS VALUE: $${d.asIsValue?.toLocaleString()||'N/A'}
+GROSS INCOME: $${d.grossIncome?.toLocaleString()}/yr | EXPENSES: $${d.expenses?.toLocaleString()}/yr | NOI: $${d.noi?.toLocaleString()}/yr
+CAP RATE: ${d.capRate}% | OCCUPANCY: ${d.occupancy}% | UNITS/SF: ${d.units||'N/A'}
+LTV: ${d.ltv}% | INTEREST RATE: ${d.rate}% | CREDIT: ${d.creditScore} | EXP: ${d.investorExperience}
+NOTES: ${d.notes||'None'}
+
+Underwrite this as a commercial deal under $10M. Assess NOI stability, cap rate vs market, debt service coverage, sponsor experience, and exit strategy. Return this exact JSON with all string fields filled with detailed analysis (2-4 sentences each):
+{"fundabilityScore":0,"dealScore":"Pass","humanReviewRequired":false,"executiveSummary":"","strengthsAndRisks":"","lenderMatchingProfile":"","structuringRecommendations":"","marketContext":"","scoreBreakdown":"","nextSteps":""}`;
 }
 </script>
 </body>

@@ -934,66 +934,225 @@ loadStats();
 </script>
 
 <!-- LOGIN PORTAL MODAL -->
-<div id="login-portal-overlay" onclick="if(event.target===this)closeLoginPortal()" style="display:none;position:fixed;inset:0;background:rgba(15,34,64,0.82);z-index:9999;align-items:center;justify-content:center;padding:24px">
-  <div style="background:white;border-radius:16px;max-width:500px;width:100%;padding:40px 36px;box-shadow:0 24px 64px rgba(0,0,0,0.35)">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">
-      <div style="font-size:20px;font-weight:700;color:#0f172a;letter-spacing:-.3px">Sign in to Underlytix</div>
-      <span onclick="closeLoginPortal()" style="cursor:pointer;font-size:24px;color:#94a3b8;line-height:1;margin-left:16px">×</span>
+<style>
+.portal-tile{display:flex;flex-direction:column;align-items:center;gap:8px;padding:18px 12px;border:2px solid #e2e8f0;border-radius:12px;cursor:pointer;background:#fff;transition:all .15s;text-align:center;width:100%}
+.portal-tile:hover,.portal-tile.active{border-color:#0e7490;background:rgba(14,116,144,0.04)}
+.portal-tile.active{border-color:#0e7490;box-shadow:0 0 0 3px rgba(14,116,144,0.12)}
+.portal-tile-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.portal-tile-name{font-size:13px;font-weight:700;color:#0f172a}
+.portal-tile-desc{font-size:11px;color:#64748b;line-height:1.4}
+.portal-auth-form{border-top:1px solid #e2e8f0;margin-top:20px;padding-top:20px;animation:lpFadeIn .2s ease both}
+@keyframes lpFadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.lp-input{width:100%;padding:10px 12px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-family:'Inter',sans-serif;outline:none;transition:border-color .15s;color:#0f172a}
+.lp-input:focus{border-color:#0e7490}
+.lp-btn{width:100%;padding:11px;background:#0f2240;color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:background .15s}
+.lp-btn:hover{background:#0e7490}
+.lp-btn:disabled{opacity:.6;cursor:not-allowed}
+.lp-err{font-size:12px;color:#dc2626;margin-top:6px;display:none}
+.lp-link{font-size:12px;color:#0e7490;font-weight:600;text-decoration:none;cursor:pointer}
+.lp-link:hover{text-decoration:underline}
+</style>
+<div id="login-portal-overlay" onclick="if(event.target===this)closeLoginPortal()" style="display:none;position:fixed;inset:0;background:rgba(15,34,64,0.82);z-index:9999;align-items:center;justify-content:center;padding:24px;overflow-y:auto">
+  <div style="background:white;border-radius:16px;max-width:520px;width:100%;padding:36px 32px;box-shadow:0 24px 64px rgba(0,0,0,0.35);margin:auto">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <div style="font-size:20px;font-weight:700;color:#0f172a;letter-spacing:-.3px">Select Your Portal</div>
+      <span onclick="closeLoginPortal()" style="cursor:pointer;font-size:26px;color:#94a3b8;line-height:1;padding:0 4px">×</span>
     </div>
-    <div style="font-size:13px;color:#64748b;margin-bottom:28px">Select your account type to continue.</div>
+    <div style="font-size:13px;color:#64748b;margin-bottom:22px">Choose your account type to sign in or create an account.</div>
 
-    <div style="display:flex;flex-direction:column;gap:10px">
-
-      <a href="/app" style="display:flex;align-items:center;gap:16px;padding:18px 20px;border:2px solid #e2e8f0;border-radius:12px;text-decoration:none;background:#fff;transition:all .15s" onmouseover="this.style.borderColor='#0e7490';this.style.background='rgba(14,116,144,0.03)'" onmouseout="this.style.borderColor='#e2e8f0';this.style.background='#fff'">
-        <div style="width:46px;height:46px;background:#0f2240;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px" id="portal-tiles">
+      <button class="portal-tile" onclick="showPortalAuth('investor')">
+        <div class="portal-tile-icon" style="background:#0f2240">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
         </div>
-        <div style="flex:1">
-          <div style="font-size:15px;font-weight:700;color:#0f172a">Investor Portal</div>
-          <div style="font-size:12px;color:#64748b;margin-top:2px">Deal analysis, DSCR scoring, lender matching</div>
+        <div class="portal-tile-name">Investor Portal</div>
+        <div class="portal-tile-desc">Deal analysis &amp; lender matching</div>
+      </button>
+      <button class="portal-tile" onclick="showPortalAuth('realtor')">
+        <div class="portal-tile-icon" style="background:#0e7490">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         </div>
-        <svg style="color:#cbd5e1;flex-shrink:0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
-      </a>
-
-      <a href="/realtor" style="display:flex;align-items:center;gap:16px;padding:18px 20px;border:2px solid #e2e8f0;border-radius:12px;text-decoration:none;background:#fff;transition:all .15s" onmouseover="this.style.borderColor='#0e7490';this.style.background='rgba(14,116,144,0.03)'" onmouseout="this.style.borderColor='#e2e8f0';this.style.background='#fff'">
-        <div style="width:46px;height:46px;background:#0e7490;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        <div class="portal-tile-name">Realtor Portal</div>
+        <div class="portal-tile-desc">Client prequal &amp; PITIA analysis</div>
+      </button>
+      <button class="portal-tile" onclick="showPortalAuth('lender')">
+        <div class="portal-tile-icon" style="background:#1a3355">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>
         </div>
-        <div style="flex:1">
-          <div style="font-size:15px;font-weight:700;color:#0f172a">Realtor Portal</div>
-          <div style="font-size:12px;color:#64748b;margin-top:2px">Client prequalification, PITIA analysis, lender referral</div>
+        <div class="portal-tile-name">Lender Portal</div>
+        <div class="portal-tile-desc">Review pre-screened deal flow</div>
+      </button>
+      <button class="portal-tile" onclick="showPortalAuth('signup')">
+        <div class="portal-tile-icon" style="background:#059669">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
         </div>
-        <svg style="color:#cbd5e1;flex-shrink:0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
-      </a>
-
-      <a href="/lender" style="display:flex;align-items:center;gap:16px;padding:18px 20px;border:2px solid #e2e8f0;border-radius:12px;text-decoration:none;background:#fff;transition:all .15s" onmouseover="this.style.borderColor='#0e7490';this.style.background='rgba(14,116,144,0.03)'" onmouseout="this.style.borderColor='#e2e8f0';this.style.background='#fff'">
-        <div style="width:46px;height:46px;background:#1a3355;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
-        </div>
-        <div style="flex:1">
-          <div style="font-size:15px;font-weight:700;color:#0f172a">Lender Portal</div>
-          <div style="font-size:12px;color:#64748b;margin-top:2px">Review pre-screened deals, manage your pipeline</div>
-        </div>
-        <svg style="color:#cbd5e1;flex-shrink:0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
-      </a>
-
+        <div class="portal-tile-name">Create Account</div>
+        <div class="portal-tile-desc">Free — 3 analyses included</div>
+      </button>
     </div>
 
-    <div style="margin-top:24px;text-align:center;font-size:12px;color:#94a3b8">
-      New to Underlytix? <a href="/app?signup=true" style="color:#0e7490;font-weight:600;text-decoration:none">Create a free account →</a>
-    </div>
+    <!-- Inline auth form — rendered by JS -->
+    <div id="portal-auth-panel" style="display:none"></div>
   </div>
 </div>
+
 <script>
-function openLoginPortal(){
-  document.getElementById('login-portal-overlay').style.display='flex';
-  document.body.style.overflow='hidden';
+var _lpRole = null;
+
+var LP_CONFIG = {
+  investor: {
+    label: 'Investor Portal',
+    fn: 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth-v3',
+    sessionKey: 'capiq_session',
+    redirect: '/app',
+    userField: 'investor',
+  },
+  realtor: {
+    label: 'Realtor Portal',
+    fn: 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-realtor-auth-v2',
+    sessionKey: 'capiq_realtor_session',
+    redirect: '/realtor',
+    userField: 'realtor',
+  },
+  lender: {
+    label: 'Lender Portal',
+    fn: 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-lender-portal-v4',
+    sessionKey: 'capiq_lender_session',
+    redirect: '/lender',
+    userField: 'lender',
+  },
+};
+
+function openLoginPortal(role) {
+  _lpRole = null;
+  document.querySelectorAll('.portal-tile').forEach(function(t){ t.classList.remove('active'); });
+  document.getElementById('portal-auth-panel').style.display = 'none';
+  document.getElementById('portal-auth-panel').innerHTML = '';
+  document.getElementById('login-portal-overlay').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+  if (role) showPortalAuth(role);
 }
-function closeLoginPortal(){
-  document.getElementById('login-portal-overlay').style.display='none';
-  document.body.style.overflow='';
+
+function closeLoginPortal() {
+  document.getElementById('login-portal-overlay').style.display = 'none';
+  document.body.style.overflow = '';
 }
-document.addEventListener('keydown',function(e){if(e.key==='Escape')closeLoginPortal();});
+
+function showPortalAuth(role) {
+  _lpRole = role;
+  document.querySelectorAll('.portal-tile').forEach(function(t, i) {
+    var roles = ['investor','realtor','lender','signup'];
+    t.classList.toggle('active', roles[i] === role);
+  });
+  var panel = document.getElementById('portal-auth-panel');
+  panel.style.display = 'block';
+  if (role === 'signup') {
+    panel.innerHTML = lpSignupForm();
+  } else {
+    var cfg = LP_CONFIG[role];
+    panel.innerHTML = lpLoginForm(cfg.label, role);
+  }
+}
+
+function lpLoginForm(label, role) {
+  return '<div class="portal-auth-form">'
+    + '<div style="font-size:14px;font-weight:600;color:#0f172a;margin-bottom:14px">Sign in — ' + label + '</div>'
+    + '<div style="display:flex;flex-direction:column;gap:10px">'
+    + '<input class="lp-input" id="lp-email" type="email" placeholder="Email address" autocomplete="email">'
+    + '<input class="lp-input" id="lp-password" type="password" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key===\'Enter\')lpSubmitLogin()">'
+    + '</div>'
+    + '<div class="lp-err" id="lp-err"></div>'
+    + '<button class="lp-btn" id="lp-submit-btn" onclick="lpSubmitLogin()" style="margin-top:14px">Sign In</button>'
+    + '<div style="text-align:center;margin-top:12px;font-size:12px;color:#94a3b8">No account? <span class="lp-link" onclick="showPortalAuth(\'signup\')">Create one free</span></div>'
+    + '</div>';
+}
+
+function lpSignupForm() {
+  return '<div class="portal-auth-form">'
+    + '<div style="font-size:14px;font-weight:600;color:#0f172a;margin-bottom:14px">Create Your Free Account</div>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'
+    + '<input class="lp-input" id="lp-first" type="text" placeholder="First name">'
+    + '<input class="lp-input" id="lp-last" type="text" placeholder="Last name">'
+    + '</div>'
+    + '<div style="display:flex;flex-direction:column;gap:8px">'
+    + '<input class="lp-input" id="lp-email" type="email" placeholder="Email address" autocomplete="email">'
+    + '<input class="lp-input" id="lp-password" type="password" placeholder="Password (8+ chars)" autocomplete="new-password" onkeydown="if(event.key===\'Enter\')lpSubmitSignup()">'
+    + '</div>'
+    + '<div class="lp-err" id="lp-err"></div>'
+    + '<button class="lp-btn" id="lp-submit-btn" onclick="lpSubmitSignup()" style="margin-top:14px">Create Account — Free</button>'
+    + '<div style="text-align:center;margin-top:12px;font-size:12px;color:#94a3b8">Already have an account? <span class="lp-link" onclick="showPortalAuth(\'investor\')">Sign in</span></div>'
+    + '</div>';
+}
+
+function lpShowErr(msg) {
+  var el = document.getElementById('lp-err');
+  if (el) { el.textContent = msg; el.style.display = 'block'; }
+}
+
+async function lpSubmitLogin() {
+  var email = (document.getElementById('lp-email')||{}).value || '';
+  var password = (document.getElementById('lp-password')||{}).value || '';
+  var btn = document.getElementById('lp-submit-btn');
+  var errEl = document.getElementById('lp-err');
+  if (errEl) errEl.style.display = 'none';
+  if (!email || !password) { lpShowErr('Please enter your email and password.'); return; }
+  var cfg = LP_CONFIG[_lpRole];
+  if (!cfg) return;
+  btn.disabled = true; btn.textContent = 'Signing in...';
+  try {
+    var res = await fetch(cfg.fn, {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({action:'login', email, password})
+    });
+    var data = await res.json();
+    if (data.success) {
+      var sess = {token: data.token, refresh_token: data.refresh_token};
+      sess[cfg.userField] = data[cfg.userField] || {email};
+      localStorage.setItem(cfg.sessionKey, JSON.stringify(sess));
+      window.location.href = cfg.redirect;
+    } else {
+      lpShowErr(data.error || 'Sign in failed. Check your credentials.');
+      btn.disabled = false; btn.textContent = 'Sign In';
+    }
+  } catch(e) {
+    lpShowErr('Network error — please try again.');
+    btn.disabled = false; btn.textContent = 'Sign In';
+  }
+}
+
+async function lpSubmitSignup() {
+  var first = (document.getElementById('lp-first')||{}).value || '';
+  var last = (document.getElementById('lp-last')||{}).value || '';
+  var email = (document.getElementById('lp-email')||{}).value || '';
+  var password = (document.getElementById('lp-password')||{}).value || '';
+  var btn = document.getElementById('lp-submit-btn');
+  var errEl = document.getElementById('lp-err');
+  if (errEl) errEl.style.display = 'none';
+  if (!first || !last) { lpShowErr('Please enter your first and last name.'); return; }
+  if (!email) { lpShowErr('Email address is required.'); return; }
+  if (!password || password.length < 8) { lpShowErr('Password must be at least 8 characters.'); return; }
+  btn.disabled = true; btn.textContent = 'Creating account...';
+  try {
+    var res = await fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth-v3', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({action:'signup', email, password, name: (first+' '+last).trim()})
+    });
+    var data = await res.json();
+    if (data.success) {
+      var sess = {token: data.token, refresh_token: data.refresh_token, investor: data.investor || {email, name: (first+' '+last).trim()}};
+      localStorage.setItem('capiq_session', JSON.stringify(sess));
+      window.location.href = '/app';
+    } else {
+      lpShowErr(data.error || 'Could not create account. Try a different email.');
+      btn.disabled = false; btn.textContent = 'Create Account — Free';
+    }
+  } catch(e) {
+    lpShowErr('Network error — please try again.');
+    btn.disabled = false; btn.textContent = 'Create Account — Free';
+  }
+}
+
+document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closeLoginPortal(); });
 </script>
 
 <script type="application/ld+json">

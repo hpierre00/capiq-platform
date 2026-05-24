@@ -16,7 +16,7 @@ export default async (req) => {
     const body = await req.json();
     const d = body.dealData || body;
 
-    const prompt = `You are an expert real estate underwriter for Underlytix. Analyze this deal and return ONLY a JSON object with no markdown.
+    const prompt = body.prompt || `You are an expert real estate underwriter for Underlytix. Analyze this deal and return ONLY a JSON object with no markdown.
 
 Deal: ${d.dealType} | ${d.propertyType} | ${d.state} | ${d.location}
 Loan: $${d.loanAmount} | Purchase: $${d.purchasePrice} | ARV: $${d.arv}
