@@ -296,6 +296,35 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
 .usage-bar{background:var(--bg-4);border-radius:6px;height:6px;overflow:hidden;margin-top:6px}
 .usage-bar-fill{height:100%;border-radius:6px;background:var(--teal);transition:width .4s ease}
 .usage-bar-fill.danger{background:var(--red)}
+/* WIZARD */
+.wizard-progress{display:flex;align-items:flex-start;margin-bottom:28px;position:relative}
+.wizard-step{display:flex;flex-direction:column;align-items:center;gap:5px;flex:1;position:relative;cursor:default}
+.wizard-step:not(:last-child)::after{content:'';position:absolute;top:13px;left:50%;right:-50%;height:2px;background:var(--border);z-index:0;transition:background .2s}
+.wizard-step.done:not(:last-child)::after{background:var(--teal)}
+.wizard-dot{width:26px;height:26px;border-radius:50%;border:2px solid var(--border);background:var(--bg-2);display:flex;align-items:center;justify-content:center;font-family:'DM Mono',monospace;font-size:10px;font-weight:700;color:var(--text-4);position:relative;z-index:1;transition:all .2s}
+.wizard-dot.done{background:var(--teal);border-color:var(--teal);color:white}
+.wizard-dot.active{background:var(--navy);border-color:var(--navy);color:white;box-shadow:0 0 0 3px rgba(15,34,64,0.1)}
+.wizard-step-label{font-size:9px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.08em;text-align:center;line-height:1.3}
+.wizard-step-label.active{color:var(--navy);font-weight:700}
+.wizard-step-label.done{color:var(--teal)}
+.wizard-panel{display:none}
+.wizard-panel.active{display:block;animation:fadeUp .25s ease both}
+.wizard-nav{display:flex;gap:12px;align-items:center;margin-top:28px;padding-top:20px;border-top:1px solid var(--border)}
+.wizard-nav-spacer{flex:1}
+/* SIDEBAR QUOTA */
+.sidebar-quota{padding:12px 16px;border-top:1px solid rgba(255,255,255,0.07)}
+.sidebar-quota-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px}
+.sidebar-quota-title{font-family:'DM Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:.1em;color:rgba(255,255,255,0.3)}
+.sidebar-quota-count{font-family:'DM Mono',monospace;font-size:11px;color:rgba(255,255,255,0.6)}
+.sidebar-quota-bar{background:rgba(255,255,255,0.08);border-radius:3px;height:3px;overflow:hidden}
+.sidebar-quota-fill{height:100%;border-radius:3px;background:var(--teal);transition:width .4s ease}
+.sidebar-quota-fill.danger{background:var(--red)}
+.sidebar-quota-sub{font-size:9px;color:rgba(255,255,255,0.2);margin-top:4px;font-family:'DM Mono',monospace}
+/* SCORE TIER */
+.score-tier-chip{display:inline-block;font-family:'DM Mono',monospace;font-size:9px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;padding:3px 10px;border-radius:3px;margin-top:6px}
+.score-tier-chip.strong{background:var(--green-dim);color:var(--green);border:1px solid var(--green-border)}
+.score-tier-chip.conditional{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(217,119,6,0.2)}
+.score-tier-chip.needs-work{background:var(--red-dim);color:var(--red);border:1px solid rgba(220,38,38,0.2)}
 @media(max-width:768px){.sidebar{width:100%;min-height:auto;position:static}.main{margin-left:0}.stats-grid{grid-template-columns:1fr 1fr}.form-grid,.form-grid-3,.form-grid-4{grid-template-columns:1fr}.lender-grid{grid-template-columns:1fr}}
 </style>
 </head>
@@ -494,6 +523,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </button>
       </div>
     </nav>
+    <div class="sidebar-quota" id="sidebar-quota" style="display:none">
+      <div class="sidebar-quota-row">
+        <span class="sidebar-quota-title">Monthly Usage</span>
+        <span class="sidebar-quota-count" id="sidebar-quota-count">0 / 3</span>
+      </div>
+      <div class="sidebar-quota-bar"><div class="sidebar-quota-fill" id="sidebar-quota-fill" style="width:0%"></div></div>
+      <div class="sidebar-quota-sub">analyses used this month</div>
+    </div>
     <div class="sidebar-footer">
       <div style="margin-bottom:10px">
         <div style="font-size:12px;font-weight:600;color:rgba(255,255,255,0.8)" id="sidebar-name"></div>
@@ -552,131 +589,189 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="topbar">
         <div><div class="topbar-title">Submit Deal</div><div class="topbar-meta">AI-Powered Underwriting Analysis</div></div>
         <div style="display:flex;align-items:center;gap:14px">
-          <div id="usage-indicator" style="display:none;text-align:right">
-            <div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text-3)" id="usage-label">0 / 3 used</div>
-            <div class="usage-bar" style="width:80px;margin-top:4px"><div class="usage-bar-fill" id="usage-fill" style="width:0%"></div></div>
-          </div>
-          <span class="chip chip-teal">STEP 1 OF 1</span>
+          <span class="chip chip-teal" id="wizard-step-chip">STEP 1 OF 4</span>
         </div>
       </div>
       <div class="content">
         <div class="card fade-up">
-          <div class="card-header"><div class="card-title">Deal Intake Form</div></div>
+          <div class="card-header">
+            <div class="card-title" id="wizard-card-title">What are you analyzing?</div>
+            <button class="btn btn-ghost" onclick="clearForm()" style="padding:5px 12px;font-size:12px">Clear</button>
+          </div>
           <div class="card-body">
-            <div class="section-divider"><div class="section-divider-label">Investor Profile</div><div class="section-divider-line"></div></div>
-            <div class="form-grid-3">
-              <div class="field"><label class="label">First Name <span class="req">*</span></label><input id="f-first-name" type="text" placeholder="John"></div>
-              <div class="field"><label class="label">Last Name <span class="req">*</span></label><input id="f-last-name" type="text" placeholder="Smith"></div>
-              <div class="field"><label class="label">Email <span class="req">*</span></label><input id="f-investor-email" type="email" placeholder="john@example.com"></div>
-              <div class="field"><label class="label">Phone</label><input id="f-investor-phone" type="tel" placeholder="(305) 555-0100"></div>
-              <div class="field field-full">
-                <label class="label">Investment Experience <span class="req">*</span></label>
-                <div class="pill-group" id="exp-pills">
-                  <div class="pill" onclick="selectPill('exp-pills','First Deal','f-experience')">First Deal</div>
-                  <div class="pill" onclick="selectPill('exp-pills','1-3 Deals','f-experience')">1–3 Deals</div>
-                  <div class="pill" onclick="selectPill('exp-pills','4-10 Deals','f-experience')">4–10 Deals</div>
-                  <div class="pill" onclick="selectPill('exp-pills','10-20 Deals','f-experience')">10–20 Deals</div>
-                  <div class="pill" onclick="selectPill('exp-pills','20+ Deals','f-experience')">20+ Deals</div>
+            <!-- WIZARD PROGRESS -->
+            <div class="wizard-progress">
+              <div class="wizard-step active" id="ws-1">
+                <div class="wizard-dot active" id="wd-1">1</div>
+                <div class="wizard-step-label active">Deal Type</div>
+              </div>
+              <div class="wizard-step" id="ws-2">
+                <div class="wizard-dot" id="wd-2">2</div>
+                <div class="wizard-step-label">Property</div>
+              </div>
+              <div class="wizard-step" id="ws-3">
+                <div class="wizard-dot" id="wd-3">3</div>
+                <div class="wizard-step-label">Financials</div>
+              </div>
+              <div class="wizard-step" id="ws-4">
+                <div class="wizard-dot" id="wd-4">4</div>
+                <div class="wizard-step-label">Profile</div>
+              </div>
+            </div>
+
+            <!-- STEP 1: Deal Type + Property Type -->
+            <div class="wizard-panel active" id="wp-1">
+              <div class="section-divider"><div class="section-divider-label">Deal Type</div><div class="section-divider-line"></div></div>
+              <div class="pill-group" id="deal-type-pills">
+                <div class="pill" onclick="selectPill('deal-type-pills','Purchase','f-deal-type')">Purchase</div>
+                <div class="pill" onclick="selectPill('deal-type-pills','Fix & Flip','f-deal-type')">Fix &amp; Flip</div>
+                <div class="pill" onclick="selectPill('deal-type-pills','Rental','f-deal-type')">Rental / DSCR</div>
+                <div class="pill" onclick="selectPill('deal-type-pills','Cash-Out','f-deal-type')">Cash-Out Refi</div>
+                <div class="pill" onclick="selectPill('deal-type-pills','Bridge','f-deal-type')">Bridge</div>
+                <div class="pill" onclick="selectPill('deal-type-pills','New Construction','f-deal-type')">New Construction</div>
+              </div>
+              <input type="hidden" id="f-deal-type">
+              <div class="section-divider" style="margin-top:24px"><div class="section-divider-label">Property Type</div><div class="section-divider-line"></div></div>
+              <div class="pill-group" id="prop-type-pills">
+                <div class="pill" onclick="selectPill('prop-type-pills','SFR','f-property-type')">SFR</div>
+                <div class="pill" onclick="selectPill('prop-type-pills','Condo','f-property-type')">Condo</div>
+                <div class="pill" onclick="selectPill('prop-type-pills','2-4 Unit','f-property-type')">2–4 Unit</div>
+                <div class="pill" onclick="selectPill('prop-type-pills','Multifamily 5+','f-property-type')">Multifamily 5+</div>
+                <div class="pill" onclick="selectPill('prop-type-pills','Commercial','f-property-type')">Commercial</div>
+                <div class="pill" onclick="selectPill('prop-type-pills','Land','f-property-type')">Land</div>
+              </div>
+              <input type="hidden" id="f-property-type">
+              <div class="wizard-nav">
+                <div class="wizard-nav-spacer"></div>
+                <div id="form-error-1" class="form-error-msg" style="display:none"></div>
+                <button class="btn btn-primary" onclick="wizardNext(1)">
+                  Property Details <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- STEP 2: Property Address -->
+            <div class="wizard-panel" id="wp-2">
+              <div class="section-divider"><div class="section-divider-label">Property Address</div><div class="section-divider-line"></div></div>
+              <div class="field field-full" style="margin-bottom:16px">
+                <label class="label">Search Address <span class="req">*</span></label>
+                <div class="autocomplete-wrap">
+                  <input id="f-address-search" type="text" placeholder="Start typing address e.g. 5521 Hawkes..." autocomplete="off" oninput="addressSearch(this.value)" onkeydown="addressKeyNav(event)">
+                  <div class="autocomplete-list" id="address-suggestions" style="display:none"></div>
                 </div>
-                <input type="hidden" id="f-experience">
+                <div style="font-size:11px;color:var(--text-4);margin-top:4px">Type to search — select from suggestions to auto-fill fields below</div>
+              </div>
+              <div class="form-grid" style="margin-bottom:12px">
+                <div class="field"><label class="label">Street Number <span class="req">*</span></label><input id="f-street-number" type="text" placeholder="5521" oninput="buildAddress()"></div>
+                <div class="field"><label class="label">Direction</label>
+                  <select id="f-street-dir" onchange="buildAddress()">
+                    <option value="">None</option>
+                    <option value="N">N</option><option value="S">S</option>
+                    <option value="E">E</option><option value="W">W</option>
+                    <option value="NE">NE</option><option value="NW">NW</option>
+                    <option value="SE">SE</option><option value="SW">SW</option>
+                  </select>
+                </div>
+                <div class="field"><label class="label">Street Name <span class="req">*</span></label><input id="f-street-name" type="text" placeholder="Hawkes Bluff" oninput="buildAddress()"></div>
+                <div class="field"><label class="label">Street Type <span class="req">*</span></label>
+                  <select id="f-street-type" onchange="buildAddress()">
+                    <option value="">Select...</option>
+                    <option value="Ave">Ave</option><option value="Blvd">Blvd</option>
+                    <option value="Cir">Cir</option><option value="Ct">Ct</option>
+                    <option value="Dr">Dr</option><option value="Hwy">Hwy</option>
+                    <option value="Ln">Ln</option><option value="Loop">Loop</option>
+                    <option value="Pkwy">Pkwy</option><option value="Pl">Pl</option>
+                    <option value="Rd">Rd</option><option value="St">St</option>
+                    <option value="Ter">Ter</option><option value="Trl">Trl</option>
+                    <option value="Way">Way</option>
+                  </select>
+                </div>
+                <div class="field" id="unit-field">
+                  <label class="label">Unit / Suite <span class="req" id="unit-req" style="display:none">*</span> <span id="unit-hint" style="font-size:10px;color:var(--amber);display:none">Required for Condo</span></label>
+                  <input id="f-unit" type="text" placeholder="Apt 2B or Unit 101" oninput="buildAddress()">
+                </div>
+                <div class="field"><label class="label">Zip Code</label><input id="f-zip" type="text" placeholder="33331" maxlength="10" oninput="buildAddress()"></div>
+              </div>
+              <div class="form-grid">
+                <div class="field"><label class="label">City <span class="req">*</span></label><input id="f-city" type="text" placeholder="Davie"></div>
+                <div class="field"><label class="label">State <span class="req">*</span></label><input id="f-state" type="text" placeholder="FL" maxlength="2" style="text-transform:uppercase"></div>
+              </div>
+              <input type="hidden" id="f-location">
+              <div class="wizard-nav">
+                <button class="btn btn-ghost" onclick="wizardBack(2)">← Back</button>
+                <div class="wizard-nav-spacer"></div>
+                <div id="form-error-2" class="form-error-msg" style="display:none"></div>
+                <button class="btn btn-primary" onclick="wizardNext(2)">
+                  Financial Details <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+                </button>
               </div>
             </div>
-            <div class="section-divider"><div class="section-divider-label">Deal Type</div><div class="section-divider-line"></div></div>
-            <div class="pill-group" id="deal-type-pills">
-              <div class="pill" onclick="selectPill('deal-type-pills','Purchase','f-deal-type')">Purchase</div>
-              <div class="pill" onclick="selectPill('deal-type-pills','Fix & Flip','f-deal-type')">Fix &amp; Flip</div>
-              <div class="pill" onclick="selectPill('deal-type-pills','Rental','f-deal-type')">Rental / DSCR</div>
-              <div class="pill" onclick="selectPill('deal-type-pills','Cash-Out','f-deal-type')">Cash-Out Refi</div>
-              <div class="pill" onclick="selectPill('deal-type-pills','Bridge','f-deal-type')">Bridge</div>
-              <div class="pill" onclick="selectPill('deal-type-pills','New Construction','f-deal-type')">New Construction</div>
-            </div>
-            <input type="hidden" id="f-deal-type">
-            <div class="section-divider"><div class="section-divider-label">Property Type</div><div class="section-divider-line"></div></div>
-            <div class="pill-group" id="prop-type-pills">
-              <div class="pill" onclick="selectPill('prop-type-pills','SFR','f-property-type')">SFR</div>
-              <div class="pill" onclick="selectPill('prop-type-pills','Condo','f-property-type')">Condo</div>
-              <div class="pill" onclick="selectPill('prop-type-pills','2-4 Unit','f-property-type')">2–4 Unit</div>
-              <div class="pill" onclick="selectPill('prop-type-pills','Multifamily 5+','f-property-type')">Multifamily 5+</div>
-              <div class="pill" onclick="selectPill('prop-type-pills','Commercial','f-property-type')">Commercial</div>
-              <div class="pill" onclick="selectPill('prop-type-pills','Land','f-property-type')">Land</div>
-            </div>
-            <input type="hidden" id="f-property-type">
-            <div class="section-divider"><div class="section-divider-label">Property Address</div><div class="section-divider-line"></div></div>
-            <div class="field field-full" style="margin-bottom:16px">
-              <label class="label">Search Address <span class="req">*</span></label>
-              <div class="autocomplete-wrap">
-                <input id="f-address-search" type="text" placeholder="Start typing address e.g. 5521 Hawkes..." autocomplete="off" oninput="addressSearch(this.value)" onkeydown="addressKeyNav(event)">
-                <div class="autocomplete-list" id="address-suggestions" style="display:none"></div>
+
+            <!-- STEP 3: Financial Details -->
+            <div class="wizard-panel" id="wp-3">
+              <div class="section-divider"><div class="section-divider-label">Financial Details</div><div class="section-divider-line"></div></div>
+              <div class="form-grid-3" style="margin-bottom:14px">
+                <div class="field"><label class="label">Loan Amount ($) <span class="req">*</span></label><input id="f-loan-amount" type="number" placeholder="600000" oninput="autoCalc()"></div>
+                <div class="field" id="purchase-price-field"><label class="label">Purchase Price ($) <span class="req" id="pp-req">*</span></label><input id="f-purchase-price" type="number" placeholder="750000" oninput="autoCalc()"></div>
+                <div class="field"><label class="label">ARV ($) <span class="req">*</span></label><input id="f-arv" type="number" placeholder="850000" oninput="autoCalc()"></div>
+                <div class="field"><label class="label">As-Is Value ($)</label><input id="f-as-is-value" type="number" placeholder="750000" oninput="autoCalc()"></div>
+                <div class="field"><label class="label">Rehab Budget ($) <span class="req" id="rehab-req" style="display:none">*</span> <span id="rehab-hint" style="font-size:10px;color:var(--amber);display:none">Required for Fix &amp; Flip</span></label><input id="f-rehab-budget" type="number" placeholder="0"></div>
+                <div class="field"><label class="label">Monthly Rent ($) <span class="req" id="rent-req" style="display:none">*</span> <span id="rent-hint" style="font-size:10px;color:var(--amber);display:none">Required for Rental/DSCR</span></label><input id="f-monthly-rent" type="number" placeholder="5800" oninput="autoCalc()"></div>
               </div>
-              <div style="font-size:11px;color:var(--text-4);margin-top:4px">Type to search — select from suggestions to auto-fill all fields below</div>
-            </div>
-            <div class="form-grid" style="margin-bottom:12px">
-              <div class="field"><label class="label">Street Number <span class="req">*</span></label><input id="f-street-number" type="text" placeholder="5521" oninput="buildAddress()"></div>
-              <div class="field"><label class="label">Direction</label>
-                <select id="f-street-dir" onchange="buildAddress()">
-                  <option value="">None</option>
-                  <option value="N">N</option><option value="S">S</option>
-                  <option value="E">E</option><option value="W">W</option>
-                  <option value="NE">NE</option><option value="NW">NW</option>
-                  <option value="SE">SE</option><option value="SW">SW</option>
-                </select>
+              <div class="form-grid-3">
+                <div class="field">
+                  <label class="label">LTV (%) <span class="req">*</span> <span class="auto-badge">AUTO-CALC</span></label>
+                  <input id="f-ltv" type="number" placeholder="Auto-calculated" step="0.1" class="auto-calc" readonly>
+                </div>
+                <div class="field">
+                  <label class="label">DSCR <span class="auto-badge">AUTO-CALC</span></label>
+                  <input id="f-dscr" type="number" placeholder="Auto-calculated" step="0.01" class="auto-calc" readonly>
+                </div>
+                <div class="field"><label class="label">Credit Score <span class="req">*</span></label><input id="f-credit-score" type="number" placeholder="730"></div>
+                <div class="field"><label class="label">Interest Rate (%) <span class="auto-badge">FOR DSCR</span></label><input id="f-rate" type="number" placeholder="7.0" step="0.1" value="7.0" oninput="autoCalc()"></div>
+                <div class="field"><label class="label">Loan Term (yrs) <span class="auto-badge">FOR DSCR</span></label><input id="f-term" type="number" placeholder="30" value="30" oninput="autoCalc()"></div>
+                <div class="field"><label class="label">Monthly Payment ($) <span class="auto-badge">AUTO-CALC</span></label><input id="f-monthly-payment" type="number" placeholder="Auto-calculated" class="auto-calc" readonly></div>
               </div>
-              <div class="field"><label class="label">Street Name <span class="req">*</span></label><input id="f-street-name" type="text" placeholder="Hawkes Bluff" oninput="buildAddress()"></div>
-              <div class="field"><label class="label">Street Type <span class="req">*</span></label>
-                <select id="f-street-type" onchange="buildAddress()">
-                  <option value="">Select...</option>
-                  <option value="Ave">Ave</option><option value="Blvd">Blvd</option>
-                  <option value="Cir">Cir</option><option value="Ct">Ct</option>
-                  <option value="Dr">Dr</option><option value="Hwy">Hwy</option>
-                  <option value="Ln">Ln</option><option value="Loop">Loop</option>
-                  <option value="Pkwy">Pkwy</option><option value="Pl">Pl</option>
-                  <option value="Rd">Rd</option><option value="St">St</option>
-                  <option value="Ter">Ter</option><option value="Trl">Trl</option>
-                  <option value="Way">Way</option>
-                </select>
+              <div class="wizard-nav">
+                <button class="btn btn-ghost" onclick="wizardBack(3)">← Back</button>
+                <div class="wizard-nav-spacer"></div>
+                <div id="form-error-3" class="form-error-msg" style="display:none"></div>
+                <button class="btn btn-primary" onclick="wizardNext(3)">
+                  Investor Profile <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 18l6-6-6-6"/></svg>
+                </button>
               </div>
-              <div class="field" id="unit-field">
-                <label class="label">Unit / Suite <span class="req" id="unit-req" style="display:none">*</span> <span id="unit-hint" style="font-size:10px;color:var(--amber);display:none">Required for Condo</span></label>
-                <input id="f-unit" type="text" placeholder="Apt 2B or Unit 101" oninput="buildAddress()">
+            </div>
+
+            <!-- STEP 4: Investor Profile + Analyze -->
+            <div class="wizard-panel" id="wp-4">
+              <div class="section-divider"><div class="section-divider-label">Investor Profile</div><div class="section-divider-line"></div></div>
+              <div class="form-grid-3">
+                <div class="field"><label class="label">First Name <span class="req">*</span></label><input id="f-first-name" type="text" placeholder="John"></div>
+                <div class="field"><label class="label">Last Name <span class="req">*</span></label><input id="f-last-name" type="text" placeholder="Smith"></div>
+                <div class="field"><label class="label">Email <span class="req">*</span></label><input id="f-investor-email" type="email" placeholder="john@example.com"></div>
+                <div class="field"><label class="label">Phone</label><input id="f-investor-phone" type="tel" placeholder="(305) 555-0100"></div>
+                <div class="field field-full">
+                  <label class="label">Investment Experience <span class="req">*</span></label>
+                  <div class="pill-group" id="exp-pills">
+                    <div class="pill" onclick="selectPill('exp-pills','First Deal','f-experience')">First Deal</div>
+                    <div class="pill" onclick="selectPill('exp-pills','1-3 Deals','f-experience')">1–3 Deals</div>
+                    <div class="pill" onclick="selectPill('exp-pills','4-10 Deals','f-experience')">4–10 Deals</div>
+                    <div class="pill" onclick="selectPill('exp-pills','10-20 Deals','f-experience')">10–20 Deals</div>
+                    <div class="pill" onclick="selectPill('exp-pills','20+ Deals','f-experience')">20+ Deals</div>
+                  </div>
+                  <input type="hidden" id="f-experience">
+                </div>
               </div>
-              <div class="field"><label class="label">Zip Code</label><input id="f-zip" type="text" placeholder="33331" maxlength="10" oninput="buildAddress()"></div>
-            </div>
-            <div class="form-grid">
-              <div class="field"><label class="label">City <span class="req">*</span></label><input id="f-city" type="text" placeholder="Davie"></div>
-              <div class="field"><label class="label">State <span class="req">*</span></label><input id="f-state" type="text" placeholder="FL" maxlength="2" style="text-transform:uppercase"></div>
-            </div>
-            <input type="hidden" id="f-location">
-            <div class="section-divider"><div class="section-divider-label">Financial Details</div><div class="section-divider-line"></div></div>
-            <div class="form-grid-3" style="margin-bottom:14px">
-              <div class="field"><label class="label">Loan Amount ($) <span class="req">*</span></label><input id="f-loan-amount" type="number" placeholder="600000" oninput="autoCalc()"></div>
-              <div class="field" id="purchase-price-field"><label class="label">Purchase Price ($) <span class="req" id="pp-req">*</span></label><input id="f-purchase-price" type="number" placeholder="750000" oninput="autoCalc()"></div>
-              <div class="field"><label class="label">ARV ($) <span class="req">*</span></label><input id="f-arv" type="number" placeholder="850000" oninput="autoCalc()"></div>
-              <div class="field"><label class="label">As-Is Value ($)</label><input id="f-as-is-value" type="number" placeholder="750000" oninput="autoCalc()"></div>
-              <div class="field"><label class="label">Rehab Budget ($) <span class="req" id="rehab-req" style="display:none">*</span> <span id="rehab-hint" style="font-size:10px;color:var(--amber);display:none">Required for Fix &amp; Flip</span></label><input id="f-rehab-budget" type="number" placeholder="0"></div>
-              <div class="field"><label class="label">Monthly Rent ($) <span class="req" id="rent-req" style="display:none">*</span> <span id="rent-hint" style="font-size:10px;color:var(--amber);display:none">Required for Rental/DSCR</span></label><input id="f-monthly-rent" type="number" placeholder="5800" oninput="autoCalc()"></div>
-            </div>
-            <div class="form-grid-3">
-              <div class="field">
-                <label class="label">LTV (%) <span class="req">*</span> <span class="auto-badge">AUTO-CALC</span></label>
-                <input id="f-ltv" type="number" placeholder="Auto-calculated from above" step="0.1" class="auto-calc" readonly>
+              <div class="section-divider" style="margin-top:24px"><div class="section-divider-label">Additional Context</div><div class="section-divider-line"></div></div>
+              <div class="field"><label class="label">Notes</label><textarea id="f-notes" placeholder="Any additional details about the deal, borrower situation, or special circumstances..."></textarea></div>
+              <div class="wizard-nav">
+                <button class="btn btn-ghost" onclick="wizardBack(4)">← Back</button>
+                <div class="wizard-nav-spacer"></div>
+                <div id="form-error" class="form-error-msg" style="display:none"></div>
+                <button class="btn btn-primary btn-lg" onclick="analyzeDeal()" id="analyze-btn">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>Analyze Deal
+                </button>
               </div>
-              <div class="field">
-                <label class="label">DSCR <span class="auto-badge">AUTO-CALC</span></label>
-                <input id="f-dscr" type="number" placeholder="Auto-calculated" step="0.01" class="auto-calc" readonly>
-              </div>
-              <div class="field"><label class="label">Credit Score <span class="req">*</span></label><input id="f-credit-score" type="number" placeholder="730"></div>
-              <div class="field"><label class="label">Interest Rate (%) <span class="auto-badge">FOR DSCR</span></label><input id="f-rate" type="number" placeholder="7.0" step="0.1" value="7.0" oninput="autoCalc()"></div>
-              <div class="field"><label class="label">Loan Term (yrs) <span class="auto-badge">FOR DSCR</span></label><input id="f-term" type="number" placeholder="30" value="30" oninput="autoCalc()"></div>
-              <div class="field"><label class="label">Monthly Payment ($) <span class="auto-badge">AUTO-CALC</span></label><input id="f-monthly-payment" type="number" placeholder="Auto-calculated" class="auto-calc" readonly></div>
-            </div>
-            <div class="section-divider"><div class="section-divider-label">Additional Context</div><div class="section-divider-line"></div></div>
-            <div class="field"><label class="label">Notes</label><textarea id="f-notes" placeholder="Any additional details about the deal, borrower situation, or special circumstances..."></textarea></div>
-            <div style="margin-top:24px;display:flex;gap:12px;align-items:center">
-              <button class="btn btn-primary btn-lg" onclick="analyzeDeal()" id="analyze-btn">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>Analyze Deal
-              </button>
-              <button class="btn btn-ghost" onclick="clearForm()">Clear Form</button>
-              <div id="form-error" class="form-error-msg" style="display:none"></div>
             </div>
           </div>
         </div>
@@ -953,23 +1048,82 @@ async function checkAccess() {
 }
 
 function updateUsageUI(access) {
-  const indicator = document.getElementById('usage-indicator');
-  const label = document.getElementById('usage-label');
-  const fill = document.getElementById('usage-fill');
   const planEl = document.getElementById('sidebar-plan');
-  if (!indicator) return;
+  const quotaEl = document.getElementById('sidebar-quota');
+  const quotaCount = document.getElementById('sidebar-quota-count');
+  const quotaFill = document.getElementById('sidebar-quota-fill');
   if (access.plan === 'pro') {
-    indicator.style.display = 'none';
     if (planEl) { planEl.textContent = 'PRO'; planEl.classList.add('pro'); }
+    if (quotaEl) quotaEl.style.display = 'none';
   } else {
-    indicator.style.display = 'block';
     const used = access.used || 0;
-    const pct = Math.min((used / access.limit) * 100, 100);
-    label.textContent = `${used} / ${access.limit} analyses used`;
-    fill.style.width = pct + '%';
-    if (pct >= 100) fill.classList.add('danger');
+    const limit = access.limit || 3;
+    const pct = Math.min((used / limit) * 100, 100);
     if (planEl) planEl.textContent = 'STARTER';
+    if (quotaEl) quotaEl.style.display = 'block';
+    if (quotaCount) quotaCount.textContent = `${used} / ${limit}`;
+    if (quotaFill) {
+      quotaFill.style.width = pct + '%';
+      pct >= 80 ? quotaFill.classList.add('danger') : quotaFill.classList.remove('danger');
+    }
   }
+}
+
+// ─── WIZARD NAVIGATION ────────────────────────────────────────────────────────
+let _wizardStep = 1;
+const WIZARD_TITLES = {1:'What are you analyzing?',2:'Property Details',3:'Financial Details',4:'Investor Profile'};
+
+function wizardGoTo(step) {
+  for (let i = 1; i <= 4; i++) {
+    const panel = document.getElementById('wp-'+i);
+    const dot = document.getElementById('wd-'+i);
+    const ws = document.getElementById('ws-'+i);
+    const lbl = ws?.querySelector('.wizard-step-label');
+    if (!panel) continue;
+    panel.classList.toggle('active', i === step);
+    dot.className = 'wizard-dot' + (i < step ? ' done' : i === step ? ' active' : '');
+    if (i < step) { dot.innerHTML = '✓'; } else { dot.innerHTML = String(i); }
+    if (lbl) lbl.className = 'wizard-step-label' + (i < step ? ' done' : i === step ? ' active' : '');
+    ws.className = 'wizard-step' + (i < step ? ' done' : i === step ? ' active' : '');
+  }
+  _wizardStep = step;
+  const chip = document.getElementById('wizard-step-chip');
+  if (chip) chip.textContent = 'STEP ' + step + ' OF 4';
+  const titleEl = document.getElementById('wizard-card-title');
+  if (titleEl) titleEl.textContent = WIZARD_TITLES[step];
+  document.getElementById('page-submit').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+function wizardNext(currentStep) {
+  const errId = 'form-error-' + currentStep;
+  const errEl = document.getElementById(errId);
+  if (errEl) errEl.style.display = 'none';
+  const showErr = (msg) => { if (errEl) { errEl.textContent = msg; errEl.style.display = 'block'; } };
+  if (currentStep === 1) {
+    if (!document.getElementById('f-deal-type').value) { showErr('Please select a Deal Type to continue.'); return; }
+    if (!document.getElementById('f-property-type').value) { showErr('Please select a Property Type to continue.'); return; }
+  } else if (currentStep === 2) {
+    if (!document.getElementById('f-street-number').value.trim()) { showErr('Street number is required.'); document.getElementById('f-street-number').focus(); return; }
+    if (!document.getElementById('f-street-name').value.trim()) { showErr('Street name is required.'); document.getElementById('f-street-name').focus(); return; }
+    if (!document.getElementById('f-street-type').value) { showErr('Street type is required.'); return; }
+    if (!document.getElementById('f-city').value.trim()) { showErr('City is required.'); document.getElementById('f-city').focus(); return; }
+    if (!document.getElementById('f-state').value.trim()) { showErr('State is required.'); document.getElementById('f-state').focus(); return; }
+    const propType = document.getElementById('f-property-type').value;
+    if (propType === 'Condo' && !document.getElementById('f-unit').value.trim()) { showErr('Unit number is required for Condo properties.'); document.getElementById('f-unit').focus(); return; }
+    buildAddress();
+  } else if (currentStep === 3) {
+    if (!document.getElementById('f-loan-amount').value) { showErr('Loan amount is required.'); document.getElementById('f-loan-amount').focus(); return; }
+    if (!document.getElementById('f-arv').value) { showErr('ARV is required.'); document.getElementById('f-arv').focus(); return; }
+    if (!document.getElementById('f-credit-score').value) { showErr('Credit score is required.'); document.getElementById('f-credit-score').focus(); return; }
+    const dealType = document.getElementById('f-deal-type').value;
+    if ((dealType === 'Fix & Flip' || dealType === 'New Construction') && !document.getElementById('f-rehab-budget').value) { showErr('Rehab Budget is required for Fix & Flip / New Construction.'); return; }
+    if (dealType === 'Rental' && !document.getElementById('f-monthly-rent').value) { showErr('Monthly Rent is required for Rental / DSCR deals.'); return; }
+  }
+  wizardGoTo(currentStep + 1);
+}
+
+function wizardBack(currentStep) {
+  wizardGoTo(currentStep - 1);
 }
 
 const STRIPE_PAYMENT_LINK = 'https://buy.stripe.com/aFa7sM7Aa7LWglb5Qo3VC00';
@@ -1683,6 +1837,8 @@ function renderResult(a, d) {
   const sc = a.fundabilityScore>=65?'var(--green)':a.fundabilityScore>=45?'var(--amber)':'var(--red)';
   const circ = 2*Math.PI*52, fill=(a.fundabilityScore/100)*circ;
   const vc = a.dealScore==='Pass'?'verdict-pass':a.dealScore==='Review'?'verdict-review':'verdict-reject';
+  const tierClass = a.fundabilityScore>=65?'strong':a.fundabilityScore>=45?'conditional':'needs-work';
+  const tierLabel = a.fundabilityScore>=65?'STRONG':a.fundabilityScore>=45?'CONDITIONAL':'NEEDS WORK';
   const matches = matchDeal(d,a);
   const mHtml = matches.length>0?matches.slice(0,3).map(m=>`
     <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid var(--border)">
@@ -1699,7 +1855,8 @@ function renderResult(a, d) {
               <svg width="120" height="120" viewBox="0 0 120 120"><circle cx="60" cy="60" r="52" fill="none" stroke="var(--bg-4)" stroke-width="8"/><circle cx="60" cy="60" r="52" fill="none" stroke="${sc}" stroke-width="8" stroke-dasharray="${fill} ${circ}" stroke-linecap="round"/></svg>
               <div class="score-ring-num"><div class="score-big" style="color:${sc}">${a.fundabilityScore}</div><div class="score-label">Capital Readiness</div></div>
             </div>
-            ${a.humanReviewRequired?'<div style="margin-top:10px;font-size:11px;color:var(--amber);font-weight:600;background:var(--amber-dim);padding:4px 10px;border-radius:4px;border:1px solid rgba(217,119,6,0.2)">⚠ REVIEW REQUIRED</div>':''}
+            <div style="text-align:center;margin-top:6px"><span class="score-tier-chip ${tierClass}">${tierLabel}</span></div>
+            ${a.humanReviewRequired?'<div style="margin-top:8px;font-size:11px;color:var(--amber);font-weight:600;background:var(--amber-dim);padding:4px 10px;border-radius:4px;border:1px solid rgba(217,119,6,0.2)">⚠ REVIEW REQUIRED</div>':''}
           </div>
           <div>
             <div class="analysis-section"><div class="analysis-title">Executive Summary</div><div class="analysis-text">${a.executiveSummary}</div></div>
@@ -1826,6 +1983,7 @@ function viewDeal(id) {
   document.querySelectorAll('#prop-type-pills .pill').forEach(p=>{if(p.getAttribute('onclick')?.includes(d.propertyType)) p.classList.add('selected');});
   document.getElementById('f-property-type').value=d.propertyType||'';
   autoCalc();
+  wizardGoTo(4);
   if(deal.analysis) renderResult(deal.analysis,d);
 }
 
@@ -1844,6 +2002,7 @@ function clearForm() {
   document.querySelectorAll('.pill').forEach(p=>p.classList.remove('selected'));
   document.getElementById('result-panel').classList.remove('show');
   document.getElementById('form-error').style.display='none';
+  wizardGoTo(1);
 }
 
 // ─── LENDER PORTAL ───────────────────────────────────────────────────────────
