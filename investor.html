@@ -296,6 +296,27 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
 .usage-bar{background:var(--bg-4);border-radius:6px;height:6px;overflow:hidden;margin-top:6px}
 .usage-bar-fill{height:100%;border-radius:6px;background:var(--teal);transition:width .4s ease}
 .usage-bar-fill.danger{background:var(--red)}
+/* LISTING AUTO-FILL */
+.autofill-bar{background:var(--bg-3);border:1px solid var(--border);border-radius:8px;padding:14px 16px;margin-bottom:24px}
+.autofill-label{font-family:'DM Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.autofill-label::after{content:'BETA';font-size:9px;background:var(--teal-dim);color:var(--teal);padding:1px 6px;border-radius:3px;border:1px solid var(--teal-border)}
+.autofill-row{display:flex;gap:8px}
+.autofill-input{flex:1;background:var(--bg-2);border:1.5px solid var(--border);border-radius:6px;color:var(--text);font-family:'Inter',sans-serif;font-size:13px;padding:9px 12px;outline:none;transition:border-color .15s}
+.autofill-input:focus{border-color:var(--teal)}
+.autofill-btn{background:var(--teal);color:white;font-size:12px;font-weight:600;padding:9px 16px;border:none;border-radius:6px;cursor:pointer;white-space:nowrap;transition:background .15s;font-family:'Inter',sans-serif}
+.autofill-btn:hover{background:var(--teal-light)}
+.autofill-btn:disabled{background:var(--bg-4);color:var(--text-4);cursor:not-allowed}
+.autofill-status{font-size:12px;margin-top:6px;min-height:16px;color:var(--text-3)}
+.autofill-status.success{color:var(--green)}
+.autofill-status.error{color:var(--red)}
+.autofill-filled{background:var(--teal-dim);border:1px solid var(--teal-border);border-radius:6px;padding:8px 12px;margin-top:8px;font-size:12px;color:var(--teal);display:none}
+.autofill-filled.show{display:block}
+/* INTRO PANEL */
+.intro-panel{background:linear-gradient(135deg,var(--teal-dim),rgba(14,116,144,0.02));border:1px solid var(--teal-border);border-radius:8px;padding:20px 24px;display:flex;gap:20px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-top:16px}
+.intro-panel p{font-size:13px;color:var(--text-2);line-height:1.65;margin:0}
+.intro-panel strong{color:var(--teal)}
+.intro-panel-not-ready{background:var(--bg-3);border:1px solid var(--border);border-radius:8px;padding:14px 18px;margin-top:16px}
+.intro-panel-not-ready p{font-size:12px;color:var(--text-3);margin:0;line-height:1.6}
 /* MIC BUTTON */
 .mic-btn{background:none;border:1px solid var(--border-dark);cursor:pointer;padding:6px 8px;border-radius:6px;color:var(--text-4);transition:all .15s;display:inline-flex;align-items:center;flex-shrink:0;height:38px;margin-top:0}
 .mic-btn:hover{color:var(--teal);border-color:var(--teal);background:var(--teal-dim)}
@@ -606,6 +627,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <button class="btn btn-ghost" onclick="clearForm()" style="padding:5px 12px;font-size:12px">Clear</button>
           </div>
           <div class="card-body">
+            <!-- LISTING AUTO-FILL -->
+            <div class="autofill-bar">
+              <div class="autofill-label">AI-Assisted Pre-Fill</div>
+              <div class="autofill-row">
+                <input class="autofill-input" id="autofill-input" type="text" placeholder="Enter a property address (e.g. 123 Main St, Miami FL 33101) or paste a Zillow / Realtor.com URL">
+                <button class="autofill-btn" id="autofill-btn" onclick="fetchListing()">Pre-fill →</button>
+              </div>
+              <div class="autofill-status" id="autofill-status"></div>
+              <div class="autofill-filled" id="autofill-filled"></div>
+            </div>
             <!-- WIZARD PROGRESS -->
             <div class="wizard-progress">
               <div class="wizard-step active" id="ws-1">
@@ -923,11 +954,34 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <button class="btn btn-primary" onclick="loadAdminData()">Access Dashboard</button>
           </div>
           <div id="admin-data-section" style="display:none">
-            <div class="stats-grid" style="margin-bottom:24px" id="admin-stats-grid"></div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
+            <!-- KPI stats -->
+            <div class="stats-grid" style="margin-bottom:20px" id="admin-stats-grid"></div>
+            <!-- Plan + deal type breakdown -->
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:20px">
+              <div class="card"><div class="card-body" id="admin-plan-breakdown"></div></div>
               <div class="card"><div class="card-body" id="admin-state-breakdown"></div></div>
               <div class="card"><div class="card-body" id="admin-type-breakdown"></div></div>
             </div>
+            <!-- Deal activity with period filter -->
+            <div class="card" style="margin-bottom:20px">
+              <div class="card-header" style="align-items:center">
+                <div class="card-title">Deal Activity</div>
+                <div style="display:flex;gap:6px" id="admin-period-tabs">
+                  <button class="btn btn-ghost admin-ptab active" data-period="monthly" onclick="renderAdminActivity('monthly')" style="padding:4px 10px;font-size:11px">Monthly</button>
+                  <button class="btn btn-ghost admin-ptab" data-period="weekly" onclick="renderAdminActivity('weekly')" style="padding:4px 10px;font-size:11px">Weekly</button>
+                  <button class="btn btn-ghost admin-ptab" data-period="daily" onclick="renderAdminActivity('daily')" style="padding:4px 10px;font-size:11px">Daily</button>
+                  <button class="btn btn-ghost admin-ptab" data-period="quarterly" onclick="renderAdminActivity('quarterly')" style="padding:4px 10px;font-size:11px">Quarterly</button>
+                  <button class="btn btn-ghost admin-ptab" data-period="yearly" onclick="renderAdminActivity('yearly')" style="padding:4px 10px;font-size:11px">Yearly</button>
+                </div>
+              </div>
+              <div class="card-body" id="admin-activity-table"></div>
+            </div>
+            <!-- Lender performance -->
+            <div class="card" style="margin-bottom:20px">
+              <div class="card-header"><div class="card-title">Lender Accounts</div></div>
+              <div class="card-body" id="admin-lender-table"></div>
+            </div>
+            <!-- Recent investors -->
             <div class="card"><div class="card-body"><div class="label" style="margin-bottom:12px">Recent Investors</div><div id="admin-investors-table"></div></div></div>
           </div>
         </div>
@@ -1965,7 +2019,13 @@ function renderResult(a, d) {
         ${mHtml}
         ${matches.length>0?'<div style="margin-top:16px"><button class="btn btn-ghost" style="width:100%" onclick="showPage(\'match\')">View Full Match Queue →</button></div>':''}
       </div>
-    </div>`;
+    </div>
+    ${a.fundabilityScore>=65
+      ? `<div class="intro-panel" id="intro-panel"><div><p><strong>This deal is analysis-ready for lender introductions.</strong><br>Your pre-packaged Deal Intelligence Summary will be sent to 3–5 matched lenders who meet your deal criteria — not mass-distributed.</p><p style="margin-top:6px;font-size:12px;color:var(--text-3)">We review every introduction request before sending.</p></div><button class="btn btn-primary" id="intro-btn" onclick="requestIntro()">Request Introductions →</button></div>`
+      : `<div class="intro-panel-not-ready"><p>Complete the recommended improvements above to qualify for lender introductions (score of 65+ required).</p></div>`
+    }`;
+  _currentDealData = d;
+  _currentAnalysis = a;
   document.getElementById('result-panel').classList.add('show');
   document.getElementById('result-panel').scrollIntoView({behavior:'smooth',block:'start'});
 }
@@ -2399,6 +2459,8 @@ function showAdminPanel() {
   document.getElementById('admin-modal').classList.add('show');
 }
 
+var _adminData = null;
+
 async function loadAdminData() {
   const secret = document.getElementById('admin-secret-input').value;
   if (!secret) return;
@@ -2409,24 +2471,108 @@ async function loadAdminData() {
     });
     const data = await res.json();
     if (!data.success) { alert(data.error || 'Unauthorized'); return; }
+    _adminData = data;
     document.getElementById('admin-login-section').style.display = 'none';
     document.getElementById('admin-data-section').style.display = 'block';
-    const s = data.summary;
+
+    const investors = data.investors || [];
+    const lenders = data.lenders || [];
+    const deals = data.deals || [];
+
+    // KPI computation
+    const proInv = investors.filter(i => i.plan === 'pro').length;
+    const starterInv = investors.filter(i => i.plan === 'free' || i.plan === 'starter' || !i.plan).length;
+    const activeLenders = lenders.filter(l => l.plan && l.plan !== 'pending').length;
+    const invMRR = proInv * 97;
+    const lenderMRR = activeLenders * 297;
+    const now = new Date(); const thisMonth = now.toISOString().slice(0,7);
+    const dealsThisMonth = deals.filter(d => (d.created_at||'').startsWith(thisMonth)).length;
+
     document.getElementById('admin-stats-grid').innerHTML = `
-      <div class="stat-card"><div class="stat-top"><span class="stat-label">Total Investors</span></div><div class="stat-value teal">${s.totalInvestors}</div><div class="stat-sub">${s.proInvestors} Pro / ${s.starterInvestors} Free</div></div>
-      <div class="stat-card green"><div class="stat-top"><span class="stat-label">Investor MRR</span></div><div class="stat-value green">$${s.estimatedMRR.toLocaleString()}</div><div class="stat-sub">$97/month × ${s.proInvestors} Pro</div></div>
-      <div class="stat-card"><div class="stat-top"><span class="stat-label">Total Deals</span></div><div class="stat-value teal">${s.totalDeals}</div><div class="stat-sub">${s.totalAnalysesThisMonth} analyses this month</div></div>
-      <div class="stat-card"><div class="stat-top"><span class="stat-label">Lender Activity</span></div><div class="stat-value teal">${s.interestedMatches}</div><div class="stat-sub">${s.termSheets} term sheets • ${s.totalMatches} total matches</div></div>
-      <div class="stat-card green"><div class="stat-top"><span class="stat-label">Lender MRR</span></div><div class="stat-value green">$${s.estimatedLenderMRR.toLocaleString()}</div><div class="stat-sub">$297/month × ${s.activeLenderUsers} active</div></div>
-      <div class="stat-card"><div class="stat-top"><span class="stat-label">Total MRR</span></div><div class="stat-value teal">$${(s.estimatedMRR + s.estimatedLenderMRR).toLocaleString()}</div><div class="stat-sub">Combined revenue</div></div>
+      <div class="stat-card"><div class="stat-top"><span class="stat-label">Total Investors</span></div><div class="stat-value teal">${investors.length}</div><div class="stat-sub">${proInv} Pro / ${starterInv} Free</div></div>
+      <div class="stat-card green"><div class="stat-top"><span class="stat-label">Investor MRR</span></div><div class="stat-value green">$${invMRR.toLocaleString()}</div><div class="stat-sub">$97/mo × ${proInv} Pro</div></div>
+      <div class="stat-card"><div class="stat-top"><span class="stat-label">Total Deals</span></div><div class="stat-value teal">${deals.length}</div><div class="stat-sub">${dealsThisMonth} this month</div></div>
+      <div class="stat-card"><div class="stat-top"><span class="stat-label">Total Lenders</span></div><div class="stat-value teal">${lenders.length}</div><div class="stat-sub">${activeLenders} active</div></div>
+      <div class="stat-card green"><div class="stat-top"><span class="stat-label">Lender MRR</span></div><div class="stat-value green">$${lenderMRR.toLocaleString()}</div><div class="stat-sub">$297/mo × ${activeLenders} active</div></div>
+      <div class="stat-card"><div class="stat-top"><span class="stat-label">Total MRR</span></div><div class="stat-value teal">$${(invMRR+lenderMRR).toLocaleString()}</div><div class="stat-sub">Combined revenue</div></div>
     `;
-    const stateRows = Object.entries(data.stateBreakdown).sort((a,b)=>b[1]-a[1]).map(([st,n])=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;border-bottom:1px solid var(--border)"><span style="color:var(--text-2)">${st}</span><span style="font-weight:600;color:var(--teal)">${n}</span></div>`).join('');
-    document.getElementById('admin-state-breakdown').innerHTML = '<div class="label" style="margin-bottom:8px">Deal Volume by State</div>' + stateRows;
-    const typeRows = Object.entries(data.dealTypeBreakdown).sort((a,b)=>b[1]-a[1]).map(([t,n])=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;border-bottom:1px solid var(--border)"><span style="color:var(--text-2)">${t}</span><span style="font-weight:600;color:var(--teal)">${n}</span></div>`).join('');
-    document.getElementById('admin-type-breakdown').innerHTML = '<div class="label" style="margin-bottom:8px">Deal Volume by Type</div>' + typeRows;
-    const invRows = (data.recentInvestors||[]).map(i=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:12px;border-bottom:1px solid var(--border)"><div><div style="font-weight:500;color:var(--text-2)">${i.email}</div><div style="color:var(--text-4);font-size:11px">${new Date(i.created_at).toLocaleDateString()}</div></div><span class="chip ${i.plan==='pro'?'chip-green':'chip-teal'}">${i.plan?.toUpperCase()}</span></div>`).join('');
-    document.getElementById('admin-investors-table').innerHTML = invRows;
+
+    // Plan breakdown
+    document.getElementById('admin-plan-breakdown').innerHTML = '<div class="label" style="margin-bottom:8px">Plan Distribution</div>' +
+      [['Pro Investors', proInv, 'var(--green)'], ['Free Investors', starterInv, 'var(--teal)'],
+       ['Realtors', (data.realtors||[]).length, 'var(--teal)'],
+       ['Active Lenders', activeLenders, 'var(--green)'], ['Pending Lenders', lenders.length - activeLenders, 'var(--text-4)']
+      ].map(([label,n,color])=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;border-bottom:1px solid var(--border)"><span style="color:var(--text-2)">${label}</span><span style="font-weight:600;color:${color}">${n}</span></div>`).join('');
+
+    // State breakdown
+    const stateCounts = {};
+    deals.forEach(d => { if(d.state) stateCounts[d.state] = (stateCounts[d.state]||0) + 1; });
+    const stateRows = Object.entries(stateCounts).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([st,n])=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;border-bottom:1px solid var(--border)"><span style="color:var(--text-2)">${st}</span><span style="font-weight:600;color:var(--teal)">${n}</span></div>`).join('');
+    document.getElementById('admin-state-breakdown').innerHTML = '<div class="label" style="margin-bottom:8px">Deals by State</div>' + (stateRows || '<div style="font-size:12px;color:var(--text-4)">No deals yet</div>');
+
+    // Deal type breakdown
+    const typeCounts = {};
+    deals.forEach(d => { const t = d.deal_type||d.asset_type||'Unknown'; typeCounts[t] = (typeCounts[t]||0)+1; });
+    const typeRows = Object.entries(typeCounts).sort((a,b)=>b[1]-a[1]).slice(0,8).map(([t,n])=>`<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:13px;border-bottom:1px solid var(--border)"><span style="color:var(--text-2)">${t}</span><span style="font-weight:600;color:var(--teal)">${n}</span></div>`).join('');
+    document.getElementById('admin-type-breakdown').innerHTML = '<div class="label" style="margin-bottom:8px">Deals by Type</div>' + (typeRows || '<div style="font-size:12px;color:var(--text-4)">No deals yet</div>');
+
+    // Activity table (default: monthly)
+    renderAdminActivity('monthly');
+
+    // Lender table
+    const lenderRows = lenders.length ? lenders.map(l => `
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;font-size:12px;border-bottom:1px solid var(--border)">
+        <div><div style="font-weight:500;color:var(--text-2)">${l.full_name||l.email}</div><div style="color:var(--text-4);font-size:11px;font-family:'DM Mono',monospace">${l.email} · ${(l.qm_category||'').toUpperCase()}</div></div>
+        <div style="text-align:right"><span class="chip ${l.plan&&l.plan!=='pending'?'chip-green':'chip-teal'}">${(l.plan||'PENDING').toUpperCase()}</span><div style="font-size:11px;color:var(--text-4);margin-top:2px">${l.last_login?'Last: '+new Date(l.last_login).toLocaleDateString():'Never logged in'}</div></div>
+      </div>`).join('')
+      : '<div style="font-size:13px;color:var(--text-4);padding:12px 0">No lender accounts yet.</div>';
+    document.getElementById('admin-lender-table').innerHTML = lenderRows;
+
+    // Recent investors
+    const invRows = investors.slice(0,20).map(i=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:12px;border-bottom:1px solid var(--border)"><div><div style="font-weight:500;color:var(--text-2)">${i.email}</div><div style="color:var(--text-4);font-size:11px">${new Date(i.created_at).toLocaleDateString()}</div></div><span class="chip ${i.plan==='pro'?'chip-green':'chip-teal'}">${(i.plan||'FREE').toUpperCase()}</span></div>`).join('');
+    document.getElementById('admin-investors-table').innerHTML = invRows || '<div style="font-size:13px;color:var(--text-4)">No investors yet.</div>';
+
   } catch(e) { alert('Error: ' + e.message); }
+}
+
+function renderAdminActivity(period) {
+  if (!_adminData) return;
+  const deals = _adminData.deals || [];
+  // Update tab active state
+  document.querySelectorAll('.admin-ptab').forEach(t => t.classList.toggle('active', t.dataset.period === period));
+
+  const buckets = {};
+  const getPeriodKey = (dateStr) => {
+    const d = new Date(dateStr);
+    if (period === 'daily') return d.toISOString().slice(0,10);
+    if (period === 'weekly') {
+      const day = d.getDay(), diff = d.getDate() - day;
+      return new Date(d.setDate(diff)).toISOString().slice(0,10) + 'W';
+    }
+    if (period === 'monthly') return dateStr.slice(0,7);
+    if (period === 'quarterly') { const q = Math.ceil((d.getMonth()+1)/3); return d.getFullYear() + '-Q' + q; }
+    if (period === 'yearly') return String(d.getFullYear());
+    return dateStr.slice(0,7);
+  };
+  deals.forEach(d => {
+    const k = getPeriodKey(d.created_at || new Date().toISOString());
+    if (!buckets[k]) buckets[k] = { count: 0, volume: 0, states: new Set() };
+    buckets[k].count++;
+    buckets[k].volume += parseFloat(d.requested_loan_amount || 0);
+    if (d.state) buckets[k].states.add(d.state);
+  });
+  const keys = Object.keys(buckets).sort().reverse().slice(0, 12);
+  if (!keys.length) { document.getElementById('admin-activity-table').innerHTML = '<div style="font-size:13px;color:var(--text-4);padding:8px 0">No deals in this period yet.</div>'; return; }
+  const rows = keys.map(k => {
+    const b = buckets[k];
+    return `<div style="display:flex;gap:12px;justify-content:space-between;padding:7px 0;font-size:12px;border-bottom:1px solid var(--border)">
+      <span style="font-family:'DM Mono',monospace;color:var(--text-3);min-width:100px">${k.replace('W','')}</span>
+      <span style="font-weight:600;color:var(--teal)">${b.count} deals</span>
+      <span style="color:var(--text-2)">${b.volume>0?'$'+Math.round(b.volume/1000)+'K vol':'—'}</span>
+      <span style="color:var(--text-4)">${[...b.states].slice(0,4).join(', ')}</span>
+    </div>`;
+  }).join('');
+  document.getElementById('admin-activity-table').innerHTML = rows;
 }
 
 function showUpgradePrompt() {
@@ -2476,6 +2622,89 @@ function startMic(inputId) {
     if (btn) { btn.classList.remove('listening'); btn.title = 'Speak input'; }
   };
   recognition.start();
+}
+
+// ─── LISTING AUTO-FILL ───────────────────────────────────────────────────────
+async function fetchListing() {
+  const input = document.getElementById('autofill-input');
+  const btn = document.getElementById('autofill-btn');
+  const status = document.getElementById('autofill-status');
+  const filled = document.getElementById('autofill-filled');
+  const val = input?.value?.trim();
+  if (!val) { status.textContent = 'Enter an address or URL first.'; status.className = 'autofill-status error'; return; }
+  const isUrl = val.startsWith('http');
+  btn.disabled = true; btn.textContent = 'Looking up...';
+  status.textContent = isUrl ? 'Fetching listing data...' : 'Searching for property...';
+  status.className = 'autofill-status';
+  filled.classList.remove('show');
+  try {
+    const res = await fetch('/.netlify/functions/capiq-analyze', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ action: 'fetch-listing', url: isUrl ? val : null, address: isUrl ? null : val })
+    });
+    const data = await res.json();
+    if (!data.listing) { status.textContent = data.error || 'Could not find this property. Enter details manually.'; status.className = 'autofill-status error'; btn.disabled = false; btn.textContent = 'Pre-fill →'; return; }
+    const L = data.listing;
+    const filledFields = [];
+    // Populate step 2 address fields
+    if (L.address) { const el = document.getElementById('f-address-search'); if (el) { el.value = L.address; el.dispatchEvent(new Event('input')); } }
+    if (L.address) { const el = document.getElementById('f-location'); if (el) el.value = L.address; filledFields.push('Address'); }
+    if (L.city) { const el = document.getElementById('f-city'); if (el) el.value = L.city; }
+    if (L.state) { const el = document.getElementById('f-state'); if (el) el.value = L.state; }
+    if (L.zip) { const el = document.getElementById('f-zip'); if (el) el.value = L.zip; }
+    // Populate property type pill if recognized
+    if (L.proptype) {
+      const typeMap = {sfr:'Single Family',condo:'Condo','24unit':'Multi-Family (2–4)',mf5:'Multi-Family (5+)'};
+      const label = typeMap[L.proptype];
+      if (label) {
+        document.querySelectorAll('#prop-type-pills .pill').forEach(p => {
+          if (p.textContent.trim().includes(label.split(' ')[0])) { p.click(); }
+        });
+        filledFields.push('Property type');
+      }
+    }
+    // Show guidance for manual fields
+    const labels = {price:'Listing price',rent:'Monthly rent',taxes:'Annual taxes',hoa:'HOA fee',insurance:'Insurance'};
+    const manual = (L.needsManual||[]).map(k => labels[k]||k);
+    status.innerHTML = '<strong style="color:var(--green)">Pre-filled!</strong> Still need: <strong>' + manual.join(', ') + '</strong>';
+    status.className = 'autofill-status success';
+    filled.textContent = filledFields.join(' · ');
+    filled.classList.add('show');
+    // Jump to step 2 to show address
+    if (_wizardStep === 1) wizardGoTo(2);
+    showToast('Address pre-filled — verify and complete remaining fields.', 'success');
+  } catch(e) {
+    status.textContent = 'Network error — please enter details manually.';
+    status.className = 'autofill-status error';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Pre-fill →';
+  }
+}
+
+// ─── LENDER INTRO REQUEST ─────────────────────────────────────────────────────
+var _currentDealData = null, _currentAnalysis = null;
+
+async function requestIntro() {
+  const btn = document.getElementById('intro-btn');
+  if (!btn) return;
+  btn.disabled = true; btn.textContent = 'Sending...';
+  try {
+    await fetch('/.netlify/functions/notion-sync', {
+      method: 'POST', headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ dealData: _currentDealData, analysis: _currentAnalysis, introRequest: true })
+    });
+    btn.textContent = 'Introductions Requested ✓';
+    btn.style.background = 'var(--green)';
+    // Mark in localStorage
+    if (state.deals.length) {
+      state.deals[0].introRequested = true;
+      localStorage.setItem('capiq_deals', JSON.stringify(state.deals));
+    }
+    showToast('Introduction request sent. Matched lenders will review your deal within 24–72 hours.', 'success');
+  } catch(e) {
+    btn.disabled = false; btn.textContent = 'Request Introductions →';
+    showToast('Could not send request — please try again.', 'error');
+  }
 }
 
 // ─── COMMERCIAL MARKET SWITCHER ──────────────────────────────────────────────

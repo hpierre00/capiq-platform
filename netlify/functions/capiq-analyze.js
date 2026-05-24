@@ -14,6 +14,47 @@ export default async (req) => {
     if (!apiKey) return new Response(JSON.stringify({ error: "ANTHROPIC_API_KEY not configured" }), { status: 500, headers: cors });
 
     const body = await req.json();
+
+    // ── LISTING AUTO-FILL ────────────────────────────────────────────────────
+    if (body.action === 'fetch-listing') {
+      const { url, address } = body;
+      var propertyRef = address || '';
+      if (url && !propertyRef) {
+        try {
+          var zM = url.match(/zillow\.com\/homedetails\/([^/?]+)/);
+          if (zM) propertyRef = decodeURIComponent(zM[1]).replace(/-?\d{6,}_zpid$/, '').replace(/-/g, ' ').trim();
+          var rM = url.match(/realtor\.com\/realestateandhomes-detail\/([^/?]+)/);
+          if (rM) propertyRef = decodeURIComponent(rM[1]).replace(/_M\d+.*$/, '').replace(/_/g, ' ').trim();
+          var rfM = url.match(/redfin\.com\/[A-Z]{2}\/([^/]+)\/([^/]+)\/home/);
+          if (rfM) propertyRef = decodeURIComponent(rfM[2]).replace(/-/g, ' ').trim() + ' ' + decodeURIComponent(rfM[1]).replace(/-/g, ' ');
+          if (!propertyRef) propertyRef = url;
+        } catch(e) { propertyRef = url; }
+      }
+      if (!propertyRef) return new Response(JSON.stringify({ error: 'Please provide an address.' }), { status: 400, headers: cors });
+
+      var schema = '{"address":"formatted full address","city":"City","state":"ST","zip":"12345","proptype":"sfr","beds":3,"baths":2,"sqft":1650,"yearbuilt":2005}';
+      var listingPrompt = 'Parse this property reference: ' + propertyRef + '. Return ONLY a valid JSON object, no markdown, no code fences. Use this structure: ' + schema + ' Rules: proptype must be sfr, 24unit, mf5, or condo. beds/baths/sqft/yearbuilt return null if unknown. Do NOT include price, rent, taxes, or HOA.';
+      try {
+        const lRes = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
+          body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 200, messages: [{ role: 'user', content: listingPrompt }] }),
+        });
+        var lData = await lRes.json();
+        var raw = ((lData.content||[]).find(b=>b.type==='text')||{}).text || '';
+        var cleaned = raw.trim().replace(/```[\w]*/g,'').replace(/```/g,'').trim();
+        var listing = { address: propertyRef, proptype: 'sfr' };
+        try { var p = JSON.parse(cleaned); if (p && p.address) listing = p; } catch(e) {
+          var m = cleaned.match(/\{[\s\S]*\}/); if (m) { try { var p2 = JSON.parse(m[0]); if (p2&&p2.address) listing = p2; } catch(e2){} }
+        }
+        listing.needsManual = ['price','rent','taxes','hoa','insurance'];
+        listing.guidance = { price:'Enter from listing page',rent:'Find on Rentometer.com or Zillow Rent Estimate',taxes:'Find on county property appraiser',hoa:'Check listing details',insurance:'Estimate 0.75–1% of price annually' };
+        return new Response(JSON.stringify({ success: true, listing }), { status: 200, headers: cors });
+      } catch(e) {
+        return new Response(JSON.stringify({ success: true, listing: { address: propertyRef, proptype: 'sfr', needsManual: ['price','rent','taxes','hoa','insurance'] } }), { status: 200, headers: cors });
+      }
+    }
+
     const d = body.dealData || body;
 
     const prompt = body.prompt || `You are an expert real estate underwriter for Underlytix. Analyze this deal and return ONLY a JSON object with no markdown.
