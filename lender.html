@@ -178,55 +178,109 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div style="width:100%;max-width:520px">
       <div class="card">
         <div style="background:var(--navy);padding:20px 24px;border-radius:10px 10px 0 0">
-          <div style="color:white;font-size:15px;font-weight:700">Lender Portal — Create Account</div>
+          <div style="color:white;font-size:15px;font-weight:700">Lender Portal</div>
           <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:3px">14-day free trial · No credit card required · $297/month after trial</div>
+          <!-- Tab switcher -->
+          <div style="display:flex;gap:4px;margin-top:14px">
+            <button id="ls-tab-create" onclick="lenderSignupTab('create')" style="padding:6px 14px;border-radius:5px;border:none;cursor:pointer;font-size:12px;font-weight:600;background:rgba(255,255,255,0.15);color:white;transition:all .15s">Create Account</button>
+            <button id="ls-tab-request" onclick="lenderSignupTab('request')" style="padding:6px 14px;border-radius:5px;border:none;cursor:pointer;font-size:12px;font-weight:600;background:transparent;color:rgba(255,255,255,0.5);transition:all .15s">Request Access</button>
+          </div>
         </div>
         <div class="card-body">
-          <div id="lender-signup-error" style="display:none;font-size:12px;color:var(--red);background:var(--red-dim);border:1px solid rgba(220,38,38,0.15);border-radius:6px;padding:10px;margin-bottom:16px"></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
-            <div class="field"><label class="label">Company Name</label><input class="input" id="ls-company" type="text" placeholder="Coastal Capital Partners"></div>
-            <div class="field"><label class="label">Your Name</label><input class="input" id="ls-contact" type="text" placeholder="Jane Smith"></div>
-          </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
-            <div class="field"><label class="label">Work Email</label><input class="input" id="ls-email" type="email" placeholder="jane@yourlender.com"></div>
-            <div class="field"><label class="label">Phone</label><input class="input" id="ls-phone" type="tel" placeholder="(305) 555-0100" oninput="this.value=formatPhone(this.value)"></div>
-          </div>
-          <div class="field" style="margin-bottom:14px"><label class="label">Password</label><input class="input" id="ls-password" type="password" placeholder="Min 8 characters"></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
-            <div class="field"><label class="label">Lender Type</label>
-              <select class="input" id="ls-type" style="appearance:auto">
-                <option value="hard_money">Hard Money</option>
-                <option value="dscr">DSCR</option>
-                <option value="non_qm">Non-QM</option>
-                <option value="bridge">Bridge</option>
-                <option value="construction">Construction</option>
-                <option value="conventional">Conventional / QM</option>
+
+          <!-- CREATE ACCOUNT PANE -->
+          <div id="ls-create-pane">
+            <div id="lender-signup-error" style="display:none;font-size:12px;color:var(--red);background:var(--red-dim);border:1px solid rgba(220,38,38,0.15);border-radius:6px;padding:10px;margin-bottom:16px"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+              <div class="field"><label class="label">Company Name</label><input class="input" id="ls-company" type="text" placeholder="Coastal Capital Partners"></div>
+              <div class="field"><label class="label">Your Name</label><input class="input" id="ls-contact" type="text" placeholder="Jane Smith"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+              <div class="field"><label class="label">Work Email</label><input class="input" id="ls-email" type="email" placeholder="jane@yourlender.com"></div>
+              <div class="field"><label class="label">Phone</label><input class="input" id="ls-phone" type="tel" placeholder="(305) 555-0100" oninput="this.value=formatPhone(this.value)"></div>
+            </div>
+            <div class="field" style="margin-bottom:14px"><label class="label">Password</label><input class="input" id="ls-password" type="password" placeholder="Min 8 characters"></div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+              <div class="field"><label class="label">Lender Type</label>
+                <select class="input" id="ls-type" style="appearance:auto">
+                  <option value="hard_money">Hard Money</option>
+                  <option value="dscr">DSCR</option>
+                  <option value="non_qm">Non-QM</option>
+                  <option value="bridge">Bridge</option>
+                  <option value="construction">Construction</option>
+                  <option value="conventional">Conventional / QM</option>
+                </select>
+              </div>
+              <div class="field"><label class="label">Primary State</label><input class="input" id="ls-state" type="text" placeholder="FL"></div>
+            </div>
+            <div class="field" style="margin-bottom:14px">
+              <label class="label">Deal Access</label>
+              <select class="input" id="ls-qm-category" style="appearance:auto" onchange="document.getElementById('ls-qm-note').style.display=this.value==='both'?'block':'none'">
+                <option value="non_qm">Non-QM Deals Only (DSCR, Hard Money, Bridge, Fix &amp; Flip)</option>
+                <option value="qm">QM Deals Only (Conventional, FHA, VA, Jumbo)</option>
+                <option value="both">Both QM + Non-QM — +$99/month add-on</option>
               </select>
+              <div id="ls-qm-note" style="display:none;margin-top:6px;padding:8px 12px;background:rgba(14,116,144,0.08);border:1px solid rgba(14,116,144,0.2);border-radius:6px;font-size:11px;color:var(--teal)">
+                ✓ Full deal access unlocked. The $99/month add-on is billed on top of your base $297/month plan and activates after your free trial.
+              </div>
             </div>
-            <div class="field"><label class="label">Primary State</label><input class="input" id="ls-state" type="text" placeholder="FL"></div>
-          </div>
-          <div class="field" style="margin-bottom:14px">
-            <label class="label">Deal Access</label>
-            <select class="input" id="ls-qm-category" style="appearance:auto" onchange="document.getElementById('ls-qm-note').style.display=this.value==='both'?'block':'none'">
-              <option value="non_qm">Non-QM Deals Only (DSCR, Hard Money, Bridge, Fix &amp; Flip)</option>
-              <option value="qm">QM Deals Only (Conventional, FHA, VA, Jumbo)</option>
-              <option value="both">Both QM + Non-QM — +$99/month add-on</option>
-            </select>
-            <div id="ls-qm-note" style="display:none;margin-top:6px;padding:8px 12px;background:rgba(14,116,144,0.08);border:1px solid rgba(14,116,144,0.2);border-radius:6px;font-size:11px;color:var(--teal)">
-              ✓ Full deal access unlocked. The $99/month add-on is billed on top of your base $297/month plan and activates after your free trial.
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
+              <div class="field"><label class="label">Min Loan ($)</label><input class="input" id="ls-min-loan" type="number" placeholder="100000"></div>
+              <div class="field"><label class="label">Max Loan ($)</label><input class="input" id="ls-max-loan" type="number" placeholder="5000000"></div>
             </div>
+            <button class="btn btn-primary" id="ls-btn" onclick="lenderSignup()" style="width:100%;justify-content:center">Start 14-Day Free Trial</button>
+            <p style="font-size:11px;color:var(--text-4);margin:12px 0 0;text-align:center">
+              Already have an account? <span onclick="showLenderLoginView()" style="color:var(--teal);cursor:pointer">Sign in →</span>
+            </p>
+            <p style="font-size:11px;color:var(--text-4);margin:8px 0 0;text-align:center">
+              By signing up you agree to our <a href="/terms" target="_blank" style="color:var(--teal)">Terms</a> and <a href="/privacy" target="_blank" style="color:var(--teal)">Privacy Policy</a>.
+            </p>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
-            <div class="field"><label class="label">Min Loan ($)</label><input class="input" id="ls-min-loan" type="number" placeholder="100000"></div>
-            <div class="field"><label class="label">Max Loan ($)</label><input class="input" id="ls-max-loan" type="number" placeholder="5000000"></div>
+
+          <!-- REQUEST ACCESS PANE -->
+          <div id="ls-request-pane" style="display:none">
+            <div style="font-size:13px;color:var(--text-3);margin-bottom:16px;padding:10px 14px;background:var(--teal-dim);border:1px solid var(--teal-border);border-radius:6px">
+              Not ready to sign up yet? Submit your lending profile and we'll reach out when we have a deal match for you.
+            </div>
+            <div id="lr-error" style="display:none;font-size:12px;color:var(--red);background:var(--red-dim);border:1px solid rgba(220,38,38,0.15);border-radius:6px;padding:10px;margin-bottom:16px"></div>
+            <div id="lr-success" style="display:none;font-size:13px;color:var(--green);background:var(--green-dim);border:1px solid var(--green-border);border-radius:6px;padding:12px;margin-bottom:16px;text-align:center">
+              Request received! We'll be in touch when a matching deal comes in.
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+              <div class="field"><label class="label">Company Name</label><input class="input" id="lr-company" type="text" placeholder="Coastal Capital Partners"></div>
+              <div class="field"><label class="label">Contact Name</label><input class="input" id="lr-contact" type="text" placeholder="Jane Smith"></div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px">
+              <div class="field"><label class="label">Work Email</label><input class="input" id="lr-email" type="email" placeholder="jane@yourlender.com"></div>
+              <div class="field"><label class="label">Phone</label><input class="input" id="lr-phone" type="tel" placeholder="(305) 555-0100" oninput="this.value=formatPhone(this.value)"></div>
+            </div>
+            <div class="field" style="margin-bottom:14px">
+              <label class="label">Loan Types</label>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;padding:10px 12px;background:var(--bg-3);border:1px solid var(--border-dark);border-radius:6px">
+                <label style="display:flex;align-items:center;gap:7px;font-size:12px;cursor:pointer"><input type="checkbox" value="Hard Money" class="lr-loan-type"> Hard Money</label>
+                <label style="display:flex;align-items:center;gap:7px;font-size:12px;cursor:pointer"><input type="checkbox" value="DSCR" class="lr-loan-type"> DSCR</label>
+                <label style="display:flex;align-items:center;gap:7px;font-size:12px;cursor:pointer"><input type="checkbox" value="Bridge" class="lr-loan-type"> Bridge</label>
+                <label style="display:flex;align-items:center;gap:7px;font-size:12px;cursor:pointer"><input type="checkbox" value="Fix & Flip" class="lr-loan-type"> Fix &amp; Flip</label>
+                <label style="display:flex;align-items:center;gap:7px;font-size:12px;cursor:pointer"><input type="checkbox" value="Construction" class="lr-loan-type"> Construction</label>
+                <label style="display:flex;align-items:center;gap:7px;font-size:12px;cursor:pointer"><input type="checkbox" value="Conventional" class="lr-loan-type"> Conventional</label>
+                <label style="display:flex;align-items:center;gap:7px;font-size:12px;cursor:pointer"><input type="checkbox" value="Non-QM" class="lr-loan-type"> Non-QM</label>
+                <label style="display:flex;align-items:center;gap:7px;font-size:12px;cursor:pointer"><input type="checkbox" value="Jumbo" class="lr-loan-type"> Jumbo</label>
+              </div>
+            </div>
+            <div class="field" style="margin-bottom:14px">
+              <label class="label">Geography (states or regions)</label>
+              <input class="input" id="lr-geography" type="text" placeholder="FL, TX, Southeast, Nationwide…">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
+              <div class="field"><label class="label">Min Loan ($)</label><input class="input" id="lr-min-loan" type="number" placeholder="100000"></div>
+              <div class="field"><label class="label">Max Loan ($)</label><input class="input" id="lr-max-loan" type="number" placeholder="5000000"></div>
+            </div>
+            <button class="btn btn-primary" id="lr-btn" onclick="requestLenderAccess()" style="width:100%;justify-content:center">Submit Request</button>
+            <p style="font-size:11px;color:var(--text-4);margin:12px 0 0;text-align:center">
+              Ready to go? <span onclick="lenderSignupTab('create')" style="color:var(--teal);cursor:pointer">Create an account →</span>
+            </p>
           </div>
-          <button class="btn btn-primary" id="ls-btn" onclick="lenderSignup()" style="width:100%;justify-content:center">Start 14-Day Free Trial</button>
-          <p style="font-size:11px;color:var(--text-4);margin:12px 0 0;text-align:center">
-            Already have an account? <span onclick="showLenderLoginView()" style="color:var(--teal);cursor:pointer">Sign in →</span>
-          </p>
-          <p style="font-size:11px;color:var(--text-4);margin:8px 0 0;text-align:center">
-            By signing up you agree to our <a href="/terms" target="_blank" style="color:var(--teal)">Terms</a> and <a href="/privacy" target="_blank" style="color:var(--teal)">Privacy Policy</a>.
-          </p>
+
         </div>
       </div>
     </div>
@@ -376,6 +430,47 @@ async function lenderStartCheckout() {
   const session = getLenderSession();
   if (!session?.token) return;
   document.getElementById('lender-upgrade-modal').classList.add('show');
+}
+
+function lenderSignupTab(tab) {
+  const isCreate = tab === 'create';
+  document.getElementById('ls-create-pane').style.display = isCreate ? 'block' : 'none';
+  document.getElementById('ls-request-pane').style.display = isCreate ? 'none' : 'block';
+  document.getElementById('ls-tab-create').style.background = isCreate ? 'rgba(255,255,255,0.15)' : 'transparent';
+  document.getElementById('ls-tab-create').style.color = isCreate ? 'white' : 'rgba(255,255,255,0.5)';
+  document.getElementById('ls-tab-request').style.background = isCreate ? 'transparent' : 'rgba(255,255,255,0.15)';
+  document.getElementById('ls-tab-request').style.color = isCreate ? 'rgba(255,255,255,0.5)' : 'white';
+}
+
+async function requestLenderAccess() {
+  const company = document.getElementById('lr-company').value.trim();
+  const contact = document.getElementById('lr-contact').value.trim();
+  const email = document.getElementById('lr-email').value.trim();
+  const phone = document.getElementById('lr-phone').value.trim();
+  const loan_types = Array.from(document.querySelectorAll('.lr-loan-type:checked')).map(el => el.value);
+  const geography = document.getElementById('lr-geography').value.trim();
+  const min_loan = document.getElementById('lr-min-loan').value;
+  const max_loan = document.getElementById('lr-max-loan').value;
+  const errEl = document.getElementById('lr-error');
+  const successEl = document.getElementById('lr-success');
+  const btn = document.getElementById('lr-btn');
+  errEl.style.display = 'none'; successEl.style.display = 'none';
+  if (!company || !contact || !email) { errEl.textContent = 'Company, name, and email are required.'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Submitting...';
+  fetch('https://hook.us2.make.com/gvwvkvvla4icv0wxiv9x68bx83hnpgsq', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ company_name: company, contact_name: contact, email, phone, loan_types, geography, min_loan, max_loan })
+  }).catch(() => {});
+  successEl.style.display = 'block';
+  btn.disabled = false; btn.textContent = 'Submit Request';
+  document.getElementById('lr-company').value = '';
+  document.getElementById('lr-contact').value = '';
+  document.getElementById('lr-email').value = '';
+  document.getElementById('lr-phone').value = '';
+  document.querySelectorAll('.lr-loan-type').forEach(el => el.checked = false);
+  document.getElementById('lr-geography').value = '';
+  document.getElementById('lr-min-loan').value = '';
+  document.getElementById('lr-max-loan').value = '';
 }
 
 async function lenderSignup() {
