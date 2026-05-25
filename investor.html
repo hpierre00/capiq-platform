@@ -1582,6 +1582,10 @@ async function doSignup() {
         method: 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ type: 'welcome', to: email, name: firstName })
       }).catch(() => {});
+      fetch('/.netlify/functions/signup-webhook', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ userType: 'investor', email, name: `${firstName} ${lastName}`.trim(), plan: 'starter' })
+      }).catch(() => {});
     }
     else showAuthError(data.error || 'Signup failed.');
   } catch (e) { showAuthError('Connection error. Please try again.'); }
