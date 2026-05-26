@@ -720,14 +720,20 @@ async function toggleVoiceInput() {
     'submit', 'send it', 'go ahead', 'run it', 'done',
     'what do you think', 'is it feasible', 'will they qualify',
     'can they qualify', 'do they qualify', 'analyze this',
-    'send that', 'that\'s all', 'that is all', 'go'
+    'send that', 'that\'s all', 'that is all', 'go',
+    'that\'s it', 'let me know', 'can you save', 'please submit',
+    'send this', 'let\'s go', 'check this', 'run analysis',
+    'what are the odds', 'do they have a shot', 'are they good',
+    'can they get approved', 'would they qualify', 'analyze it',
+    'please analyze', 'go for it', 'check it out'
   ];
+  const containsTrigger = (lower) => AUTO_SUBMIT_TRIGGERS.some(t => lower.includes(t));
   voiceRecognition.onresult = (ev) => {
     for (let i = ev.resultIndex; i < ev.results.length; i++) {
       if (ev.results[i].isFinal) {
         const transcript = ev.results[i][0].transcript.trim();
-        const lower = transcript.toLowerCase().replace(/[.,!?]$/, '');
-        if (AUTO_SUBMIT_TRIGGERS.some(t => lower === t || lower.endsWith(' ' + t))) {
+        const lower = transcript.toLowerCase().replace(/[.,!?]+$/, '');
+        if (containsTrigger(lower)) {
           voiceRecognition.stop();
           isRecording = false;
           if (input.value.trim()) {
@@ -959,9 +965,9 @@ function cleanForSpeech(text) {
     .replace(/^\s*\d+\.\s+/gm, '')         // strip numbered lists
     .replace(/\$(\d+(?:,\d{3})*(?:\.\d+)?)/g, (_, n) => {
       const num = parseFloat(n.replace(/,/g, ''));
-      if (num >= 1_000_000) return (num / 1_000_000).toFixed(num % 1_000_000 === 0 ? 0 : 1) + ' million dollars';
-      if (num >= 1_000) return Math.round(num / 1_000) + ' thousand dollars';
-      return n + ' dollars';
+      if (num >= 1000000) return (num / 1000000).toFixed(num % 1000000 === 0 ? 0 : 1) + ' million dollars';
+      if (num >= 1000) return Math.round(num / 1000) + ' thousand dollars';
+      return Math.round(num) + ' dollars';
     })
     .replace(/(\d+(?:\.\d+)?)%/g, '$1 percent')
     .replace(/\bDTI\b/g, 'debt-to-income ratio')
@@ -988,7 +994,7 @@ async function speakText(text) {
     const res = await fetch('/.netlify/functions/realtor-tts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ text: text.slice(0, 1500) })
+      body: JSON.stringify({ text: text.length <= 2000 ? text : text.slice(0, text.lastIndexOf('.', 2000) + 1) || text.slice(0, 2000) })
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
