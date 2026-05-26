@@ -3,5 +3,7 @@ Allow: /
 
 Disallow: /app/
 Disallow: /app
+Disallow: /investor.html
+Disallow: /lender.html
 
 Sitemap: https://underlytix.com/sitemap.xml
