@@ -716,11 +716,27 @@ async function toggleVoiceInput() {
     btn.title = 'Click to stop';
     showToast('🎤 Listening — speak now. Click ⏹ when done.', 'success');
   };
+  const AUTO_SUBMIT_TRIGGERS = [
+    'submit', 'send it', 'go ahead', 'run it', 'done',
+    'what do you think', 'is it feasible', 'will they qualify',
+    'can they qualify', 'do they qualify', 'analyze this',
+    'send that', 'that\'s all', 'that is all', 'go'
+  ];
   voiceRecognition.onresult = (ev) => {
-    // With interimResults=false, every result is final — no duplicates possible
     for (let i = ev.resultIndex; i < ev.results.length; i++) {
       if (ev.results[i].isFinal) {
-        base += ev.results[i][0].transcript.trim() + ' ';
+        const transcript = ev.results[i][0].transcript.trim();
+        const lower = transcript.toLowerCase().replace(/[.,!?]$/, '');
+        if (AUTO_SUBMIT_TRIGGERS.some(t => lower === t || lower.endsWith(' ' + t))) {
+          voiceRecognition.stop();
+          isRecording = false;
+          if (input.value.trim()) {
+            showToast('🎤 Auto-submitting…', 'success');
+            setTimeout(() => sendPrequal(), 300);
+          }
+          return;
+        }
+        base += transcript + ' ';
       }
     }
     input.value = base.trim();
@@ -893,21 +909,34 @@ let currentAudio = null;
 // Pre-warmed AudioContext — created on user gesture, kept alive for async playback
 let voiceAudioCtx = null;
 
+function enableVoiceMode() {
+  try {
+    voiceAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    voiceAudioCtx.resume();
+  } catch(e) {}
+  voiceModeEnabled = true;
+  const btn = document.getElementById('voice-mode-btn');
+  btn.textContent = '🔊 VOICE ON';
+  btn.style.background = 'rgba(14,116,144,0.3)';
+  btn.style.borderColor = 'rgba(14,116,144,0.5)';
+  btn.style.color = '#67e8f9';
+  showToast('Voice AI enabled — AI will speak responses aloud.', 'success');
+}
+
 function toggleVoiceMode() {
   voiceModeEnabled = !voiceModeEnabled;
   const btn = document.getElementById('voice-mode-btn');
   if (voiceModeEnabled) {
-    // Create and resume AudioContext on the user gesture — this is the key
-    // Chrome allows async audio playback if AudioContext was resumed synchronously
-    try {
-      voiceAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      voiceAudioCtx.resume();
-    } catch(e) {}
-    btn.textContent = '🔊 VOICE ON';
-    btn.style.background = 'rgba(14,116,144,0.3)';
-    btn.style.borderColor = 'rgba(14,116,144,0.5)';
-    btn.style.color = '#67e8f9';
-    showToast('Voice AI enabled — AI will speak responses aloud.', 'success');
+    const sess = getRealtorSession();
+    const realtorId = sess?.realtor?.id || 'default';
+    const permKey = 'voice_perms_shown_' + realtorId;
+    if (!localStorage.getItem(permKey)) {
+      localStorage.setItem(permKey, '1');
+      voiceModeEnabled = false; // hold until modal confirms
+      document.getElementById('voice-perms-modal').classList.add('show');
+      return;
+    }
+    enableVoiceMode();
   } else {
     voiceModeEnabled = false;
     voiceAudioCtx = null;
@@ -919,8 +948,41 @@ function toggleVoiceMode() {
   }
 }
 
+function cleanForSpeech(text) {
+  return text
+    .replace(/\*\*(.*?)\*\*/g, '$1')      // strip **bold**
+    .replace(/\*(.*?)\*/g, '$1')           // strip *italic*
+    .replace(/---+/g, '.')                 // --- → pause
+    .replace(/--/g, ',')                   // -- → pause
+    .replace(/#{1,6}\s/g, '')              // strip markdown headers
+    .replace(/^\s*[-•]\s+/gm, '')          // strip bullet points
+    .replace(/^\s*\d+\.\s+/gm, '')         // strip numbered lists
+    .replace(/\$(\d+(?:,\d{3})*(?:\.\d+)?)/g, (_, n) => {
+      const num = parseFloat(n.replace(/,/g, ''));
+      if (num >= 1_000_000) return (num / 1_000_000).toFixed(num % 1_000_000 === 0 ? 0 : 1) + ' million dollars';
+      if (num >= 1_000) return Math.round(num / 1_000) + ' thousand dollars';
+      return n + ' dollars';
+    })
+    .replace(/(\d+(?:\.\d+)?)%/g, '$1 percent')
+    .replace(/\bDTI\b/g, 'debt-to-income ratio')
+    .replace(/\bLTV\b/g, 'loan-to-value ratio')
+    .replace(/\bDSCR\b/g, 'debt service coverage ratio')
+    .replace(/\bARV\b/g, 'after-repair value')
+    .replace(/\bPITIA\b/g, 'P-I-T-I-A')
+    .replace(/\bFHA\b/g, 'F-H-A')
+    .replace(/\bVA\b/g, 'V-A loan')
+    .replace(/\bHOA\b/g, 'H-O-A')
+    .replace(/\bPMI\b/g, 'P-M-I')
+    .replace(/\bARM\b/g, 'adjustable rate mortgage')
+    .replace(/\bFICO\b/g, 'FICO score')
+    .replace(/\bMLS\b/g, 'M-L-S')
+    .replace(/\bAPR\b/g, 'A-P-R')
+    .trim();
+}
+
 async function speakText(text) {
   if (!voiceModeEnabled || !text) return;
+  text = cleanForSpeech(text);
   if (currentAudio) { currentAudio.pause(); currentAudio = null; }
   try {
     const res = await fetch('/.netlify/functions/realtor-tts', {
@@ -964,6 +1026,21 @@ async function speakText(text) {
     showToast('Voice unavailable: ' + e.message, 'error');
     // Do NOT disable voice mode — let user retry
   }
+}
+
+function saveVoicePerms() {
+  const sess = getRealtorSession();
+  const realtorId = sess?.realtor?.id || 'default';
+  localStorage.setItem('voice_autosave_' + realtorId, document.getElementById('vp-autosave').checked ? '1' : '0');
+  localStorage.setItem('voice_autolender_' + realtorId, document.getElementById('vp-autolender').checked ? '1' : '0');
+  document.getElementById('voice-perms-modal').classList.remove('show');
+  enableVoiceMode();
+}
+
+function getVoicePref(key) {
+  const sess = getRealtorSession();
+  const realtorId = sess?.realtor?.id || 'default';
+  return localStorage.getItem(key + realtorId) === '1';
 }
 </script>
 
@@ -1083,6 +1160,44 @@ async function speakText(text) {
       <button onclick="document.getElementById('realtor-welcome-modal').classList.remove('show')"
         style="width:100%;padding:10px;background:transparent;border:none;color:var(--text-4);font-size:13px;cursor:pointer;font-family:inherit">
         Skip for now
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- VOICE PERMISSIONS MODAL -->
+<div class="modal-overlay" id="voice-perms-modal" style="z-index:10003">
+  <div style="background:var(--bg-2);border-radius:14px;max-width:460px;width:92%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.4)">
+    <div style="background:var(--navy);padding:20px 24px">
+      <div style="color:white;font-size:16px;font-weight:700">🔊 Voice AI Preferences</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:4px">Set once — saved to your account</div>
+    </div>
+    <div style="padding:24px">
+      <div style="margin-bottom:20px">
+        <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer">
+          <input type="checkbox" id="vp-autosave" style="accent-color:var(--teal);margin-top:3px;flex-shrink:0">
+          <div>
+            <div style="font-size:14px;color:var(--text-1);font-weight:600">Auto-save prequals to pipeline</div>
+            <div style="font-size:12px;color:var(--text-4);margin-top:3px;line-height:1.5">Every completed prequal is automatically saved to your client pipeline. You can still delete them.</div>
+          </div>
+        </label>
+      </div>
+      <div style="margin-bottom:24px">
+        <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer">
+          <input type="checkbox" id="vp-autolender" style="accent-color:var(--teal);margin-top:3px;flex-shrink:0">
+          <div>
+            <div style="font-size:14px;color:var(--text-1);font-weight:600">Auto-open lender matching for Strong Alignment</div>
+            <div style="font-size:12px;color:var(--text-4);margin-top:3px;line-height:1.5">When a client scores Strong Alignment, the lender matching panel opens automatically. You still confirm before any data is shared.</div>
+          </div>
+        </label>
+      </div>
+      <button onclick="saveVoicePerms()"
+        style="width:100%;padding:13px;background:var(--teal);color:white;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">
+        Enable Voice AI →
+      </button>
+      <button onclick="document.getElementById('voice-perms-modal').classList.remove('show')"
+        style="width:100%;padding:10px;background:transparent;border:none;color:var(--text-4);font-size:13px;cursor:pointer;font-family:inherit;margin-top:6px">
+        Cancel
       </button>
     </div>
   </div>
