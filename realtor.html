@@ -727,12 +727,18 @@ async function toggleVoiceInput() {
     'can they get approved', 'would they qualify', 'analyze it',
     'please analyze', 'go for it', 'check it out'
   ];
+  const normalizePronouns = (s) => s
+    .replace(/\b(he|she|the client|my client|this client|the buyer|my buyer)\b/g, 'they')
+    .replace(/\b(him|her)\b/g, 'them')
+    .replace(/\b(his|hers)\b/g, 'their');
   const containsTrigger = (lower) => AUTO_SUBMIT_TRIGGERS.some(t => lower.includes(t));
+  let silenceTimer = null;
   voiceRecognition.onresult = (ev) => {
+    if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
     for (let i = ev.resultIndex; i < ev.results.length; i++) {
       if (ev.results[i].isFinal) {
         const transcript = ev.results[i][0].transcript.trim();
-        const lower = transcript.toLowerCase().replace(/[.,!?]+$/, '');
+        const lower = normalizePronouns(transcript.toLowerCase().replace(/[.,!?]+$/, ''));
         if (containsTrigger(lower)) {
           voiceRecognition.stop();
           isRecording = false;
@@ -747,8 +753,18 @@ async function toggleVoiceInput() {
     }
     input.value = base.trim();
     input.style.borderColor = 'var(--teal)';
+    // 4-second silence = auto-submit
+    if (input.value.trim()) {
+      silenceTimer = setTimeout(() => {
+        voiceRecognition.stop();
+        isRecording = false;
+        showToast('🎤 Auto-submitting after silence…', 'success');
+        setTimeout(() => sendPrequal(), 300);
+      }, 4000);
+    }
   };
   voiceRecognition.onend = () => {
+    if (silenceTimer) { clearTimeout(silenceTimer); silenceTimer = null; }
     if (!isRecording) return;
     isRecording = false;
     btn.innerHTML = '🎤'; btn.style.background = 'var(--bg-3)'; btn.style.borderColor = 'var(--border)'; btn.style.color = 'var(--text-4)'; btn.title = 'Voice input';
@@ -915,6 +931,15 @@ let currentAudio = null;
 // Pre-warmed AudioContext — created on user gesture, kept alive for async playback
 let voiceAudioCtx = null;
 
+function autoRestartMic() {
+  if (!voiceModeEnabled) return;
+  setTimeout(() => {
+    if (!voiceModeEnabled) return;
+    showToast('🎤 Your turn — speak now', 'success');
+    toggleVoiceInput();
+  }, 600);
+}
+
 function enableVoiceMode() {
   try {
     voiceAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -1015,7 +1040,7 @@ async function speakText(text) {
         source.buffer = audioBuffer;
         source.connect(voiceAudioCtx.destination);
         source.start(0);
-        source.onended = () => { currentAudio = null; };
+        source.onended = () => { currentAudio = null; autoRestartMic(); };
         currentAudio = source; // store for stop-on-toggle
         return;
       } catch(ctxErr) {
@@ -1026,7 +1051,7 @@ async function speakText(text) {
     const blob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
     const url = URL.createObjectURL(blob);
     currentAudio = new Audio(url);
-    currentAudio.onended = () => { URL.revokeObjectURL(url); currentAudio = null; };
+    currentAudio.onended = () => { URL.revokeObjectURL(url); currentAudio = null; autoRestartMic(); };
     await currentAudio.play();
   } catch(e) {
     showToast('Voice unavailable: ' + e.message, 'error');
