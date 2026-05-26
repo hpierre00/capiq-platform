@@ -890,16 +890,27 @@ document.addEventListener('DOMContentLoaded', () => {
 let voiceModeEnabled = false;
 let currentAudio = null;
 
+// Pre-warmed AudioContext — created on user gesture, kept alive for async playback
+let voiceAudioCtx = null;
+
 function toggleVoiceMode() {
   voiceModeEnabled = !voiceModeEnabled;
   const btn = document.getElementById('voice-mode-btn');
   if (voiceModeEnabled) {
+    // Create and resume AudioContext on the user gesture — this is the key
+    // Chrome allows async audio playback if AudioContext was resumed synchronously
+    try {
+      voiceAudioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      voiceAudioCtx.resume();
+    } catch(e) {}
     btn.textContent = '🔊 VOICE ON';
     btn.style.background = 'rgba(14,116,144,0.3)';
     btn.style.borderColor = 'rgba(14,116,144,0.5)';
     btn.style.color = '#67e8f9';
     showToast('Voice AI enabled — AI will speak responses aloud.', 'success');
   } else {
+    voiceModeEnabled = false;
+    voiceAudioCtx = null;
     btn.textContent = '🔊 VOICE OFF';
     btn.style.background = 'transparent';
     btn.style.borderColor = 'rgba(255,255,255,0.15)';
@@ -919,28 +930,41 @@ async function speakText(text) {
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
-      showToast('Voice AI error: ' + (err.error || res.status), 'error');
+      showToast('Voice error: ' + (err.error || res.status), 'error');
       voiceModeEnabled = false;
       const btn = document.getElementById('voice-mode-btn');
       if (btn) { btn.textContent = '🔊 VOICE OFF'; btn.style.background = 'transparent'; btn.style.borderColor = 'rgba(255,255,255,0.15)'; btn.style.color = 'rgba(255,255,255,0.5)'; }
       return;
     }
-    const blob = await res.blob();
+    const arrayBuffer = await res.arrayBuffer();
+    if (arrayBuffer.byteLength < 50) {
+      showToast('Voice: empty audio received', 'error');
+      return;
+    }
+    // Decode and play via AudioContext — bypasses autoplay policy entirely
+    if (voiceAudioCtx) {
+      try {
+        if (voiceAudioCtx.state === 'suspended') await voiceAudioCtx.resume();
+        const audioBuffer = await voiceAudioCtx.decodeAudioData(arrayBuffer);
+        const source = voiceAudioCtx.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(voiceAudioCtx.destination);
+        source.start(0);
+        source.onended = () => { currentAudio = null; };
+        currentAudio = source; // store for stop-on-toggle
+        return;
+      } catch(ctxErr) {
+        // AudioContext decode failed — fall through to HTMLAudio fallback
+      }
+    }
+    // Fallback: HTMLAudio element
+    const blob = new Blob([arrayBuffer], { type: 'audio/mpeg' });
     const url = URL.createObjectURL(blob);
     currentAudio = new Audio(url);
     currentAudio.onended = () => { URL.revokeObjectURL(url); currentAudio = null; };
-    currentAudio.play().catch((err) => {
-      // Chrome autoplay policy blocks audio not triggered by a direct user gesture.
-      // The TTS fetch is async so the original click is "stale" by the time play() is called.
-      URL.revokeObjectURL(url);
-      currentAudio = null;
-      showToast('⚠️ Browser blocked autoplay — interact with the page first, then re-enable Voice AI.', 'error');
-      voiceModeEnabled = false;
-      const btn = document.getElementById('voice-mode-btn');
-      if (btn) { btn.textContent = '🔊 VOICE OFF'; btn.style.background = 'transparent'; btn.style.borderColor = 'rgba(255,255,255,0.15)'; btn.style.color = 'rgba(255,255,255,0.5)'; }
-    });
+    await currentAudio.play();
   } catch(e) {
-    showToast('Voice AI unavailable: ' + e.message, 'error');
+    showToast('Voice unavailable: ' + e.message, 'error');
     voiceModeEnabled = false;
     const btn = document.getElementById('voice-mode-btn');
     if (btn) { btn.textContent = '🔊 VOICE OFF'; btn.style.background = 'transparent'; btn.style.borderColor = 'rgba(255,255,255,0.15)'; btn.style.color = 'rgba(255,255,255,0.5)'; }
