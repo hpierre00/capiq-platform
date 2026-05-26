@@ -2604,19 +2604,24 @@ function startMic(inputId) {
   if (!SR) { showToast('Voice input requires Chrome or Edge.', 'error'); return; }
   const btn = document.querySelector('[data-mic="' + inputId + '"]');
   const recognition = new SR();
-  recognition.continuous = false;
+  recognition.continuous = true;
   recognition.interimResults = false;
   recognition.lang = 'en-US';
   if (btn) { btn.classList.add('listening'); btn.title = 'Listening…'; }
   recognition.onresult = (e) => {
-    const transcript = e.results[0][0].transcript;
-    const input = document.getElementById(inputId);
-    if (input) {
-      input.value = (input.value ? input.value + ' ' : '') + transcript;
-      input.dispatchEvent(new Event('input'));
-      if (inputId === 'f-address-search') addressSearch(input.value);
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      if (e.results[i].isFinal) {
+        const transcript = e.results[i][0].transcript;
+        const input = document.getElementById(inputId);
+        if (input) {
+          input.value = (input.value ? input.value + ' ' : '') + transcript;
+          input.dispatchEvent(new Event('input'));
+          if (inputId === 'f-address-search') addressSearch(input.value);
+        }
+        recognition.stop();
+        if (btn) { btn.classList.remove('listening'); btn.title = 'Speak input'; }
+      }
     }
-    if (btn) { btn.classList.remove('listening'); btn.title = 'Speak input'; }
   };
   recognition.onerror = (e) => {
     if (btn) { btn.classList.remove('listening'); btn.title = 'Speak input'; }

@@ -696,8 +696,8 @@ async function toggleVoiceInput() {
     showToast(msgs[e.name] || 'Mic error: ' + e.message, 'error'); return;
   }
   voiceRecognition = new SR();
-  voiceRecognition.continuous = false;
-  voiceRecognition.interimResults = false; // NO interim — only fire on complete utterances, zero duplicates
+  voiceRecognition.continuous = true;
+  voiceRecognition.interimResults = false;
   voiceRecognition.lang = 'en-US';
   voiceRecognition.maxAlternatives = 1;
   // Capture existing text ONCE before starting
