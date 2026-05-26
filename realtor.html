@@ -394,6 +394,25 @@ function onRealtorAuth(token, realtor, refreshToken) {
   document.getElementById('rs-plan-sub').textContent = plan === 'trial' ? `Ends ${trialEnd}` : '$49/month';
   showDashboardView();
   loadRealtorHistory();
+  checkShowWelcome(realtor);
+}
+
+function checkShowWelcome(realtor) {
+  if (!realtor) return;
+  if (realtor.prequals_this_month > 0) return;
+  const stored = localStorage.getItem('underlytix_welcomed_' + realtor.id);
+  if (stored) return;
+  localStorage.setItem('underlytix_welcomed_' + realtor.id, '1');
+  setTimeout(() => showWelcomeModal(realtor), 800);
+}
+
+function showWelcomeModal(realtor) {
+  const firstName = (realtor.name || '').split(' ')[0] || 'there';
+  const modal = document.getElementById('realtor-welcome-modal');
+  if (!modal) return;
+  const nameEl = document.getElementById('welcome-name');
+  if (nameEl) nameEl.textContent = firstName;
+  modal.classList.add('show');
 }
 
 function realtorLogout() {
@@ -984,5 +1003,49 @@ async function speakText(text) {
   </div>
 </div>
 
+<!-- REALTOR WELCOME MODAL -->
+<div class="modal-overlay" id="realtor-welcome-modal" style="z-index:10002">
+  <div style="background:var(--bg-2);border-radius:16px;max-width:480px;width:92%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.4)">
+    <div style="background:linear-gradient(135deg,#0a1628 0%,#0e2340 100%);padding:32px 28px;text-align:center">
+      <div style="font-size:48px;margin-bottom:12px">🏠</div>
+      <div style="font-size:22px;font-weight:800;color:white;margin-bottom:8px">
+        You're in, <span id="welcome-name">there</span>.
+      </div>
+      <div style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.6">
+        Your Realtor Portal is ready. Run your first client prequalification in 60 seconds.
+      </div>
+    </div>
+    <div style="padding:24px 28px">
+      <div style="margin-bottom:20px">
+        <div style="font-size:11px;font-weight:700;color:var(--teal);letter-spacing:.1em;margin-bottom:12px">HOW IT WORKS</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:flex-start;gap:12px">
+            <div style="width:24px;height:24px;border-radius:50%;background:rgba(14,116,144,0.15);border:1px solid rgba(14,116,144,0.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--teal);flex-shrink:0">1</div>
+            <div style="font-size:13px;color:var(--text-2);line-height:1.5;padding-top:3px">Click <strong>New Prequal</strong> and describe your client naturally — income, credit range, purchase price, debts</div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:12px">
+            <div style="width:24px;height:24px;border-radius:50%;background:rgba(14,116,144,0.15);border:1px solid rgba(14,116,144,0.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--teal);flex-shrink:0">2</div>
+            <div style="font-size:13px;color:var(--text-2);line-height:1.5;padding-top:3px">Get a <strong>Capital Readiness Score</strong> with full PITIA breakdown and loan type recommendation</div>
+          </div>
+          <div style="display:flex;align-items:flex-start;gap:12px">
+            <div style="width:24px;height:24px;border-radius:50%;background:rgba(14,116,144,0.15);border:1px solid rgba(14,116,144,0.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--teal);flex-shrink:0">3</div>
+            <div style="font-size:13px;color:var(--text-2);line-height:1.5;padding-top:3px">If they qualify, <strong>Find Matching Lenders</strong> to connect your client directly to our network</div>
+          </div>
+        </div>
+      </div>
+      <div style="background:rgba(14,116,144,0.06);border:1px solid rgba(14,116,144,0.15);border-radius:8px;padding:12px;margin-bottom:20px;font-size:12px;color:var(--text-3);line-height:1.5;text-align:center">
+        📋 <strong>Try this:</strong> "I have a buyer looking at a $380k home in Boca Raton. W-2 income $6,500/month, credit around 690, puts down 10%, $450/month car payment, HOA is $280/month."
+      </div>
+      <button onclick="document.getElementById('realtor-welcome-modal').classList.remove('show'); startNewPrequal();"
+        style="width:100%;padding:14px;background:var(--teal);color:white;border:none;border-radius:9px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px">
+        Run My First Prequal →
+      </button>
+      <button onclick="document.getElementById('realtor-welcome-modal').classList.remove('show')"
+        style="width:100%;padding:10px;background:transparent;border:none;color:var(--text-4);font-size:13px;cursor:pointer;font-family:inherit">
+        Skip for now
+      </button>
+    </div>
+  </div>
+</div>
 </body>
 </html>
