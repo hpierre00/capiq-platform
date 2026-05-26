@@ -931,9 +931,6 @@ async function speakText(text) {
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       showToast('Voice error: ' + (err.error || res.status), 'error');
-      voiceModeEnabled = false;
-      const btn = document.getElementById('voice-mode-btn');
-      if (btn) { btn.textContent = '🔊 VOICE OFF'; btn.style.background = 'transparent'; btn.style.borderColor = 'rgba(255,255,255,0.15)'; btn.style.color = 'rgba(255,255,255,0.5)'; }
       return;
     }
     const arrayBuffer = await res.arrayBuffer();
@@ -965,9 +962,7 @@ async function speakText(text) {
     await currentAudio.play();
   } catch(e) {
     showToast('Voice unavailable: ' + e.message, 'error');
-    voiceModeEnabled = false;
-    const btn = document.getElementById('voice-mode-btn');
-    if (btn) { btn.textContent = '🔊 VOICE OFF'; btn.style.background = 'transparent'; btn.style.borderColor = 'rgba(255,255,255,0.15)'; btn.style.color = 'rgba(255,255,255,0.5)'; }
+    // Do NOT disable voice mode — let user retry
   }
 }
 </script>
