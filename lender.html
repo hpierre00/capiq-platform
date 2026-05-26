@@ -168,6 +168,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <span style="font-size:12px;color:var(--text-4)">New lender? </span>
             <span onclick="showLenderSignupView()" style="font-size:12px;color:var(--teal);cursor:pointer;font-weight:600">Start your 14-day free trial →</span>
           </div>
+          <div style="text-align:center;margin-top:16px">
+            <span onclick="showLenderRequestAccess()"
+              style="font-size:13px;color:var(--teal);cursor:pointer;font-weight:600">
+              Don't have access? Request it →
+            </span>
+          </div>
         </div>
       </div>
     </div>
@@ -853,6 +859,114 @@ async function doLenderForgotPassword() {
   } catch(e) { errEl.textContent = 'Connection error.'; errEl.style.display = 'block'; }
   finally { btn.disabled = false; btn.textContent = 'Send Reset Link'; }
 }
+
+function showLenderRequestAccess() {
+  document.getElementById('lender-access-error').style.display = 'none';
+  document.getElementById('lender-access-success').style.display = 'none';
+  ['la-company','la-contact','la-email','la-phone','la-min','la-max','la-geo'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.querySelectorAll('#lender-access-modal input[type="checkbox"]').forEach(cb => cb.checked = false);
+  document.getElementById('lender-access-modal').classList.add('show');
+}
+
+async function submitLenderAccessRequest() {
+  const company = document.getElementById('la-company').value.trim();
+  const contact = document.getElementById('la-contact').value.trim();
+  const email = document.getElementById('la-email').value.trim();
+  const phone = document.getElementById('la-phone').value.trim();
+  const errEl = document.getElementById('lender-access-error');
+  const successEl = document.getElementById('lender-access-success');
+  const btn = document.getElementById('la-submit-btn');
+  errEl.style.display = 'none';
+  if (!company) { errEl.textContent = 'Company name is required.'; errEl.style.display = 'block'; return; }
+  if (!contact) { errEl.textContent = 'Contact name is required.'; errEl.style.display = 'block'; return; }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { errEl.textContent = 'Valid email is required.'; errEl.style.display = 'block'; return; }
+  if (!phone) { errEl.textContent = 'Phone number is required.'; errEl.style.display = 'block'; return; }
+  const loanTypes = Array.from(document.querySelectorAll('#lender-access-modal input[type="checkbox"]:checked')).map(cb => cb.value);
+  if (!loanTypes.length) { errEl.textContent = 'Select at least one loan type.'; errEl.style.display = 'block'; return; }
+  btn.disabled = true; btn.textContent = 'Submitting...';
+  try {
+    await fetch('/.netlify/functions/signup-webhook', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        userType: 'lender',
+        company_name: company,
+        contact_name: contact,
+        email, phone,
+        loan_types: loanTypes.join(', '),
+        geography: document.getElementById('la-geo').value.trim() || 'Not specified',
+        min_loan: document.getElementById('la-min').value.trim() || 'Not specified',
+        max_loan: document.getElementById('la-max').value.trim() || 'Not specified'
+      })
+    });
+    successEl.innerHTML = '<strong>Request received.</strong><br>We\'ll review your application and send login credentials to <strong>' + email + '</strong> within 24-48 hours.';
+    successEl.style.display = 'block';
+    btn.style.display = 'none';
+  } catch(e) {
+    errEl.textContent = 'Connection error. Please try again.';
+    errEl.style.display = 'block';
+    btn.disabled = false; btn.textContent = 'Submit Access Request';
+  }
+}
 </script>
+
+<!-- LENDER REQUEST ACCESS MODAL -->
+<div class="modal-overlay" id="lender-access-modal" style="z-index:10001">
+  <div style="background:var(--bg-2);border-radius:14px;max-width:520px;width:95%;overflow:hidden;max-height:90vh;overflow-y:auto">
+    <div style="background:var(--navy);padding:20px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0">
+      <div>
+        <div style="color:white;font-size:16px;font-weight:700">Request Lender Access</div>
+        <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:3px">We review all applications within 24-48 hours</div>
+      </div>
+      <span onclick="document.getElementById('lender-access-modal').classList.remove('show')"
+        style="color:rgba(255,255,255,0.5);cursor:pointer;font-size:22px;padding:4px 8px">×</span>
+    </div>
+    <div style="padding:24px">
+      <div style="background:rgba(14,116,144,0.06);border:1px solid rgba(14,116,144,0.15);border-radius:8px;padding:14px;margin-bottom:20px;font-size:13px;color:var(--text-3);line-height:1.6">
+        Access is free for approved lenders. Once approved you'll receive login credentials and immediate access to pre-screened deal flow from our realtor network.
+      </div>
+      <div id="lender-access-error" style="display:none;font-size:12px;color:#ef4444;background:rgba(239,68,68,0.08);border-radius:6px;padding:10px;margin-bottom:16px"></div>
+      <div id="lender-access-success" style="display:none;font-size:13px;color:#059669;background:rgba(5,150,105,0.08);border:1px solid rgba(5,150,105,0.2);border-radius:8px;padding:14px;margin-bottom:16px;text-align:center;line-height:1.6"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div><label style="font-size:11px;color:var(--text-4);display:block;margin-bottom:4px;font-weight:600;letter-spacing:.05em">COMPANY NAME *</label><input class="input" id="la-company" type="text" placeholder="Coastal Capital LLC"></div>
+        <div><label style="font-size:11px;color:var(--text-4);display:block;margin-bottom:4px;font-weight:600;letter-spacing:.05em">CONTACT NAME *</label><input class="input" id="la-contact" type="text" placeholder="Jane Smith"></div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div><label style="font-size:11px;color:var(--text-4);display:block;margin-bottom:4px;font-weight:600;letter-spacing:.05em">EMAIL *</label><input class="input" id="la-email" type="email" placeholder="jane@lender.com"></div>
+        <div><label style="font-size:11px;color:var(--text-4);display:block;margin-bottom:4px;font-weight:600;letter-spacing:.05em">PHONE *</label><input class="input" id="la-phone" type="tel" placeholder="(305) 555-0100"></div>
+      </div>
+      <div style="margin-bottom:12px">
+        <label style="font-size:11px;color:var(--text-4);display:block;margin-bottom:6px;font-weight:600;letter-spacing:.05em">LOAN TYPES YOU FUND *</label>
+        <div style="display:flex;flex-wrap:wrap;gap:8px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-2);cursor:pointer"><input type="checkbox" value="DSCR" style="accent-color:var(--teal)"> DSCR</label>
+          <label style="display:flex;align-items:center;gap=6px;font-size:13px;color:var(--text-2);cursor:pointer"><input type="checkbox" value="Hard Money" style="accent-color:var(--teal)"> Hard Money</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-2);cursor:pointer"><input type="checkbox" value="Bridge" style="accent-color:var(--teal)"> Bridge</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-2);cursor:pointer"><input type="checkbox" value="Fix & Flip" style="accent-color:var(--teal)"> Fix & Flip</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-2);cursor:pointer"><input type="checkbox" value="Construction" style="accent-color:var(--teal)"> Construction</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-2);cursor:pointer"><input type="checkbox" value="Conventional" style="accent-color:var(--teal)"> Conventional</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-2);cursor:pointer"><input type="checkbox" value="Commercial" style="accent-color:var(--teal)"> Commercial</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-2);cursor:pointer"><input type="checkbox" value="Non-QM" style="accent-color:var(--teal)"> Non-QM</label>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px">
+        <div><label style="font-size:11px;color:var(--text-4);display:block;margin-bottom:4px;font-weight:600;letter-spacing:.05em">MIN LOAN AMOUNT</label><input class="input" id="la-min" type="text" placeholder="$100,000"></div>
+        <div><label style="font-size:11px;color:var(--text-4);display:block;margin-bottom:4px;font-weight:600;letter-spacing:.05em">MAX LOAN AMOUNT</label><input class="input" id="la-max" type="text" placeholder="$5,000,000"></div>
+      </div>
+      <div style="margin-bottom:20px">
+        <label style="font-size:11px;color:var(--text-4);display:block;margin-bottom:4px;font-weight:600;letter-spacing:.05em">GEOGRAPHIC FOCUS</label>
+        <input class="input" id="la-geo" type="text" placeholder="Florida, Southeast, National...">
+      </div>
+      <button onclick="submitLenderAccessRequest()" id="la-submit-btn"
+        style="width:100%;padding:13px;background:var(--teal);color:white;border:none;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit">
+        Submit Access Request
+      </button>
+      <p style="font-size:11px;color:var(--text-4);text-align:center;margin-top:12px;line-height:1.5">
+        We review all applications manually. You'll receive a confirmation email within 24-48 hours.
+      </p>
+    </div>
+  </div>
+</div>
 </body>
 </html>
