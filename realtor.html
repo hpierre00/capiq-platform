@@ -393,6 +393,9 @@ function onRealtorAuth(token, realtor, refreshToken) {
   document.getElementById('rs-plan-badge').textContent = plan === 'active' ? 'Pro' : 'Trial';
   const trialEnd = realtor.trial_ends_at ? new Date(realtor.trial_ends_at).toLocaleDateString() : '';
   document.getElementById('rs-plan-sub').textContent = plan === 'trial' ? `Ends ${trialEnd}` : '$49/month';
+  if (plan === 'trial' && realtor.trial_ends_at && new Date() > new Date(realtor.trial_ends_at)) {
+    showTrialExpiredBanner();
+  }
   showDashboardView();
   loadRealtorHistory();
   checkShowWelcome(realtor);
@@ -582,7 +585,12 @@ async function loadRealtorHistory() {
     } else {
       _historyData = [];
     }
-    renderHistory(_historyData);
+    const _seen = new Map();
+    for (const p of _historyData) {
+      const key = p.client_email || p.client_name || p.id;
+      if (!_seen.has(key)) _seen.set(key, p);
+    }
+    renderHistory([..._seen.values()]);
   } catch(e) {
     const container = document.getElementById('rs-history-list');
     if (container) container.innerHTML = '<div style="text-align:center;padding:24px;color:var(--red);font-size:13px">Could not load history. Try signing out and back in.</div>';
@@ -1073,6 +1081,15 @@ function getVoicePref(key) {
   const sess = getRealtorSession();
   const realtorId = sess?.realtor?.id || 'default';
   return localStorage.getItem(key + realtorId) === '1';
+}
+
+function showTrialExpiredBanner() {
+  if (document.getElementById('trial-expired-banner')) return;
+  const banner = document.createElement('div');
+  banner.id = 'trial-expired-banner';
+  banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#e53e3e;color:#fff;text-align:center;padding:12px 16px;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:12px';
+  banner.innerHTML = 'Your free trial has ended. <a href="#" onclick="showUpgradeModal();return false;" style="color:#fff;text-decoration:underline;margin-left:6px">Upgrade to Pro →</a>';
+  document.body.prepend(banner);
 }
 </script>
 
