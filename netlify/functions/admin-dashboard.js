@@ -1,5 +1,5 @@
 // Admin dashboard — directly queries Supabase with service role key
-// Protected by ADMIN_SECRET env var (default: underlytix-admin-2026)
+// Protected by ADMIN_SECRET env var — no hardcoded fallback
 export default async (req) => {
   const cors = {
     "Access-Control-Allow-Origin": "*",
@@ -10,7 +10,7 @@ export default async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: cors });
   if (req.method !== "POST") return new Response(JSON.stringify({ error: "Method not allowed" }), { status: 405, headers: cors });
 
-  const ADMIN_SECRET = Netlify.env.get("ADMIN_SECRET") || "underlytix-admin-2026";
+    const ADMIN_SECRET = Netlify.env.get("ADMIN_SECRET");
   const SVC_KEY = Netlify.env.get("SUPABASE_SERVICE_KEY");
   const SB = "https://mxyepucitjzleaziizkr.supabase.co";
 
