@@ -20,7 +20,7 @@ export default async (req) => {
 
     const body = await req.json();
     const { action, token, messages, clientData, successUrl, cancelUrl } = body;
-    const REALTOR_PRICE_ID = 'price_1TX81gBdTWAzjDqGDWtzfK7J';
+    const REALTOR_PRICE_ID = 'price_1TcCwDRAfobZUNrFwqUxc1hM';
     const STRIPE_SECRET = Netlify.env.get("STRIPE_SECRET_KEY") || "";
 
     // ── CHAT: conversational prequal intake ──────────────────────────────────
@@ -412,7 +412,7 @@ If you don't have enough information yet, set "ready": false and omit the other 
       // Route to Stripe checkout via capiq-lender-portal-v3 which has STRIPE_SECRET_KEY
       // Fall back to direct payment link if secret unavailable
       if (!STRIPE_SECRET) {
-        const REALTOR_PAYMENT_URL = `https://buy.stripe.com/aFa7sM7Aa7LWglb5Qo3VC00?prefilled_email=${encodeURIComponent(authData.realtor?.email||"")}&client_reference_id=${authData.realtor?.id||""}`;
+        const REALTOR_PAYMENT_URL = `https://buy.stripe.com/00w28t2TjgKW9e2bZtb7y06?prefilled_email=${encodeURIComponent(authData.realtor?.email||"")}&client_reference_id=${authData.realtor?.id||""}`;
         return new Response(JSON.stringify({ success: true, checkoutUrl: REALTOR_PAYMENT_URL }), { status: 200, headers: cors });
       }
 
