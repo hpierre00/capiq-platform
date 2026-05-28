@@ -126,6 +126,7 @@ input::placeholder,textarea::placeholder{color:var(--text-4)}
 .portal-topbar{background:var(--navy);padding:14px 24px;display:flex;justify-content:space-between;align-items:center;position:sticky;top:0;z-index:50;border-bottom:1px solid rgba(255,255,255,0.08)}
 @media(max-width:768px){.stats-grid{grid-template-columns:1fr}}
 </style>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 </head>
 <body>
 <!-- Google Tag Manager (noscript) -->
@@ -225,7 +226,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-top"><span class="stat-label">Prequals This Month</span></div><div class="stat-value teal" id="rs-prequal-count">0</div><div class="stat-sub">Client assessments</div></div>
         <div class="stat-card"><div class="stat-top"><span class="stat-label">Plan</span></div><div class="stat-value teal" id="rs-plan-badge">Trial</div><div class="stat-sub" id="rs-plan-sub">14-day free trial</div></div>
-        <div class="stat-card" style="cursor:pointer" onclick="startNewPrequal()"><div class="stat-top"><span class="stat-label">Available</span></div><div class="stat-value teal">24/7</div><div class="stat-sub" style="color:var(--teal)">Click to run a prequal →</div></div>
+        <div class="stat-card" style="cursor:pointer" onclick="startNewPrequal()"><div class="stat-top"><span class="stat-label">AI Prequals</span></div><div class="stat-value teal" id="rs-limit-display">...</div><div class="stat-sub" style="color:var(--teal)">Click to run a prequal →</div></div>
       </div>
       <div class="card">
         <div class="card-body">
@@ -465,7 +466,7 @@ function appendChatMessage(role, text) {
   const isAssistant = role === 'assistant';
   const div = document.createElement('div');
   div.style.cssText = `background:${isAssistant ? 'var(--bg-3)' : 'rgba(0,191,165,0.1)'};border-radius:12px;padding:14px 16px;font-size:14px;color:var(--text-2);max-width:90%;line-height:1.6;align-self:${isAssistant ? 'flex-start' : 'flex-end'};margin-left:${isAssistant ? '0' : 'auto'}`;
-  div.textContent = text;
+  div.innerHTML = window.marked ? marked.parse(text) : text.replace(/\n/g, '<br>');
   el.appendChild(div);
   el.scrollTop = el.scrollHeight;
 }
