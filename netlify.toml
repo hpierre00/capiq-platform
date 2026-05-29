@@ -23,6 +23,38 @@
   status = 301
   force = true
 
+
+# Redirect .html → canonical clean URLs (prevents Google from indexing raw .html paths)
+[[redirects]]
+from = "/index.html"
+to = "/"
+status = 301
+
+[[redirects]]
+from = "/realtor.html"
+to = "/realtor"
+status = 301
+
+[[redirects]]
+from = "/lender.html"
+to = "/lender"
+status = 301
+
+[[redirects]]
+from = "/investor.html"
+to = "/app"
+status = 301
+
+[[redirects]]
+from = "/terms.html"
+to = "/terms"
+status = 301
+
+[[redirects]]
+from = "/privacy.html"
+to = "/privacy"
+status = 301
+
 # Legal pages — must be before the SPA catch-all
 [[redirects]]
   from = "/terms"
