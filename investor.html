@@ -356,6 +356,14 @@ input.field-alert{border-color:var(--red)!important;animation:shake .3s ease}
 .score-tier-chip.needs-work{background:var(--red-dim);color:var(--red);border:1px solid rgba(220,38,38,0.2)}
 @media(max-width:768px){.sidebar{width:100%;min-height:auto;position:static}.main{margin-left:0}.stats-grid{grid-template-columns:1fr 1fr}.form-grid,.form-grid-3,.form-grid-4{grid-template-columns:1fr}.lender-grid{grid-template-columns:1fr}}
 </style>
+    <!-- Microsoft Clarity -->
+    <script type="text/javascript">
+        (function(c,l,a,r,i,t,y){
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+        })(window, document, "clarity", "script", "wymi2q72od");
+    </script>
 </head>
 <body>
 <!-- Google Tag Manager (noscript) -->
@@ -380,10 +388,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div><div class="auth-logo-text">Underlytix</div><div class="auth-logo-sub">Capital Intelligence</div></div>
     </div>
     <div class="auth-tabs">
-      <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Sign In</button>
-      <button class="auth-tab" id="tab-signup" onclick="switchAuthTab('signup')" style="background:var(--teal);color:white;font-weight:700;border-radius:5px">Create Free Account</button>
-      <a href="/realtor" class="auth-tab" style="color:var(--teal);text-decoration:none;font-size:12px">🏠 Realtor</a>
-      <a href="/lender" class="auth-tab" style="color:var(--teal);text-decoration:none;font-size:12px">🏦 Lender</a>
+      <button class="auth-tab" id="tab-signup" onclick="switchAuthTab('signup')">Create Account</button>
+      <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Investor</button>
+      <a href="/realtor" class="auth-tab" style="color:var(--teal);text-decoration:none">Realtor</a>
+      <a href="/lender" class="auth-tab" style="color:var(--teal);text-decoration:none">Lender</a>
     </div>
     <div class="auth-error" id="auth-error"></div>
 
@@ -394,10 +402,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <button class="auth-btn" id="auth-btn" onclick="doAuth()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>Sign In
       </button>
-      <div onclick="window.location.href='/realtor'" style="margin-top:14px;padding:10px 14px;background:rgba(0,212,188,0.06);border:1px solid rgba(0,212,188,0.18);border-radius:8px;text-align:center;cursor:pointer;transition:background 0.15s" onmouseover="this.style.background='rgba(0,212,188,0.1)'" onmouseout="this.style.background='rgba(0,212,188,0.06)'">
-        <span style="font-size:12px;color:rgba(15,34,64,0.5)">Are you a real estate agent? </span>
-        <span style="font-size:12px;color:var(--teal);font-weight:600">Access Realtor Portal →</span>
-      </div>
+
     </div>
 
     <!-- SIGNUP FORM -->

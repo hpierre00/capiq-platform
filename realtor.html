@@ -127,6 +127,14 @@ input::placeholder,textarea::placeholder{color:var(--text-4)}
 @media(max-width:768px){.stats-grid{grid-template-columns:1fr}}
 </style>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <!-- Microsoft Clarity -->
+    <script type="text/javascript">
+        (function(c,l,a,r,i,t,y){
+            c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};
+            t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;
+            y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
+        })(window, document, "clarity", "script", "wymi2q72od");
+    </script>
 </head>
 <body>
 <!-- Google Tag Manager (noscript) -->
@@ -1088,7 +1096,7 @@ function showTrialExpiredBanner() {
   const banner = document.createElement('div');
   banner.id = 'trial-expired-banner';
   banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#e53e3e;color:#fff;text-align:center;padding:12px 16px;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:12px';
-  banner.innerHTML = 'Your free trial has ended. <a href="#" onclick="showUpgradeModal();return false;" style="color:#fff;text-decoration:underline;margin-left:6px">Upgrade to Pro →</a>';
+  banner.innerHTML = '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center"><span style="font-size:14px">⚡ Your 14-day free trial has ended — upgrade to keep running prequalifications.</span><button onclick="realtorCheckout()" style="background:white;color:#c53030;border:none;padding:7px 18px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">Upgrade to Pro — $49/mo →</button></div>';
   document.body.prepend(banner);
 }
 </script>
@@ -1215,7 +1223,7 @@ function showTrialExpiredBanner() {
 </div>
 
 <!-- VOICE PERMISSIONS MODAL -->
-<div class="modal-overlay" id="voice-perms-modal" style="z-index:10003">
+<div class="modal-overlay" id="voice-perms-modal" style="z-index:10003;padding:20px;align-items:center;justify-content:center">
   <div style="background:var(--bg-2);border-radius:14px;max-width:460px;width:92%;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,0.4)">
     <div style="background:var(--navy);padding:20px 24px">
       <div style="color:white;font-size:16px;font-weight:700">🔊 Voice AI Preferences</div>
@@ -1226,8 +1234,8 @@ function showTrialExpiredBanner() {
         <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer">
           <input type="checkbox" id="vp-autosave" style="accent-color:var(--teal);margin-top:3px;flex-shrink:0">
           <div>
-            <div style="font-size:14px;color:var(--text-1);font-weight:600">Auto-save prequals to pipeline</div>
-            <div style="font-size:12px;color:var(--text-4);margin-top:3px;line-height:1.5">Every completed prequal is automatically saved to your client pipeline. You can still delete them.</div>
+            <div style="font-size:14px;color:#0f172a;font-weight:600">Auto-save prequals to pipeline</div>
+            <div style="font-size:12px;color:#475569;margin-top:3px;line-height:1.5">Every completed prequal is automatically saved to your client pipeline. You can still delete them.</div>
           </div>
         </label>
       </div>
@@ -1235,8 +1243,8 @@ function showTrialExpiredBanner() {
         <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer">
           <input type="checkbox" id="vp-autolender" style="accent-color:var(--teal);margin-top:3px;flex-shrink:0">
           <div>
-            <div style="font-size:14px;color:var(--text-1);font-weight:600">Auto-open lender matching for Strong Alignment</div>
-            <div style="font-size:12px;color:var(--text-4);margin-top:3px;line-height:1.5">When a client scores Strong Alignment, the lender matching panel opens automatically. You still confirm before any data is shared.</div>
+            <div style="font-size:14px;color:#0f172a;font-weight:600">Auto-open lender matching for Strong Alignment</div>
+            <div style="font-size:12px;color:#475569;margin-top:3px;line-height:1.5">When a client scores Strong Alignment, the lender matching panel opens automatically. You still confirm before any data is shared.</div>
           </div>
         </label>
       </div>
