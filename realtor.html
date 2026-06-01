@@ -385,6 +385,11 @@ async function realtorSignup() {
         method: 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify({ type: 'welcome', to: email, name })
       }).catch(()=>{});
+      // Enroll in trial onboarding email sequence
+      fetch('/.netlify/functions/trigger-sequence', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ event: 'trial_signup', email, name, trial_ends_at: data.realtor?.trial_ends_at })
+      }).catch(()=>{});
     } else { errEl.textContent = data.error || 'Signup failed.'; errEl.style.display = 'block'; }
   } catch(e) { errEl.textContent = 'Connection error.'; errEl.style.display = 'block'; }
   finally { btn.disabled = false; btn.textContent = 'Start Free Trial'; }

@@ -432,7 +432,22 @@ async function onLenderAuth(token, user, refreshToken) {
 async function lenderStartQMAddonCheckout() {
   const session = getLenderSession();
   if (!session?.token) return;
-  document.getElementById('lender-upgrade-modal').classList.add('show');
+  const btn = document.getElementById('lender-qm-addon-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Redirecting...'; }
+  try {
+    const res = await fetch('/.netlify/functions/lender-qm-addon-checkout', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: session.token,
+        successUrl: window.location.origin + '/lender?qm_upgraded=true',
+        cancelUrl: window.location.origin + '/lender'
+      })
+    });
+    const data = await res.json();
+    if (data.checkoutUrl) window.location.href = data.checkoutUrl;
+    else showToast(data.error || 'Checkout unavailable', 'error');
+  } catch (e) { showToast('Connection error', 'error'); }
+  finally { if (btn) { btn.disabled = false; btn.textContent = 'Upgrade Now'; } }
 }
 
 function lenderLogout() {
@@ -444,7 +459,22 @@ function lenderLogout() {
 async function lenderStartCheckout() {
   const session = getLenderSession();
   if (!session?.token) return;
-  document.getElementById('lender-upgrade-modal').classList.add('show');
+  const btn = document.getElementById('lender-subscribe-btn');
+  if (btn) { btn.disabled = true; btn.textContent = 'Redirecting to Stripe...'; }
+  try {
+    const res = await fetch('/.netlify/functions/lender-checkout', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        token: session.token,
+        successUrl: window.location.origin + '/lender?lender_upgraded=true',
+        cancelUrl: window.location.origin + '/lender'
+      })
+    });
+    const data = await res.json();
+    if (data.checkoutUrl) window.location.href = data.checkoutUrl;
+    else showToast(data.error || 'Checkout unavailable', 'error');
+  } catch (e) { showToast('Connection error', 'error'); }
+  finally { if (btn) { btn.disabled = false; btn.textContent = 'Subscribe — $297/month'; } }
 }
 
 function lenderSignupTab(tab) {
@@ -549,7 +579,7 @@ async function loadLenderDeals(token) {
               <li style="font-size:13px;color:var(--text-2)">✓ Matched to your exact lending criteria</li>
               <li style="font-size:13px;color:var(--text-2)">✓ One-click Interest / Term Sheet / Pass workflow</li>
             </ul>
-            <button class="btn btn-primary" onclick="lenderStartCheckout()" style="width:100%;justify-content:center">Subscribe — $297/month</button>
+            <button id="lender-subscribe-btn" class="btn btn-primary" onclick="lenderStartCheckout()" style="width:100%;justify-content:center">Subscribe — $297/month</button>
           </div>
         </div>`;
     }
@@ -838,8 +868,8 @@ async function submitLenderChangePassword() {
         <div style="font-size:14px;font-weight:700;color:var(--teal);margin-bottom:6px">Full Deal Access — +$99/month</div>
         <div style="font-size:13px;color:var(--text-2);line-height:1.6">Unlock both QM and Non-QM deals. See every investor deal submitted to the platform that matches your lending criteria.</div>
       </div>
-      <div style="font-size:13px;color:var(--text-2);margin-bottom:20px;line-height:1.6">To activate, contact us and we'll upgrade your account within 1 business day:</div>
-      <a href="mailto:support@underlytix.com?subject=QM+Addon+Upgrade+Request&body=Please upgrade my lender account to full deal access (QM %2B Non-QM) for +$99/month." style="display:block;background:var(--teal);color:white;font-weight:600;padding:12px 20px;border-radius:8px;text-decoration:none;text-align:center;font-size:14px">Email support@underlytix.com to Upgrade</a>
+      <div style="font-size:13px;color:var(--text-2);margin-bottom:20px;line-height:1.6">You'll be taken to Stripe's secure checkout. Your subscription starts immediately after payment.</div>
+      <button id="lender-qm-addon-btn" onclick="lenderStartQMAddonCheckout()" style="display:block;width:100%;background:var(--teal);color:white;font-weight:600;padding:12px 20px;border-radius:8px;border:none;text-align:center;font-size:14px;cursor:pointer">Upgrade Now — $99/month</button>
       <div style="text-align:center;margin-top:14px"><span onclick="document.getElementById('lender-upgrade-modal').classList.remove('show')" style="font-size:12px;color:var(--text-4);cursor:pointer">Close</span></div>
     </div>
   </div>

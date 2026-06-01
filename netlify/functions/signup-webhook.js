@@ -1,19 +1,80 @@
-export default async (req) => {
-  const cors = { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' };
-  if (req.method === 'OPTIONS') return new Response(null, { status: 200, headers: cors });
+/**
+ * Netlify Function: signup-webhook
+ *
+ * Routes new signups to the correct Make.com scenario webhook.
+ * Called by investor.html (and optionally realtor.html) on successful signup.
+ *
+ * POST body: { userType, email, name, plan }
+ * Returns:   { ok: true } or { error }
+ *
+ * Webhook URLs (active scenarios as of 2026-06-01):
+ *   realtor  → scenario 5253824 → MAKE_WEBHOOK_REALTOR_SIGNUP env var
+ *   investor → scenario 5253830 → MAKE_WEBHOOK_INVESTOR_SIGNUP env var
+ */
+
+const WEBHOOK_URLS = {
+  realtor:  process.env.MAKE_WEBHOOK_REALTOR_SIGNUP,
+  investor: process.env.MAKE_WEBHOOK_INVESTOR_SIGNUP,
+};
+
+const TRIAL_DAYS = 14;
+
+exports.handler = async (event) => {
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
+  }
+
+  let body;
   try {
-    const body = await req.json();
-    const { userType, ...data } = body;
-    const webhooks = {
-      realtor: 'https://hook.us2.make.com/7f3lfj2en6v8jgs0kxfjkjdeijixutri',
-      investor: 'https://hook.us2.make.com/g84gu45p9uehhit5knvdy44cgph8xdq0',
-      lender: 'https://hook.us2.make.com/gvwvkvvla4icv0wxiv9x68bx83hnpgsq',
+    body = JSON.parse(event.body || '{}');
+  } catch {
+    return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON' }) };
+  }
+
+  const { userType, email, name, plan } = body;
+
+  if (!userType || !email) {
+    return { statusCode: 400, body: JSON.stringify({ error: 'Missing required fields: userType, email' }) };
+  }
+
+  const webhookUrl = WEBHOOK_URLS[userType];
+  if (!webhookUrl) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: `Unknown userType: ${userType}. Use: realtor, investor` }),
     };
-    const url = webhooks[userType];
-    if (!url) return new Response(JSON.stringify({ error: 'Unknown userType' }), { status: 400, headers: cors });
-    await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-    return new Response(JSON.stringify({ success: true }), { status: 200, headers: cors });
-  } catch (e) {
-    return new Response(JSON.stringify({ error: e.message }), { status: 500, headers: cors });
+  }
+
+  const trialEndsAt = new Date(Date.now() + TRIAL_DAYS * 24 * 60 * 60 * 1000).toISOString();
+
+  try {
+    const payload = {
+      email,
+      name:          name || '',
+      userType,
+      plan:          plan || 'starter',
+      trial_ends_at: trialEndsAt,
+    };
+
+    const response = await fetch(webhookUrl, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      console.error(`[signup-webhook] Make.com rejected ${userType} signup for ${email}: ${response.status}`);
+      return { statusCode: 502, body: JSON.stringify({ error: 'Failed to notify Make.com' }) };
+    }
+
+    console.log(`[signup-webhook] ${userType} signup fired for ${email}`);
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ok: true, userType, email }),
+    };
+  } catch (err) {
+    console.error('[signup-webhook] error:', err.message);
+    return { statusCode: 500, body: JSON.stringify({ error: 'Internal server error' }) };
   }
 };
