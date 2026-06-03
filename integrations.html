@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-KPMLXZJ4');</script>
+<title>AI Integrations & Connectors — Underlytix Capital Intelligence Platform</title>
+<meta name="description" content="Connect Underlytix to ChatGPT, Claude, Gemini, and your existing real estate tools. API access, MCP support, and native integrations for deal analysis and lender matching." />
+<meta name="robots" content="index, follow" />
+<link rel="canonical" href="https://underlytix.com/integrations" />
+<meta property="og:title" content="AI Integrations & Connectors — Underlytix Capital Intelligence Platform" />
+<meta property="og:description" content="Connect Underlytix to ChatGPT, Claude, Gemini, and your existing real estate tools. API access, MCP support, and native integrations for deal analysis and lender matching." />
+<meta property="og:url" content="https://underlytix.com/integrations" />
+<meta property="og:type" content="website" />
+<meta property="og:image" content="https://underlytix.com/og-image.png" />
+<link rel="icon" type="image/png" href="/favicon.png" />
+<link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0f2240;--navy-2:#1a3355;--navy-3:#0d1d35;--teal:#0e7490;--teal-light:#0891b2;--teal-dim:rgba(14,116,144,0.08);--teal-border:rgba(14,116,144,0.2);--bg:#f8fafc;--bg-2:#ffffff;--bg-3:#f1f5f9;--border:#e2e8f0;--text:#0f172a;--text-2:#334155;--text-3:#64748b;--text-4:#94a3b8;--green:#059669;--green-dim:rgba(5,150,105,0.08);--shadow:0 4px 12px rgba(15,34,64,0.08);--shadow-lg:0 20px 40px rgba(15,34,64,0.12);--r:8px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.6}
+a{color:inherit;text-decoration:none}
+nav{position:sticky;top:0;z-index:100;background:rgba(248,250,252,0.95);backdrop-filter:blur(12px);padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.nav-logo{display:flex;align-items:center;gap:10px}
+.nav-logo-mark{width:34px;height:34px;background:var(--navy);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.nav-logo-mark svg{width:17px;height:17px}
+.nav-logo-text{font-size:17px;font-weight:700;color:var(--text);letter-spacing:-.4px}
+.nav-logo-sub{font-family:'DM Mono',monospace;font-size:8px;color:var(--text-4);letter-spacing:.12em;text-transform:uppercase;margin-top:1px}
+.nav-links{display:flex;gap:28px}
+.nav-links a{font-size:13px;font-weight:500;color:var(--text-3);transition:color .15s}
+.nav-links a:hover{color:var(--text)}
+.nav-cta{display:flex;gap:8px;align-items:center}
+.btn-ghost{padding:7px 16px;border-radius:6px;border:1px solid var(--border);font-size:13px;font-weight:500;color:var(--text-2);transition:all .15s}
+.btn-ghost:hover{border-color:var(--teal);color:var(--teal)}
+.btn-navy{padding:8px 18px;border-radius:6px;border:none;font-size:13px;font-weight:600;color:white;background:var(--navy);transition:all .15s}
+.btn-navy:hover{background:var(--navy-2);transform:translateY(-1px)}
+.container{max-width:1080px;margin:0 auto;padding:0 24px}
+.hero-section{background:var(--navy);padding:80px 24px 72px;text-align:center}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(14,116,144,0.2);border:1px solid rgba(14,116,144,0.35);color:#67e8f9;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin-bottom:24px}
+.hero-h1{font-size:clamp(28px,5vw,50px);font-weight:800;color:white;line-height:1.1;letter-spacing:-.02em;max-width:800px;margin:0 auto 20px}
+.hero-sub{font-size:17px;color:rgba(255,255,255,0.65);max-width:560px;margin:0 auto 36px;line-height:1.6}
+.hero-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn-teal{padding:13px 28px;border-radius:8px;background:var(--teal);color:white;font-size:15px;font-weight:600;border:none;cursor:pointer;transition:all .2s;display:inline-block}
+.btn-teal:hover{background:var(--teal-light);transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.btn-outline-white{padding:13px 28px;border-radius:8px;background:transparent;color:white;font-size:15px;font-weight:500;border:1px solid rgba(255,255,255,0.3);display:inline-block;transition:all .2s}
+.btn-outline-white:hover{border-color:white;background:rgba(255,255,255,0.08)}
+section{padding:72px 24px}
+section:nth-child(even){background:var(--bg-2)}
+.section-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);margin-bottom:12px}
+h2{font-size:clamp(22px,4vw,36px);font-weight:800;color:var(--text);letter-spacing:-.02em;line-height:1.15;margin-bottom:16px}
+.section-sub{font-size:16px;color:var(--text-3);max-width:600px;margin-bottom:48px;line-height:1.6}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.card{background:var(--bg-2);border:1px solid var(--border);border-radius:12px;padding:28px;transition:box-shadow .2s}
+.card:hover{box-shadow:var(--shadow)}
+.card-icon{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;font-size:24px}
+.card h3{font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px}
+.card p{font-size:14px;color:var(--text-3);line-height:1.6}
+.card .tag{display:inline-block;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;margin-bottom:10px}
+.tag-live{background:var(--green-dim);color:var(--green)}
+.tag-soon{background:#fef3c7;color:#b45309}
+.tag-future{background:var(--teal-dim);color:var(--teal)}
+.code-block{background:var(--navy);border-radius:12px;padding:24px 28px;font-family:'DM Mono',monospace;font-size:13px;color:#e2e8f0;overflow-x:auto;line-height:1.7}
+.code-comment{color:#64748b}
+.code-key{color:#67e8f9}
+.code-str{color:#86efac}
+.code-num{color:#fbbf24}
+.endpoint-list{display:flex;flex-direction:column;gap:12px}
+.endpoint{display:flex;align-items:flex-start;gap:16px;background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:18px 20px}
+.method{font-family:'DM Mono',monospace;font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;flex-shrink:0;margin-top:2px}
+.method-post{background:#dcfce7;color:#166534}
+.method-get{background:#dbeafe;color:#1e40af}
+.endpoint-path{font-family:'DM Mono',monospace;font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
+.endpoint-desc{font-size:13px;color:var(--text-3)}
+.cta-section{background:var(--navy);text-align:center;padding:80px 24px}
+.cta-section h2{color:white}
+.cta-section p{color:rgba(255,255,255,0.65);font-size:16px;margin-bottom:32px}
+footer{background:var(--navy-3);border-top:1px solid rgba(255,255,255,0.06);padding:48px 24px 24px}
+.footer-inner{max-width:1080px;margin:0 auto}
+.footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:40px}
+.footer-logo-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.footer-logo-mark{width:30px;height:30px;background:var(--navy-2);border-radius:6px;display:flex;align-items:center;justify-content:center}
+.footer-logo-text{font-size:16px;font-weight:700;color:white}
+.footer-desc{font-size:13px;color:rgba(255,255,255,0.45);line-height:1.6}
+.footer-col h4{font-size:12px;font-weight:600;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px}
+.footer-col a{display:block;font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:8px;transition:color .15s}
+.footer-col a:hover{color:white}
+.footer-bottom{border-top:1px solid rgba(255,255,255,0.06);padding-top:20px}
+.footer-copy{font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:8px}
+.footer-legal{font-size:11px;color:rgba(255,255,255,0.25);line-height:1.6}
+@media(max-width:768px){.grid-2,.grid-3{grid-template-columns:1fr}.footer-top{grid-template-columns:1fr 1fr}nav .nav-links{display:none}}
+</style>
+<script type="application/ld+json">{
+  "@context":"https://schema.org",
+  "@graph":[
+    {"@type":"WebPage","name":"Underlytix Integrations","url":"https://underlytix.com/integrations","description":"AI integrations and connector ecosystem for the Underlytix Capital Intelligence platform."},
+    {"@type":"FAQPage","mainEntity":[
+      {"@type":"Question","name":"Can I connect Underlytix to ChatGPT?","acceptedAnswer":{"@type":"Answer","text":"Underlytix is building a ChatGPT plugin and custom GPT that connects directly to deal analysis and capital readiness scoring. API access is available for developers. Sign up for early access."}},
+      {"@type":"Question","name":"Does Underlytix support MCP (Model Context Protocol)?","acceptedAnswer":{"@type":"Answer","text":"MCP support is on the Underlytix roadmap. When available, AI agents using MCP-compatible interfaces (Claude, Cursor, and others) will be able to call Underlytix deal analysis and lender matching directly from their context."}},
+      {"@type":"Question","name":"Is there an Underlytix API?","acceptedAnswer":{"@type":"Answer","text":"The Underlytix API is in development. It will expose endpoints for deal analysis, capital readiness scoring, lender matching, and risk analysis. Developer documentation and API keys will be available at developers.underlytix.com."}}
+    ]}
+  ]
+}</script>
+<script type="text/javascript">(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","CLARITY_ID");</script>
+</head>
+<body>
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KPMLXZJ4" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<nav>
+  <a href="/" class="nav-logo">
+    <div class="nav-logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <div><div class="nav-logo-text">Underlytix</div><div class="nav-logo-sub">Capital Intelligence</div></div>
+  </a>
+  <div class="nav-links">
+    <a href="/#how">How It Works</a><a href="/#pricing">Pricing</a><a href="/integrations">Integrations</a><a href="/developers">API</a>
+  </div>
+  <div class="nav-cta">
+    <a href="/app" class="btn-ghost">Sign In</a>
+    <a href="/app?signup=true" class="btn-navy">Get Started Free</a>
+  </div>
+</nav>
+
+<section class="hero-section">
+  <div class="container">
+    <div class="hero-badge">Integrations</div>
+    <h1 class="hero-h1">Connect Underlytix<br>to Everything</h1>
+    <p class="hero-sub">Use Underlytix capital intelligence inside ChatGPT, Claude, Gemini, your CRM, and any tool that matters to your deal workflow. Native integrations and open API.</p>
+    <div class="hero-cta">
+      <a href="mailto:api@underlytix.com?subject=API Access Request" class="btn-teal">Request API Access</a>
+      <a href="/developers" class="btn-outline-white">View API Docs</a>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-label">AI Assistants</div>
+    <h2>Use Underlytix inside your AI tools</h2>
+    <p class="section-sub">Ask any AI assistant to analyze a real estate deal with Underlytix intelligence — deal scoring, DSCR, lender matching, and capital readiness, all available natively.</p>
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-icon" style="background:#f0fdf4"><span>🤖</span></div>
+        <div class="tag tag-soon">Coming Soon</div>
+        <h3>ChatGPT Plugin</h3>
+        <p>Analyze deals, get Capital Readiness Scores, and find lender matches — all from inside ChatGPT. Ask: "Can this deal get funded?" and get a real answer.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:#eff6ff"><span>⚡</span></div>
+        <div class="tag tag-soon">Coming Soon</div>
+        <h3>Claude / MCP Support</h3>
+        <p>Underlytix will be available as an MCP (Model Context Protocol) server — enabling Claude and other MCP-compatible agents to call deal analysis and lender matching directly.</p>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:#fef9c3"><span>✨</span></div>
+        <div class="tag tag-soon">Coming Soon</div>
+        <h3>Gemini Integration</h3>
+        <p>Google Gemini users will be able to invoke Underlytix deal intelligence directly from Gemini Advanced and Google Workspace AI features.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-label">Current Platform</div>
+    <h2>What's live now</h2>
+    <div class="grid-3">
+      <div class="card">
+        <div class="card-icon" style="background:var(--green-dim)">📊</div>
+        <div class="tag tag-live">Live</div>
+        <h3>Investor Portal</h3>
+        <p>Full deal analysis, Capital Readiness Scoring, risk analysis, and lender matching for investors. Available at underlytix.com/app.</p>
+        <a href="/app?signup=true" style="display:inline-block;margin-top:14px;font-size:13px;color:var(--teal);font-weight:600">Get Started →</a>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:var(--green-dim)">🏠</div>
+        <div class="tag tag-live">Live</div>
+        <h3>Realtor Portal</h3>
+        <p>Pre-screen buyers and their deals before the lender meeting. Full deal analysis and client pre-qualification tools.</p>
+        <a href="/realtor" style="display:inline-block;margin-top:14px;font-size:13px;color:var(--teal);font-weight:600">View Portal →</a>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:var(--green-dim)">🏦</div>
+        <div class="tag tag-live">Live</div>
+        <h3>Lender Portal</h3>
+        <p>Receive pre-scored deal submissions. Triage incoming applications faster using Capital Readiness Scores.</p>
+        <a href="/lender" style="display:inline-block;margin-top:14px;font-size:13px;color:var(--teal);font-weight:600">View Portal →</a>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:var(--teal-dim)">🔌</div>
+        <div class="tag tag-soon">In Development</div>
+        <h3>REST API</h3>
+        <p>Programmatic access to deal analysis, capital readiness scoring, lender matching, and risk analysis. Documentation at developers.underlytix.com.</p>
+        <a href="mailto:api@underlytix.com?subject=API Early Access" style="display:inline-block;margin-top:14px;font-size:13px;color:var(--teal);font-weight:600">Request Early Access →</a>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:var(--teal-dim)">🧩</div>
+        <div class="tag tag-soon">In Development</div>
+        <h3>MCP Server</h3>
+        <p>Model Context Protocol support for Claude, Cursor, and other MCP-compatible AI agents to call Underlytix intelligence natively.</p>
+        <a href="mailto:api@underlytix.com?subject=MCP Early Access" style="display:inline-block;margin-top:14px;font-size:13px;color:var(--teal);font-weight:600">Join Waitlist →</a>
+      </div>
+      <div class="card">
+        <div class="card-icon" style="background:var(--teal-dim)">🤖</div>
+        <div class="tag tag-future">Roadmap</div>
+        <h3>Underlytix Capital Intelligence GPT</h3>
+        <p>A public custom GPT named "Underlytix Capital Intelligence" — analyze deals, explain fundability, assess readiness, and simulate lender decisions, all in ChatGPT.</p>
+        <a href="mailto:api@underlytix.com?subject=GPT Waitlist" style="display:inline-block;margin-top:14px;font-size:13px;color:var(--teal);font-weight:600">Join Waitlist →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-label">For Developers</div>
+    <h2>Build on Underlytix</h2>
+    <p class="section-sub">The Underlytix API exposes deal analysis, capital readiness scoring, lender matching, and risk analysis as programmable endpoints.</p>
+    <div class="grid-2">
+      <div>
+        <div class="endpoint-list">
+          <div class="endpoint">
+            <span class="method method-post">POST</span>
+            <div><div class="endpoint-path">/v1/deal-analysis</div><div class="endpoint-desc">Analyze a deal — returns DSCR, LTV, cash-on-cash, NOI, and Capital Readiness Score</div></div>
+          </div>
+          <div class="endpoint">
+            <span class="method method-post">POST</span>
+            <div><div class="endpoint-path">/v1/capital-readiness-score</div><div class="endpoint-desc">Score a deal's overall fundability on a 0–100 scale</div></div>
+          </div>
+          <div class="endpoint">
+            <span class="method method-post">POST</span>
+            <div><div class="endpoint-path">/v1/lender-match</div><div class="endpoint-desc">Match a deal profile to appropriate lender types and products</div></div>
+          </div>
+          <div class="endpoint">
+            <span class="method method-post">POST</span>
+            <div><div class="endpoint-path">/v1/risk-analysis</div><div class="endpoint-desc">Identify specific risk factors and suggested remediation for a deal</div></div>
+          </div>
+        </div>
+      </div>
+      <div class="code-block"><span class="code-comment">// Example request</span>
+POST /v1/deal-analysis
+
+{
+  <span class="code-key">"purchase_price"</span>: <span class="code-num">680000</span>,
+  <span class="code-key">"loan_amount"</span>: <span class="code-num">510000</span>,
+  <span class="code-key">"monthly_rent"</span>: <span class="code-num">5200</span>,
+  <span class="code-key">"property_type"</span>: <span class="code-str">"multifamily"</span>,
+  <span class="code-key">"units"</span>: <span class="code-num">4</span>,
+  <span class="code-key">"interest_rate"</span>: <span class="code-num">7.25</span>
+}
+
+<span class="code-comment">// Response</span>
+{
+  <span class="code-key">"capital_readiness_score"</span>: <span class="code-num">84</span>,
+  <span class="code-key">"dscr"</span>: <span class="code-num">1.31</span>,
+  <span class="code-key">"ltv"</span>: <span class="code-num">0.75</span>,
+  <span class="code-key">"cash_on_cash"</span>: <span class="code-num">0.074</span>,
+  <span class="code-key">"verdict"</span>: <span class="code-str">"FUNDABLE"</span>,
+  <span class="code-key">"lender_type"</span>: <span class="code-str">"DSCR_RENTAL"</span>
+}</div>
+    </div>
+    <div style="margin-top:24px;text-align:center">
+      <a href="/developers" class="btn-teal">View Full API Documentation</a>
+    </div>
+  </div>
+</section>
+
+<section class="cta-section">
+  <div class="container">
+    <h2>Ready to integrate?</h2>
+    <p>Request API access or get started with the platform today.</p>
+    <div class="hero-cta">
+      <a href="mailto:api@underlytix.com?subject=API Access Request" class="btn-teal">Request API Access</a>
+      <a href="/app?signup=true" class="btn-outline-white">Use the Platform Free</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo-row">
+          <div class="footer-logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+          <div class="footer-logo-text">Underlytix</div>
+        </div>
+        <div class="footer-desc">Capital intelligence for investors, realtors, and lenders. Available 24/7.</div>
+      </div>
+      <div class="footer-col"><h4>Platform</h4><a href="/app">Investor Portal</a><a href="/realtor">Realtor Portal</a><a href="/lender">Lender Portal</a></div>
+      <div class="footer-col"><h4>Developers</h4><a href="/developers">API Docs</a><a href="/integrations">Integrations</a><a href="mailto:api@underlytix.com">API Access</a></div>
+      <div class="footer-col"><h4>AI Agents</h4><a href="/deal-analysis-agent">Deal Analysis</a><a href="/capital-readiness-agent">Capital Readiness</a><a href="/lender-match-agent">Lender Matching</a></div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2026 Underlytix LLC. All rights reserved.</div>
+      <div class="footer-legal">Underlytix provides pre-application intelligence tools only. Results do not constitute a mortgage pre-approval, commitment to lend, financial advice, or legal advice.</div>
+    </div>
+  </div>
+</footer>
+</body>
+</html>

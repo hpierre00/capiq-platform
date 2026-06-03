@@ -1,107 +1,61 @@
-[build]
-  publish = "."
-  functions = "netlify/functions"
-
 [functions]
+  directory = "netlify/functions"
   node_bundler = "esbuild"
 
 [functions."check-trial-expiry"]
   schedule = "0 10 * * *"
 
-# CTCReady.com → underlytix.com with UTM tracking (campaign redirect)
-# This rule fires when the host is ctcready.com
 [[redirects]]
-  from = "https://ctcready.com/*"
-  to = "https://underlytix.com/app?utm_source=ctcready&utm_medium=direct&utm_campaign=ctcready_brand"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "https://www.ctcready.com/*"
-  to = "https://underlytix.com/app?utm_source=ctcready&utm_medium=direct&utm_campaign=ctcready_brand"
-  status = 301
-  force = true
-
-# www.underlytix.com → underlytix.com canonical
-[[redirects]]
-  from = "https://www.underlytix.com/*"
-  to = "https://underlytix.com/:splat"
-  status = 301
-  force = true
-
-
-# Redirect .html → canonical clean URLs (prevents Google from indexing raw .html paths)
-[[redirects]]
-from = "/index.html"
-to = "/"
-status = 301
-
-[[redirects]]
-from = "/realtor.html"
-to = "/realtor"
-status = 301
-
-[[redirects]]
-from = "/lender.html"
-to = "/lender"
-status = 301
-
-[[redirects]]
-from = "/investor.html"
-to = "/app"
-status = 301
-
-[[redirects]]
-from = "/terms.html"
-to = "/terms"
-status = 301
-
-[[redirects]]
-from = "/privacy.html"
-to = "/privacy"
-status = 301
-
-# Legal pages — must be before the SPA catch-all
-[[redirects]]
-  from = "/terms"
-  to = "/terms.html"
+  from = "/integrations"
+  to = "/integrations.html"
   status = 200
 
 [[redirects]]
-  from = "/privacy"
-  to = "/privacy.html"
-  status = 200
-
-# Root serves the marketing landing page
-[[redirects]]
-  from = "/"
-  to = "/index.html"
-  status = 200
-
-# Standalone portal routes
-[[redirects]]
-  from = "/realtor"
-  to = "/realtor.html"
+  from = "/developers"
+  to = "/developers.html"
   status = 200
 
 [[redirects]]
-  from = "/lender"
-  to = "/lender.html"
-  status = 200
-
-# /app serves the investor portal
-[[redirects]]
-  from = "/app"
-  to = "/investor.html"
+  from = "/underlytix-vs-pre-approval"
+  to = "/underlytix-vs-pre-approval.html"
   status = 200
 
 [[redirects]]
-  from = "/app/*"
-  to = "/investor.html"
+  from = "/underlytix-vs-mortgage-calculator"
+  to = "/underlytix-vs-mortgage-calculator.html"
   status = 200
 
-# SPA fallback — only for /app subroutes, not root
 [[redirects]]
-  from = "/app/**"
-  to = "/investor.html"
+  from = "/underlytix-vs-underwriting"
+  to = "/underlytix-vs-underwriting.html"
+  status = 200
+
+[[redirects]]
+  from = "/underlytix-vs-loan-officer"
+  to = "/underlytix-vs-loan-officer.html"
+  status = 200
+
+[[redirects]]
+  from = "/deal-analysis-agent"
+  to = "/deal-analysis-agent.html"
+  status = 200
+
+[[redirects]]
+  from = "/capital-readiness-agent"
+  to = "/capital-readiness-agent.html"
+  status = 200
+
+[[redirects]]
+  from = "/lender-match-agent"
+  to = "/lender-match-agent.html"
+  status = 200
+
+[[redirects]]
+  from = "/risk-analysis-agent"
+  to = "/risk-analysis-agent.html"
+  status = 200
+
+[[redirects]]
+  from = "/investor-agent"
+  to = "/investor-agent.html"
   status = 200
