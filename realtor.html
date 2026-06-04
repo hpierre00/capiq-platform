@@ -443,21 +443,28 @@ function realtorLogout() {
 
 async function realtorCheckout() {
   const sess = getRealtorSession();
-  if (!sess?.token) return;
+  if (!sess?.token) {
+    // No session — redirect to checkout page
+    window.location.href = '/checkout?plan=realtor';
+    return;
+  }
   const btn = document.getElementById('rs-billing-btn');
   const plan = sess.realtor?.plan;
   if (btn) { btn.disabled = true; btn.textContent = plan === 'active' ? 'Loading...' : 'Redirecting...'; }
   try {
     const action = plan === 'active' ? 'create_portal' : 'create_checkout';
-    const res = await fetch(REALTOR_PREQUAL_FN, {
+    const res = await fetch('/.netlify/functions/realtor-checkout', {
       method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ action, token: sess.token, successUrl: window.location.origin + '/realtor?realtor_upgraded=true', cancelUrl: window.location.origin + '/realtor' })
+      body: JSON.stringify({ action, token: sess.token,
+        successUrl: window.location.origin + '/realtor?realtor_upgraded=true',
+        cancelUrl: window.location.origin + '/realtor',
+        returnUrl: window.location.origin + '/realtor' })
     });
     const data = await res.json();
     const url = data.checkoutUrl || data.portalUrl;
     if (url) window.location.href = url;
     else showToast(data.error || 'Billing unavailable', 'error');
-  } catch(e) { showToast('Connection error', 'error'); }
+  } catch(e) { showToast('Connection error — redirecting...', 'error'); setTimeout(()=>{ window.location.href='/checkout?plan=realtor'; },1500); }
   finally { if (btn) { btn.disabled = false; btn.textContent = 'Manage Billing'; } }
 }
 
@@ -1101,7 +1108,7 @@ function showTrialExpiredBanner() {
   const banner = document.createElement('div');
   banner.id = 'trial-expired-banner';
   banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#e53e3e;color:#fff;text-align:center;padding:12px 16px;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:12px';
-  banner.innerHTML = '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center"><span style="font-size:14px">⚡ Your 14-day free trial has ended — upgrade to keep running prequalifications.</span><button onclick="realtorCheckout()" style="background:white;color:#c53030;border:none;padding:7px 18px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">Upgrade to Pro — $49/mo →</button></div>';
+  banner.innerHTML = '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center"><span style="font-size:14px">⚡ Your 14-day free trial has ended — upgrade to keep running prequalifications.</span><button onclick="realtorCheckout()" style="background:white;color:#c53030;border:none;padding:7px 18px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">Upgrade to Pro — $49/mo →</button><a href="/checkout?plan=realtor" style="color:white;font-size:12px;text-decoration:underline;opacity:0.8">or go to checkout →</a></div>';
   document.body.prepend(banner);
 }
 </script>

@@ -482,6 +482,29 @@ async function lenderManageBilling() {
   }
 }
 
+async function lenderManageBilling() {
+  const session = getLenderSession();
+  if (!session?.token) return;
+  const lender = session.lender || {};
+  const plan = lender.plan || 'trial';
+  if (plan === 'active' || plan === 'paid') {
+    const btn = document.getElementById('lender-billing-btn');
+    if (btn) { btn.disabled = true; btn.textContent = 'Opening portal...'; }
+    try {
+      const res = await fetch('/.netlify/functions/lender-billing-portal', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: session.token, returnUrl: window.location.href })
+      });
+      const data = await res.json();
+      if (data.portalUrl) window.location.href = data.portalUrl;
+      else lenderStartCheckout();
+    } catch { lenderStartCheckout(); }
+    finally { const b = document.getElementById('lender-billing-btn'); if (b) { b.disabled = false; b.textContent = 'Manage Plan'; } }
+  } else {
+    lenderStartCheckout();
+  }
+}
+
 async function lenderStartCheckout() {
   const session = getLenderSession();
   if (!session?.token) return;
