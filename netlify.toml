@@ -6,6 +6,11 @@
   schedule = "0 10 * * *"
 
 [[redirects]]
+  from = "/checkout"
+  to = "/checkout.html"
+  status = 200
+
+[[redirects]]
   from = "/integrations"
   to = "/integrations.html"
   status = 200

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Start Your Free Trial — Underlytix Capital Intelligence</title>
+<meta name="robots" content="noindex" />
+<link rel="icon" type="image/png" href="/favicon.png" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{--navy:#0f2240;--navy-2:#1a3355;--teal:#0e7490;--teal-light:#0891b2;--bg:#f8fafc;--bg-2:#ffffff;--border:#e2e8f0;--text:#0f172a;--text-2:#334155;--text-3:#64748b;--text-4:#94a3b8;--green:#059669;--green-dim:rgba(5,150,105,0.08)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;display:flex;flex-direction:column}
+a{color:inherit;text-decoration:none}
+
+/* Nav */
+.top-nav{background:var(--navy);padding:14px 32px;display:flex;align-items:center;justify-content:space-between}
+.nav-brand{display:flex;align-items:center;gap:10px}
+.nav-mark{width:32px;height:32px;background:var(--teal);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.nav-mark svg{width:17px;height:17px}
+.nav-name{font-size:16px;font-weight:800;color:white;letter-spacing:-.4px}
+.nav-sub{font-family:'DM Mono',monospace;font-size:8px;color:rgba(255,255,255,0.4);letter-spacing:.1em;text-transform:uppercase;margin-top:1px}
+.nav-secure{font-size:12px;color:rgba(255,255,255,0.4);display:flex;align-items:center;gap:5px}
+
+/* Layout */
+.page{flex:1;display:grid;grid-template-columns:1fr 1fr;min-height:calc(100vh - 58px)}
+
+/* Left — confidence panel */
+.left-panel{background:var(--navy);padding:56px 48px;display:flex;flex-direction:column;justify-content:center}
+.plan-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(14,116,144,0.2);border:1px solid rgba(14,116,144,0.35);color:#67e8f9;padding:5px 14px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:28px}
+.left-panel h1{font-size:clamp(24px,3vw,38px);font-weight:800;color:white;line-height:1.1;letter-spacing:-.02em;margin-bottom:16px}
+.left-sub{font-size:16px;color:rgba(255,255,255,0.55);line-height:1.6;margin-bottom:36px}
+.plan-card{background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:24px 28px;margin-bottom:32px}
+.plan-name{font-size:13px;color:rgba(255,255,255,0.5);font-weight:600;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
+.plan-price{display:flex;align-items:baseline;gap:6px;margin-bottom:4px}
+.plan-price-num{font-size:40px;font-weight:800;color:white;font-family:'DM Mono',monospace}
+.plan-price-period{font-size:14px;color:rgba(255,255,255,0.45)}
+.plan-trial{font-size:13px;color:#34d399;font-weight:600;margin-top:4px}
+.check-list{display:flex;flex-direction:column;gap:12px}
+.check-item{display:flex;align-items:flex-start;gap:10px;font-size:14px;color:rgba(255,255,255,0.7);line-height:1.5}
+.check-icon{width:20px;height:20px;background:rgba(5,150,105,0.2);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;font-size:11px}
+.trust-row{display:flex;align-items:center;gap:20px;margin-top:32px;padding-top:24px;border-top:1px solid rgba(255,255,255,0.08)}
+.trust-item{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,0.4)}
+
+/* Right — form panel */
+.right-panel{background:var(--bg-2);padding:48px 48px;display:flex;flex-direction:column;justify-content:center}
+.form-header{margin-bottom:32px}
+.form-header h2{font-size:24px;font-weight:800;color:var(--text);letter-spacing:-.02em;margin-bottom:6px}
+.form-header p{font-size:14px;color:var(--text-3)}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:12px;font-weight:600;color:var(--text-2);letter-spacing:.03em;margin-bottom:6px}
+.field input,.field select{width:100%;padding:11px 14px;border:1px solid var(--border);border-radius:8px;font-size:14px;color:var(--text);background:var(--bg);transition:border-color .15s;font-family:inherit}
+.field input:focus,.field select:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(14,116,144,0.1)}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.btn-checkout{width:100%;padding:15px;border-radius:10px;background:var(--teal);color:white;font-size:16px;font-weight:700;border:none;cursor:pointer;transition:all .2s;margin-top:8px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px}
+.btn-checkout:hover{background:var(--teal-light);transform:translateY(-1px);box-shadow:0 8px 24px rgba(14,116,144,0.3)}
+.btn-checkout:disabled{opacity:0.7;cursor:not-allowed;transform:none}
+.secure-note{display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;color:var(--text-4);margin-top:12px}
+.divider{height:1px;background:var(--border);margin:20px 0}
+.already-have{text-align:center;font-size:13px;color:var(--text-3)}
+.already-have a{color:var(--teal);font-weight:600}
+.error-msg{background:#fee2e2;border:1px solid #fca5a5;border-radius:8px;padding:10px 14px;font-size:13px;color:#991b1b;margin-bottom:16px;display:none}
+
+/* Testimonial */
+.testimonial{background:rgba(14,116,144,0.06);border:1px solid rgba(14,116,144,0.15);border-radius:10px;padding:20px 24px;margin-top:24px}
+.testimonial-text{font-size:14px;color:var(--text-2);line-height:1.6;font-style:italic;margin-bottom:10px}
+.testimonial-author{font-size:12px;font-weight:600;color:var(--text-3)}
+
+@media(max-width:768px){
+  .page{grid-template-columns:1fr}
+  .left-panel{padding:32px 24px}
+  .right-panel{padding:32px 24px}
+}
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <a href="/" class="nav-brand">
+    <div class="nav-mark"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+    <div><div class="nav-name">Underlytix</div><div class="nav-sub">Capital Intelligence</div></div>
+  </a>
+  <div class="nav-secure">🔒 256-bit SSL encryption</div>
+</nav>
+
+<div class="page">
+  <!-- LEFT: Confidence Panel -->
+  <div class="left-panel">
+    <div class="plan-badge">🎯 Start Free Today</div>
+    <h1>Know if your deals are fundable before you approach a lender</h1>
+    <p class="left-sub">Join investors, realtors, and lenders who use Underlytix to score deals in 60 seconds — before any lender meeting, application, or credit pull.</p>
+
+    <div class="plan-card" id="plan-display">
+      <div class="plan-name" id="plan-label">Realtor Pro Plan</div>
+      <div class="plan-price">
+        <span class="plan-price-num" id="plan-price">$49</span>
+        <span class="plan-price-period">/month after trial</span>
+      </div>
+      <div class="plan-trial">✓ 14-day free trial — $0 due today</div>
+    </div>
+
+    <div class="check-list">
+      <div class="check-item"><div class="check-icon">✓</div><span>Unlimited client pre-qualifications during your trial</span></div>
+      <div class="check-item"><div class="check-icon">✓</div><span>Capital Readiness Score on every deal — in 60 seconds</span></div>
+      <div class="check-item"><div class="check-icon">✓</div><span>DSCR, LTV, and cash-on-cash analysis included</span></div>
+      <div class="check-item"><div class="check-icon">✓</div><span>Matched lender recommendations by deal type</span></div>
+      <div class="check-item"><div class="check-icon">✓</div><span>Cancel anytime — no contracts, no hidden fees</span></div>
+    </div>
+
+    <div class="trust-row">
+      <div class="trust-item">🔒 Stripe-secured checkout</div>
+      <div class="trust-item">🏦 No credit pull</div>
+      <div class="trust-item">✓ Cancel anytime</div>
+    </div>
+  </div>
+
+  <!-- RIGHT: Form Panel -->
+  <div class="right-panel">
+    <div class="form-header">
+      <h2>Start your free trial</h2>
+      <p>No credit card required. Cancel anytime before day 14.</p>
+    </div>
+
+    <div id="error-msg" class="error-msg"></div>
+
+    <div class="field-row">
+      <div class="field">
+        <label>First Name</label>
+        <input type="text" id="first-name" placeholder="John" autocomplete="given-name">
+      </div>
+      <div class="field">
+        <label>Last Name</label>
+        <input type="text" id="last-name" placeholder="Smith" autocomplete="family-name">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Work Email</label>
+      <input type="email" id="email" placeholder="john@yourbrokerage.com" autocomplete="email">
+    </div>
+
+    <div class="field">
+      <label>Plan</label>
+      <select id="plan-select" onchange="updatePlan()">
+        <option value="realtor">Realtor Pro — $49/month</option>
+        <option value="investor">Investor Pro — $49/month</option>
+        <option value="lender">Lender Portal — $297/month</option>
+        <option value="team">Team Plan (5 seats) — $149/month</option>
+      </select>
+    </div>
+
+    <div class="field" id="company-field" style="display:none">
+      <label>Brokerage / Company</label>
+      <input type="text" id="company" placeholder="Your Brokerage Name">
+    </div>
+
+    <div class="field" id="discount-field">
+      <label>Promo Code <span style="color:var(--text-4);font-weight:400">(optional)</span></label>
+      <input type="text" id="discount-code" placeholder="Enter code">
+    </div>
+
+    <button class="btn-checkout" onclick="startCheckout()" id="checkout-btn">
+      <span id="btn-text">Start My Free Trial →</span>
+    </button>
+
+    <div class="secure-note">
+      🔒 Your payment is processed securely by Stripe. We never store card details.
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="testimonial">
+      <div class="testimonial-text">"I ran three deals through Underlytix before calling my lender. Saved me two weeks and two credit pulls. The DSCR analysis alone is worth it."</div>
+      <div class="testimonial-author">— Real estate investor, Miami FL</div>
+    </div>
+
+    <div class="already-have" style="margin-top:16px">
+      Already have an account? <a href="/app">Sign in →</a>
+    </div>
+  </div>
+</div>
+
+<script>
+const PLANS = {
+  realtor:  { label: 'Realtor Pro Plan',          price: '$49',  portal: '/realtor' },
+  investor: { label: 'Investor Pro Plan',          price: '$49',  portal: '/app' },
+  lender:   { label: 'Lender Portal Plan',         price: '$297', portal: '/lender' },
+  team:     { label: 'Team Plan — 5 Seats',        price: '$149', portal: '/realtor' },
+};
+
+// Pre-fill from URL params
+const params = new URLSearchParams(window.location.search);
+if (params.get('plan')) {
+  const sel = document.getElementById('plan-select');
+  if (sel) sel.value = params.get('plan');
+  updatePlan();
+}
+if (params.get('email')) document.getElementById('email').value = params.get('email');
+
+function updatePlan() {
+  const plan = document.getElementById('plan-select').value;
+  const p = PLANS[plan] || PLANS.realtor;
+  document.getElementById('plan-label').textContent = p.label;
+  document.getElementById('plan-price').textContent = p.price;
+  document.getElementById('company-field').style.display = (plan === 'team' || plan === 'lender') ? 'block' : 'none';
+  document.getElementById('checkout-btn').querySelector('#btn-text').textContent =
+    plan === 'lender' ? 'Start 14-Day Free Trial →' : 'Start My Free Trial →';
+}
+
+async function startCheckout() {
+  const firstName = document.getElementById('first-name').value.trim();
+  const lastName  = document.getElementById('last-name').value.trim();
+  const email     = document.getElementById('email').value.trim();
+  const plan      = document.getElementById('plan-select').value;
+
+  const errEl = document.getElementById('error-msg');
+  errEl.style.display = 'none';
+
+  if (!firstName || !lastName) { showError('Please enter your first and last name.'); return; }
+  if (!email || !email.includes('@')) { showError('Please enter a valid email address.'); return; }
+
+  const btn = document.getElementById('checkout-btn');
+  btn.disabled = true;
+  document.getElementById('btn-text').textContent = 'Preparing your trial...';
+
+  // Route to the appropriate portal signup with pre-filled data
+  const target = PLANS[plan]?.portal || '/app';
+  const url = `${target}?signup=true&email=${encodeURIComponent(email)}&name=${encodeURIComponent(firstName + ' ' + lastName)}&plan=${plan}`;
+  window.location.href = url;
+}
+
+function showError(msg) {
+  const el = document.getElementById('error-msg');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+</script>
+</body>
+</html>
