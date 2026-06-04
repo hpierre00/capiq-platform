@@ -32,19 +32,19 @@ exports.handler = async (event) => {
 
   const { action, token, successUrl, cancelUrl, returnUrl } = body;
 
-  if (!token) {
-    return { statusCode: 401, body: JSON.stringify({ error: 'Authentication required' }) };
-  }
+  // Allow unauthenticated requests (from /checkout page) — use provided email for pre-fill
+  let userEmail = body.email || null;
 
-  // Verify token and get user email
-  let userEmail = null;
-  try {
-    const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-      headers: { apikey: SUPABASE_SERVICE_KEY, Authorization: `Bearer ${token}` }
-    });
-    if (res.ok) { const u = await res.json(); userEmail = u.email; }
-  } catch (err) {
-    console.error('[realtor-checkout] Supabase error:', err.message);
+  if (token) {
+    // Authenticated — get verified email from Supabase
+    try {
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+        headers: { apikey: SUPABASE_SERVICE_KEY, Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) { const u = await res.json(); userEmail = u.email || userEmail; }
+    } catch (err) {
+      console.error('[realtor-checkout] Supabase error:', err.message);
+    }
   }
 
   const siteUrl = process.env.SITE_URL || 'https://underlytix.com';
@@ -68,9 +68,22 @@ exports.handler = async (event) => {
     }
 
     // Default: create_checkout
+    // Use REALTOR_PAYMENT_LINK if set (direct Stripe hosted link — most reliable)
+    // Use REALTOR_PRICE_ID only if on the correct Stripe account (acct_1TQUoT)
+    const paymentLink = process.env.REALTOR_PAYMENT_LINK;
     const priceId = process.env.REALTOR_PRICE_ID;
-    if (!priceId) {
-      // No price configured — redirect to payment link fallback
+
+    // If we have a direct payment link, use it (fastest, most reliable path)
+    if (paymentLink && !priceId) {
+      const url = `${paymentLink}${userEmail ? '?prefilled_email=' + encodeURIComponent(userEmail) : ''}`;
+      return {
+        statusCode: 200,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ checkoutUrl: url }),
+      };
+    }
+
+    if (!priceId && !paymentLink) {
       const fallback = `${siteUrl}/checkout?plan=realtor${userEmail ? '&email=' + encodeURIComponent(userEmail) : ''}`;
       return {
         statusCode: 200,
@@ -98,6 +111,12 @@ exports.handler = async (event) => {
     };
   } catch (err) {
     console.error('[realtor-checkout] Stripe error:', err.message);
+    // Fall back to direct payment link if Stripe session creation fails
+    const paymentLink = process.env.REALTOR_PAYMENT_LINK;
+    if (paymentLink) {
+      const url = `${paymentLink}${userEmail ? '?prefilled_email=' + encodeURIComponent(userEmail) : ''}`;
+      return { statusCode: 200, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ checkoutUrl: url }) };
+    }
     return { statusCode: 500, body: JSON.stringify({ error: err.message || 'Checkout unavailable' }) };
   }
 };

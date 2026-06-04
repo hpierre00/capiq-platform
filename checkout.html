@@ -221,12 +221,54 @@ async function startCheckout() {
 
   const btn = document.getElementById('checkout-btn');
   btn.disabled = true;
-  document.getElementById('btn-text').textContent = 'Preparing your trial...';
+  document.getElementById('btn-text').textContent = 'Redirecting to secure checkout...';
 
-  // Route to the appropriate portal signup with pre-filled data
-  const target = PLANS[plan]?.portal || '/app';
-  const url = `${target}?signup=true&email=${encodeURIComponent(email)}&name=${encodeURIComponent(firstName + ' ' + lastName)}&plan=${plan}`;
-  window.location.href = url;
+  try {
+    let checkoutUrl = null;
+
+    if (plan === 'team') {
+      // Teams: email inquiry (no Stripe flow yet)
+      window.location.href = `mailto:teams@underlytix.com?subject=Team Plan — ${encodeURIComponent(firstName + ' ' + lastName)}&body=Email: ${encodeURIComponent(email)}`;
+      return;
+    }
+
+    // Determine which Netlify function to call
+    const fnMap = {
+      realtor:  '/.netlify/functions/realtor-checkout',
+      investor: '/.netlify/functions/realtor-checkout', // shares same payment link
+      lender:   '/.netlify/functions/lender-checkout',
+    };
+    const fn = fnMap[plan] || fnMap.realtor;
+
+    const res = await fetch(fn, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'create_checkout',
+        token: null, // unauthenticated — function will use email for pre-fill
+        email,
+        successUrl: `${window.location.origin}/${plan === 'lender' ? 'lender' : plan === 'investor' ? 'app' : 'realtor'}?trial_started=true`,
+        cancelUrl: window.location.href,
+      })
+    });
+
+    if (res.ok) {
+      const data = await res.json();
+      checkoutUrl = data.checkoutUrl || data.portalUrl;
+    }
+
+    if (checkoutUrl) {
+      window.location.href = checkoutUrl;
+    } else {
+      // Final fallback: go to portal signup with pre-fill
+      const portal = { realtor: '/realtor', investor: '/app', lender: '/lender' }[plan] || '/realtor';
+      window.location.href = `${portal}?signup=true&email=${encodeURIComponent(email)}&name=${encodeURIComponent(firstName + ' ' + lastName)}`;
+    }
+  } catch(e) {
+    // Network error fallback
+    const portal = { realtor: '/realtor', investor: '/app', lender: '/lender' }[plan] || '/realtor';
+    window.location.href = `${portal}?signup=true&email=${encodeURIComponent(email)}&name=${encodeURIComponent(firstName + ' ' + lastName)}`;
+  }
 }
 
 function showError(msg) {

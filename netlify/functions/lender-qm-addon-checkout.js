@@ -11,7 +11,8 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://mxyepucitjzleaziizkr.supabase.co';
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
-const LENDER_QM_PRICE_ID = process.env.LENDER_QM_PRICE_ID || 'price_1TdOFEBdTWAzjDqG9e6ynNun';
+// Pinned to acct_1TQUoT — correct Netlify Stripe account
+const LENDER_QM_PRICE_ID = 'price_1TdOFEBdTWAzjDqG9e6ynNun';
 
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
