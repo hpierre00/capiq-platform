@@ -68,34 +68,23 @@ exports.handler = async (event) => {
     }
 
     // Default: create_checkout
-    // Use REALTOR_PAYMENT_LINK if set (direct Stripe hosted link — most reliable)
-    // Use REALTOR_PRICE_ID only if on the correct Stripe account (acct_1TQUoT)
-    const paymentLink = process.env.REALTOR_PAYMENT_LINK;
-    const priceId = process.env.REALTOR_PRICE_ID;
-
-    // If we have a direct payment link, use it (fastest, most reliable path)
-    if (paymentLink && !priceId) {
-      const url = `${paymentLink}${userEmail ? '?prefilled_email=' + encodeURIComponent(userEmail) : ''}`;
-      return {
-        statusCode: 200,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ checkoutUrl: url }),
-      };
-    }
-
-    if (!priceId && !paymentLink) {
-      const fallback = `${siteUrl}/checkout?plan=realtor${userEmail ? '&email=' + encodeURIComponent(userEmail) : ''}`;
-      return {
-        statusCode: 200,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ checkoutUrl: fallback }),
-      };
-    }
-
+    // Build session using inline price_data — no pre-existing price ID required.
+    // This creates the checkout on whichever Stripe account STRIPE_SECRET_KEY belongs to (acct_1TQUoT).
     const sessionParams = {
       mode: 'subscription',
       payment_method_types: ['card'],
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [{
+        quantity: 1,
+        price_data: {
+          currency: 'usd',
+          unit_amount: 4900, // $49.00
+          recurring: { interval: 'month' },
+          product_data: {
+            name: 'Underlytix Realtor Pro',
+            description: 'Unlimited client pre-qualifications · Capital Readiness Scoring · 24/7 access',
+          },
+        },
+      }],
       success_url: successUrl || `${siteUrl}/realtor?realtor_upgraded=true`,
       cancel_url:  cancelUrl  || `${siteUrl}/realtor`,
       allow_promotion_codes: true,
@@ -111,12 +100,6 @@ exports.handler = async (event) => {
     };
   } catch (err) {
     console.error('[realtor-checkout] Stripe error:', err.message);
-    // Fall back to direct payment link if Stripe session creation fails
-    const paymentLink = process.env.REALTOR_PAYMENT_LINK;
-    if (paymentLink) {
-      const url = `${paymentLink}${userEmail ? '?prefilled_email=' + encodeURIComponent(userEmail) : ''}`;
-      return { statusCode: 200, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ checkoutUrl: url }) };
-    }
     return { statusCode: 500, body: JSON.stringify({ error: err.message || 'Checkout unavailable' }) };
   }
 };
