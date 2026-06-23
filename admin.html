@@ -40,14 +40,15 @@ html,body{height:100%;font-family:'Inter',sans-serif;font-size:14px;background:#
 
 /* ── Dashboard ── */
 #admin-dashboard{display:none}
-.dash-wrap{max-width:980px;margin:0 auto;padding:32px 24px}
+.dash-wrap{max-width:1100px;margin:0 auto;padding:32px 24px}
 .dash-title{font-size:20px;font-weight:700;margin-bottom:4px}
 .dash-sub{color:#64748b;font-size:13px;margin-bottom:28px}
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-@media(max-width:640px){.grid-2{grid-template-columns:1fr}}
+@media(max-width:700px){.grid-2{grid-template-columns:1fr}}
 
 /* Panels */
 .panel{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:24px}
+.panel-full{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:24px;margin-top:20px}
 .panel-head{margin-bottom:18px}
 .panel-title{font-size:14px;font-weight:700;color:#0f172a;margin-bottom:3px}
 .panel-sub{color:#64748b;font-size:12px}
@@ -55,7 +56,17 @@ html,body{height:100%;font-family:'Inter',sans-serif;font-size:14px;background:#
 .field-sm label{display:block;font-size:11px;font-weight:600;color:#6b7280;margin-bottom:4px;letter-spacing:.04em;text-transform:uppercase}
 .select{width:100%;padding:9px 12px;border:1px solid #d1d5db;border-radius:7px;font-size:13px;font-family:inherit;background:#fff;color:#0f172a;cursor:pointer;outline:none;transition:border-color .15s}
 .select:focus{border-color:#0e7490}
-.btn-grant{width:100%;padding:10px 16px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:4px;transition:filter .15s}
+
+/* Portal checkboxes */
+.portal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px}
+.portal-check{display:flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid #d1d5db;border-radius:7px;cursor:pointer;transition:border-color .15s,background .15s;user-select:none}
+.portal-check:hover{border-color:#0e7490;background:#f0fdff}
+.portal-check input{width:14px;height:14px;cursor:pointer;accent-color:#0e7490}
+.portal-check.checked{border-color:#0e7490;background:rgba(14,116,144,0.06)}
+.portal-check span{font-size:12px;font-weight:600;color:#374151}
+.portal-check small{font-size:10px;color:#9ca3af;display:block}
+
+.btn-grant{width:100%;padding:10px 16px;background:linear-gradient(135deg,#0e7490,#0891b2);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:8px;transition:filter .15s}
 .btn-grant:hover{filter:brightness(1.08)}
 .btn-grant:disabled{opacity:.55;cursor:default;filter:none}
 
@@ -69,17 +80,50 @@ html,body{height:100%;font-family:'Inter',sans-serif;font-size:14px;background:#
 .manual-link code{display:block;font-size:11px;color:#78350f;word-break:break-all;background:rgba(0,0,0,0.05);padding:7px 9px;border-radius:5px;cursor:pointer}
 
 /* Quick links */
-.links-list{display:flex;flex-direction:column;gap:10px}
-.quick-link{display:flex;align-items:center;gap:12px;padding:13px 14px;border:1px solid #e2e8f0;border-radius:8px;text-decoration:none;color:#0f172a;transition:border-color .15s,box-shadow .15s}
+.links-list{display:flex;flex-direction:column;gap:8px}
+.quick-link{display:flex;align-items:center;gap:12px;padding:11px 14px;border:1px solid #e2e8f0;border-radius:8px;text-decoration:none;color:#0f172a;transition:border-color .15s,box-shadow .15s}
 .quick-link:hover{border-color:#94a3b8;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
-.ql-icon{width:34px;height:34px;background:#f1f5f9;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.ql-icon{width:30px;height:30px;background:#f1f5f9;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0}
 .ql-info{flex:1;min-width:0}
-.ql-name{font-weight:600;font-size:13px}
+.ql-name{font-weight:600;font-size:12px}
 .ql-desc{font-size:11px;color:#64748b;margin-top:1px}
-.ql-arr{color:#cbd5e1;font-size:14px}
+.ql-arr{color:#cbd5e1;font-size:13px}
 
-/* Divider label */
-.divider{margin:28px 0 20px;padding-top:20px;border-top:1px solid #f1f5f9}
+/* ── Manage Users table ── */
+.mu-toolbar{display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.mu-search{flex:1;min-width:180px;padding:8px 12px;border:1px solid #d1d5db;border-radius:7px;font-size:13px;font-family:inherit;outline:none;transition:border-color .15s}
+.mu-search:focus{border-color:#0e7490}
+.btn-load{padding:8px 16px;background:#0f172a;color:#fff;border:none;border-radius:7px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;white-space:nowrap;transition:background .15s}
+.btn-load:hover{background:#1e293b}
+.btn-load:disabled{opacity:.5;cursor:default}
+
+.users-table-wrap{overflow-x:auto;border:1px solid #e2e8f0;border-radius:8px}
+.users-table{width:100%;border-collapse:collapse;font-size:12px}
+.users-table th{padding:9px 12px;text-align:left;background:#f8fafc;font-size:11px;font-weight:700;color:#6b7280;letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid #e2e8f0;white-space:nowrap}
+.users-table td{padding:9px 12px;border-bottom:1px solid #f1f5f9;color:#374151;white-space:nowrap}
+.users-table tr:last-child td{border-bottom:none}
+.users-table tr:hover td{background:#f8fafc}
+.plan-chip{display:inline-flex;padding:2px 7px;border-radius:10px;font-size:10px;font-weight:700;letter-spacing:.04em}
+.plan-active{background:#dcfce7;color:#166534}
+.plan-trial{background:#dbeafe;color:#1d4ed8}
+.plan-suspended{background:#fef9c3;color:#854d0e}
+.plan-terminated{background:#fee2e2;color:#991b1b}
+.plan-pending{background:#f1f5f9;color:#475569}
+
+.btn-action{padding:4px 10px;border-radius:5px;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer;border:1px solid transparent;transition:all .15s;white-space:nowrap}
+.btn-suspend{background:#fffbeb;border-color:#fcd34d;color:#92400e}
+.btn-suspend:hover{background:#fef3c7}
+.btn-terminate{background:#fef2f2;border-color:#fca5a5;color:#991b1b}
+.btn-terminate:hover{background:#fee2e2}
+.btn-reinstate{background:#f0fdf4;border-color:#86efac;color:#166534}
+.btn-reinstate:hover{background:#dcfce7}
+.btn-action:disabled{opacity:.4;cursor:default}
+
+.mu-empty{text-align:center;padding:32px;color:#94a3b8;font-size:13px}
+.mu-count{font-size:12px;color:#64748b}
+
+/* Divider */
+.divider{margin:24px 0 16px;padding-top:20px;border-top:1px solid #f1f5f9}
 .divider span{font-size:11px;font-weight:700;color:#94a3b8;letter-spacing:.06em;text-transform:uppercase}
 </style>
 </head>
@@ -128,15 +172,34 @@ html,body{height:100%;font-family:'Inter',sans-serif;font-size:14px;background:#
       <div class="panel">
         <div class="panel-head">
           <div class="panel-title">Grant Portal Access</div>
-          <div class="panel-sub">Activate a new user or upgrade an existing account</div>
+          <div class="panel-sub">Invite a new user or upgrade an existing account</div>
         </div>
 
         <div class="field-sm">
           <label>Recipient Email</label>
-          <input type="email" id="g-email" class="input" placeholder="realtor@brokerage.com"
+          <input type="email" id="g-email" class="input" placeholder="user@example.com"
                  onkeydown="if(event.key==='Enter')grantAccess()">
         </div>
+
         <div class="field-sm">
+          <label>Portal Access</label>
+          <div class="portal-grid">
+            <label class="portal-check checked" id="pc-realtor">
+              <input type="checkbox" id="g-portal-realtor" checked onchange="togglePortalCheck('realtor')">
+              <div><span>🏠 Realtor</span><small>Prequal + AI</small></div>
+            </label>
+            <label class="portal-check" id="pc-lender">
+              <input type="checkbox" id="g-portal-lender" onchange="togglePortalCheck('lender')">
+              <div><span>🏦 Lender</span><small>Loan tools</small></div>
+            </label>
+            <label class="portal-check" id="pc-investor">
+              <input type="checkbox" id="g-portal-investor" onchange="togglePortalCheck('investor')">
+              <div><span>📈 Investor</span><small>Deal analysis</small></div>
+            </label>
+          </div>
+        </div>
+
+        <div class="field-sm" style="margin-top:8px">
           <label>Access Level</label>
           <select id="g-plan" class="select">
             <option value="permanent">Permanent (free, no expiry)</option>
@@ -144,7 +207,8 @@ html,body{height:100%;font-family:'Inter',sans-serif;font-size:14px;background:#
             <option value="trial_14">14-day free trial</option>
           </select>
         </div>
-        <button class="btn-grant" id="g-btn" onclick="grantAccess()">Grant Access →</button>
+
+        <button class="btn-grant" id="g-btn" onclick="grantAccess()">Send Invite →</button>
         <div id="g-result" class="result"></div>
         <div id="g-link-box" class="manual-link">
           <p>📋 Email not sent — share this setup link manually:</p>
@@ -152,26 +216,42 @@ html,body{height:100%;font-family:'Inter',sans-serif;font-size:14px;background:#
         </div>
       </div>
 
-      <!-- ── Quick Links ── -->
+      <!-- ── Quick Access ── -->
       <div class="panel">
         <div class="panel-head">
           <div class="panel-title">Quick Access</div>
-          <div class="panel-sub">Jump to key platform areas</div>
+          <div class="panel-sub">Jump to any platform area</div>
         </div>
         <div class="links-list">
-          <a href="/underlytix-dashboard.html" target="_blank" class="quick-link">
-            <div class="ql-icon">📊</div>
-            <div class="ql-info">
-              <div class="ql-name">Ops Dashboard</div>
-              <div class="ql-desc">Contacts, deal flow, platform stats</div>
-            </div>
-            <div class="ql-arr">→</div>
-          </a>
           <a href="/realtor.html" target="_blank" class="quick-link">
             <div class="ql-icon">🏠</div>
             <div class="ql-info">
               <div class="ql-name">Realtor Portal</div>
               <div class="ql-desc">AI prequal, lender match, voice mode</div>
+            </div>
+            <div class="ql-arr">→</div>
+          </a>
+          <a href="/lender.html" target="_blank" class="quick-link">
+            <div class="ql-icon">🏦</div>
+            <div class="ql-info">
+              <div class="ql-name">Lender Portal</div>
+              <div class="ql-desc">Loan pipeline, QM analysis, pricing</div>
+            </div>
+            <div class="ql-arr">→</div>
+          </a>
+          <a href="/investor.html" target="_blank" class="quick-link">
+            <div class="ql-icon">📈</div>
+            <div class="ql-info">
+              <div class="ql-name">Investor Portal</div>
+              <div class="ql-desc">Deal analysis, DSCR, cap rate tools</div>
+            </div>
+            <div class="ql-arr">→</div>
+          </a>
+          <a href="/underlytix-dashboard.html" target="_blank" class="quick-link">
+            <div class="ql-icon">📊</div>
+            <div class="ql-info">
+              <div class="ql-name">Ops Dashboard</div>
+              <div class="ql-desc">Contacts, deal flow, platform stats</div>
             </div>
             <div class="ql-arr">→</div>
           </a>
@@ -191,18 +271,44 @@ html,body{height:100%;font-family:'Inter',sans-serif;font-size:14px;background:#
             </div>
             <div class="ql-arr">→</div>
           </a>
-          <a href="https://dashboard.stripe.com" target="_blank" class="quick-link">
-            <div class="ql-icon">💳</div>
-            <div class="ql-info">
-              <div class="ql-name">Stripe</div>
-              <div class="ql-desc">Payments, subscriptions, webhooks</div>
-            </div>
-            <div class="ql-arr">→</div>
-          </a>
         </div>
       </div>
 
     </div>
+
+    <!-- ── Manage Users ── -->
+    <div class="panel-full">
+      <div class="panel-head">
+        <div class="panel-title">Manage Users</div>
+        <div class="panel-sub">Suspend or terminate access for any user at any time</div>
+      </div>
+
+      <div class="mu-toolbar">
+        <input type="text" id="mu-search" class="mu-search" placeholder="Filter by email…"
+               oninput="filterUsers()">
+        <button class="btn-load" id="mu-load-btn" onclick="loadUsers()">Load Users</button>
+        <span class="mu-count" id="mu-count"></span>
+      </div>
+
+      <div class="users-table-wrap" id="mu-table-wrap" style="display:none">
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th>Email</th>
+              <th>Plan</th>
+              <th>Trial Ends</th>
+              <th>Prequals</th>
+              <th>Joined</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="mu-tbody"></tbody>
+        </table>
+      </div>
+      <div class="mu-empty" id="mu-empty" style="display:none">No users found.</div>
+      <div id="mu-result" class="result" style="margin-top:12px"></div>
+    </div>
+
   </div>
 </div>
 
@@ -211,9 +317,11 @@ const SUPABASE_URL  = 'https://mxyepucitjzleaziizkr.supabase.co';
 const ANON_KEY      = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eWVwdWNpdGp6bGVhemlpemtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0Njk1ODIsImV4cCI6MjA5MDA0NTU4Mn0.oQr_hO5fVkOhGcJ2u3mqQDJIfw9cAdXwfVAAXOf96q4';
 const ADMIN_EMAILS  = ['hpierre00@gmail.com'];
 const INVITE_FN     = '/.netlify/functions/admin-invite';
+const MANAGE_FN     = '/.netlify/functions/admin-manage';
 
 let adminToken = null;
 let adminEmail = null;
+let allUsers   = [];
 
 // ── Restore session ───────────────────────────────────────────────────────────
 (function restoreSession() {
@@ -226,7 +334,7 @@ let adminEmail = null;
       adminEmail = email;
       showDashboard();
     }
-  } catch (e) {}
+  } catch(e) {}
 })();
 
 // ── Login ─────────────────────────────────────────────────────────────────────
@@ -235,9 +343,7 @@ async function doLogin(ev) {
   const email = document.getElementById('l-email').value.trim().toLowerCase();
   const pass  = document.getElementById('l-pass').value;
   const btn   = document.getElementById('l-btn');
-  const errEl = document.getElementById('l-err');
-
-  errEl.classList.remove('show');
+  document.getElementById('l-err').classList.remove('show');
 
   if (!ADMIN_EMAILS.includes(email)) {
     showLoginErr('This email address does not have admin access.');
@@ -254,18 +360,12 @@ async function doLogin(ev) {
       body:    JSON.stringify({ email, password: pass }),
     });
     const data = await res.json();
-
-    if (!res.ok) {
-      showLoginErr(data.error_description || data.msg || 'Incorrect email or password.');
-      return;
-    }
-
+    if (!res.ok) { showLoginErr(data.error_description || data.msg || 'Incorrect email or password.'); return; }
     adminToken = data.access_token;
     adminEmail = email;
     sessionStorage.setItem('_admin_sess', JSON.stringify({ token: adminToken, email }));
     showDashboard();
-
-  } catch (err) {
+  } catch(err) {
     showLoginErr('Network error — check your connection and try again.');
   } finally {
     btn.disabled    = false;
@@ -294,15 +394,32 @@ function adminLogout() {
   document.getElementById('login-screen').style.display    = 'flex';
   document.getElementById('admin-dashboard').style.display = 'none';
   document.getElementById('nav-auth-area').style.display   = 'none';
-  document.getElementById('l-email').value    = '';
-  document.getElementById('l-pass').value     = '';
+  document.getElementById('l-email').value = '';
+  document.getElementById('l-pass').value  = '';
   document.getElementById('l-err').classList.remove('show');
+}
+
+// ── Portal checkbox toggle ────────────────────────────────────────────────────
+function togglePortalCheck(name) {
+  const cb = document.getElementById('g-portal-' + name);
+  const lbl = document.getElementById('pc-' + name);
+  if (cb.checked) lbl.classList.add('checked');
+  else            lbl.classList.remove('checked');
+}
+
+function getSelectedPortals() {
+  const portals = [];
+  ['realtor','lender','investor'].forEach(p => {
+    if (document.getElementById('g-portal-' + p)?.checked) portals.push(p);
+  });
+  return portals;
 }
 
 // ── Grant Access ──────────────────────────────────────────────────────────────
 async function grantAccess() {
   const email    = (document.getElementById('g-email').value || '').trim();
   const planType = document.getElementById('g-plan').value;
+  const portals  = getSelectedPortals();
   const btn      = document.getElementById('g-btn');
   const resultEl = document.getElementById('g-result');
   const linkBox  = document.getElementById('g-link-box');
@@ -315,15 +432,20 @@ async function grantAccess() {
     resultEl.className   = 'result err';
     return;
   }
+  if (portals.length === 0) {
+    resultEl.textContent = 'Select at least one portal to grant access to.';
+    resultEl.className   = 'result err';
+    return;
+  }
 
   btn.disabled    = true;
-  btn.textContent = 'Granting access…';
+  btn.textContent = 'Sending…';
 
   try {
     const res  = await fetch(INVITE_FN, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ token: adminToken, email, plan_type: planType }),
+      body:    JSON.stringify({ token: adminToken, email, plan_type: planType, portals }),
     });
     const data = await res.json();
 
@@ -333,30 +455,29 @@ async function grantAccess() {
       return;
     }
 
-    const label = planType === 'permanent' ? 'permanent access'
-                : planType === 'trial_30'  ? '30-day trial'
-                :                            '14-day trial';
+    const portalLabels = portals.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(', ');
+    const planLabel    = planType === 'permanent' ? 'permanent access'
+                       : planType === 'trial_30'  ? '30-day trial'
+                       :                            '14-day trial';
 
-    if (data.userExists) {
-      resultEl.textContent = `✓ ${email} upgraded to ${label}.${data.emailSent ? ' Notification email sent.' : ''}`;
-    } else {
-      resultEl.textContent = `✓ Invite created for ${email} (${label}).${data.emailSent ? ' Setup email sent.' : ' Copy the link below to share manually.'}`;
-    }
+    resultEl.textContent = data.userExists
+      ? `✓ ${email} upgraded to ${planLabel} — Portals: ${portalLabels}.${data.emailSent ? ' Notification sent.' : ''}`
+      : `✓ Invite sent to ${email} — ${planLabel} — Portals: ${portalLabels}.${data.emailSent ? '' : ' Copy the link below.'}`;
     resultEl.className = 'result ok';
 
     if (data.setupLink) {
       document.getElementById('g-link-code').textContent = data.setupLink;
       linkBox.classList.add('show');
     }
-
     document.getElementById('g-email').value = '';
-
-  } catch (err) {
+    // Refresh user list if it was loaded
+    if (allUsers.length) loadUsers();
+  } catch(err) {
     resultEl.textContent = 'Network error — please try again.';
     resultEl.className   = 'result err';
   } finally {
     btn.disabled    = false;
-    btn.textContent = 'Grant Access →';
+    btn.textContent = 'Send Invite →';
   }
 }
 
@@ -366,6 +487,108 @@ function copyLink(el) {
     el.textContent = '✓ Copied to clipboard!';
     setTimeout(() => { el.textContent = orig; }, 1800);
   });
+}
+
+// ── Manage Users ──────────────────────────────────────────────────────────────
+async function loadUsers() {
+  const btn = document.getElementById('mu-load-btn');
+  btn.disabled    = true;
+  btn.textContent = 'Loading…';
+
+  try {
+    const res  = await fetch(MANAGE_FN, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ token: adminToken, action: 'list_users' }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      showMuResult('Failed to load users: ' + (data.error || res.status), 'err');
+      return;
+    }
+    allUsers = data.users || [];
+    renderUsers(allUsers);
+    document.getElementById('mu-count').textContent = `${allUsers.length} user${allUsers.length !== 1 ? 's' : ''}`;
+  } catch(e) {
+    showMuResult('Network error loading users.', 'err');
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = 'Refresh';
+  }
+}
+
+function filterUsers() {
+  const q = (document.getElementById('mu-search').value || '').toLowerCase();
+  const filtered = q ? allUsers.filter(u => u.email.toLowerCase().includes(q)) : allUsers;
+  renderUsers(filtered);
+  document.getElementById('mu-count').textContent = `${filtered.length} of ${allUsers.length}`;
+}
+
+function renderUsers(users) {
+  const tbody = document.getElementById('mu-tbody');
+  const wrap  = document.getElementById('mu-table-wrap');
+  const empty = document.getElementById('mu-empty');
+
+  if (!users.length) {
+    wrap.style.display  = 'none';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+  wrap.style.display  = 'block';
+
+  tbody.innerHTML = users.map(u => {
+    const plan    = u.plan || 'pending';
+    const chip    = `<span class="plan-chip plan-${plan}">${plan}</span>`;
+    const trial   = u.trial_ends_at ? new Date(u.trial_ends_at).toLocaleDateString() : '—';
+    const joined  = u.created_at   ? new Date(u.created_at).toLocaleDateString()    : '—';
+    const prequals = u.prequals_this_month ?? '—';
+
+    const canSuspend   = plan !== 'suspended'  && plan !== 'terminated';
+    const canTerminate = plan !== 'terminated';
+    const canReinstate = plan === 'suspended'  || plan === 'terminated';
+
+    return `<tr>
+      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis">${u.email}</td>
+      <td>${chip}</td>
+      <td>${trial}</td>
+      <td>${prequals}</td>
+      <td>${joined}</td>
+      <td style="display:flex;gap:5px;flex-wrap:wrap">
+        ${canSuspend   ? `<button class="btn-action btn-suspend"   onclick="manageUser('${u.email}','suspend')">Suspend</button>`   : ''}
+        ${canTerminate ? `<button class="btn-action btn-terminate" onclick="manageUser('${u.email}','terminate')">Terminate</button>` : ''}
+        ${canReinstate ? `<button class="btn-action btn-reinstate" onclick="manageUser('${u.email}','reinstate')">Reinstate</button>` : ''}
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function manageUser(email, action) {
+  const label = action.charAt(0).toUpperCase() + action.slice(1);
+  if (!confirm(`${label} access for ${email}?`)) return;
+
+  try {
+    const res  = await fetch(MANAGE_FN, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ token: adminToken, action, email }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.ok) {
+      showMuResult('Error: ' + (data.error || res.status), 'err');
+      return;
+    }
+    showMuResult(`✓ ${email} — ${label}d successfully.`, 'ok');
+    loadUsers(); // refresh list
+  } catch(e) {
+    showMuResult('Network error.', 'err');
+  }
+}
+
+function showMuResult(msg, type) {
+  const el = document.getElementById('mu-result');
+  el.textContent = msg;
+  el.className   = 'result ' + type;
 }
 </script>
 </body>

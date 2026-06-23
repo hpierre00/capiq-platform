@@ -5,6 +5,9 @@
 [functions."check-trial-expiry"]
   schedule = "0 10 * * *"
 
+[functions."site-monitor"]
+  schedule = "0 * * * *"
+
 [[redirects]]
   from = "/checkout"
   to = "/checkout.html"

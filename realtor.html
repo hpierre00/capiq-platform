@@ -830,14 +830,14 @@ async function toggleVoiceInput() {
     }
     input.value = base.trim();
     input.style.borderColor = 'var(--teal)';
-    // 4-second silence = auto-submit
+    // 9-second silence = auto-submit (generous for real estate details)
     if (input.value.trim()) {
       silenceTimer = setTimeout(() => {
         voiceRecognition.stop();
         isRecording = false;
         showToast('🎤 Auto-submitting after silence…', 'success');
         setTimeout(() => sendPrequal(), 300);
-      }, 4000);
+      }, 9000);
     }
   };
   voiceRecognition.onend = () => {
@@ -1078,11 +1078,89 @@ let voiceAudioCtx = null;
 
 function autoRestartMic() {
   if (!voiceModeEnabled) return;
+  // Stop any existing recognition cleanly before restarting
+  if (voiceRecognition) { try { voiceRecognition.abort(); } catch(e){} voiceRecognition = null; }
+  isRecording = false;
   setTimeout(() => {
     if (!voiceModeEnabled) return;
     showToast('🎤 Your turn — speak now', 'success');
-    toggleVoiceInput();
-  }, 600);
+    startVoiceInput();
+  }, 800);
+}
+
+// Direct-start: always opens a fresh recognition session (no toggle state)
+async function startVoiceInput() {
+  if (isRecording) return; // already recording
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream.getTracks().forEach(t => t.stop());
+  } catch(e) { return; }
+
+  const btn   = document.getElementById('prequal-voice-btn');
+  const input = document.getElementById('prequal-input');
+
+  voiceRecognition = new SR();
+  voiceRecognition.continuous    = true;
+  voiceRecognition.interimResults = false;
+  voiceRecognition.lang = 'en-US';
+  voiceRecognition.maxAlternatives = 1;
+
+  const existingText = input.value.trim() ? input.value.trimEnd() + ' ' : '';
+  let base = existingText;
+
+  voiceRecognition.onstart = () => {
+    isRecording = true;
+    if (!document.getElementById('pulse-style')) {
+      const s = document.createElement('style'); s.id = 'pulse-style';
+      s.textContent = '@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.3)}}';
+      document.head.appendChild(s);
+    }
+    if (btn) {
+      btn.innerHTML = '<span style="display:inline-block;width:10px;height:10px;background:#ef4444;border-radius:50%;animation:pulse 1s infinite"></span>';
+      btn.style.background   = 'rgba(239,68,68,0.12)';
+      btn.style.borderColor  = 'rgba(239,68,68,0.35)';
+      btn.title = 'Click to stop';
+    }
+  };
+
+  const AUTO_SUBMIT_TRIGGERS_2 = ['submit','send it','go ahead','run it','done','that\'s all','that is all','go','let\'s go','please submit','analyze this','run analysis'];
+  let silenceTimer2 = null;
+  voiceRecognition.onresult = (ev) => {
+    if (silenceTimer2) { clearTimeout(silenceTimer2); silenceTimer2 = null; }
+    for (let i = ev.resultIndex; i < ev.results.length; i++) {
+      if (ev.results[i].isFinal) {
+        const t = ev.results[i][0].transcript.trim();
+        if (AUTO_SUBMIT_TRIGGERS_2.some(trigger => t.toLowerCase().includes(trigger))) {
+          voiceRecognition.stop(); isRecording = false;
+          if (input.value.trim()) setTimeout(() => sendPrequal(), 300);
+          return;
+        }
+        base += t + ' ';
+      }
+    }
+    if (input) { input.value = base.trim(); input.style.borderColor = 'var(--teal)'; }
+    if (input?.value.trim()) {
+      silenceTimer2 = setTimeout(() => {
+        voiceRecognition.stop(); isRecording = false;
+        showToast('🎤 Auto-submitting after silence…', 'success');
+        setTimeout(() => sendPrequal(), 300);
+      }, 9000);
+    }
+  };
+  voiceRecognition.onend = () => {
+    if (silenceTimer2) { clearTimeout(silenceTimer2); silenceTimer2 = null; }
+    isRecording = false;
+    if (btn) { btn.innerHTML = '🎤'; btn.style.background = 'var(--bg-3)'; btn.style.borderColor = 'var(--border)'; btn.style.color = 'var(--text-4)'; }
+    if (input) input.style.borderColor = 'var(--border)';
+  };
+  voiceRecognition.onerror = (ev) => {
+    isRecording = false;
+    if (btn) { btn.innerHTML = '🎤'; btn.style.background = 'var(--bg-3)'; btn.style.borderColor = 'var(--border)'; }
+    if (ev.error === 'aborted' || ev.error === 'no-speech') return;
+  };
+  try { voiceRecognition.start(); } catch(e) {}
 }
 
 function enableVoiceMode() {
@@ -1217,20 +1295,48 @@ async function speakText(text) {
 function browserSpeak(text) {
   if (!window.speechSynthesis) return;
   window.speechSynthesis.cancel();
-  const utt = new SpeechSynthesisUtterance(text.slice(0, 2000));
-  utt.rate = 1.05;
-  utt.pitch = 1.0;
-  utt.volume = 1.0;
-  // Prefer a natural-sounding US English voice
+
+  function doSpeak(voices) {
+    // Chrome bug: synthesis dies silently after ~15s — split into sentences
+    const sentences = text.slice(0, 3000).match(/[^.!?]+[.!?]+/g) || [text.slice(0, 3000)];
+    let idx = 0;
+
+    function speakNext() {
+      if (idx >= sentences.length) { currentAudio = null; autoRestartMic(); return; }
+      const utt = new SpeechSynthesisUtterance(sentences[idx++].trim());
+      utt.rate   = 1.05;
+      utt.pitch  = 1.0;
+      utt.volume = 1.0;
+      const preferred = voices.find(v => v.name.includes('Samantha') && v.lang.startsWith('en'))
+                     || voices.find(v => v.name.includes('Google') && v.lang === 'en-US')
+                     || voices.find(v => v.name.includes('Microsoft Aria') && v.lang === 'en-US')
+                     || voices.find(v => v.lang === 'en-US')
+                     || voices[0];
+      if (preferred) utt.voice = preferred;
+      utt.onend   = speakNext;
+      utt.onerror = (e) => { if (e.error !== 'interrupted') speakNext(); };
+      window.speechSynthesis.speak(utt);
+    }
+    speakNext();
+  }
+
   const voices = window.speechSynthesis.getVoices();
-  const preferred = voices.find(v => v.name.includes('Samantha') && v.lang.startsWith('en'))
-                 || voices.find(v => v.name.includes('Google') && v.lang === 'en-US')
-                 || voices.find(v => v.name.includes('Microsoft Aria') && v.lang === 'en-US')
-                 || voices.find(v => v.lang === 'en-US')
-                 || voices[0];
-  if (preferred) utt.voice = preferred;
-  utt.onend = () => { currentAudio = null; autoRestartMic(); };
-  window.speechSynthesis.speak(utt);
+  if (voices.length > 0) {
+    doSpeak(voices);
+  } else {
+    // Voices not loaded yet — wait for the event (happens on first page load in Chrome)
+    window.speechSynthesis.onvoiceschanged = () => {
+      window.speechSynthesis.onvoiceschanged = null;
+      doSpeak(window.speechSynthesis.getVoices());
+    };
+    // Safety: if event never fires, try after 1s anyway
+    setTimeout(() => {
+      if (window.speechSynthesis.getVoices().length > 0) {
+        window.speechSynthesis.onvoiceschanged = null;
+        doSpeak(window.speechSynthesis.getVoices());
+      }
+    }, 1000);
+  }
 }
 
 function saveVoicePerms() {

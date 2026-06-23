@@ -44,11 +44,18 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON' }) };
   }
 
-  const { token, email, plan_type = 'permanent' } = body;
+  const { token, email, plan_type = 'permanent', portals = ['realtor'] } = body;
 
   if (!token || !email) {
     return { statusCode: 400, body: JSON.stringify({ error: 'token and email are required' }) };
   }
+
+  // Validate portals
+  const validPortals = ['realtor', 'lender', 'investor'];
+  const selectedPortals = Array.isArray(portals)
+    ? portals.filter(p => validPortals.includes(p))
+    : ['realtor'];
+  if (selectedPortals.length === 0) selectedPortals.push('realtor');
 
   // ── 1. Verify caller is an admin ─────────────────────────────────────────────
   const authRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
@@ -158,9 +165,21 @@ exports.handler = async (event) => {
   }
 
   // ── 5. Send the email ─────────────────────────────────────────────────────────
-  const setupLink  = `${SITE_URL}/realtor?invite_token=${inviteToken}`;
-  const planLabel  = plan === 'active' ? 'full' : (plan_type === 'trial_30' ? '30-day free' : '14-day free');
-  let   emailSent  = false;
+  // Build per-portal setup links
+  const portalMeta = {
+    realtor:  { label: '🏠 Realtor Portal', path: '/realtor', desc: 'AI prequal, lender match, voice mode' },
+    lender:   { label: '🏦 Lender Portal',   path: '/lender',   desc: 'Loan pipeline, QM analysis, pricing' },
+    investor: { label: '📈 Investor Portal', path: '/investor', desc: 'Deal analysis, DSCR, cap rate tools' },
+  };
+  const primaryPortal  = selectedPortals[0];
+  const setupLink      = `${SITE_URL}${portalMeta[primaryPortal].path}?invite_token=${inviteToken}`;
+  const planLabel      = plan === 'active' ? 'full' : (plan_type === 'trial_30' ? '30-day free' : '14-day free');
+  let   emailSent      = false;
+
+  const portalButtonsHtml = selectedPortals.map(p =>
+    `<a href="${SITE_URL}${portalMeta[p].path}" style="display:inline-block;margin:6px 8px 6px 0;background:#0f172a;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:600;font-size:13px">${portalMeta[p].label} →</a>`
+  ).join('');
+  const portalListText = selectedPortals.map(p => `${portalMeta[p].label} — ${portalMeta[p].desc}`).join('<br>');
 
   if (RESEND_API_KEY) {
     const subject = userExists
@@ -171,16 +190,18 @@ exports.handler = async (event) => {
       ? `
         <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#1a202c">
           <h2 style="margin-bottom:8px">Your Underlytix access is active</h2>
-          <p>Your account has been upgraded to <strong>${planLabel} access</strong> on the Underlytix Realtor Portal — run client prequalifications, calculate PITIA, and match buyers with lenders.</p>
-          <p><a href="${SITE_URL}/realtor" style="background:#00bfa5;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;display:inline-block;margin:16px 0">Open Realtor Portal →</a></p>
+          <p>Your account has been upgraded to <strong>${planLabel} access</strong> for the following portals:</p>
+          <p style="margin:12px 0;padding:12px 16px;background:#f8fafc;border-radius:6px;font-size:13px;color:#374151;line-height:1.8">${portalListText}</p>
+          <div style="margin:16px 0">${portalButtonsHtml}</div>
           <p style="color:#718096;font-size:13px">Sign in with your existing password. If you've forgotten it, use the "Forgot password?" link on the login page.</p>
         </div>`
       : `
         <div style="font-family:sans-serif;max-width:520px;margin:0 auto;color:#1a202c">
           <h2 style="margin-bottom:8px">You've been invited to Underlytix</h2>
-          <p>You have been granted <strong>${planLabel} access</strong> to the Underlytix Realtor Portal — run full client prequalifications, calculate PITIA, and match buyers with lenders in seconds.</p>
+          <p>You have been granted <strong>${planLabel} access</strong> to the following portals:</p>
+          <p style="margin:12px 0;padding:12px 16px;background:#f8fafc;border-radius:6px;font-size:13px;color:#374151;line-height:1.8">${portalListText}</p>
           <p><a href="${setupLink}" style="background:#00bfa5;color:#fff;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:600;display:inline-block;margin:16px 0">Set Your Password & Get Started →</a></p>
-          <p style="color:#718096;font-size:13px">This setup link expires in 72 hours.</p>
+          <p style="color:#718096;font-size:13px">This setup link expires in 72 hours. After setting your password, you can access all granted portals using the same login.</p>
         </div>`;
 
     const emailRes = await fetch('https://api.resend.com/emails', {
