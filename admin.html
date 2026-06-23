@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Underlytix Admin</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:'Inter',sans-serif;font-size:14px;background:#f8fafc;color:#0f172a}
+
+/* ── Nav ── */
+.nav{background:#0f172a;padding:0 32px;height:56px;display:flex;align-items:center;justify-content:space-between}
+.nav-brand{color:#fff;font-weight:700;font-size:15px;letter-spacing:-.01em;display:flex;align-items:center;gap:6px}
+.nav-brand em{color:#f6ad55;font-style:normal}
+.nav-badge{background:rgba(246,173,85,0.15);border:1px solid rgba(246,173,85,0.3);color:#f6ad55;font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;letter-spacing:.06em}
+.nav-right{display:flex;align-items:center;gap:12px}
+.nav-email{color:#64748b;font-size:12px}
+.nav-signout{background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.1);color:#94a3b8;padding:6px 14px;border-radius:6px;cursor:pointer;font-size:12px;font-family:inherit;transition:all .15s}
+.nav-signout:hover{background:rgba(255,255,255,0.14);color:#fff}
+
+/* ── Login ── */
+#login-screen{min-height:calc(100vh - 56px);display:flex;align-items:center;justify-content:center;padding:32px 16px}
+.login-card{background:#fff;border:1px solid #e2e8f0;border-radius:12px;padding:40px;width:100%;max-width:400px;box-shadow:0 4px 24px rgba(0,0,0,0.08)}
+.lc-logo{font-size:20px;font-weight:700;color:#0f172a;margin-bottom:4px}
+.lc-logo em{color:#f6ad55;font-style:normal}
+.lc-sub{color:#64748b;font-size:13px;margin-bottom:28px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:11px;font-weight:600;color:#374151;margin-bottom:5px;letter-spacing:.04em;text-transform:uppercase}
+.input{width:100%;padding:10px 14px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;font-family:inherit;background:#fff;color:#0f172a;outline:none;transition:border-color .15s,box-shadow .15s}
+.input:focus{border-color:#0e7490;box-shadow:0 0 0 3px rgba(14,116,144,0.1)}
+.btn-signin{width:100%;padding:11px;background:#0f172a;color:#fff;border:none;border-radius:8px;font-size:14px;font-weight:600;font-family:inherit;cursor:pointer;transition:background .15s;margin-top:4px}
+.btn-signin:hover{background:#1e293b}
+.btn-signin:disabled{opacity:.5;cursor:default}
+.login-err{color:#dc2626;font-size:13px;margin-top:12px;padding:10px 12px;background:#fef2f2;border:1px solid #fecaca;border-radius:7px;display:none}
+.login-err.show{display:block}
+
+/* ── Dashboard ── */
+#admin-dashboard{display:none}
+.dash-wrap{max-width:980px;margin:0 auto;padding:32px 24px}
+.dash-title{font-size:20px;font-weight:700;margin-bottom:4px}
+.dash-sub{color:#64748b;font-size:13px;margin-bottom:28px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:640px){.grid-2{grid-template-columns:1fr}}
+
+/* Panels */
+.panel{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:24px}
+.panel-head{margin-bottom:18px}
+.panel-title{font-size:14px;font-weight:700;color:#0f172a;margin-bottom:3px}
+.panel-sub{color:#64748b;font-size:12px}
+.field-sm{margin-bottom:12px}
+.field-sm label{display:block;font-size:11px;font-weight:600;color:#6b7280;margin-bottom:4px;letter-spacing:.04em;text-transform:uppercase}
+.select{width:100%;padding:9px 12px;border:1px solid #d1d5db;border-radius:7px;font-size:13px;font-family:inherit;background:#fff;color:#0f172a;cursor:pointer;outline:none;transition:border-color .15s}
+.select:focus{border-color:#0e7490}
+.btn-grant{width:100%;padding:10px 16px;background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff;border:none;border-radius:7px;font-size:13px;font-weight:700;font-family:inherit;cursor:pointer;margin-top:4px;transition:filter .15s}
+.btn-grant:hover{filter:brightness(1.08)}
+.btn-grant:disabled{opacity:.55;cursor:default;filter:none}
+
+.result{margin-top:12px;padding:10px 14px;border-radius:7px;font-size:13px;display:none;line-height:1.5}
+.result.ok{background:#f0fdf4;border:1px solid #bbf7d0;color:#166534;display:block}
+.result.err{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;display:block}
+
+.manual-link{background:#fffbeb;border:1px solid #fcd34d;border-radius:7px;padding:12px;margin-top:10px;display:none}
+.manual-link.show{display:block}
+.manual-link p{font-size:11px;color:#92400e;font-weight:600;margin-bottom:6px}
+.manual-link code{display:block;font-size:11px;color:#78350f;word-break:break-all;background:rgba(0,0,0,0.05);padding:7px 9px;border-radius:5px;cursor:pointer}
+
+/* Quick links */
+.links-list{display:flex;flex-direction:column;gap:10px}
+.quick-link{display:flex;align-items:center;gap:12px;padding:13px 14px;border:1px solid #e2e8f0;border-radius:8px;text-decoration:none;color:#0f172a;transition:border-color .15s,box-shadow .15s}
+.quick-link:hover{border-color:#94a3b8;box-shadow:0 2px 8px rgba(0,0,0,0.06)}
+.ql-icon{width:34px;height:34px;background:#f1f5f9;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.ql-info{flex:1;min-width:0}
+.ql-name{font-weight:600;font-size:13px}
+.ql-desc{font-size:11px;color:#64748b;margin-top:1px}
+.ql-arr{color:#cbd5e1;font-size:14px}
+
+/* Divider label */
+.divider{margin:28px 0 20px;padding-top:20px;border-top:1px solid #f1f5f9}
+.divider span{font-size:11px;font-weight:700;color:#94a3b8;letter-spacing:.06em;text-transform:uppercase}
+</style>
+</head>
+<body>
+
+<!-- Nav -->
+<nav class="nav">
+  <div class="nav-brand">Underlytix <em>Admin</em> <span class="nav-badge">INTERNAL</span></div>
+  <div class="nav-right" id="nav-auth-area" style="display:none">
+    <span class="nav-email" id="nav-email-label"></span>
+    <button class="nav-signout" onclick="adminLogout()">Sign out</button>
+  </div>
+</nav>
+
+<!-- Login Screen -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="lc-logo">Underlytix <em>Admin</em></div>
+    <div class="lc-sub">Restricted access — authorized personnel only</div>
+    <form onsubmit="doLogin(event)">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="l-email" class="input" placeholder="admin@example.com"
+               autocomplete="email" required>
+      </div>
+      <div class="field" style="margin-bottom:20px">
+        <label>Password</label>
+        <input type="password" id="l-pass" class="input" placeholder="••••••••"
+               autocomplete="current-password" required>
+      </div>
+      <button type="submit" class="btn-signin" id="l-btn">Sign In</button>
+    </form>
+    <div class="login-err" id="l-err"></div>
+  </div>
+</div>
+
+<!-- Admin Dashboard -->
+<div id="admin-dashboard">
+  <div class="dash-wrap">
+    <div class="dash-title">Admin Dashboard</div>
+    <div class="dash-sub">Manage user access and monitor platform operations</div>
+
+    <div class="grid-2">
+
+      <!-- ── Grant Access ── -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Grant Portal Access</div>
+          <div class="panel-sub">Activate a new user or upgrade an existing account</div>
+        </div>
+
+        <div class="field-sm">
+          <label>Recipient Email</label>
+          <input type="email" id="g-email" class="input" placeholder="realtor@brokerage.com"
+                 onkeydown="if(event.key==='Enter')grantAccess()">
+        </div>
+        <div class="field-sm">
+          <label>Access Level</label>
+          <select id="g-plan" class="select">
+            <option value="permanent">Permanent (free, no expiry)</option>
+            <option value="trial_30">30-day free trial</option>
+            <option value="trial_14">14-day free trial</option>
+          </select>
+        </div>
+        <button class="btn-grant" id="g-btn" onclick="grantAccess()">Grant Access →</button>
+        <div id="g-result" class="result"></div>
+        <div id="g-link-box" class="manual-link">
+          <p>📋 Email not sent — share this setup link manually:</p>
+          <code id="g-link-code" onclick="copyLink(this)" title="Click to copy">—</code>
+        </div>
+      </div>
+
+      <!-- ── Quick Links ── -->
+      <div class="panel">
+        <div class="panel-head">
+          <div class="panel-title">Quick Access</div>
+          <div class="panel-sub">Jump to key platform areas</div>
+        </div>
+        <div class="links-list">
+          <a href="/underlytix-dashboard.html" target="_blank" class="quick-link">
+            <div class="ql-icon">📊</div>
+            <div class="ql-info">
+              <div class="ql-name">Ops Dashboard</div>
+              <div class="ql-desc">Contacts, deal flow, platform stats</div>
+            </div>
+            <div class="ql-arr">→</div>
+          </a>
+          <a href="/realtor.html" target="_blank" class="quick-link">
+            <div class="ql-icon">🏠</div>
+            <div class="ql-info">
+              <div class="ql-name">Realtor Portal</div>
+              <div class="ql-desc">AI prequal, lender match, voice mode</div>
+            </div>
+            <div class="ql-arr">→</div>
+          </a>
+          <a href="https://app.netlify.com/projects/capiq-platform" target="_blank" class="quick-link">
+            <div class="ql-icon">⚙️</div>
+            <div class="ql-info">
+              <div class="ql-name">Netlify Console</div>
+              <div class="ql-desc">Deploys, functions, env vars</div>
+            </div>
+            <div class="ql-arr">→</div>
+          </a>
+          <a href="https://supabase.com/dashboard/project/mxyepucitjzleaziizkr" target="_blank" class="quick-link">
+            <div class="ql-icon">🗄️</div>
+            <div class="ql-info">
+              <div class="ql-name">Supabase</div>
+              <div class="ql-desc">Database, auth, realtor_users table</div>
+            </div>
+            <div class="ql-arr">→</div>
+          </a>
+          <a href="https://dashboard.stripe.com" target="_blank" class="quick-link">
+            <div class="ql-icon">💳</div>
+            <div class="ql-info">
+              <div class="ql-name">Stripe</div>
+              <div class="ql-desc">Payments, subscriptions, webhooks</div>
+            </div>
+            <div class="ql-arr">→</div>
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL  = 'https://mxyepucitjzleaziizkr.supabase.co';
+const ANON_KEY      = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eWVwdWNpdGp6bGVhemlpemtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0Njk1ODIsImV4cCI6MjA5MDA0NTU4Mn0.oQr_hO5fVkOhGcJ2u3mqQDJIfw9cAdXwfVAAXOf96q4';
+const ADMIN_EMAILS  = ['hpierre00@gmail.com'];
+const INVITE_FN     = '/.netlify/functions/admin-invite';
+
+let adminToken = null;
+let adminEmail = null;
+
+// ── Restore session ───────────────────────────────────────────────────────────
+(function restoreSession() {
+  try {
+    const s = sessionStorage.getItem('_admin_sess');
+    if (!s) return;
+    const { token, email } = JSON.parse(s);
+    if (ADMIN_EMAILS.includes((email || '').toLowerCase())) {
+      adminToken = token;
+      adminEmail = email;
+      showDashboard();
+    }
+  } catch (e) {}
+})();
+
+// ── Login ─────────────────────────────────────────────────────────────────────
+async function doLogin(ev) {
+  ev.preventDefault();
+  const email = document.getElementById('l-email').value.trim().toLowerCase();
+  const pass  = document.getElementById('l-pass').value;
+  const btn   = document.getElementById('l-btn');
+  const errEl = document.getElementById('l-err');
+
+  errEl.classList.remove('show');
+
+  if (!ADMIN_EMAILS.includes(email)) {
+    showLoginErr('This email address does not have admin access.');
+    return;
+  }
+
+  btn.disabled    = true;
+  btn.textContent = 'Signing in…';
+
+  try {
+    const res  = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', apikey: ANON_KEY },
+      body:    JSON.stringify({ email, password: pass }),
+    });
+    const data = await res.json();
+
+    if (!res.ok) {
+      showLoginErr(data.error_description || data.msg || 'Incorrect email or password.');
+      return;
+    }
+
+    adminToken = data.access_token;
+    adminEmail = email;
+    sessionStorage.setItem('_admin_sess', JSON.stringify({ token: adminToken, email }));
+    showDashboard();
+
+  } catch (err) {
+    showLoginErr('Network error — check your connection and try again.');
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = 'Sign In';
+  }
+}
+
+function showLoginErr(msg) {
+  const el = document.getElementById('l-err');
+  el.textContent = msg;
+  el.classList.add('show');
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+function showDashboard() {
+  document.getElementById('login-screen').style.display    = 'none';
+  document.getElementById('admin-dashboard').style.display = 'block';
+  document.getElementById('nav-auth-area').style.display   = 'flex';
+  document.getElementById('nav-email-label').textContent   = adminEmail;
+}
+
+function adminLogout() {
+  sessionStorage.removeItem('_admin_sess');
+  adminToken = null;
+  adminEmail = null;
+  document.getElementById('login-screen').style.display    = 'flex';
+  document.getElementById('admin-dashboard').style.display = 'none';
+  document.getElementById('nav-auth-area').style.display   = 'none';
+  document.getElementById('l-email').value    = '';
+  document.getElementById('l-pass').value     = '';
+  document.getElementById('l-err').classList.remove('show');
+}
+
+// ── Grant Access ──────────────────────────────────────────────────────────────
+async function grantAccess() {
+  const email    = (document.getElementById('g-email').value || '').trim();
+  const planType = document.getElementById('g-plan').value;
+  const btn      = document.getElementById('g-btn');
+  const resultEl = document.getElementById('g-result');
+  const linkBox  = document.getElementById('g-link-box');
+
+  resultEl.className = 'result';
+  linkBox.classList.remove('show');
+
+  if (!email || !email.includes('@')) {
+    resultEl.textContent = 'Please enter a valid email address.';
+    resultEl.className   = 'result err';
+    return;
+  }
+
+  btn.disabled    = true;
+  btn.textContent = 'Granting access…';
+
+  try {
+    const res  = await fetch(INVITE_FN, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ token: adminToken, email, plan_type: planType }),
+    });
+    const data = await res.json();
+
+    if (!res.ok || !data.ok) {
+      resultEl.textContent = data.error || 'Something went wrong. Please try again.';
+      resultEl.className   = 'result err';
+      return;
+    }
+
+    const label = planType === 'permanent' ? 'permanent access'
+                : planType === 'trial_30'  ? '30-day trial'
+                :                            '14-day trial';
+
+    if (data.userExists) {
+      resultEl.textContent = `✓ ${email} upgraded to ${label}.${data.emailSent ? ' Notification email sent.' : ''}`;
+    } else {
+      resultEl.textContent = `✓ Invite created for ${email} (${label}).${data.emailSent ? ' Setup email sent.' : ' Copy the link below to share manually.'}`;
+    }
+    resultEl.className = 'result ok';
+
+    if (data.setupLink) {
+      document.getElementById('g-link-code').textContent = data.setupLink;
+      linkBox.classList.add('show');
+    }
+
+    document.getElementById('g-email').value = '';
+
+  } catch (err) {
+    resultEl.textContent = 'Network error — please try again.';
+    resultEl.className   = 'result err';
+  } finally {
+    btn.disabled    = false;
+    btn.textContent = 'Grant Access →';
+  }
+}
+
+function copyLink(el) {
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    const orig = el.textContent;
+    el.textContent = '✓ Copied to clipboard!';
+    setTimeout(() => { el.textContent = orig; }, 1800);
+  });
+}
+</script>
+</body>
+</html>

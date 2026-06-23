@@ -230,6 +230,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   <!-- DASHBOARD VIEW -->
   <div id="rs-dashboard-view" style="display:none">
+    <!-- Admin panel injected here by showAdminPanel() if user is admin -->
     <div style="max-width:900px;width:100%;margin:0 auto;padding:32px 24px">
       <div class="stats-grid">
         <div class="stat-card"><div class="stat-top"><span class="stat-label">Prequals This Month</span></div><div class="stat-value teal" id="rs-prequal-count">0</div><div class="stat-sub">Client assessments</div></div>
@@ -303,8 +304,16 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <script src="/portal-common.js"></script>
 <script>
-const REALTOR_AUTH_FN = 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-realtor-auth-v5';
+const REALTOR_AUTH_FN   = 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-realtor-auth-v5';
 const REALTOR_PREQUAL_FN = '/.netlify/functions/realtor-prequal';
+const ADMIN_INVITE_FN   = '/.netlify/functions/admin-invite';
+const ADMIN_ACTIVATE_FN = '/.netlify/functions/realtor-activate';
+
+// ── Admin access ──────────────────────────────────────────────────────────────
+const ADMIN_EMAILS = ['hpierre00@gmail.com'];
+function isAdminUser(email) {
+  return ADMIN_EMAILS.includes((email || '').toLowerCase().trim());
+}
 
 let realtorSession = null;
 let prequaMessages = [];
@@ -397,21 +406,67 @@ async function realtorSignup() {
 
 function onRealtorAuth(token, realtor, refreshToken) {
   setRealtorSession(token, realtor, refreshToken);
+
+  const admin = isAdminUser(realtor.email);
+  const plan  = realtor.plan || 'trial';
+
   document.getElementById('rs-user-badge').style.display = 'inline';
   document.getElementById('rs-user-badge').textContent = realtor.name || realtor.email;
   document.getElementById('rs-logout-btn').style.display = 'block';
-  document.getElementById('rs-billing-btn').style.display = 'block';
   document.getElementById('rs-prequal-count').textContent = realtor.prequals_this_month || 0;
-  const plan = realtor.plan || 'trial';
-  document.getElementById('rs-plan-badge').textContent = plan === 'active' ? 'Pro' : 'Trial';
-  const trialEnd = realtor.trial_ends_at ? new Date(realtor.trial_ends_at).toLocaleDateString() : '';
-  document.getElementById('rs-plan-sub').textContent = plan === 'trial' ? `Ends ${trialEnd}` : '$49/month';
-  if (plan === 'trial' && realtor.trial_ends_at && new Date() > new Date(realtor.trial_ends_at)) {
-    showTrialExpiredBanner();
+
+  if (admin) {
+    // Admin: no billing button, special badge, show admin panel
+    document.getElementById('rs-billing-btn').style.display = 'none';
+    document.getElementById('rs-plan-badge').textContent = 'Admin';
+    document.getElementById('rs-plan-badge').style.color = '#f6ad55';
+    document.getElementById('rs-plan-sub').textContent = 'Full access · No limits';
+    showAdminPanel(realtor);
+  } else {
+    document.getElementById('rs-billing-btn').style.display = 'block';
+    document.getElementById('rs-plan-badge').textContent = plan === 'active' ? 'Pro' : 'Trial';
+    document.getElementById('rs-plan-badge').style.color = '';
+    const trialEnd = realtor.trial_ends_at ? new Date(realtor.trial_ends_at).toLocaleDateString() : '';
+    document.getElementById('rs-plan-sub').textContent = plan === 'trial' ? `Ends ${trialEnd}` : '$49/month';
+    if (plan === 'trial' && realtor.trial_ends_at && new Date() > new Date(realtor.trial_ends_at)) {
+      showTrialExpiredBanner();
+    }
   }
+
   showDashboardView();
   loadRealtorHistory();
-  checkShowWelcome(realtor);
+  if (!admin) checkShowWelcome(realtor);
+}
+
+function showAdminPanel(realtor) {
+  // Remove old panel if it exists (e.g. on session refresh)
+  const old = document.getElementById('admin-panel');
+  if (old) old.remove();
+
+  const panel = document.createElement('div');
+  panel.id = 'admin-panel';
+  panel.style.cssText = 'max-width:900px;width:100%;margin:0 auto 0;padding:0 24px 20px';
+  panel.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:11px 16px;
+                background:linear-gradient(135deg,rgba(246,173,85,0.08),transparent);
+                border:1px solid rgba(246,173,85,0.2);border-radius:9px;flex-wrap:wrap;gap:10px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:14px">⚡</span>
+        <span style="font-size:13px;font-weight:600;color:#f6ad55">Admin Mode</span>
+        <span style="font-size:12px;color:var(--text-4)">— grant access, manage users, and more</span>
+      </div>
+      <a href="/admin.html" target="_blank"
+         style="background:rgba(246,173,85,0.12);border:1px solid rgba(246,173,85,0.3);color:#f6ad55;
+                padding:7px 16px;border-radius:7px;font-size:12px;font-weight:700;text-decoration:none;
+                display:inline-flex;align-items:center;gap:5px;white-space:nowrap">
+        Admin Dashboard →
+      </a>
+    </div>
+  `;
+
+  // Insert the admin banner above the stats grid, inside the dashboard view
+  const dashView = document.getElementById('rs-dashboard-view');
+  dashView.insertBefore(panel, dashView.firstElementChild);
 }
 
 function checkShowWelcome(realtor) {
@@ -443,28 +498,21 @@ function realtorLogout() {
 
 async function realtorCheckout() {
   const sess = getRealtorSession();
-  if (!sess?.token) {
-    // No session — redirect to checkout page
-    window.location.href = '/checkout?plan=realtor';
-    return;
-  }
+  if (!sess?.token) return;
   const btn = document.getElementById('rs-billing-btn');
   const plan = sess.realtor?.plan;
   if (btn) { btn.disabled = true; btn.textContent = plan === 'active' ? 'Loading...' : 'Redirecting...'; }
   try {
     const action = plan === 'active' ? 'create_portal' : 'create_checkout';
-    const res = await fetch('/.netlify/functions/realtor-checkout', {
+    const res = await fetch(REALTOR_PREQUAL_FN, {
       method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ action, token: sess.token,
-        successUrl: window.location.origin + '/realtor?realtor_upgraded=true',
-        cancelUrl: window.location.origin + '/realtor',
-        returnUrl: window.location.origin + '/realtor' })
+      body: JSON.stringify({ action, token: sess.token, successUrl: window.location.origin + '/realtor?realtor_upgraded=true', cancelUrl: window.location.origin + '/realtor' })
     });
     const data = await res.json();
     const url = data.checkoutUrl || data.portalUrl;
     if (url) window.location.href = url;
     else showToast(data.error || 'Billing unavailable', 'error');
-  } catch(e) { showToast('Connection error — redirecting...', 'error'); setTimeout(()=>{ window.location.href='/checkout?plan=realtor'; },1500); }
+  } catch(e) { showToast('Connection error', 'error'); }
   finally { if (btn) { btn.disabled = false; btn.textContent = 'Manage Billing'; } }
 }
 
@@ -930,6 +978,74 @@ if (window.location.search.includes('realtor_upgraded=true')) {
   setTimeout(() => showToast('Realtor Pro activated! Unlimited prequalifications unlocked.', 'success'), 800);
 }
 
+// ── Invite-token handler: show "Set your password" modal ─────────────────────
+(function handleInviteToken() {
+  const params      = new URLSearchParams(window.location.search);
+  const inviteToken = params.get('invite_token');
+  const inviteEmail = params.get('email') || '';
+  if (!inviteToken) return;
+  // Clean the URL so a page refresh doesn't re-trigger
+  window.history.replaceState({}, '', window.location.pathname);
+  // Pre-fill and open the set-password modal once the page is ready
+  document.addEventListener('DOMContentLoaded', () => {
+    const modal = document.getElementById('realtor-set-password-modal');
+    if (!modal) return;
+    document.getElementById('sp-invite-token').value  = inviteToken;
+    document.getElementById('sp-email').value         = inviteEmail;
+    if (inviteEmail) document.getElementById('sp-email').readOnly = true;
+    modal.classList.add('show');
+  });
+})();
+
+async function doActivateAccount() {
+  const token    = document.getElementById('sp-invite-token').value;
+  const email    = document.getElementById('sp-email').value.trim();
+  const name     = document.getElementById('sp-name').value.trim();
+  const password = document.getElementById('sp-password').value;
+  const confirm  = document.getElementById('sp-password-confirm').value;
+  const errEl    = document.getElementById('sp-error');
+  const btn      = document.getElementById('sp-submit-btn');
+
+  errEl.style.display = 'none';
+
+  if (!email)              { errEl.textContent = 'Email is required.'; errEl.style.display = 'block'; return; }
+  if (!password)           { errEl.textContent = 'Password is required.'; errEl.style.display = 'block'; return; }
+  if (password.length < 8) { errEl.textContent = 'Password must be at least 8 characters.'; errEl.style.display = 'block'; return; }
+  if (password !== confirm) { errEl.textContent = 'Passwords do not match.'; errEl.style.display = 'block'; return; }
+
+  btn.disabled = true; btn.textContent = 'Setting up account…';
+  try {
+    const res  = await fetch(ADMIN_ACTIVATE_FN, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ invite_token: token, email, password, name }),
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+      document.getElementById('realtor-set-password-modal').classList.remove('show');
+      if (data.autoLogin && data.token) {
+        onRealtorAuth(data.token, data.realtor, data.refresh_token);
+        showToast('Welcome to Underlytix! Your account is ready.', 'success');
+      } else {
+        // Auto-login failed — pre-fill the login form
+        const loginEmail = document.getElementById('rs-login-email');
+        if (loginEmail) loginEmail.value = email;
+        showLoginView();
+        showToast('Account created! Sign in with your new password.', 'success');
+      }
+    } else {
+      errEl.textContent = data.error || 'Something went wrong. Please contact support.';
+      errEl.style.display = 'block';
+    }
+  } catch(e) {
+    errEl.textContent = 'Connection error. Please try again.';
+    errEl.style.display = 'block';
+  } finally {
+    btn.disabled = false; btn.textContent = 'Create Account';
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   const sess = getRealtorSession();
   if (sess?.realtor) {
@@ -1052,6 +1168,11 @@ async function speakText(text) {
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
+      // ElevenLabs not configured — fall back to browser speech synthesis
+      if (res.status === 503 || err.error === 'TTS not configured') {
+        browserSpeak(text);
+        return;
+      }
       showToast('Voice error: ' + (err.error || res.status), 'error');
       return;
     }
@@ -1083,9 +1204,33 @@ async function speakText(text) {
     currentAudio.onended = () => { URL.revokeObjectURL(url); currentAudio = null; autoRestartMic(); };
     await currentAudio.play();
   } catch(e) {
-    showToast('Voice unavailable: ' + e.message, 'error');
-    // Do NOT disable voice mode — let user retry
+    // Network error — try browser speech as fallback before showing toast
+    if (window.speechSynthesis) {
+      browserSpeak(text);
+    } else {
+      showToast('Voice unavailable: ' + e.message, 'error');
+    }
   }
+}
+
+// Browser-native TTS fallback (no API key required)
+function browserSpeak(text) {
+  if (!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const utt = new SpeechSynthesisUtterance(text.slice(0, 2000));
+  utt.rate = 1.05;
+  utt.pitch = 1.0;
+  utt.volume = 1.0;
+  // Prefer a natural-sounding US English voice
+  const voices = window.speechSynthesis.getVoices();
+  const preferred = voices.find(v => v.name.includes('Samantha') && v.lang.startsWith('en'))
+                 || voices.find(v => v.name.includes('Google') && v.lang === 'en-US')
+                 || voices.find(v => v.name.includes('Microsoft Aria') && v.lang === 'en-US')
+                 || voices.find(v => v.lang === 'en-US')
+                 || voices[0];
+  if (preferred) utt.voice = preferred;
+  utt.onend = () => { currentAudio = null; autoRestartMic(); };
+  window.speechSynthesis.speak(utt);
 }
 
 function saveVoicePerms() {
@@ -1103,12 +1248,71 @@ function getVoicePref(key) {
   return localStorage.getItem(key + realtorId) === '1';
 }
 
+// ── Admin: grant access ───────────────────────────────────────────────────────
+async function adminGrantAccess() {
+  const emailInput  = document.getElementById('admin-invite-email');
+  const planSelect  = document.getElementById('admin-invite-plan');
+  const btn         = document.getElementById('admin-invite-btn');
+  const resultEl    = document.getElementById('admin-invite-result');
+  const targetEmail = (emailInput?.value || '').trim();
+
+  if (!targetEmail) {
+    emailInput?.focus();
+    return;
+  }
+
+  const sess = getRealtorSession();
+  if (!sess?.token) { showToast('Session expired — please sign in again', 'error'); return; }
+
+  btn.disabled = true;
+  btn.textContent = 'Granting…';
+  resultEl.style.display = 'none';
+
+  try {
+    const res  = await fetch(ADMIN_INVITE_FN, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({
+        token:     sess.token,
+        email:     targetEmail,
+        plan_type: planSelect?.value || 'permanent',
+      }),
+    });
+    const data = await res.json();
+
+    if (data.ok) {
+      const wasExisting = data.userExists;
+      const planLabel   = data.plan === 'active' ? 'permanent free access' : 'free trial access';
+      let msg = wasExisting
+        ? `✅ <strong>${targetEmail}</strong> already had an account — plan upgraded to ${planLabel}.`
+        : `✅ Invite sent to <strong>${targetEmail}</strong> (${planLabel}).`;
+
+      if (!data.emailSent && data.setupLink) {
+        msg += `<br><span style="font-size:12px;color:var(--text-3)">No email service configured — share this link manually:<br>
+          <a href="${data.setupLink}" target="_blank" style="color:var(--teal);word-break:break-all">${data.setupLink}</a></span>`;
+      }
+      resultEl.style.cssText = 'display:block;margin-top:12px;font-size:13px;padding:10px 14px;border-radius:7px;background:rgba(0,191,165,0.08);border:1px solid rgba(0,191,165,0.2);color:var(--teal)';
+      resultEl.innerHTML = msg;
+      emailInput.value = '';
+    } else {
+      resultEl.style.cssText = 'display:block;margin-top:12px;font-size:13px;padding:10px 14px;border-radius:7px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.15);color:#ef4444';
+      resultEl.textContent = data.error || 'Something went wrong. Try again.';
+    }
+  } catch(e) {
+    resultEl.style.cssText = 'display:block;margin-top:12px;font-size:13px;padding:10px 14px;border-radius:7px;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.15);color:#ef4444';
+    resultEl.textContent = 'Connection error. Please try again.';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Grant Access';
+  }
+}
+
 function showTrialExpiredBanner() {
   if (document.getElementById('trial-expired-banner')) return;
   const banner = document.createElement('div');
   banner.id = 'trial-expired-banner';
   banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#e53e3e;color:#fff;text-align:center;padding:12px 16px;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:12px';
-  banner.innerHTML = '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center"><span style="font-size:14px">⚡ Your 14-day free trial has ended — upgrade to keep running prequalifications.</span><button onclick="realtorCheckout()" style="background:white;color:#c53030;border:none;padding:7px 18px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">Upgrade to Pro — $49/mo →</button><a href="/checkout?plan=realtor" style="color:white;font-size:12px;text-decoration:underline;opacity:0.8">or go to checkout →</a></div>';
+  banner.innerHTML = '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center"><span style="font-size:14px">⚡ Your 14-day free trial has ended — upgrade to keep running prequalifications.</span><button onclick="realtorCheckout()" style="background:white;color:#c53030;border:none;padding:7px 18px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">Upgrade to Pro — $49/mo →</button></div>';
   document.body.prepend(banner);
 }
 </script>
@@ -1185,6 +1389,39 @@ function showTrialExpiredBanner() {
       <div style="margin-bottom:16px"><label style="font-size:11px;color:var(--text-4);display:block;margin-bottom:4px">EMAIL</label><input class="input" id="forgot-email" type="email" placeholder="you@brokerage.com"></div>
       <button class="btn btn-primary" id="forgot-btn" onclick="doRealtorForgotPassword()" style="width:100%;justify-content:center">Send Reset Link</button>
       <div style="text-align:center;margin-top:12px"><span onclick="document.getElementById('realtor-forgot-modal').classList.remove('show')" style="font-size:12px;color:var(--teal);cursor:pointer">← Back to sign in</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- SET PASSWORD MODAL (admin invite flow) -->
+<div class="modal-overlay" id="realtor-set-password-modal" style="z-index:10002">
+  <div class="modal-box" style="max-width:440px">
+    <div style="background:var(--navy);padding:20px 24px;border-radius:14px 14px 0 0">
+      <div style="color:white;font-size:16px;font-weight:700">Create Your Account</div>
+      <div style="font-size:12px;color:rgba(255,255,255,0.4);margin-top:2px">You've been invited — set a password to get started</div>
+    </div>
+    <div class="modal-body" style="padding:24px">
+      <input type="hidden" id="sp-invite-token">
+      <div id="sp-error" style="display:none;font-size:12px;color:#ef4444;background:rgba(239,68,68,0.08);border-radius:6px;padding:10px;margin-bottom:14px"></div>
+      <div class="field" style="margin-bottom:14px">
+        <label class="label">Email</label>
+        <input class="input" id="sp-email" type="email" placeholder="you@brokerage.com">
+      </div>
+      <div class="field" style="margin-bottom:14px">
+        <label class="label">Your Name <span style="color:var(--text-4);font-weight:400">(optional)</span></label>
+        <input class="input" id="sp-name" type="text" placeholder="Jane Smith">
+      </div>
+      <div class="field" style="margin-bottom:14px">
+        <label class="label">Password <span style="color:var(--red)">*</span></label>
+        <input class="input" id="sp-password" type="password" placeholder="Min. 8 characters"
+               onkeydown="if(event.key==='Enter')document.getElementById('sp-password-confirm').focus()">
+      </div>
+      <div class="field" style="margin-bottom:22px">
+        <label class="label">Confirm Password <span style="color:var(--red)">*</span></label>
+        <input class="input" id="sp-password-confirm" type="password" placeholder="Re-enter password"
+               onkeydown="if(event.key==='Enter')doActivateAccount()">
+      </div>
+      <button id="sp-submit-btn" onclick="doActivateAccount()" class="btn btn-primary" style="width:100%;justify-content:center">Create Account</button>
     </div>
   </div>
 </div>

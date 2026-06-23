@@ -214,7 +214,6 @@ When you have enough information to make a determination, respond with a JSON bl
   "ready": true,
   "loanType": "conventional|fha|va|usda|jumbo|dscr|hard_money|bank_statement|non_qm",
   "result": "likely_qualifies|borderline|unlikely|needs_review",
-  // result labels: likely_qualifies="Strong Alignment", borderline="Needs Review", unlikely="Low Compatibility", needs_review="Needs Review"
   "maxLoanAmount": 0,
   "estimatedMonthlyPayment": 0,
   "monthlyPI": 0,
@@ -245,33 +244,13 @@ When you have enough information to make a determination, respond with a JSON bl
   "creditScoreTarget": 0,
   "autoSubmitted": true,
   "nextSteps": "What the realtor should do next",
-  "disclaimer": "This prequalification is based solely on the information provided and is not a commitment to lend. All loan approvals are subject to full lender underwriting, credit review, income verification, appraisal, and final lender decision.",
-  "improvementStrategies": [
-    {
-      "issue": "High DTI — back-end at 52%, limit is 45%",
-      "paths": [
-        {"label": "Option 1", "action": "Pay off $8,400 credit card balance", "impact": "DTI drops to 44.2% — qualifies at original price"},
-        {"label": "Option 2", "action": "Add co-borrower with $2,800/month income", "impact": "Combined DTI 41% — qualifies with strong file"},
-        {"label": "Combined", "action": "Pay off $4,200 card + reduce price to $395k", "impact": "DTI 43.8% — qualifies conventionally with PMI"}
-      ]
-    }
-  ],
-  "qualifyingPricePoint": 395000,
-  "coborrowerIncomeNeeded": 2800,
-  "creditScoreTarget": 680
+  "disclaimer": "This prequalification is based solely on the information provided and is not a commitment to lend. All loan approvals are subject to full lender underwriting, credit review, income verification, appraisal, and final lender decision."
 }
 </PREQUAL_RESULT>
 
 Set autoSubmitted: true on every result — details are always forwarded to the lender network.
 When result is "borderline" or "unlikely", you MUST include detailed remediation strategies.
-For each barrier to qualification, provide 2-3 specific paths with exact numbers:
-- PATH 1 (Single fix): "Pay off the $12,400 auto loan → DTI drops from 51% to 43% → qualifies at original price"
-- PATH 2 (Alternative): "Add co-borrower with $3,200/month income → combined DTI 41% → qualifies"  
-- PATH 3 (Combined): "Pay off credit card ($4,200) + reduce purchase price to $385k → qualifies conventionally"
-- Price reduction: calculate the exact price point where they qualify
-- Credit improvement: give exact score target and what it unlocks ("680+ opens FHA at 3.5% down")
-- Down payment increase: calculate exact additional down needed to hit LTV threshold
-- Debt payoff: identify which specific debt, if paid, fixes DTI the most efficiently
+For each barrier to qualification, provide 2-3 specific paths with exact numbers.
 
 If you don't have enough information yet, set "ready": false and omit the other fields.`;
 
@@ -283,7 +262,7 @@ If you don't have enough information yet, set "ready": false and omit the other 
           "anthropic-version": "2023-06-01",
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
+          model: "claude-sonnet-4-6",
           max_tokens: 1500,
           system: systemPrompt,
           messages: messages || [],
@@ -319,7 +298,6 @@ If you don't have enough information yet, set "ready": false and omit the other 
     if (action === "save") {
       if (!token) return new Response(JSON.stringify({ error: "Token required" }), { status: 401, headers: cors });
 
-      // Verify realtor token
       const authRes = await fetch(REALTOR_AUTH_FN, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -331,7 +309,6 @@ If you don't have enough information yet, set "ready": false and omit the other 
       const realtorId = authData.realtor.id;
       const p = clientData?.prequal || {};
 
-      // Save via Supabase REST (service role — anon blocked by RLS)
       const insertRes = await fetch(`${SUPABASE_URL}/rest/v1/client_prequals`, {
         method: "POST",
         headers: {
@@ -370,7 +347,6 @@ If you don't have enough information yet, set "ready": false and omit the other 
 
       const saved = await insertRes.json();
 
-      // Increment usage
       await fetch(REALTOR_AUTH_FN, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -380,7 +356,7 @@ If you don't have enough information yet, set "ready": false and omit the other 
       return new Response(JSON.stringify({ success: true, prequal: saved[0] }), { status: 200, headers: cors });
     }
 
-    // ── HISTORY: get realtor's past prequals ─────────────────────────────────
+    // ── HISTORY ───────────────────────────────────────────────────────────────
     if (action === "history") {
       if (!token) return new Response(JSON.stringify({ error: "Token required" }), { status: 401, headers: cors });
       const authRes = await fetch(REALTOR_AUTH_FN, {
@@ -399,7 +375,7 @@ If you don't have enough information yet, set "ready": false and omit the other 
       return new Response(JSON.stringify({ success: true, history }), { status: 200, headers: cors });
     }
 
-    // ── CHECKOUT: start Stripe subscription for realtor ────────────────────────
+    // ── CHECKOUT ──────────────────────────────────────────────────────────────
     if (action === "create_checkout") {
       if (!token) return new Response(JSON.stringify({ error: "Token required" }), { status: 401, headers: cors });
       const authRes = await fetch(REALTOR_AUTH_FN, {
@@ -409,15 +385,12 @@ If you don't have enough information yet, set "ready": false and omit the other 
       const authData = await authRes.json();
       if (!authData.valid) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: cors });
       const realtor = authData.realtor;
-      // Route to Stripe checkout via capiq-lender-portal-v3 which has STRIPE_SECRET_KEY
-      // Fall back to direct payment link if secret unavailable
+
       if (!STRIPE_SECRET) {
         const REALTOR_PAYMENT_URL = `https://buy.stripe.com/00w28t2TjgKW9e2bZtb7y06?prefilled_email=${encodeURIComponent(authData.realtor?.email||"")}&client_reference_id=${authData.realtor?.id||""}`;
         return new Response(JSON.stringify({ success: true, checkoutUrl: REALTOR_PAYMENT_URL }), { status: 200, headers: cors });
       }
 
-      // Create or retrieve Stripe customer
-      // Check for existing stripe_customer_id
       const userRes = await fetch(`${SUPABASE_URL}/rest/v1/realtor_users?id=eq.${realtor.id}&select=stripe_customer_id`, {
         headers: { "apikey": SVC_KEY, "Authorization": `Bearer ${SVC_KEY}` }
       });
@@ -457,7 +430,7 @@ If you don't have enough information yet, set "ready": false and omit the other 
       return new Response(JSON.stringify({ success: true, checkoutUrl: s.url }), { status: 200, headers: cors });
     }
 
-    // ── PORTAL: manage existing realtor subscription ─────────────────────────
+    // ── PORTAL ────────────────────────────────────────────────────────────────
     if (action === "create_portal") {
       if (!token) return new Response(JSON.stringify({ error: "Token required" }), { status: 401, headers: cors });
       const authRes = await fetch(REALTOR_AUTH_FN, {
@@ -485,7 +458,7 @@ If you don't have enough information yet, set "ready": false and omit the other 
       return new Response(JSON.stringify({ success: true, portalUrl: po.url }), { status: 200, headers: cors });
     }
 
-    // ── CAPITAL MATCH REQUEST ────────────────────────────────────────────────
+    // ── CAPITAL MATCH REQUEST ─────────────────────────────────────────────────
     if (action === "request_capital_match") {
       if (!token) return new Response(JSON.stringify({ error: "Token required" }), { status: 401, headers: cors });
       const authRes = await fetch(REALTOR_AUTH_FN, {
@@ -499,11 +472,9 @@ If you don't have enough information yet, set "ready": false and omit the other 
       const clientName = body.clientName || "Client";
       const clientEmail = body.clientEmail || "";
       const clientPhone = body.clientPhone || "";
-      const ctaSource = body.ctaSource || "unknown";
       const SUPABASE_URL_L = "https://mxyepucitjzleaziizkr.supabase.co";
       const SK_LOCAL = Netlify.env.get("SUPABASE_SERVICE_KEY") || "";
 
-      // Write to deal_submissions so admin dashboard shows this match request
       if (SK_LOCAL) {
         const loanType = p.loanType || "";
         const qmTypes = ["conventional", "fha", "va", "usda", "jumbo"];
@@ -537,7 +508,6 @@ If you don't have enough information yet, set "ready": false and omit the other 
           }),
         }).catch(() => {});
 
-        // Also flag the prequal record if an ID was provided
         if (body.prequal_id) {
           await fetch(`${SUPABASE_URL_L}/rest/v1/client_prequals?id=eq.${body.prequal_id}`, {
             method: "PATCH",
@@ -547,7 +517,6 @@ If you don't have enough information yet, set "ready": false and omit the other 
         }
       }
 
-      // Fetch active lender emails from Supabase
       let lenderEmails = [];
       if (SK_LOCAL) {
         const lRes = await fetch(`${SUPABASE_URL_L}/rest/v1/lender_users?select=email&limit=50`, {
@@ -579,7 +548,7 @@ If you don't have enough information yet, set "ready": false and omit the other 
         <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:6px;padding:12px;margin-top:16px;font-size:12px;color:#166534">
           To respond to this inquiry, reply directly to the realtor at <strong>${authData.realtor?.email || "—"}</strong>
         </div>
-        <p style="font-size:11px;color:#9ca3af;margin-top:16px">This is a preliminary review request only. No commitment to lend is implied. Client contact info shared with realtor's authorization.</p>
+        <p style="font-size:11px;color:#9ca3af;margin-top:16px">This is a preliminary review request only. No commitment to lend is implied.</p>
       </div>`;
 
       const RESEND_KEY = Netlify.env.get("RESEND_API_KEY") || "";
