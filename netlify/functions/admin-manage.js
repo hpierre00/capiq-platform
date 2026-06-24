@@ -17,6 +17,8 @@
 const ADMIN_EMAILS = ['hpierre00@gmail.com'];
 const SUPABASE_URL = process.env.SUPABASE_URL  || 'https://mxyepucitjzleaziizkr.supabase.co';
 const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
+// Anon key used as project identifier when verifying user JWTs.
+const ANON_KEY     = process.env.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im14eWVwdWNpdGp6bGVhemlpemtyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ0Njk1ODIsImV4cCI6MjA5MDA0NTU4Mn0.oQr_hO5fVkOhGcJ2u3mqQDJIfw9cAdXwfVAAXOf96q4';
 
 const cors = {
   'Access-Control-Allow-Origin':  '*',
@@ -45,7 +47,7 @@ exports.handler = async (event) => {
 
   // ── Verify caller is admin ────────────────────────────────────────────────────
   const authRes = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
-    headers: { apikey: SERVICE_KEY, Authorization: `Bearer ${token}` },
+    headers: { apikey: ANON_KEY, Authorization: `Bearer ${token}` },
   }).catch(() => null);
 
   if (!authRes?.ok) {

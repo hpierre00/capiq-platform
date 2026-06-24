@@ -324,17 +324,45 @@ let adminEmail = null;
 let allUsers   = [];
 
 // ── Restore session ───────────────────────────────────────────────────────────
-(function restoreSession() {
+(async function restoreSession() {
   try {
     const s = sessionStorage.getItem('_admin_sess');
     if (!s) return;
-    const { token, email } = JSON.parse(s);
-    if (ADMIN_EMAILS.includes((email || '').toLowerCase())) {
+    const { token, email, refreshToken } = JSON.parse(s);
+    if (!ADMIN_EMAILS.includes((email || '').toLowerCase())) return;
+
+    // Validate the stored access token
+    const check = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+      headers: { apikey: ANON_KEY, Authorization: `Bearer ${token}` }
+    }).catch(() => null);
+
+    if (check?.ok) {
       adminToken = token;
       adminEmail = email;
       showDashboard();
+      return;
     }
-  } catch(e) {}
+
+    // Token invalid/expired — try refresh
+    if (!refreshToken) { sessionStorage.removeItem('_admin_sess'); return; }
+    const refreshRes = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json', apikey: ANON_KEY },
+      body:    JSON.stringify({ refresh_token: refreshToken }),
+    }).catch(() => null);
+
+    if (refreshRes?.ok) {
+      const data = await refreshRes.json();
+      adminToken = data.access_token;
+      adminEmail = email;
+      sessionStorage.setItem('_admin_sess', JSON.stringify({
+        token: data.access_token, email, refreshToken: data.refresh_token
+      }));
+      showDashboard();
+    } else {
+      sessionStorage.removeItem('_admin_sess');
+    }
+  } catch(e) { sessionStorage.removeItem('_admin_sess'); }
 })();
 
 // ── Login ─────────────────────────────────────────────────────────────────────
@@ -363,7 +391,9 @@ async function doLogin(ev) {
     if (!res.ok) { showLoginErr(data.error_description || data.msg || 'Incorrect email or password.'); return; }
     adminToken = data.access_token;
     adminEmail = email;
-    sessionStorage.setItem('_admin_sess', JSON.stringify({ token: adminToken, email }));
+    sessionStorage.setItem('_admin_sess', JSON.stringify({
+      token: data.access_token, email, refreshToken: data.refresh_token
+    }));
     showDashboard();
   } catch(err) {
     showLoginErr('Network error — check your connection and try again.');
