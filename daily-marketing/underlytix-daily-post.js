@@ -23,17 +23,20 @@ const CONFIG = {
 const BRANDS = {
   Underlytix: {
     name: 'Underlytix',
-    description: 'real estate capital intelligence SaaS',
-    audience: 'real estate investors, developers, and capital market professionals',
+    description: 'real estate capital intelligence SaaS that pre-qualifies deals and matches lenders before underwriting',
+    audience: 'realtors, real estate investors, and private lenders',
     website: 'underlytix.com',
-    hashtags: '#Underlytix #RealEstateInvesting #CapitalMarkets #RealEstateTech #PropTech',
+    instagram: '@underlytix',
+    facebook: 'facebook.com/profile.php?id=61590666091101',
+    youtube: 'youtube.com/@Underlytix',
+    hashtags: '#Underlytix #RealEstateInvesting #RealEstateTech #PropTech #LenderMatching',
   },
   Tradolux: {
     name: 'Tradolux',
     description: 'AI-powered trading intelligence platform',
     audience: 'traders, investors, and finance professionals',
-    website: 'tradolux.ai',
-    hashtags: '#Tradolux #AITrading #TradingIntelligence #FinTech #AlgoTrading',
+    website: 'tradolux.com',
+    hashtags: '#Tradolux #AITrading #StockAnalysis #TradingSignals #FinTech',
   },
 };
 
