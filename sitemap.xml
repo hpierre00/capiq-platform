@@ -26,4 +26,7 @@
   <!-- Legal -->
   <url><loc>https://underlytix.com/terms</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
   <url><loc>https://underlytix.com/privacy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
+  <url>
+    <loc>https://underlytix.com/dscr-guide</loc>
+  </url>
 </urlset>
