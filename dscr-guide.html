@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Google Tag Manager -->
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+})(window,document,'script','dataLayer','GTM-KPMLXZJ4');</script>
+<!-- End Google Tag Manager -->
+<title>What Is a DSCR Score? Why Real Estate Deals Fail Underwriting | Underlytix</title>
+<meta name="description" content="DSCR (debt service coverage ratio) explained in plain English: how lenders calculate it, the thresholds that kill deals, and how to check a property before underwriting.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://underlytix.com/dscr-guide">
+<meta name="author" content="Underlytix LLC">
+<meta property="og:title" content="What Is a DSCR Score? — Underlytix">
+<meta property="og:description" content="DSCR (debt service coverage ratio) explained in plain English: how lenders calculate it, the thresholds that kill deals, and how to check a property before underwriting.">
+<meta property="og:url" content="https://underlytix.com/dscr-guide">
+<meta property="og:type" content="website">
+<meta property="og:image" content="https://underlytix.com/og-image.png">
+<link rel="icon" type="image/png" href="/favicon.png">
+<link rel="sitemap" type="application/xml" href="/sitemap.xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;family=DM+Mono:wght@400;500&amp;display=swap" rel="stylesheet">
+<style>
+:root{
+  --navy:#0f2240;--navy-2:#1a3355;--navy-3:#0d1d35;
+  --teal:#0e7490;--teal-light:#0891b2;--teal-dim:rgba(14,116,144,0.08);--teal-border:rgba(14,116,144,0.2);
+  --bg:#f8fafc;--bg-2:#ffffff;--bg-3:#f1f5f9;--border:#e2e8f0;
+  --text:#0f172a;--text-2:#334155;--text-3:#64748b;--text-4:#94a3b8;
+  --green:#059669;--green-dim:rgba(5,150,105,0.08);
+  --shadow:0 4px 12px rgba(15,34,64,0.08),0 2px 4px rgba(15,34,64,0.05);
+  --shadow-lg:0 20px 40px rgba(15,34,64,0.12),0 8px 16px rgba(15,34,64,0.06);
+  --r:8px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.6}
+a{color:inherit;text-decoration:none}
+nav{position:sticky;top:0;z-index:100;background:rgba(248,250,252,0.95);backdrop-filter:blur(12px);padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.nav-logo{display:flex;align-items:center;gap:10px}
+.nav-logo-mark{width:34px;height:34px;background:var(--navy);border-radius:8px;display:flex;align-items:center;justify-content:center}
+.nav-logo-mark svg{width:17px;height:17px}
+.nav-logo-text{font-size:17px;font-weight:700;color:var(--text);letter-spacing:-.4px}
+.nav-logo-sub{font-family:'DM Mono',monospace;font-size:8px;color:var(--text-4);letter-spacing:.12em;text-transform:uppercase;margin-top:1px}
+.nav-links{display:flex;gap:28px}
+.nav-links a{font-size:13px;font-weight:500;color:var(--text-3);transition:color .15s}
+.nav-links a:hover{color:var(--text)}
+.nav-cta{display:flex;gap:8px;align-items:center}
+.btn-ghost{padding:7px 16px;border-radius:6px;border:1px solid var(--border);font-size:13px;font-weight:500;color:var(--text-2);cursor:pointer;transition:all .15s}
+.btn-ghost:hover{border-color:var(--teal);color:var(--teal)}
+.btn-navy{padding:8px 18px;border-radius:6px;border:none;font-size:13px;font-weight:600;color:white;background:var(--navy);cursor:pointer;transition:all .15s}
+.btn-navy:hover{background:var(--navy-2);transform:translateY(-1px)}
+.container{max-width:1080px;margin:0 auto;padding:0 24px}
+.hero-section{background:var(--navy);padding:80px 24px 72px;text-align:center}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;background:rgba(14,116,144,0.2);border:1px solid rgba(14,116,144,0.35);color:#67e8f9;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin-bottom:24px}
+.hero-h1{font-size:clamp(28px,5vw,50px);font-weight:800;color:white;line-height:1.1;letter-spacing:-.02em;max-width:800px;margin:0 auto 20px}
+.hero-sub{font-size:17px;color:rgba(255,255,255,0.65);max-width:560px;margin:0 auto 36px;line-height:1.6}
+.hero-cta{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.btn-teal{padding:13px 28px;border-radius:8px;background:var(--teal);color:white;font-size:15px;font-weight:600;border:none;cursor:pointer;transition:all .2s}
+.btn-teal:hover{background:var(--teal-light);transform:translateY(-2px);box-shadow:var(--shadow-lg)}
+.btn-outline-white{padding:13px 28px;border-radius:8px;background:transparent;color:white;font-size:15px;font-weight:500;border:1px solid rgba(255,255,255,0.3);cursor:pointer;transition:all .2s}
+.btn-outline-white:hover{border-color:white;background:rgba(255,255,255,0.08)}
+section{padding:72px 24px}
+section:nth-child(even){background:var(--bg-2)}
+.section-label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--teal);margin-bottom:12px}
+h2{font-size:clamp(22px,4vw,36px);font-weight:800;color:var(--text);letter-spacing:-.02em;line-height:1.15;margin-bottom:16px}
+.section-sub{font-size:16px;color:var(--text-3);max-width:560px;margin-bottom:48px;line-height:1.6}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+.card{background:var(--bg-2);border:1px solid var(--border);border-radius:12px;padding:28px}
+.card-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;margin-bottom:16px;font-size:22px}
+.card-icon.teal{background:var(--teal-dim)}
+.card-icon.green{background:var(--green-dim)}
+.card h3{font-size:16px;font-weight:700;color:var(--text);margin-bottom:8px}
+.card p{font-size:14px;color:var(--text-3);line-height:1.6}
+.compare-table{width:100%;border-collapse:collapse;margin-top:32px}
+.compare-table th{text-align:left;padding:14px 18px;background:var(--navy);color:white;font-size:13px;font-weight:600}
+.compare-table th:first-child{border-radius:8px 0 0 0}
+.compare-table th:last-child{border-radius:0 8px 0 0}
+.compare-table td{padding:13px 18px;font-size:14px;border-bottom:1px solid var(--border);vertical-align:top}
+.compare-table tr:last-child td{border-bottom:none}
+.compare-table tr:nth-child(even) td{background:var(--bg-3)}
+.check{color:var(--green);font-weight:600}
+.cross{color:#dc2626}
+.faq-list{display:flex;flex-direction:column;gap:0;border:1px solid var(--border);border-radius:12px;overflow:hidden}
+.faq-item{padding:22px 24px;border-bottom:1px solid var(--border);cursor:pointer;transition:background .15s}
+.faq-item:last-child{border-bottom:none}
+.faq-item:hover{background:var(--bg-3)}
+.faq-q{font-size:15px;font-weight:600;color:var(--text);display:flex;justify-content:space-between;align-items:center;gap:16px}
+.faq-a{font-size:14px;color:var(--text-3);margin-top:12px;line-height:1.65;display:none}
+.faq-item.open .faq-a{display:block}
+.faq-item.open .faq-chevron{transform:rotate(180deg)}
+.faq-chevron{transition:transform .2s;flex-shrink:0;color:var(--text-4)}
+.cta-section{background:var(--navy);text-align:center;padding:80px 24px}
+.cta-section h2{color:white}
+.cta-section p{color:rgba(255,255,255,0.65);font-size:16px;margin-bottom:32px}
+.step-list{display:flex;flex-direction:column;gap:0}
+.step-item{display:flex;gap:20px;padding:24px 0;border-bottom:1px solid var(--border)}
+.step-item:last-child{border-bottom:none}
+.step-num{width:36px;height:36px;border-radius:50%;background:var(--navy);color:white;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.step-body h3{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px}
+.step-body p{font-size:14px;color:var(--text-3);line-height:1.6}
+.tag{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.04em}
+.tag-teal{background:var(--teal-dim);color:var(--teal);border:1px solid var(--teal-border)}
+.tag-green{background:var(--green-dim);color:var(--green)}
+footer{background:var(--navy-3);border-top:1px solid rgba(255,255,255,0.06);padding:48px 24px 24px}
+.footer-inner{max-width:1080px;margin:0 auto}
+.footer-top{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:40px;margin-bottom:40px}
+.footer-logo-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.footer-logo-mark{width:30px;height:30px;background:var(--navy-2);border-radius:6px;display:flex;align-items:center;justify-content:center}
+.footer-logo-text{font-size:16px;font-weight:700;color:white}
+.footer-desc{font-size:13px;color:rgba(255,255,255,0.45);line-height:1.6}
+.footer-col h4{font-size:12px;font-weight:600;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:.06em;margin-bottom:14px}
+.footer-col a{display:block;font-size:13px;color:rgba(255,255,255,0.6);margin-bottom:8px;transition:color .15s}
+.footer-col a:hover{color:white}
+.footer-bottom{border-top:1px solid rgba(255,255,255,0.06);padding-top:20px}
+.footer-copy{font-size:12px;color:rgba(255,255,255,0.35);margin-bottom:8px}
+.footer-legal{font-size:11px;color:rgba(255,255,255,0.25);line-height:1.6}
+@media(max-width:768px){
+  .grid-2,.grid-3{grid-template-columns:1fr}
+  .footer-top{grid-template-columns:1fr 1fr}
+  nav .nav-links{display:none}
+}
+</style>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {"@type":"WebPage","name":"Underlytix vs Underwriting","url":"https://underlytix.com/underlytix-vs-underwriting"},
+    {"@type":"FAQPage","mainEntity":[
+      {"@type":"Question","name":"What is the difference between Underlytix and underwriting?","acceptedAnswer":{"@type":"Answer","text":"Underwriting is the formal lender process of evaluating a loan application — it happens after you've submitted a full application and it involves income verification, appraisals, title review, and credit analysis. Underlytix is pre-underwriting intelligence: it scores the deal before any formal application so you know whether it's worth pursuing."}},
+      {"@type":"Question","name":"Why is pre-underwriting intelligence valuable?","acceptedAnswer":{"@type":"Answer","text":"Formal underwriting is slow, expensive, and happens too late. By the time a deal dies in underwriting, you've spent weeks, paid for appraisals, and burned hard-pull credit inquiries. Underlytix catches fundability issues in 60 seconds before you commit to any of that."}},
+      {"@type":"Question","name":"Is Underlytix used by lenders too?","acceptedAnswer":{"@type":"Answer","text":"Yes. Lenders use Underlytix to pre-screen deals before investing underwriting resources. When a borrower submits a deal pre-scored by Underlytix, lenders can triage faster and focus human underwriting effort on deals most likely to close."}}
+    ]}
+  ]
+}
+</script>
+<!-- Microsoft Clarity -->
+<script type="text/javascript">(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","CLARITY_ID");</script>
+</head>
+<body>
+<!-- Google Tag Manager (noscript) -->
+<noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KPMLXZJ4" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<nav id="navbar">
+  <a href="/" class="nav-logo">
+    <div class="nav-logo-mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg>
+    </div>
+    <div>
+      <div class="nav-logo-text">Underlytix</div>
+      <div class="nav-logo-sub">Capital Intelligence</div>
+    </div>
+  </a>
+  <div class="nav-links">
+    <a href="/#how">How It Works</a>
+    <a href="/#pricing">Pricing</a>
+    <a href="/app">Sign In</a>
+  </div>
+  <div class="nav-cta">
+    <a href="/app" class="btn-ghost">Sign In</a>
+    <a href="/app?signup=true" class="btn-navy">Get Started Free</a>
+  </div>
+</nav>
+
+<section class="hero-section">
+  <div class="container">
+    <div class="hero-badge">DSCR GUIDE</div>
+    <h1 class="hero-h1">What is a DSCR score — and why do deals fail underwriting?</h1>
+    <p class="hero-sub">Debt service coverage ratio is the single number most likely to kill an investment property loan. Here is how lenders calculate it, the thresholds that matter, and how to know where a deal stands before it ever reaches an underwriter.</p>
+    <div class="hero-cta">
+      <a href="/app?signup=true" class="btn-teal">Get My Readiness Score</a>
+      <a href="/lender" class="btn-outline-white">I'm a Lender</a>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-label">THE CALCULATION</div>
+    <h2>How lenders calculate DSCR</h2>
+    <div class="step-list">
+      <div class="step-item">
+        <div class="step-num">1</div>
+        <div class="step-body"><h3>Start with net operating income <span class="tag tag-teal">NOI</span></h3><p>Gross rental income minus operating expenses — taxes, insurance, management, maintenance, vacancy allowance. Debt payments are not included. Overstating NOI by ignoring vacancy or management costs is the most common reason a deal that "pencils" fails underwriting.</p></div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">2</div>
+        <div class="step-body"><h3>Total the annual debt service</h3><p>Every dollar of principal and interest the loan requires for the year. On many DSCR programs the lender uses the full PITIA payment — principal, interest, taxes, insurance, and association dues — which pushes the bar higher than a simple P&amp;I estimate.</p></div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">3</div>
+        <div class="step-body"><h3>Divide: NOI ÷ debt service <span class="tag tag-green">the score</span></h3><p>A DSCR of 1.0 means the property earns exactly its debt payments — no cushion. Most DSCR lenders want 1.20 to 1.25. Some programs accept 1.0, or below 1.0 with a lower loan-to-value and a higher rate. The ratio, not your salary, is what qualifies the deal.</p></div>
+      </div>
+      <div class="step-item">
+        <div class="step-num">4</div>
+        <div class="step-body"><h3>Stress-test before you submit</h3><p>Underwriters re-run the number with their own vacancy, tax, and insurance assumptions — not yours. If your deal only works with optimistic rent and zero vacancy, it fails in their model even though it passed in yours. Run the pessimistic case first.</p></div>
+      </div></div>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-label">THE THRESHOLDS</div>
+    <h2>What your DSCR means to a lender</h2>
+    <table class="compare-table">
+      <thead><tr><th>DSCR</th><th>What it says</th><th>Typical lender response</th></tr></thead>
+      <tbody>
+        <tr><td>Below 1.00</td><td>Property loses money against its debt</td><td><span class="cross">✗</span> Declined by most programs; a few allow it with 65–70% max LTV and premium pricing</td></tr>
+        <tr><td>1.00 – 1.19</td><td>Covers debt with little cushion</td><td>Case-by-case; expect rate adjustments, reserves requirements, or a larger down payment</td></tr>
+        <tr><td>1.20 – 1.24</td><td>Meets the common minimum</td><td><span class="check">✓</span> Approvable at many DSCR lenders; standard terms</td></tr>
+        <tr><td>1.25+</td><td>Comfortable coverage</td><td><span class="check">✓</span> Broad lender pool, best pricing tiers, smoother underwriting</td></tr>
+      </tbody></table>
+  </div>
+</section>
+
+<section>
+  <div class="container">
+    <div class="section-label">COMMON QUESTIONS</div>
+    <h2>DSCR questions investors actually ask</h2>
+    <div class="faq-list">
+      <div class="faq-item">
+        <div class="faq-q">Is DSCR the same as DTI? <span class="faq-chevron">▾</span></div>
+        <div class="faq-a">No. DTI (debt-to-income) measures you — your personal income against your personal debts. DSCR measures the property — its income against its own loan. That is why DSCR loans can close without W-2s or tax returns: the asset qualifies, not the borrower.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Can I get a loan with DSCR below 1.0? <span class="faq-chevron">▾</span></div>
+        <div class="faq-a">Some programs allow it, typically with a lower maximum LTV, higher interest rate, and larger reserves. It is priced as what it is: a bet that rents rise or that you carry the shortfall. Most investors are better served restructuring the deal first.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">How do I raise a property's DSCR? <span class="faq-chevron">▾</span></div>
+        <div class="faq-a">Four levers: raise income (market-rate rents, additional units), cut operating expenses, reduce the loan amount with a larger down payment, or lower the debt service with a longer amortization or interest-only period. A rate buydown moves the ratio too.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q">Why did my deal fail underwriting when my DSCR looked fine? <span class="faq-chevron">▾</span></div>
+        <div class="faq-a">Because the underwriter recalculated it. Lenders apply their own vacancy factor, use the appraiser's market rent instead of your pro forma, and count full PITIA. A 1.30 on your spreadsheet can be a 1.05 in their model. Checking the deal against lender assumptions before submission is exactly the gap Underlytix closes.</div>
+      </div></div>
+  </div>
+</section>
+
+<section class="cta-section">
+  <div class="container">
+    <h2>Know your DSCR before the lender does.</h2>
+    <p>Underlytix runs DSCR, LTV, and fundability on a deal in about 60 seconds — against real lender thresholds, not optimistic assumptions.</p>
+    <div class="hero-cta">
+      <a href="/app?signup=true" class="btn-teal">Analyze a Deal Free</a>
+      <a href="/lender" class="btn-outline-white">Lender Portal</a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo-row">
+          <div class="footer-logo-mark"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path></svg></div>
+          <div class="footer-logo-text">Underlytix</div>
+        </div>
+        <div class="footer-desc">Capital intelligence for investors, realtors, and lenders. Available 24/7.</div>
+      </div>
+      <div class="footer-col">
+        <h4>Platform</h4>
+        <a href="/app">Investor Portal</a>
+        <a href="/realtor">Realtor Portal</a>
+        <a href="/lender">Lender Portal</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="mailto:support@underlytix.com">Contact</a>
+        <a href="/terms">Terms</a>
+        <a href="/privacy">Privacy</a>
+      </div>
+      <div class="footer-col">
+        <h4>Resources</h4>
+        <a href="/underlytix-vs-pre-approval">vs Pre-Approval</a>
+        <a href="/underlytix-vs-underwriting">vs Underwriting</a>
+        <a href="/deal-analysis-agent">Deal Analysis Agent</a>
+        <a href="/capital-readiness-agent">Capital Readiness Agent</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2026 Underlytix LLC. All rights reserved.</div>
+      <div class="footer-legal">Underlytix provides pre-application intelligence tools only. Results are based solely on user-provided data and do not constitute a mortgage pre-approval, commitment to lend, financial advice, or legal advice. All loan approvals are subject to full lender underwriting, credit review, and final approval.</div>
+    </div>
+  </div>
+</footer>
+<script>
+document.querySelectorAll('.faq-item').forEach(item=>{
+  item.addEventListener('click',()=>{
+    item.classList.toggle('open');
+  });
+});
+</script>
+
+</body></html>
