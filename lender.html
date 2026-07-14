@@ -106,6 +106,93 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .auth-btn:hover{background:var(--teal-light)}
 .auth-btn:disabled{opacity:.5;cursor:not-allowed}
 @media(max-width:768px){.stats-grid{grid-template-columns:1fr 1fr}}
+/* ── Lender primary nav ── */
+.lp-pnav-tab{padding:13px 20px;border:none;background:none;font-family:'Inter',sans-serif;font-size:13px;font-weight:500;color:var(--text-3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+.lp-pnav-tab.active{color:var(--teal);border-bottom-color:var(--teal);font-weight:600}
+.lp-pnav-tab:hover:not(.active){color:var(--text-2)}
+/* ── Deal Assessment panel ── */
+.lpa-shell{display:flex;height:100%}
+.lpa-sidebar{width:240px;flex-shrink:0;background:var(--bg-2);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden}
+.lpa-sb-head{padding:13px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.lpa-sb-head h3{font-size:11px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin:0}
+.lpa-new-btn{background:var(--teal);color:#fff;border:none;border-radius:5px;padding:4px 10px;font-size:11px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif}
+.lpa-new-btn:hover{opacity:.85}
+.lpa-search{padding:9px 12px;border-bottom:1px solid var(--border)}
+.lpa-search input{width:100%;background:var(--bg-3);border:1px solid var(--border);border-radius:5px;color:var(--text);font-size:12px;padding:6px 10px;font-family:'Inter',sans-serif;outline:none;box-sizing:border-box}
+.lpa-search input:focus{border-color:var(--teal)}
+.lpa-search input::placeholder{color:var(--text-4)}
+.lpa-deal-list{flex:1;overflow-y:auto;padding:5px}
+.lpa-deal-item{padding:8px 10px;border-radius:6px;cursor:pointer;border:1px solid transparent;margin-bottom:3px}
+.lpa-deal-item:hover{background:var(--bg-3);border-color:var(--border)}
+.lpa-deal-prop{font-size:12px;font-weight:500;color:var(--text);margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.lpa-deal-meta{font-size:10px;color:var(--text-4);display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+.lpa-vdot{width:6px;height:6px;border-radius:50%;flex-shrink:0;display:inline-block}
+.lpa-empty{text-align:center;padding:28px 12px;color:var(--text-4);font-size:12px;line-height:1.6}
+.lpa-main{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--bg)}
+.lpa-chat{flex:1;overflow-y:auto;padding:18px 22px;display:flex;flex-direction:column;gap:12px}
+.lpa-chat::-webkit-scrollbar{width:3px}.lpa-chat::-webkit-scrollbar-thumb{background:var(--border-dark)}
+.lpa-msg{display:flex;gap:9px}
+.lpa-msg.user{flex-direction:row-reverse;align-self:flex-end}
+.lpa-avatar{width:27px;height:27px;border-radius:6px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700}
+.lpa-ai-avatar{background:var(--teal-dim);border:1px solid var(--teal-border);color:var(--teal)}
+.lpa-user-avatar{background:rgba(15,34,64,0.1);border:1px solid rgba(15,34,64,0.2);color:var(--navy)}
+.lpa-bubble{padding:9px 13px;border-radius:10px;font-size:13px;line-height:1.6}
+.lpa-ai-bub{background:var(--bg-2);border:1px solid var(--border);border-top-left-radius:3px;color:var(--text);max-width:540px}
+.lpa-user-bub{background:var(--teal-dim);border:1px solid var(--teal-border);border-top-right-radius:3px;color:var(--text);max-width:420px}
+.lpa-opts{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.lpa-opt{background:var(--bg-2);border:1px solid var(--border-dark);color:var(--text-2);padding:5px 12px;border-radius:14px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;transition:all .15s}
+.lpa-opt:hover{border-color:var(--teal);color:var(--teal)}
+@keyframes lpa-bounce{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+.lpa-typing{display:flex;gap:3px;align-items:center;padding:2px 0}
+.lpa-typing span{width:6px;height:6px;background:var(--text-4);border-radius:50%;animation:lpa-bounce 1.2s infinite}
+.lpa-typing span:nth-child(2){animation-delay:.2s}.lpa-typing span:nth-child(3){animation-delay:.4s}
+.lpa-decision-card{background:var(--bg-2);border:1px solid var(--border);border-radius:11px;padding:16px;margin-top:4px;width:100%;max-width:580px}
+.lpa-verdict-badge{display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:6px;font-size:12px;font-weight:700;letter-spacing:.3px;margin-bottom:13px}
+.lpa-v-approve{background:rgba(5,150,105,0.12);border:1px solid rgba(5,150,105,0.25);color:var(--green)}
+.lpa-v-conditions{background:rgba(217,119,6,0.1);border:1px solid rgba(217,119,6,0.25);color:var(--amber)}
+.lpa-v-decline{background:rgba(220,38,38,0.1);border:1px solid rgba(220,38,38,0.25);color:var(--red)}
+.lpa-metrics-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:13px}
+.lpa-metric{background:var(--bg-3);border:1px solid var(--border);border-radius:6px;padding:8px 10px}
+.lpa-m-label{font-size:9px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.07em;margin-bottom:2px}
+.lpa-m-val{font-size:13px;font-weight:600;color:var(--text)}
+.lpa-m-good{color:var(--green)}.lpa-m-warn{color:var(--amber)}.lpa-m-bad{color:var(--red)}
+.lpa-rationale h4,.lpa-conditions h4{font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.07em;margin:0 0 7px 0}
+.lpa-rationale ul,.lpa-conditions ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:4px}
+.lpa-rationale li{font-size:12px;color:var(--text-2);display:flex;gap:6px;line-height:1.5}
+.lpa-rationale li::before{content:'—';color:var(--text-4);flex-shrink:0}
+.lpa-conditions li{font-size:12px;color:var(--amber);display:flex;gap:6px;line-height:1.5}
+.lpa-conditions li::before{content:'→';flex-shrink:0}
+.lpa-action-row{display:flex;gap:7px;margin-top:13px}
+.lpa-act-btn{flex:1;padding:7px 5px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:none;display:flex;align-items:center;justify-content:center;gap:5px;font-family:'Inter',sans-serif;transition:opacity .15s}
+.lpa-act-btn:hover{opacity:.82}
+.lpa-btn-pdf{background:var(--teal);color:#fff}
+.lpa-btn-email{background:var(--bg-3);border:1px solid var(--border-dark);color:var(--text-2)}
+.lpa-btn-new{background:transparent;border:1px solid var(--border);color:var(--text-3)}
+.lpa-proc{display:flex;align-items:center;gap:9px;padding:11px 14px;background:var(--bg-2);border:1px solid var(--border);border-radius:10px;font-size:13px;color:var(--text-3)}
+.lpa-proc-ring{width:15px;height:15px;border:2px solid var(--border-dark);border-top-color:var(--teal);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+.lpa-input-bar{padding:12px 18px 16px;border-top:1px solid var(--border);background:var(--bg-2);display:flex;gap:8px;align-items:flex-end}
+.lpa-input{flex:1;background:var(--bg-3);border:1px solid var(--border-dark);color:var(--text);border-radius:8px;padding:9px 13px;font-size:13px;font-family:'Inter',sans-serif;resize:none;min-height:38px;max-height:110px;line-height:1.5;box-sizing:border-box}
+.lpa-input:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(14,116,144,.1)}
+.lpa-input::placeholder{color:var(--text-4)}
+.lpa-send{width:38px;height:38px;background:var(--teal);border:none;border-radius:7px;color:#fff;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:opacity .15s}
+.lpa-send:hover{opacity:.85}.lpa-send:disabled{opacity:.4;cursor:not-allowed}
+/* ── Guidelines panel ── */
+.gl-section{background:var(--bg-2);border:1px solid var(--border);border-radius:10px;margin-bottom:18px;overflow:hidden}
+.gl-section-head{padding:14px 18px;border-bottom:1px solid var(--border);background:var(--bg-3)}
+.gl-section-title{font-size:12px;font-weight:700;color:var(--text)}
+.gl-section-sub{font-size:11px;color:var(--text-3);margin-top:2px}
+.gl-body{padding:18px}
+.gl-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.gl-field label{display:block;font-size:11px;font-weight:600;color:var(--text-3);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
+.gl-field input,.gl-field textarea{width:100%;background:var(--bg-3);border:1px solid var(--border-dark);color:var(--text);border-radius:6px;padding:8px 11px;font-size:13px;font-family:'Inter',sans-serif;box-sizing:border-box}
+.gl-field input:focus,.gl-field textarea:focus{outline:none;border-color:var(--teal)}
+.gl-field input::placeholder,.gl-field textarea::placeholder{color:var(--text-4)}
+.gl-check-row{display:flex;flex-wrap:wrap;gap:12px}
+.gl-check-row label{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--text-2);cursor:pointer}
+.gl-check-row input[type=checkbox]{accent-color:var(--teal);width:14px;height:14px}
+.gl-save-btn{background:var(--teal);color:#fff;border:none;border-radius:7px;padding:11px 28px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:opacity .15s}
+.gl-save-btn:hover{opacity:.85}
+@media(max-width:768px){.gl-grid{grid-template-columns:1fr 1fr}.lpa-sidebar{width:200px}}
 </style>
     <!-- Microsoft Clarity -->
     <script type="text/javascript">
@@ -115,6 +202,7 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
             y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);
         })(window, document, "clarity", "script", "wymi2q72od");
     </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 <!-- Google Tag Manager (noscript) -->
@@ -303,6 +391,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
   <!-- DASHBOARD VIEW -->
   <div id="lender-dashboard-view" style="display:none">
+  <div id="lp-primary-nav" style="background:var(--bg-2);border-bottom:1px solid var(--border);padding:0 24px;flex-shrink:0">
+    <div style="max-width:1100px;margin:0 auto;display:flex">
+      <button class="lp-pnav-tab active" id="lpt-pipeline" onclick="switchLenderPanel('pipeline')">📋 Deal Pipeline</button>
+      <button class="lp-pnav-tab" id="lpt-assessment" onclick="switchLenderPanel('assessment')">⚡ Deal Assessment AI</button>
+      <button class="lp-pnav-tab" id="lpt-guidelines" onclick="switchLenderPanel('guidelines')">⚙ Lending Guidelines</button>
+    </div>
+  </div>
+  <div id="lp-pipeline-panel">
     <div style="max-width:1100px;width:100%;margin:0 auto;padding:32px 24px">
 
       <!-- Stats -->
@@ -335,7 +431,118 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div id="lender-deals-grid" style="display:grid;grid-template-columns:1fr;gap:16px"></div>
     </div>
   </div>
-</div>
+  </div><!-- /lp-pipeline-panel -->
+
+  <!-- AI DEAL ASSESSMENT PANEL -->
+  <div id="lp-assessment-panel" style="display:none;height:calc(100vh - 106px)">
+    <div class="lpa-shell">
+      <div class="lpa-sidebar">
+        <div class="lpa-sb-head">
+          <h3>Assessments</h3>
+          <button class="lpa-new-btn" onclick="lpaNewAssessment()">+ New</button>
+        </div>
+        <div class="lpa-search">
+          <input type="text" id="lpa-search-input" placeholder="Search by address or borrower…" oninput="lpaFilterDeals()">
+        </div>
+        <div class="lpa-deal-list" id="lpa-deal-list">
+          <div class="lpa-empty">No assessments yet.<br>Click + New to start.</div>
+        </div>
+      </div>
+      <div class="lpa-main">
+        <div class="lpa-chat" id="lpa-chat"></div>
+        <div class="lpa-input-bar">
+          <textarea class="lpa-input" id="lpa-user-input" placeholder="Type a folio number, address, or answer…" rows="1" onkeydown="lpaHandleKey(event)" oninput="lpaAutoResize(this)"></textarea>
+          <button class="lpa-send" id="lpa-send-btn" onclick="lpaSend()">↑</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LENDING GUIDELINES PANEL -->
+  <div id="lp-guidelines-panel" style="display:none;max-height:calc(100vh - 106px);overflow-y:auto">
+    <div style="max-width:760px;margin:0 auto;padding:32px 24px">
+      <div style="margin-bottom:22px">
+        <div style="font-size:16px;font-weight:700;color:var(--text);margin-bottom:5px">Lending Guidelines &amp; Criteria</div>
+        <div style="font-size:13px;color:var(--text-3);line-height:1.6">Set your underwriting criteria once. The AI applies them automatically to every deal assessment — changes take effect on the next assessment.</div>
+      </div>
+
+      <div class="gl-section">
+        <div class="gl-section-head">
+          <div class="gl-section-title">Maximum LTV by Product</div>
+          <div class="gl-section-sub">The AI flags any deal where LTV exceeds your limit and adjusts the decision accordingly.</div>
+        </div>
+        <div class="gl-body">
+          <div class="gl-grid">
+            <div class="gl-field"><label>DSCR (%)</label><input id="gl-ltv-dscr" type="number" min="40" max="90" placeholder="75"></div>
+            <div class="gl-field"><label>Bridge (%)</label><input id="gl-ltv-bridge" type="number" min="40" max="90" placeholder="65"></div>
+            <div class="gl-field"><label>Fix &amp; Flip (%)</label><input id="gl-ltv-flip" type="number" min="40" max="95" placeholder="85"></div>
+            <div class="gl-field"><label>Land (%)</label><input id="gl-ltv-land" type="number" min="30" max="75" placeholder="55"></div>
+            <div class="gl-field"><label>Ground-Up (%)</label><input id="gl-ltv-gnd" type="number" min="40" max="90" placeholder="75"></div>
+            <div class="gl-field"><label>Private / Hard Money (%)</label><input id="gl-ltv-private" type="number" min="40" max="85" placeholder="70"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gl-section">
+        <div class="gl-section-head">
+          <div class="gl-section-title">Credit &amp; Loan Size</div>
+        </div>
+        <div class="gl-body">
+          <div class="gl-grid">
+            <div class="gl-field"><label>Min Credit Score</label><input id="gl-min-credit" type="number" min="500" max="850" placeholder="620"></div>
+            <div class="gl-field"><label>Min Loan Amount</label><input id="gl-min-loan" type="text" placeholder="$100,000"></div>
+            <div class="gl-field"><label>Max Loan Amount</label><input id="gl-max-loan" type="text" placeholder="$5,000,000"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="gl-section">
+        <div class="gl-section-head">
+          <div class="gl-section-title">Eligible Loan Products</div>
+          <div class="gl-section-sub">The AI will note if a requested product is outside your approved program set.</div>
+        </div>
+        <div class="gl-body">
+          <div class="gl-check-row">
+            <label><input type="checkbox" class="gl-product" value="DSCR" checked> DSCR</label>
+            <label><input type="checkbox" class="gl-product" value="Private Money" checked> Private / Hard Money</label>
+            <label><input type="checkbox" class="gl-product" value="Bridge" checked> Bridge</label>
+            <label><input type="checkbox" class="gl-product" value="Fix & Flip" checked> Fix &amp; Flip</label>
+            <label><input type="checkbox" class="gl-product" value="Ground-Up" checked> Ground-Up Construction</label>
+            <label><input type="checkbox" class="gl-product" value="Land" checked> Land Loan</label>
+            <label><input type="checkbox" class="gl-product" value="Commercial"> Commercial / Mixed-Use</label>
+          </div>
+        </div>
+      </div>
+
+      <div class="gl-section">
+        <div class="gl-section-head">
+          <div class="gl-section-title">Geographic Focus</div>
+        </div>
+        <div class="gl-body">
+          <div class="gl-field"><label>States or Markets You Lend In</label>
+            <input id="gl-geo" type="text" placeholder="e.g. Florida, Southeast, National, Miami-Dade County…">
+          </div>
+        </div>
+      </div>
+
+      <div class="gl-section">
+        <div class="gl-section-head">
+          <div class="gl-section-title">Additional Underwriting Notes</div>
+          <div class="gl-section-sub">Special requirements, red flags, or notes the AI should surface on every assessment.</div>
+        </div>
+        <div class="gl-body">
+          <div class="gl-field">
+            <textarea id="gl-notes" rows="4" style="resize:vertical;min-height:90px" placeholder="e.g. We do not fund cannabis-related properties. Require full appraisal on loans above $2M. No condotels or manufactured housing."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <button class="gl-save-btn" onclick="lpaSaveGuidelines()">Save Guidelines</button>
+    </div>
+  </div>
+
+</div><!-- /lender-dashboard-view -->
+</div><!-- /portal-shell -->
 
 <!-- DEAL DETAIL MODAL -->
 <div class="modal-overlay" id="lender-deal-modal">
@@ -385,6 +592,7 @@ function showLenderDashboardView() {
   document.getElementById('lender-login-view').style.display = 'none';
   document.getElementById('lender-signup-view').style.display = 'none';
   document.getElementById('lender-dashboard-view').style.display = 'block';
+  if (typeof lpaRenderSidebar === 'function') lpaRenderSidebar();
 }
 
 async function lenderLogin() {
@@ -478,29 +686,6 @@ async function lenderManageBilling() {
     finally { if (btn) { btn.disabled = false; btn.textContent = 'Manage Plan'; } }
   } else {
     // Trial/free — go to checkout
-    lenderStartCheckout();
-  }
-}
-
-async function lenderManageBilling() {
-  const session = getLenderSession();
-  if (!session?.token) return;
-  const lender = session.lender || {};
-  const plan = lender.plan || 'trial';
-  if (plan === 'active' || plan === 'paid') {
-    const btn = document.getElementById('lender-billing-btn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Opening portal...'; }
-    try {
-      const res = await fetch('/.netlify/functions/lender-billing-portal', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: session.token, returnUrl: window.location.href })
-      });
-      const data = await res.json();
-      if (data.portalUrl) window.location.href = data.portalUrl;
-      else lenderStartCheckout();
-    } catch { lenderStartCheckout(); }
-    finally { const b = document.getElementById('lender-billing-btn'); if (b) { b.disabled = false; b.textContent = 'Manage Plan'; } }
-  } else {
     lenderStartCheckout();
   }
 }
@@ -1056,5 +1241,829 @@ async function submitLenderAccessRequest() {
     </div>
   </div>
 </div>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   DEAL ASSESSMENT — lpa- prefix throughout
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Panel switching ── */
+function switchLenderPanel(panel) {
+  ['pipeline','assessment','guidelines'].forEach(function(p) {
+    var el = document.getElementById('lp-' + p + '-panel');
+    if (el) el.style.display = p === panel ? 'block' : 'none';
+    var tab = document.getElementById('lpt-' + p);
+    if (tab) tab.classList.toggle('active', p === panel);
+  });
+  if (panel === 'assessment') {
+    if (!document.getElementById('lpa-chat').children.length) lpaNewAssessment();
+    lpaRenderSidebar();
+  }
+  if (panel === 'guidelines') lpaLoadGuidelinesForm();
+}
+
+/* ── State machine ── */
+var LPA_ST = {
+  PROPERTY:'property', LOAN_TYPE:'loan_type',
+  CLIENT_NAME:'client_name', BORROWER_NAME:'borrower_name',
+  DEAL_BASICS:'deal_basics', DOWN_PAYMENT:'down_payment',
+  DSCR_RENT:'dscr_rent', DSCR_EXP:'dscr_exp',
+  BRIDGE_VALUE:'bridge_value', BRIDGE_EXIT:'bridge_exit',
+  FLIP_ARV:'flip_arv', FLIP_REHAB:'flip_rehab', FLIP_EXP:'flip_exp',
+  LAND_ZONE:'land_zone', LAND_EXIT:'land_exit',
+  GND_BUDGET:'gnd_budget', GND_PERMITS:'gnd_permits',
+  PRIVATE_EXIT:'private_exit', PRIVATE_TERM:'private_term',
+  CREDIT:'credit', PROCESSING:'processing', DECISION:'decision'
+};
+var lpaState = LPA_ST.PROPERTY;
+var lpaDeal  = {};
+var lpaDeals = [];
+
+/* ── Guidelines persistence ── */
+function lpaGetGL() {
+  var s = getLenderSession();
+  var key = 'ul_lender_gl_' + ((s && s.user && s.user.email) || 'default');
+  try { return JSON.parse(localStorage.getItem(key) || 'null'); } catch(e) { return null; }
+}
+
+function lpaSaveGuidelines() {
+  var s = getLenderSession();
+  var key = 'ul_lender_gl_' + ((s && s.user && s.user.email) || 'default');
+  var g = {
+    ltv_dscr:    (parseFloat(document.getElementById('gl-ltv-dscr').value)    || 75)  / 100,
+    ltv_bridge:  (parseFloat(document.getElementById('gl-ltv-bridge').value)  || 65)  / 100,
+    ltv_flip:    (parseFloat(document.getElementById('gl-ltv-flip').value)    || 85)  / 100,
+    ltv_land:    (parseFloat(document.getElementById('gl-ltv-land').value)    || 55)  / 100,
+    ltv_gnd:     (parseFloat(document.getElementById('gl-ltv-gnd').value)     || 75)  / 100,
+    ltv_private: (parseFloat(document.getElementById('gl-ltv-private').value) || 70)  / 100,
+    min_credit:  parseInt(document.getElementById('gl-min-credit').value) || 620,
+    min_loan:    lpaToNum(document.getElementById('gl-min-loan').value)   || 0,
+    max_loan:    lpaToNum(document.getElementById('gl-max-loan').value)   || 99999999,
+    geo_focus:   document.getElementById('gl-geo').value.trim(),
+    products:    Array.from(document.querySelectorAll('.gl-product:checked')).map(function(c){return c.value;}),
+    notes:       document.getElementById('gl-notes').value.trim()
+  };
+  localStorage.setItem(key, JSON.stringify(g));
+  showToast('Lending guidelines saved', 'success');
+}
+
+function lpaLoadGuidelinesForm() {
+  var g = lpaGetGL();
+  if (!g) return;
+  var set = function(id, val) { var el = document.getElementById(id); if (el) el.value = val; };
+  set('gl-ltv-dscr',    Math.round((g.ltv_dscr    || 0.75) * 100));
+  set('gl-ltv-bridge',  Math.round((g.ltv_bridge  || 0.65) * 100));
+  set('gl-ltv-flip',    Math.round((g.ltv_flip    || 0.85) * 100));
+  set('gl-ltv-land',    Math.round((g.ltv_land    || 0.55) * 100));
+  set('gl-ltv-gnd',     Math.round((g.ltv_gnd    || 0.75) * 100));
+  set('gl-ltv-private', Math.round((g.ltv_private || 0.70) * 100));
+  set('gl-min-credit',  g.min_credit || 620);
+  set('gl-min-loan',    g.min_loan   ? '$' + g.min_loan.toLocaleString() : '');
+  set('gl-max-loan',    g.max_loan && g.max_loan < 99999999 ? '$' + g.max_loan.toLocaleString() : '');
+  set('gl-geo',         g.geo_focus  || '');
+  set('gl-notes',       g.notes      || '');
+  if (g.products && g.products.length) {
+    document.querySelectorAll('.gl-product').forEach(function(c) {
+      c.checked = g.products.indexOf(c.value) >= 0;
+    });
+  }
+}
+
+/* ── Chat helpers ── */
+function lpaChat() { return document.getElementById('lpa-chat'); }
+
+function lpaAddAI(html, opts) {
+  opts = opts || [];
+  var wrap = document.createElement('div');
+  wrap.className = 'lpa-msg ai';
+  var optHtml = '';
+  if (opts.length) {
+    optHtml = '<div class="lpa-opts">' + opts.map(function(o) {
+      return '<button class="lpa-opt" onclick="lpaPickOpt(this)">' + o + '</button>';
+    }).join('') + '</div>';
+  }
+  wrap.innerHTML = '<div class="lpa-avatar lpa-ai-avatar">AI</div><div><div class="lpa-bubble lpa-ai-bub">' + html + '</div>' + optHtml + '</div>';
+  lpaChat().appendChild(wrap);
+  lpaScroll();
+}
+
+function lpaAddUser(text) {
+  var s = getLenderSession();
+  var init = (s && s.user && s.user.name) ? s.user.name[0].toUpperCase() : 'L';
+  var wrap = document.createElement('div');
+  wrap.className = 'lpa-msg user';
+  wrap.innerHTML = '<div class="lpa-avatar lpa-user-avatar">' + init + '</div><div class="lpa-bubble lpa-user-bub">' + text + '</div>';
+  lpaChat().appendChild(wrap);
+  lpaScroll();
+}
+
+function lpaAddTyping() {
+  var wrap = document.createElement('div');
+  wrap.className = 'lpa-msg ai';
+  wrap.innerHTML = '<div class="lpa-avatar lpa-ai-avatar">AI</div><div class="lpa-bubble lpa-ai-bub"><div class="lpa-typing"><span></span><span></span><span></span></div></div>';
+  lpaChat().appendChild(wrap);
+  lpaScroll();
+  return wrap;
+}
+
+function lpaScroll() { var c = lpaChat(); c.scrollTop = c.scrollHeight; }
+function lpaDelay(ms) { return new Promise(function(r){ setTimeout(r, ms); }); }
+
+async function lpaAI(html, opts, ms) {
+  ms = ms !== undefined ? ms : 480;
+  var t = lpaAddTyping();
+  await lpaDelay(ms);
+  t.remove();
+  lpaAddAI(html, opts);
+}
+
+function lpaPickOpt(btn) {
+  var val = btn.textContent;
+  // remove all option rows
+  document.querySelectorAll('.lpa-opts').forEach(function(el){ el.remove(); });
+  lpaAddUser(val);
+  lpaProcess(val);
+}
+
+/* ── Input ── */
+function lpaSend() {
+  var inp = document.getElementById('lpa-user-input');
+  var val = inp.value.trim();
+  if (!val || lpaState === LPA_ST.PROCESSING || lpaState === LPA_ST.DECISION) return;
+  inp.value = '';
+  lpaAutoResize(inp);
+  lpaAddUser(val);
+  lpaProcess(val);
+}
+
+function lpaHandleKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); lpaSend(); }
+}
+
+function lpaAutoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function lpaSetInput(on) {
+  document.getElementById('lpa-user-input').disabled = !on;
+  document.getElementById('lpa-send-btn').disabled   = !on;
+}
+
+/* ── State machine process ── */
+async function lpaProcess(input) {
+  lpaSetInput(false);
+  var v = input.trim();
+
+  switch (lpaState) {
+
+    case LPA_ST.PROPERTY:
+      lpaDeal.address = v;
+      lpaState = LPA_ST.LOAN_TYPE;
+      await lpaAI('Got it — <strong>' + v + '</strong>. What type of financing is the borrower seeking?',
+        ['Private Money / Hard Money','DSCR – Rental Income','Bridge Loan','Fix & Flip','Ground-Up Construction','Land Loan','Commercial / Mixed-Use']);
+      break;
+
+    case LPA_ST.LOAN_TYPE:
+      lpaDeal.loanType = lpaMapType(v);
+      lpaState = LPA_ST.CLIENT_NAME;
+      await lpaAI('<strong>' + lpaDeal.loanType + '</strong>. Who is the client or broker submitting this deal? (Enter "direct" if the borrower is submitting.)');
+      break;
+
+    case LPA_ST.CLIENT_NAME:
+      lpaDeal.clientName = /^(direct|n\/a|none)$/i.test(v) ? '(Direct Borrower)' : v;
+      lpaState = LPA_ST.BORROWER_NAME;
+      await lpaAI("What is the borrower's legal name or entity name?");
+      break;
+
+    case LPA_ST.BORROWER_NAME:
+      lpaDeal.borrowerName = v;
+      lpaState = LPA_ST.DEAL_BASICS;
+      await lpaAI('What is the <strong>purchase price</strong> or current appraised value? (e.g. $610,000 or 610k)');
+      break;
+
+    case LPA_ST.DEAL_BASICS:
+      lpaDeal.purchasePrice = lpaToNum(v);
+      if (!lpaDeal.purchasePrice) {
+        await lpaAI("I didn't catch that — please enter the purchase price (e.g. $610,000 or 610k).", [], 300);
+        lpaSetInput(true); return;
+      }
+      lpaState = LPA_ST.DOWN_PAYMENT;
+      await lpaAI('How much is the borrower putting down? (Dollar amount or percentage — e.g. "$110,000" or "18%")');
+      break;
+
+    case LPA_ST.DOWN_PAYMENT:
+      lpaDeal.downPayment = v.indexOf('%') >= 0
+        ? Math.round(lpaDeal.purchasePrice * parseFloat(v) / 100)
+        : lpaToNum(v);
+      lpaDeal.loanAmount = lpaDeal.purchasePrice - lpaDeal.downPayment;
+      lpaDeal.ltv = lpaDeal.loanAmount / lpaDeal.purchasePrice;
+      lpaState = lpaTypeBranch(lpaDeal.loanType);
+      await lpaProductQ(lpaDeal.loanType);
+      break;
+
+    case LPA_ST.DSCR_RENT:
+      lpaDeal.monthlyRent = lpaToNum(v);
+      lpaState = LPA_ST.DSCR_EXP;
+      await lpaAI('What are the estimated monthly operating expenses? (taxes, insurance, management, maintenance)');
+      break;
+
+    case LPA_ST.DSCR_EXP:
+      lpaDeal.monthlyExp = lpaToNum(v) || Math.round(lpaDeal.monthlyRent * 0.35);
+      lpaState = LPA_ST.CREDIT;
+      await lpaCreditQ();
+      break;
+
+    case LPA_ST.BRIDGE_VALUE:
+      lpaDeal.currentValue = lpaToNum(v);
+      lpaState = LPA_ST.BRIDGE_EXIT;
+      await lpaAI("What's the exit strategy and target timeframe?",
+        ['Sale – 6 months','Sale – 12 months','Refinance – 12 months','Refinance – 18–24 months']);
+      break;
+
+    case LPA_ST.BRIDGE_EXIT:
+      lpaDeal.exitStrategy = v;
+      lpaState = LPA_ST.CREDIT;
+      await lpaCreditQ();
+      break;
+
+    case LPA_ST.FLIP_ARV:
+      lpaDeal.arv = lpaToNum(v);
+      lpaState = LPA_ST.FLIP_REHAB;
+      await lpaAI('What is the estimated <strong>rehab / renovation budget</strong>?');
+      break;
+
+    case LPA_ST.FLIP_REHAB:
+      lpaDeal.rehabBudget = lpaToNum(v);
+      lpaState = LPA_ST.FLIP_EXP;
+      await lpaAI('How many fix-and-flip projects has this borrower completed in the last 24 months?',
+        ['0 — First-timer','1–2 Projects','3–5 Projects','6+ Projects']);
+      break;
+
+    case LPA_ST.FLIP_EXP:
+      lpaDeal.flipExp = v;
+      lpaState = LPA_ST.CREDIT;
+      await lpaCreditQ();
+      break;
+
+    case LPA_ST.LAND_ZONE:
+      lpaDeal.zoning = v;
+      lpaState = LPA_ST.LAND_EXIT;
+      await lpaAI("What is the borrower's exit strategy for this land?",
+        ['Hold – Sell Later','Develop – Residential','Develop – Commercial','Agricultural Use']);
+      break;
+
+    case LPA_ST.LAND_EXIT:
+      lpaDeal.exitStrategy = v;
+      lpaState = LPA_ST.CREDIT;
+      await lpaCreditQ();
+      break;
+
+    case LPA_ST.GND_BUDGET:
+      lpaDeal.constructionBudget = lpaToNum(v);
+      lpaState = LPA_ST.GND_PERMITS;
+      await lpaAI('Does the borrower have approved plans and permits?',
+        ['Permits Approved','Plans Submitted – Pending','Pre-Permit / Pre-Entitlement']);
+      break;
+
+    case LPA_ST.GND_PERMITS:
+      lpaDeal.permitStatus = v;
+      lpaState = LPA_ST.CREDIT;
+      await lpaCreditQ();
+      break;
+
+    case LPA_ST.PRIVATE_EXIT:
+      lpaDeal.exitStrategy = v;
+      lpaState = LPA_ST.PRIVATE_TERM;
+      await lpaAI('What loan term is the borrower seeking?',
+        ['6 Months','12 Months','18 Months','24 Months']);
+      break;
+
+    case LPA_ST.PRIVATE_TERM:
+      lpaDeal.loanTerm = v;
+      lpaState = LPA_ST.CREDIT;
+      await lpaCreditQ();
+      break;
+
+    case LPA_ST.CREDIT:
+      lpaDeal.creditScore = v;
+      await lpaRenderDecision();
+      return;
+  }
+
+  lpaSetInput(lpaState !== LPA_ST.DECISION && lpaState !== LPA_ST.PROCESSING);
+}
+
+function lpaMapType(raw) {
+  var r = raw.toLowerCase();
+  if (r.indexOf('dscr') >= 0 || r.indexOf('rental') >= 0) return 'DSCR – Rental Income Based';
+  if (r.indexOf('bridge') >= 0)                            return 'Bridge Loan';
+  if (r.indexOf('flip') >= 0)                              return 'Fix & Flip';
+  if (r.indexOf('ground') >= 0 || r.indexOf('const') >= 0) return 'Ground-Up Construction';
+  if (r.indexOf('land') >= 0)                              return 'Land Loan';
+  if (r.indexOf('commercial') >= 0 || r.indexOf('mixed') >= 0) return 'Commercial / Mixed-Use';
+  return 'Private Money / Hard Money';
+}
+
+function lpaTypeBranch(type) {
+  var t = type.toLowerCase();
+  if (t.indexOf('dscr') >= 0)   return LPA_ST.DSCR_RENT;
+  if (t.indexOf('bridge') >= 0) return LPA_ST.BRIDGE_VALUE;
+  if (t.indexOf('flip') >= 0)   return LPA_ST.FLIP_ARV;
+  if (t.indexOf('land') >= 0)   return LPA_ST.LAND_ZONE;
+  if (t.indexOf('ground') >= 0) return LPA_ST.GND_BUDGET;
+  return LPA_ST.PRIVATE_EXIT;
+}
+
+async function lpaProductQ(type) {
+  var t = type.toLowerCase();
+  if (t.indexOf('dscr') >= 0)
+    await lpaAI('What is the <strong>monthly gross rental income</strong> for this property?');
+  else if (t.indexOf('bridge') >= 0)
+    await lpaAI('What is the current <strong>as-is value</strong> of the property?');
+  else if (t.indexOf('flip') >= 0)
+    await lpaAI('What is the projected <strong>After-Repair Value (ARV)</strong>?');
+  else if (t.indexOf('land') >= 0)
+    await lpaAI('What is the current <strong>zoning designation</strong>? (e.g. A-1, RR-5, C-1, or "unzoned")');
+  else if (t.indexOf('ground') >= 0)
+    await lpaAI('What is the total <strong>construction budget</strong>, excluding land cost?');
+  else
+    await lpaAI("What is the borrower's <strong>exit strategy</strong>?",
+      ['Sale of Property','Cash-Out Refinance','Development / Build-Out','Business Revenue']);
+}
+
+async function lpaCreditQ() {
+  lpaState = LPA_ST.CREDIT;
+  await lpaAI("Almost there — what is the borrower's estimated <strong>credit score range</strong>?",
+    ['Below 580','580–619','620–659','660–699','700–739','740+']);
+}
+
+/* ── Decision Engine ── */
+async function lpaRenderDecision() {
+  lpaState = LPA_ST.PROCESSING;
+  lpaSetInput(false);
+
+  var proc = document.createElement('div');
+  proc.className = 'lpa-msg ai';
+  proc.innerHTML = '<div class="lpa-avatar lpa-ai-avatar">AI</div><div class="lpa-proc"><div class="lpa-proc-ring"></div>Running underwriting analysis…</div>';
+  lpaChat().appendChild(proc);
+  lpaScroll();
+  await lpaDelay(1800);
+  proc.remove();
+
+  var gl = lpaGetGL();
+  var result = lpaComputeDecision(lpaDeal, gl);
+  lpaDeal.decision = result.verdict;
+  lpaDeal.decisionData = result;
+  lpaDeal.date = new Date().toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'});
+
+  // save to history
+  var s = getLenderSession();
+  var hKey = 'ul_lpa_hist_' + ((s && s.user && s.user.email) || 'default');
+  var hist = [];
+  try { hist = JSON.parse(localStorage.getItem(hKey) || '[]'); } catch(e) {}
+  var rec = {
+    id: Date.now(), address: lpaDeal.address, loanType: lpaDeal.loanType,
+    borrower: lpaDeal.borrowerName, verdict: result.verdict, date: lpaDeal.date,
+    deal: JSON.parse(JSON.stringify(lpaDeal))
+  };
+  hist.unshift(rec);
+  localStorage.setItem(hKey, JSON.stringify(hist.slice(0, 50)));
+  lpaDeals = hist;
+  lpaRenderSidebar();
+
+  var vClass = result.verdict === 'APPROVED' ? 'lpa-v-approve'
+             : result.verdict === 'APPROVED WITH CONDITIONS' ? 'lpa-v-conditions'
+             : 'lpa-v-decline';
+  var vIcon  = result.verdict === 'APPROVED' ? '✓'
+             : result.verdict === 'APPROVED WITH CONDITIONS' ? '⚑' : '✗';
+
+  var metricsHtml = result.metrics.map(function(m) {
+    return '<div class="lpa-metric"><div class="lpa-m-label">' + m.label +
+           '</div><div class="lpa-m-val ' + (m.color || '') + '">' + m.value + '</div></div>';
+  }).join('');
+
+  var rationaleHtml = '<div class="lpa-rationale"><h4>Rationale</h4><ul>' +
+    result.rationale.map(function(r){ return '<li>' + r + '</li>'; }).join('') + '</ul></div>';
+
+  var condHtml = result.conditions.length
+    ? '<div class="lpa-conditions" style="margin-top:12px"><h4>Conditions</h4><ul>' +
+      result.conditions.map(function(c){ return '<li>' + c + '</li>'; }).join('') + '</ul></div>' : '';
+
+  var noteHtml = (gl && gl.notes)
+    ? '<div style="margin-top:12px;padding:10px 12px;background:var(--teal-dim);border:1px solid var(--teal-border);border-radius:6px;font-size:11px;color:var(--teal)">Lender note applied: ' + gl.notes + '</div>' : '';
+
+  var wrap = document.createElement('div');
+  wrap.className = 'lpa-msg ai';
+  wrap.innerHTML =
+    '<div class="lpa-avatar lpa-ai-avatar">AI</div>' +
+    '<div style="flex:1">' +
+      '<div class="lpa-bubble lpa-ai-bub" style="margin-bottom:10px">Assessment complete for <strong>' + lpaDeal.address + '</strong>:</div>' +
+      '<div class="lpa-decision-card">' +
+        '<div class="lpa-verdict-badge ' + vClass + '">' + vIcon + ' ' + result.verdict + '</div>' +
+        '<div class="lpa-metrics-grid">' + metricsHtml + '</div>' +
+        rationaleHtml + condHtml + noteHtml +
+        '<div class="lpa-action-row">' +
+          '<button class="lpa-act-btn lpa-btn-pdf" onclick="lpaDownloadPDF()">⬇ PDF Report</button>' +
+          '<button class="lpa-act-btn lpa-btn-email" onclick="lpaEmailReport()">✉ Email</button>' +
+          '<button class="lpa-act-btn lpa-btn-new" onclick="lpaNewAssessment()">+ New Deal</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  lpaChat().appendChild(wrap);
+  lpaScroll();
+  lpaState = LPA_ST.DECISION;
+}
+
+function lpaComputeDecision(d, gl) {
+  var ltv  = d.ltv || 0;
+  var cNum = lpaCreditNum(d.creditScore || '');
+  var ltvP = (ltv * 100).toFixed(1) + '%';
+  var lc   = ltv <= 0.65 ? 'lpa-m-good' : ltv <= 0.75 ? 'lpa-m-warn' : 'lpa-m-bad';
+  var type = (d.loanType || '').toLowerCase();
+
+  var maxDSCR    = (gl && gl.ltv_dscr    != null) ? gl.ltv_dscr    : 0.75;
+  var maxBridge  = (gl && gl.ltv_bridge  != null) ? gl.ltv_bridge  : 0.65;
+  var maxFlip    = (gl && gl.ltv_flip    != null) ? gl.ltv_flip    : 0.85;
+  var maxLand    = (gl && gl.ltv_land    != null) ? gl.ltv_land    : 0.55;
+  var maxGnd     = (gl && gl.ltv_gnd     != null) ? gl.ltv_gnd     : 0.75;
+  var maxPrivate = (gl && gl.ltv_private != null) ? gl.ltv_private : 0.70;
+  var minCredit  = (gl && gl.min_credit  != null) ? gl.min_credit  : 620;
+  var minLoan    = (gl && gl.min_loan    != null) ? gl.min_loan    : 0;
+  var maxLoan    = (gl && gl.max_loan    != null) ? gl.max_loan    : 99999999;
+
+  var verdict = 'APPROVED', rationale = [], conditions = [];
+  var metrics = [
+    {label:'Loan-to-Value',  value:ltvP, color:lc},
+    {label:'Loan Amount',    value:lpaFmt(d.loanAmount)},
+    {label:'Purchase Price', value:lpaFmt(d.purchasePrice)},
+    {label:'Down Payment',   value:lpaFmt(d.downPayment) + ' (' + ((d.downPayment/d.purchasePrice)*100).toFixed(0) + '%)', color:lc}
+  ];
+
+  // loan size guard
+  if (d.loanAmount < minLoan && minLoan > 0) {
+    return {verdict:'DECLINE', metrics:metrics,
+      rationale:['Loan amount of ' + lpaFmt(d.loanAmount) + ' is below the minimum deal size of ' + lpaFmt(minLoan) + '.'],
+      conditions:[]};
+  }
+  if (d.loanAmount > maxLoan) {
+    return {verdict:'DECLINE', metrics:metrics,
+      rationale:['Loan amount of ' + lpaFmt(d.loanAmount) + ' exceeds the maximum exposure of ' + lpaFmt(maxLoan) + '.'],
+      conditions:[]};
+  }
+
+  if (type.indexOf('dscr') >= 0) {
+    var rate = ltv <= 0.65 ? 0.075 : ltv <= maxDSCR ? 0.085 : 0.095;
+    var mr = rate / 12, n = 360;
+    var pmt = d.loanAmount * (mr * Math.pow(1+mr,n)) / (Math.pow(1+mr,n)-1);
+    var noi = (d.monthlyRent * 12 * 0.95) - (d.monthlyExp * 12);
+    var dscr = noi / (pmt * 12);
+    var dc = dscr >= 1.25 ? 'lpa-m-good' : dscr >= 1.0 ? 'lpa-m-warn' : 'lpa-m-bad';
+    metrics.push({label:'DSCR', value:dscr.toFixed(2)+'x', color:dc});
+    metrics.push({label:'Est. Annual NOI', value:lpaFmt(noi), color:dc});
+    if (dscr >= 1.25 && ltv <= maxDSCR && cNum >= minCredit) {
+      verdict = 'APPROVED';
+      rationale.push('DSCR of ' + dscr.toFixed(2) + 'x exceeds the 1.25x threshold — property cash-flows adequately.');
+      rationale.push('LTV of ' + ltvP + ' is within the ' + (maxDSCR*100).toFixed(0) + '% guideline.');
+    } else if (dscr >= 1.0 && ltv <= maxDSCR + 0.05) {
+      verdict = 'APPROVED WITH CONDITIONS';
+      if (dscr < 1.25)       { rationale.push('DSCR of ' + dscr.toFixed(2) + 'x is below the preferred 1.25x.'); conditions.push('Provide executed leases and 12-month rental history.'); }
+      if (ltv > maxDSCR)     { rationale.push('LTV of ' + ltvP + ' exceeds the ' + (maxDSCR*100).toFixed(0) + '% guideline.'); conditions.push('Additional reserves required (6 months PITIA).'); }
+      if (cNum < minCredit)  { conditions.push('Credit score below lender minimum of ' + minCredit + ' — compensating factors required.'); }
+    } else {
+      verdict = 'DECLINE';
+      if (dscr < 1.0)        rationale.push('DSCR of ' + dscr.toFixed(2) + 'x — property does not service the debt.');
+      if (ltv > maxDSCR + 0.05) rationale.push('LTV of ' + ltvP + ' materially exceeds the ' + (maxDSCR*100).toFixed(0) + '% guideline.');
+      if (cNum < minCredit - 40) rationale.push('Credit score significantly below lender minimum of ' + minCredit + '.');
+    }
+
+  } else if (type.indexOf('flip') >= 0) {
+    var ltvArv = d.loanAmount / (d.arv || d.purchasePrice);
+    var expNum = (d.flipExp||'').indexOf('6+') >= 0 ? 6 : (d.flipExp||'').indexOf('3') >= 0 ? 3 : (d.flipExp||'').indexOf('1') >= 0 ? 1 : 0;
+    var lac = ltvArv <= 0.70 ? 'lpa-m-good' : ltvArv <= 0.80 ? 'lpa-m-warn' : 'lpa-m-bad';
+    metrics.push({label:'ARV', value:lpaFmt(d.arv)});
+    metrics.push({label:'Rehab Budget', value:lpaFmt(d.rehabBudget)});
+    metrics.push({label:'Loan / ARV', value:(ltvArv*100).toFixed(1)+'%', color:lac});
+    if (ltvArv <= 0.70 && ltv <= maxFlip && expNum >= 1 && cNum >= minCredit) {
+      verdict = 'APPROVED';
+      rationale.push('Loan-to-ARV of ' + (ltvArv*100).toFixed(1) + '% is within the 70% threshold.');
+      rationale.push('Borrower has documented fix-and-flip experience.');
+    } else if (ltvArv <= 0.80) {
+      verdict = 'APPROVED WITH CONDITIONS';
+      if (ltvArv > 0.70) { rationale.push('Loan-to-ARV of ' + (ltvArv*100).toFixed(1) + '% exceeds preferred 70%.'); conditions.push('Independent appraisal confirming ARV required prior to close.'); }
+      if (expNum === 0)   conditions.push('First-time flipper — signed GC contract and draw schedule required.');
+      if (cNum < minCredit) conditions.push('Credit score below lender minimum of ' + minCredit + '.');
+    } else {
+      verdict = 'DECLINE';
+      rationale.push('Loan-to-ARV of ' + (ltvArv*100).toFixed(1) + '% exceeds the 80% maximum — insufficient equity cushion on exit.');
+    }
+
+  } else if (type.indexOf('land') >= 0) {
+    var entitled = (d.zoning||'').toLowerCase().indexOf('unzoned') < 0;
+    metrics.push({label:'Zoning', value:d.zoning || 'Unknown'});
+    metrics.push({label:'Exit Strategy', value:d.exitStrategy || 'Unknown'});
+    if (ltv <= maxLand && entitled && cNum >= minCredit) {
+      verdict = 'APPROVED';
+      rationale.push('LTV of ' + ltvP + ' is within the ' + (maxLand*100).toFixed(0) + '% guideline for raw land.');
+      rationale.push('Zoning indicates entitled land — lower risk profile.');
+    } else if (ltv <= maxLand + 0.10) {
+      verdict = 'APPROVED WITH CONDITIONS';
+      if (!entitled) conditions.push('Unzoned land — county zoning confirmation letter required.');
+      conditions.push('Phase 1 Environmental Site Assessment required.');
+      conditions.push('Survey confirming legal acreage required.');
+      if (cNum < minCredit) conditions.push('Credit below lender minimum of ' + minCredit + '.');
+    } else {
+      verdict = 'DECLINE';
+      rationale.push('LTV of ' + ltvP + ' exceeds the maximum for raw land — insufficient equity position.');
+    }
+
+  } else if (type.indexOf('bridge') >= 0) {
+    var asIsLTV = d.loanAmount / (d.currentValue || d.purchasePrice);
+    var bac = asIsLTV <= maxBridge ? 'lpa-m-good' : asIsLTV <= maxBridge + 0.10 ? 'lpa-m-warn' : 'lpa-m-bad';
+    metrics.push({label:'As-Is Value', value:lpaFmt(d.currentValue)});
+    metrics.push({label:'LTV (As-Is)', value:(asIsLTV*100).toFixed(1)+'%', color:bac});
+    metrics.push({label:'Exit Strategy', value:d.exitStrategy || 'Unknown'});
+    if (asIsLTV <= maxBridge && cNum >= minCredit) {
+      verdict = 'APPROVED';
+      rationale.push('As-is LTV of ' + (asIsLTV*100).toFixed(1) + '% is within the ' + (maxBridge*100).toFixed(0) + '% bridge guideline.');
+    } else if (asIsLTV <= maxBridge + 0.10) {
+      verdict = 'APPROVED WITH CONDITIONS';
+      if (asIsLTV > maxBridge) { rationale.push('As-is LTV of ' + (asIsLTV*100).toFixed(1) + '% slightly above bridge guideline.'); conditions.push('Rate adjustment of +0.5–1% to compensate for LTV.'); }
+      if (cNum < minCredit) conditions.push('Credit below lender minimum of ' + minCredit + '.');
+    } else {
+      verdict = 'DECLINE';
+      rationale.push('As-is LTV of ' + (asIsLTV*100).toFixed(1) + '% exceeds the bridge ceiling — insufficient collateral coverage.');
+    }
+
+  } else if (type.indexOf('ground') >= 0) {
+    var totalCost = (d.purchasePrice || 0) + (d.constructionBudget || 0);
+    var ltc = d.loanAmount / totalCost;
+    var permitOk = (d.permitStatus||'').toLowerCase().indexOf('approved') >= 0;
+    var gac = ltc <= maxGnd ? 'lpa-m-good' : ltc <= maxGnd + 0.10 ? 'lpa-m-warn' : 'lpa-m-bad';
+    metrics.push({label:'Total Project Cost', value:lpaFmt(totalCost)});
+    metrics.push({label:'Construction Budget', value:lpaFmt(d.constructionBudget)});
+    metrics.push({label:'Loan-to-Cost', value:(ltc*100).toFixed(1)+'%', color:gac});
+    metrics.push({label:'Permit Status', value:d.permitStatus || 'Unknown', color:permitOk?'lpa-m-good':'lpa-m-warn'});
+    if (ltc <= maxGnd && permitOk && cNum >= minCredit) {
+      verdict = 'APPROVED';
+      rationale.push('LTC of ' + (ltc*100).toFixed(1) + '% is within the ' + (maxGnd*100).toFixed(0) + '% ground-up guideline.');
+      rationale.push('Permits approved — project is shovel-ready.');
+    } else if (ltc <= maxGnd + 0.10) {
+      verdict = 'APPROVED WITH CONDITIONS';
+      conditions.push('Construction loan to fund via draw schedule with independent inspector sign-off.');
+      if (!permitOk) conditions.push('Permits must be issued before first construction draw.');
+      if (ltc > maxGnd) conditions.push('LTC at ' + (ltc*100).toFixed(1) + '% — GC fixed-price contract required.');
+      if (cNum < minCredit) conditions.push('Credit below lender minimum of ' + minCredit + '.');
+    } else {
+      verdict = 'DECLINE';
+      rationale.push('LTC of ' + (ltc*100).toFixed(1) + '% exceeds the maximum — insufficient borrower equity in the deal.');
+    }
+
+  } else {
+    // Private money / commercial
+    metrics.push({label:'Exit Strategy', value:d.exitStrategy || 'Unknown'});
+    metrics.push({label:'Loan Term', value:d.loanTerm || 'Not specified'});
+    if (ltv <= maxPrivate && cNum >= minCredit && d.exitStrategy) {
+      verdict = 'APPROVED';
+      rationale.push('LTV of ' + ltvP + ' is within the ' + (maxPrivate*100).toFixed(0) + '% private money guideline.');
+      rationale.push('Clear exit strategy identified: ' + d.exitStrategy + '.');
+    } else if (ltv <= maxPrivate + 0.05) {
+      verdict = 'APPROVED WITH CONDITIONS';
+      if (ltv > maxPrivate) { rationale.push('LTV of ' + ltvP + ' exceeds preferred ' + (maxPrivate*100).toFixed(0) + '%.' ); conditions.push('Rate adjustment of +1–2% to reflect elevated LTV.'); }
+      if (!d.exitStrategy || d.exitStrategy === 'Unknown') conditions.push('Exit strategy must be documented and time-bound.');
+      if (cNum < minCredit) conditions.push('Credit below lender minimum of ' + minCredit + '.');
+    } else {
+      verdict = 'DECLINE';
+      rationale.push('LTV of ' + ltvP + ' exceeds the maximum for private money — insufficient collateral coverage.');
+    }
+  }
+
+  if (!rationale.length) rationale.push('Deal does not meet program criteria based on submitted parameters.');
+  return {verdict:verdict, metrics:metrics, rationale:rationale, conditions:conditions};
+}
+
+/* ── PDF ── */
+function lpaDownloadPDF() {
+  if (typeof window.jspdf === 'undefined') { showToast('PDF library not loaded yet — try again.', 'error'); return; }
+  var jsPDF = window.jspdf.jsPDF;
+  var doc = new jsPDF({unit:'pt', format:'letter'});
+  var W = 612, M = 50;
+  var s = getLenderSession();
+  var gl = lpaGetGL();
+  var y = M;
+
+  var vc = lpaDeal.decision === 'APPROVED' ? [5,150,105]
+         : lpaDeal.decision === 'APPROVED WITH CONDITIONS' ? [180,83,9] : [220,38,38];
+
+  doc.setFillColor(15,34,64); doc.rect(0,0,W,68,'F');
+  doc.setFontSize(16); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
+  doc.text('UNDERLYTIX', M, 28);
+  doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(120,150,190);
+  doc.text('LENDER DEAL ASSESSMENT · CONFIDENTIAL', M, 43);
+  doc.setTextColor(150,170,200);
+  doc.text(lpaDeal.date || '', W-M, 43, {align:'right'});
+  y = 90;
+
+  function sec(title) {
+    doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(14,116,144);
+    doc.text(title, M, y);
+    doc.setDrawColor(200,220,230); doc.line(M + doc.getTextWidth(title) + 8, y-2, W-M, y-2);
+    y += 16;
+  }
+  function rw(lbl, val) {
+    doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(90,90,90);
+    doc.text(lbl, M+8, y);
+    doc.setFont('helvetica','normal'); doc.setTextColor(20,20,20);
+    doc.text(String(val || '—'), M+190, y);
+    y += 15;
+  }
+
+  sec('PARTIES');
+  rw('Lender',        (s && s.user && s.user.lender && s.user.lender.lender_name) || '_____________');
+  rw('Loan Officer',  (s && s.user && s.user.name) || '_____________');
+  rw('Client / Broker', lpaDeal.clientName || '_____________');
+  rw('Borrower',      lpaDeal.borrowerName || '_____________');
+  y += 8;
+
+  sec('PROPERTY & LOAN');
+  rw('Address / Folio', lpaDeal.address);
+  rw('Loan Product',    lpaDeal.loanType);
+  rw('Purchase Price',  lpaFmt(lpaDeal.purchasePrice));
+  rw('Loan Amount',     lpaFmt(lpaDeal.loanAmount));
+  rw('Down Payment',    lpaFmt(lpaDeal.downPayment) + ' (' + ((lpaDeal.downPayment/lpaDeal.purchasePrice)*100).toFixed(0) + '%)');
+  rw('LTV',             (lpaDeal.ltv*100).toFixed(1) + '%');
+  if (lpaDeal.creditScore)       rw('Credit Score', lpaDeal.creditScore);
+  if (lpaDeal.monthlyRent)       rw('Monthly Rent', lpaFmt(lpaDeal.monthlyRent));
+  if (lpaDeal.arv)               rw('ARV', lpaFmt(lpaDeal.arv));
+  if (lpaDeal.exitStrategy)      rw('Exit Strategy', lpaDeal.exitStrategy);
+  if (lpaDeal.constructionBudget) rw('Construction Budget', lpaFmt(lpaDeal.constructionBudget));
+  y += 8;
+
+  doc.setFillColor(vc[0], vc[1], vc[2]);
+  doc.roundedRect(M, y, W-M*2, 36, 5, 5, 'F');
+  doc.setFontSize(13); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
+  doc.text(lpaDeal.decision || '', W/2, y+23, {align:'center'});
+  y += 50;
+
+  var dd = lpaDeal.decisionData;
+  sec('RATIONALE');
+  doc.setFontSize(10); doc.setFont('helvetica','normal'); doc.setTextColor(50,50,50);
+  (dd && dd.rationale || []).forEach(function(r) {
+    var lines = doc.splitTextToSize('— ' + r, W-M*2-20);
+    doc.text(lines, M+10, y); y += lines.length * 14;
+  });
+  y += 6;
+
+  if (dd && dd.conditions && dd.conditions.length) {
+    sec('CONDITIONS');
+    doc.setTextColor(160,100,0);
+    dd.conditions.forEach(function(c) {
+      var lines = doc.splitTextToSize('→ ' + c, W-M*2-20);
+      doc.text(lines, M+10, y); y += lines.length * 14;
+    });
+    y += 6;
+  }
+
+  if (gl && gl.notes) {
+    sec('LENDER NOTES');
+    doc.setTextColor(14,116,144);
+    var lines = doc.splitTextToSize(gl.notes, W-M*2-20);
+    doc.text(lines, M+10, y); y += lines.length * 14 + 6;
+  }
+
+  y = Math.max(y, 640);
+  doc.setDrawColor(200,200,200);
+  doc.line(M, y, M+180, y); doc.line(M+230, y, M+420, y);
+  doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(120,120,120);
+  doc.text((s && s.user && s.user.name) || 'Loan Officer', M, y+12);
+  doc.text('Date', M+230, y+12);
+  doc.text('Borrower / Authorized Signatory', M, y+24);
+
+  doc.setFillColor(15,34,64); doc.rect(0,750,W,62,'F');
+  doc.setFontSize(8); doc.setTextColor(100,120,160);
+  doc.text('This assessment is for informational purposes only and does not constitute a commitment to lend.', W/2, 768, {align:'center'});
+  doc.text('© ' + new Date().getFullYear() + ' Underlytix · Confidential', W/2, 782, {align:'center'});
+
+  doc.save('Underlytix_Assessment_' + (lpaDeal.address||'deal').replace(/[^a-z0-9]/gi,'_') + '.pdf');
+}
+
+/* ── Email ── */
+function lpaEmailReport() {
+  var s = getLenderSession();
+  var dd = lpaDeal.decisionData;
+  var subj = encodeURIComponent('Deal Assessment — ' + (lpaDeal.address || ''));
+  var lines = [
+    'UNDERLYTIX LENDER DEAL ASSESSMENT', '',
+    'Property: ' + (lpaDeal.address || ''),
+    'Loan Product: ' + (lpaDeal.loanType || ''),
+    'Borrower: ' + (lpaDeal.borrowerName || ''),
+    'Client: ' + (lpaDeal.clientName || ''),
+    'Date: ' + (lpaDeal.date || ''), '',
+    'DECISION: ' + (lpaDeal.decision || ''), '',
+    'LOAN PARAMETERS',
+    'Purchase Price: ' + lpaFmt(lpaDeal.purchasePrice),
+    'Loan Amount: ' + lpaFmt(lpaDeal.loanAmount),
+    'Down Payment: ' + lpaFmt(lpaDeal.downPayment) + ' (' + ((lpaDeal.downPayment/lpaDeal.purchasePrice)*100).toFixed(0) + '%)',
+    'LTV: ' + (lpaDeal.ltv*100).toFixed(1) + '%', '',
+    'RATIONALE'
+  ].concat((dd && dd.rationale || []).map(function(r){ return '• ' + r; }));
+  if (dd && dd.conditions && dd.conditions.length) {
+    lines.push(''); lines.push('CONDITIONS');
+    dd.conditions.forEach(function(c){ lines.push('→ ' + c); });
+  }
+  lines.push('');
+  lines.push('Prepared by: ' + ((s && s.user && s.user.name) || '') + ' · ' + ((s && s.user && s.user.lender && s.user.lender.lender_name) || ''));
+  var body = encodeURIComponent(lines.join('\n'));
+  window.open('mailto:?subject=' + subj + '&body=' + body);
+}
+
+/* ── Sidebar ── */
+function lpaRenderSidebar() {
+  var list = document.getElementById('lpa-deal-list');
+  if (!list) return;
+  var s = getLenderSession();
+  var hKey = 'ul_lpa_hist_' + ((s && s.user && s.user.email) || 'default');
+  try { lpaDeals = JSON.parse(localStorage.getItem(hKey) || '[]'); } catch(e) { lpaDeals = []; }
+
+  var q = '';
+  var si = document.getElementById('lpa-search-input');
+  if (si) q = si.value.toLowerCase();
+
+  var filtered = lpaDeals.filter(function(d) {
+    return (d.address||'').toLowerCase().indexOf(q) >= 0 ||
+           (d.borrower||'').toLowerCase().indexOf(q) >= 0;
+  });
+
+  if (!filtered.length) {
+    list.innerHTML = '<div class="lpa-empty">No assessments yet.<br>Click + New to start.</div>';
+    return;
+  }
+  list.innerHTML = filtered.map(function(d) {
+    var dotColor = d.verdict === 'APPROVED' ? 'var(--green)'
+                 : (d.verdict && d.verdict.indexOf('CONDITIONS') >= 0) ? 'var(--amber)' : 'var(--red)';
+    return '<div class="lpa-deal-item" onclick="lpaLoadRec(' + d.id + ')">' +
+      '<div class="lpa-deal-prop" title="' + d.address + '">' + d.address + '</div>' +
+      '<div class="lpa-deal-meta">' +
+        '<span class="lpa-vdot" style="background:' + dotColor + '"></span>' +
+        '<span>' + (d.loanType||'').split(' ')[0] + '</span>' +
+        '<span>·</span><span>' + (d.date||'') + '</span>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function lpaFilterDeals() { lpaRenderSidebar(); }
+
+function lpaLoadRec(id) {
+  var rec = lpaDeals.filter(function(d){ return d.id === id; })[0];
+  if (!rec) return;
+  lpaDeal = JSON.parse(JSON.stringify(rec.deal));
+  lpaState = LPA_ST.DECISION;
+  lpaChat().innerHTML = '';
+  setTimeout(function() {
+    lpaAddAI('Loaded assessment: <strong>' + rec.address + '</strong> — ' + rec.borrower);
+    lpaAddAI('<strong>Decision on file: ' + rec.verdict + '</strong><br>Click <em>+ New</em> to run a new assessment.');
+    lpaSetInput(false);
+  }, 100);
+}
+
+function lpaNewAssessment() {
+  lpaChat().innerHTML = '';
+  lpaDeal = {};
+  lpaState = LPA_ST.PROPERTY;
+  lpaSetInput(true);
+  setTimeout(async function() {
+    var s = getLenderSession();
+    var name = (s && s.user && s.user.name) ? ', <strong>' + s.user.name + '</strong>' : '';
+    await lpaAI(
+      'Hello' + name + '. I’m the Underlytix underwriting assistant.<br><br>' +
+      'To begin, enter the <strong>folio number</strong> or <strong>property address</strong> you’d like to assess.',
+      [], 300
+    );
+  }, 150);
+}
+
+/* ── Utilities ── */
+function lpaToNum(s) {
+  if (!s) return 0;
+  var c = String(s).replace(/[$,\s]/g,'').toLowerCase();
+  if (c.slice(-1) === 'k') return parseFloat(c) * 1000;
+  if (c.slice(-1) === 'm') return parseFloat(c) * 1000000;
+  return parseFloat(c) || 0;
+}
+function lpaFmt(n) {
+  if (n == null || isNaN(n)) return '—';
+  return '$' + Math.round(n).toLocaleString('en-US');
+}
+function lpaCreditNum(s) {
+  if (!s) return 680;
+  if (s.indexOf('Below 580') >= 0) return 560;
+  if (s.indexOf('580') >= 0) return 600;
+  if (s.indexOf('620') >= 0) return 640;
+  if (s.indexOf('660') >= 0) return 680;
+  if (s.indexOf('700') >= 0) return 720;
+  return 760;
+}
+</script>
 </body>
 </html>
