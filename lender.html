@@ -200,6 +200,19 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .gl-save-btn{background:var(--teal);color:#fff;border:none;border-radius:7px;padding:11px 28px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:opacity .15s}
 .gl-save-btn:hover{opacity:.85}
 @media(max-width:768px){.gl-grid{grid-template-columns:1fr 1fr}.lpa-sidebar{width:200px}}
+
+.lpa-outcome-strip{border-top:1px solid var(--border);margin-top:13px;padding-top:11px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.lpa-out-label{font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.07em;flex-shrink:0}
+.lpa-out-btn{background:var(--bg-3);border:1px solid var(--border);color:var(--text-2);padding:4px 10px;border-radius:12px;font-size:11px;cursor:pointer;font-family:Inter,sans-serif;transition:all .15s}
+.lpa-out-btn:hover{border-color:var(--teal);color:var(--teal)}
+.lpa-out-btn.selected-funded{background:rgba(5,150,105,0.12);border-color:rgba(5,150,105,0.35);color:var(--green)}
+.lpa-out-btn.selected-declined{background:rgba(220,38,38,0.10);border-color:rgba(220,38,38,0.25);color:var(--red)}
+.lpa-out-btn.selected-withdrawn{background:rgba(107,114,128,0.12);border-color:rgba(107,114,128,0.25);color:var(--text-3)}
+.lpa-out-btn.selected-pending{background:rgba(217,119,6,0.10);border-color:rgba(217,119,6,0.25);color:var(--amber)}
+.lpa-precedent-box{background:var(--bg-3);border:1px solid var(--border);border-radius:7px;padding:10px 12px;margin:8px 0;font-size:12px}
+.lpa-prec-head{font-size:10px;font-weight:600;color:var(--teal);text-transform:uppercase;letter-spacing:.07em;margin-bottom:6px}
+.lpa-prec-item{color:var(--text-2);line-height:1.5;padding:3px 0;border-bottom:1px solid var(--border)}
+.lpa-prec-item:last-child{border-bottom:none}
 </style>
     <!-- Microsoft Clarity -->
     <script type="text/javascript">
@@ -1709,12 +1722,85 @@ async function lpaRenderDecision() {
           '<button class="lpa-act-btn lpa-btn-email" onclick="lpaEmailReport()">✉ Email</button>' +
           '<button class="lpa-act-btn lpa-btn-new" onclick="lpaNewAssessment()">+ New Deal</button>' +
         '</div>' +
+      lpaRenderOutcomeStrip(rec) +
       '</div>' +
     '</div>';
   lpaChat().appendChild(wrap);
   lpaScroll();
   lpaState = LPA_ST.DECISION;
 }
+
+
+  function lpaHistSetOutcome(id, outcome) {
+    var sess = getLenderSession();
+    var email = sess && sess.user ? sess.user.email : 'default';
+    var key = 'ul_lpa_hist_' + email;
+    var hist = [];
+    try { hist = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) {}
+    var entry = null;
+    for (var i = 0; i < hist.length; i++) {
+      if (hist[i].id === id) { entry = hist[i]; break; }
+    }
+    if (!entry) return;
+    entry.outcome = outcome;
+    entry.outcomeDate = new Date().toLocaleDateString('en-US', {month:'long',day:'numeric',year:'numeric'});
+    try { localStorage.setItem(key, JSON.stringify(hist)); } catch(e) {}
+    var strip = document.querySelector('[data-hist-id="' + id + '"]');
+    if (strip) {
+      var btns = strip.querySelectorAll('.lpa-out-btn');
+      var clsMap = {funded:'selected-funded',declined_lender:'selected-declined',withdrawn:'selected-withdrawn',pending:'selected-pending'};
+      btns.forEach(function(b) {
+        b.className = 'lpa-out-btn';
+        if (b.dataset.outcome === outcome) b.classList.add(clsMap[outcome] || '');
+      });
+    }
+    if (typeof showToast === 'function') showToast('Outcome saved', 'success');
+  }
+
+  function lpaPrecedentLookup(loanType, ltv) {
+    var sess = getLenderSession();
+    var email = sess && sess.user ? sess.user.email : 'default';
+    var hist = [];
+    try { hist = JSON.parse(localStorage.getItem('ul_lpa_hist_' + email) || '[]'); } catch(e) {}
+    var typeKey = (loanType || '').toLowerCase().split(' ')[0];
+    return hist.filter(function(h) {
+      if (!h.deal || !h.outcome || h.outcome === 'pending') return false;
+      var hType = (h.loanType || '').toLowerCase().split(' ')[0];
+      if (typeKey && hType && typeKey !== hType && !hType.includes(typeKey) && !typeKey.includes(hType)) return false;
+      var hLtv = parseFloat((h.deal && h.deal.ltv) || (h.deal && h.deal.decisionData && h.deal.decisionData.metrics && h.deal.decisionData.metrics.ltv) || 0);
+      var cLtv = parseFloat(ltv || 0);
+      if (cLtv > 0 && hLtv > 0 && Math.abs(hLtv - cLtv) > 0.15) return false;
+      return true;
+    });
+  }
+
+  function lpaRenderOutcomeStrip(rec) {
+    var ltv = (rec.deal && rec.deal.ltv) || (rec.deal && rec.deal.decisionData && rec.deal.decisionData.metrics && rec.deal.decisionData.metrics.ltv) || 0;
+    var precs = lpaPrecedentLookup(rec.loanType, ltv);
+    var ph = '';
+    if (precs.length) {
+      var pf = precs.filter(function(p) { return p.outcome === 'funded'; }).length;
+      var pd = precs.filter(function(p) { return p.outcome === 'declined_lender'; }).length;
+      ph = '<div class="lpa-precedent-box"><div class="lpa-prec-head">' + precs.length + ' Similar Past Deal' + (precs.length !== 1 ? 's' : '') + ': ' + pf + ' funded, ' + pd + ' declined</div>' +
+        precs.slice(0, 3).map(function(p) {
+          var col = p.outcome === 'funded' ? 'var(--green)' : p.outcome === 'declined_lender' ? 'var(--red)' : 'var(--text-3)';
+          var lbl = p.outcome === 'funded' ? 'Funded' : p.outcome === 'declined_lender' ? 'Declined' : 'Withdrawn';
+          return '<div class="lpa-prec-item">' + (p.address || 'Unknown') + ' &mdash; <span style="color:' + col + '">' + lbl + '</span></div>';
+        }).join('') + '</div>';
+    }
+    var id = rec.id;
+    var curO = rec.outcome || '';
+    var clsMap = {funded:'selected-funded',declined_lender:'selected-declined',withdrawn:'selected-withdrawn',pending:'selected-pending'};
+    var oh = '<div class="lpa-outcome-strip" data-hist-id="' + id + '"><span class="lpa-out-label">Outcome:</span>';
+    [['funded','Funded'],['declined_lender','Declined'],['withdrawn','Withdrawn'],['pending','Pending']].forEach(function(pair) {
+      var k = pair[0], lbl = pair[1];
+      var sc = curO === k ? ' ' + (clsMap[k] || '') : '';
+      oh += '<button class="lpa-out-btn' + sc + '" data-outcome="' + k + '" onclick="lpaHistSetOutcome(' + id + ',\'' + k + '\')">' + lbl + '</button>';
+    });
+    oh += '</div>';
+    return ph + oh;
+  }
+
 
 function lpaComputeDecision(d, gl) {
   var ltv  = d.ltv || 0;
