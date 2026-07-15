@@ -1722,6 +1722,7 @@ async function lpaRenderDecision() {
           '<button class="lpa-act-btn lpa-btn-email" onclick="lpaEmailReport()">✉ Email</button>' +
           '<button class="lpa-act-btn lpa-btn-new" onclick="lpaNewAssessment()">+ New Deal</button>' +
         '</div>' +
+      lpaCapitalStack(rec) +
       lpaRenderOutcomeStrip(rec) +
       '</div>' +
     '</div>';
@@ -1799,6 +1800,424 @@ async function lpaRenderDecision() {
     });
     oh += '</div>';
     return ph + oh;
+  }
+
+
+
+  // ── Phase 3 + 4: Deal Assessment AI extensions ───────────────────────────
+
+  function lpaFormatCurrency(n) {
+    n = parseFloat(n) || 0;
+    if (n >= 1000000) return '$' + (n / 1000000).toFixed(1) + 'M';
+    if (n >= 1000)    return '$' + Math.round(n / 1000) + 'K';
+    return '$' + n.toLocaleString();
+  }
+
+  function lpaClassifyProduct(state) {
+    var lt  = ((state && state.loanType) || '').toLowerCase();
+    var ltv = parseFloat((state && state.ltv) || 0);
+    var dscr = parseFloat((state && state.dscr) || 0);
+    var PRODUCTS = {
+      dscr:     { name:'DSCR',                 maxLtv:80, note:'Min 1.0x DSCR required; 1.25x+ preferred for best pricing' },
+      bridge:   { name:'Bridge',               maxLtv:75, note:'Stabilized-value basis; exit strategy and timeline required' },
+      fix:      { name:'Fix & Flip',           maxLtv:90, note:'90% of cost / 70–75% of ARV; rehab draws disbursed in stages' },
+      flip:     { name:'Fix & Flip',           maxLtv:90, note:'90% of cost / 70–75% of ARV; rehab draws disbursed in stages' },
+      ground:   { name:'Ground-Up Construction',maxLtv:65, note:'60–65% of stabilized value; draw schedule + lien waivers required' },
+      land:     { name:'Land',                 maxLtv:50, note:'40–50% of appraised value; entitlement status and timeline critical' },
+      private:  { name:'Private Money',        maxLtv:70, note:'Asset-based underwriting; credit weighted less than collateral' },
+      hard:     { name:'Hard Money',           maxLtv:70, note:'Short-term asset-based; 12–24 month term with balloon typical' },
+    };
+    var key = Object.keys(PRODUCTS).find(function(k) { return lt.includes(k); });
+    if (!key && dscr > 0) key = 'dscr';
+    var p = PRODUCTS[key] || PRODUCTS['private'];
+    var tier = ltv <= p.maxLtv * 0.85 ? 'A'
+             : ltv <= p.maxLtv        ? 'B'
+             :                          'C';
+    return { product: p.name, tier: tier, maxLtv: p.maxLtv, note: p.note };
+  }
+
+  async function lpaFetchPublicRecord(input) {
+    // Calls the lender portal Supabase edge function with action 'fetch_property'.
+    // Falls back gracefully if the action is not yet implemented on the server.
+    try {
+      var sess = getLenderSession();
+      var token = sess && sess.token;
+      var LENDER_FN = 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-lender-portal-v4';
+      var res = await fetch(LENDER_FN, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'fetch_property', token: token, query: input })
+      });
+      if (!res.ok) return null;
+      var data = await res.json();
+      if (data && data.property) return data.property;
+      return null;
+    } catch (e) {
+      console.warn('lpaFetchPublicRecord error:', e);
+      return null;
+    }
+  }
+
+  function lpaGeneratePDF(rec) {
+    try {
+      var jsPDF = window.jspdf && window.jspdf.jsPDF;
+      if (!jsPDF) { showToast('PDF library not loaded', 'error'); return; }
+
+      var sess   = getLenderSession();
+      var lender = (sess && sess.user && sess.user.lender) || {};
+      var lenderName = lender.lender_name || (sess && sess.user && sess.user.name) || 'Lender';
+      var doc    = new jsPDF({ unit: 'pt', format: 'letter' });
+      var W      = 612;
+      var M      = 48;   // left/right margin
+      var y      = 0;
+
+      // ── Header bar ──────────────────────────────────────────────────────────
+      doc.setFillColor(15, 34, 64);           // --navy
+      doc.rect(0, 0, W, 68, 'F');
+      doc.setFontSize(18); doc.setFont('helvetica', 'bold');
+      doc.setTextColor(255, 255, 255);
+      doc.text('UNDERLYTIX', M, 30);
+      doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+      doc.setTextColor(160, 190, 210);
+      doc.text('DEAL ASSESSMENT REPORT', M, 46);
+      var dateStr = new Date().toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' });
+      doc.setFontSize(9); doc.setTextColor(180, 200, 220);
+      doc.text(dateStr,    W - M, 30, { align:'right' });
+      doc.text(lenderName, W - M, 46, { align:'right' });
+      y = 88;
+
+      // ── Verdict badge ────────────────────────────────────────────────────────
+      var verdict = (rec && rec.verdict) || 'PENDING';
+      var vRgb = verdict === 'APPROVED'    ? [5,150,105]
+               : verdict === 'CONDITIONS'  ? [217,119,6]
+               :                            [220,38,38];
+      doc.setFillColor(vRgb[0], vRgb[1], vRgb[2]);
+      doc.roundedRect(M, y, 130, 22, 4, 4, 'F');
+      doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.setTextColor(255,255,255);
+      doc.text(verdict, M + 65, y + 15, { align:'center' });
+      y += 36;
+
+      // ── Address ──────────────────────────────────────────────────────────────
+      var d = (rec && rec.deal) || {};
+      var address = d.address || rec.address || 'Subject Property';
+      doc.setFontSize(15); doc.setFont('helvetica', 'bold'); doc.setTextColor(15,23,42);
+      doc.text(address, M, y); y += 5;
+      doc.setDrawColor(226,232,240); doc.setLineWidth(0.5);
+      doc.line(M, y, W - M, y); y += 14;
+
+      // ── Metrics grid (2 columns) ─────────────────────────────────────────────
+      var metrics = (rec && rec.metrics) || {};
+      var pairs = [
+        ['Loan Amount',   lpaFormatCurrency(metrics.loanAmount || metrics.loan_amount || 0)],
+        ['LTV',           metrics.ltv ? metrics.ltv + '%' : (d.ltv ? d.ltv + '%' : '—')],
+        ['Loan Type',     rec.loanType || '—'],
+        ['DSCR',          metrics.dscr || '—'],
+        ['ARV',           lpaFormatCurrency(metrics.arv || d.arv || 0)],
+        ['Asset Type',    metrics.assetType || rec.assetType || d.assetType || '—'],
+      ];
+      var col1 = M, col2 = W / 2 + 10;
+      pairs.forEach(function(pair, i) {
+        var col = i % 2 === 0 ? col1 : col2;
+        var ry  = y + Math.floor(i / 2) * 38;
+        doc.setFontSize(8); doc.setFont('helvetica', 'normal'); doc.setTextColor(100,116,139);
+        doc.text(pair[0].toUpperCase(), col, ry);
+        doc.setFontSize(13); doc.setFont('helvetica', 'bold'); doc.setTextColor(15,23,42);
+        doc.text(String(pair[1] || '—'), col, ry + 14);
+      });
+      y += Math.ceil(pairs.length / 2) * 38 + 8;
+      doc.setDrawColor(226,232,240); doc.line(M, y, W - M, y); y += 14;
+
+      // ── Product classification ────────────────────────────────────────────────
+      var cls = lpaClassifyProduct({ loanType: rec.loanType, ltv: (metrics.ltv || d.ltv || 0), dscr: (metrics.dscr || 0) });
+      if (cls && cls.product) {
+        doc.setFontSize(8); doc.setFont('helvetica', 'bold'); doc.setTextColor(14,116,144);
+        doc.text('PRODUCT CLASSIFICATION', M, y); y += 12;
+        doc.setFontSize(11); doc.setFont('helvetica', 'normal'); doc.setTextColor(51,65,85);
+        doc.text(cls.product + ' · Tier ' + cls.tier + ' · Max LTV ' + cls.maxLtv + '%', M, y); y += 12;
+        var noteLines = doc.splitTextToSize(cls.note, W - M * 2);
+        doc.setFontSize(10); doc.setTextColor(100,116,139);
+        doc.text(noteLines, M, y); y += noteLines.length * 13 + 10;
+        doc.setDrawColor(226,232,240); doc.line(M, y, W - M, y); y += 14;
+      }
+
+      // ── Rationale ────────────────────────────────────────────────────────────
+      var rationale = (rec && rec.rationale) || [];
+      if (rationale.length) {
+        doc.setFontSize(8); doc.setFont('helvetica', 'bold'); doc.setTextColor(100,116,139);
+        doc.text('ANALYSIS', M, y); y += 13;
+        doc.setFont('helvetica', 'normal'); doc.setTextColor(51,65,85);
+        rationale.forEach(function(line) {
+          var lines = doc.splitTextToSize('— ' + line, W - M * 2);
+          doc.setFontSize(11); doc.text(lines, M, y);
+          y += lines.length * 14 + 4;
+        });
+        y += 6;
+      }
+
+      // ── Conditions ───────────────────────────────────────────────────────────
+      var conditions = (rec && rec.conditions) || [];
+      if (conditions.length) {
+        var blockH = conditions.length * 18 + 28;
+        doc.setFillColor(255, 251, 235);
+        doc.rect(M, y - 4, W - M * 2, blockH, 'F');
+        doc.setFontSize(8); doc.setFont('helvetica', 'bold'); doc.setTextColor(180,83,9);
+        doc.text('CONDITIONS TO FUNDING', M + 8, y + 10); y += 22;
+        doc.setFont('helvetica', 'normal'); doc.setTextColor(120,60,0); doc.setFontSize(11);
+        conditions.forEach(function(c) {
+          var lines = doc.splitTextToSize('→ ' + c, W - M * 2 - 16);
+          doc.text(lines, M + 8, y);
+          y += lines.length * 13 + 5;
+        });
+        y += 10;
+      }
+
+      // ── Capital stack ─────────────────────────────────────────────────────────
+      var capitalPath = (rec && rec.capitalPath) || [];
+      if (capitalPath.length) {
+        doc.setDrawColor(226,232,240); doc.line(M, y, W - M, y); y += 14;
+        doc.setFontSize(8); doc.setFont('helvetica', 'bold'); doc.setTextColor(100,116,139);
+        doc.text('CAPITAL STACK PATH', M, y); y += 13;
+        capitalPath.forEach(function(cp, i) {
+          doc.setFillColor(14, 116, 144);
+          doc.circle(M + 9, y + 3, 8, 'F');
+          doc.setFontSize(8); doc.setFont('helvetica', 'bold'); doc.setTextColor(255,255,255);
+          doc.text(String(i + 1), M + 9, y + 6, { align:'center' });
+          doc.setFontSize(12); doc.setFont('helvetica', 'bold'); doc.setTextColor(15,23,42);
+          doc.text(cp.label || cp.product || '', M + 24, y + 6);
+          y += 17;
+          var desc = cp.desc || cp.description || '';
+          if (desc) {
+            var dlines = doc.splitTextToSize(desc, W - M * 2 - 24);
+            doc.setFontSize(10); doc.setFont('helvetica', 'normal'); doc.setTextColor(71,85,105);
+            doc.text(dlines, M + 24, y);
+            y += dlines.length * 13 + 5;
+          }
+        });
+        y += 6;
+      }
+
+      // ── Footer ────────────────────────────────────────────────────────────────
+      doc.setFillColor(241,245,249);
+      doc.rect(0, 752, W, 60, 'F');
+      doc.setFontSize(8); doc.setFont('helvetica', 'normal'); doc.setTextColor(148,163,184);
+      doc.text('Generated by Underlytix · underlytix.com', M, 774);
+      doc.text(lenderName, W - M, 774, { align:'right' });
+      doc.text('For internal use only. Not a commitment to lend.', M, 790);
+
+      var slug = (address).replace(/[^a-z0-9]+/gi, '-').toLowerCase().replace(/^-|-$/g, '');
+      doc.save('underlytix-' + (slug || 'decision') + '.pdf');
+      showToast('PDF downloaded', 'success');
+    } catch (e) {
+      console.error('lpaGeneratePDF error:', e);
+      showToast('PDF error: ' + e.message, 'error');
+    }
+  }
+
+  function lpaEmailDecision(rec) {
+    var sess    = getLenderSession();
+    var lender  = (sess && sess.user && sess.user.lender) || {};
+    var lName   = lender.lender_name || (sess && sess.user && sess.user.name) || '';
+    var d       = (rec && rec.deal) || {};
+    var metrics = (rec && rec.metrics) || {};
+    var address = d.address || rec.address || 'Subject Property';
+    var verdict = (rec && rec.verdict) || '—';
+    var rationale  = (rec && rec.rationale)  || [];
+    var conditions = (rec && rec.conditions) || [];
+    var capitalPath = (rec && rec.capitalPath) || [];
+
+    var subject = 'Deal Assessment — ' + address;
+    var lines = [
+      'UNDERLYTIX DEAL ASSESSMENT',
+      '='.repeat(40),
+      '',
+      'Property:    ' + address,
+      'Verdict:     ' + verdict,
+      'Loan Type:   ' + (rec.loanType || '—'),
+      'Loan Amount: ' + lpaFormatCurrency(metrics.loanAmount || metrics.loan_amount || 0),
+      'LTV:         ' + (metrics.ltv ? metrics.ltv + '%' : (d.ltv ? d.ltv + '%' : '—')),
+      'DSCR:        ' + (metrics.dscr || '—'),
+      'ARV:         ' + lpaFormatCurrency(metrics.arv || d.arv || 0),
+      '',
+    ];
+    if (rationale.length) {
+      lines.push('ANALYSIS:');
+      rationale.forEach(function(r) { lines.push('• ' + r); });
+      lines.push('');
+    }
+    if (conditions.length) {
+      lines.push('CONDITIONS TO FUNDING:');
+      conditions.forEach(function(c) { lines.push('→ ' + c); });
+      lines.push('');
+    }
+    if (capitalPath.length) {
+      lines.push('CAPITAL STACK PATH:');
+      capitalPath.forEach(function(cp, i) {
+        lines.push((i + 1) + '. ' + (cp.label || cp.product || ''));
+        if (cp.desc || cp.description) lines.push('   ' + (cp.desc || cp.description));
+      });
+      lines.push('');
+    }
+    lines.push('-'.repeat(40));
+    lines.push('Generated by Underlytix · underlytix.com');
+    if (lName) lines.push(lName);
+
+    var body   = lines.join('\n');
+    var mailto = 'mailto:?subject=' + encodeURIComponent(subject) + '&body=' + encodeURIComponent(body);
+
+    if (mailto.length < 1900) {
+      window.open(mailto, '_blank');
+    } else {
+      // Body too long for mailto — copy to clipboard
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(body).then(function() {
+          showToast('Decision copied to clipboard — paste into your email', 'success');
+        }).catch(function() {
+          showToast('Email body too long for mailto — download the PDF instead', 'info');
+        });
+      } else {
+        showToast('Download the PDF and attach it to your email', 'info');
+      }
+    }
+  }
+
+  // ── Phase 4: Financing structure decisioning ─────────────────────────────
+
+  function lpaCrossCollateral(state) {
+    var lt  = ((state && state.loanType) || '').toLowerCase();
+    var ltv = parseFloat((state && state.ltv) || 0);
+    if (!lt.includes('land') && !lt.includes('ground')) return null;
+    var required = ltv > 50;
+    var notes = [];
+    if (required) {
+      notes.push('LTV exceeds 50% land ceiling — cross-collateral from existing equity required');
+      notes.push('Identify free-and-clear or equity-rich properties in borrower portfolio');
+      notes.push('First-lien lender must consent to blanket or cross-lien structure');
+    }
+    if (!state.entitlement || state.entitlement === 'raw') {
+      notes.push('Raw / unentitled land: appraisal basis, entitlement timeline, and exit plan are critical');
+    }
+    if (!notes.length) notes.push('Adequate equity for standalone land financing');
+    return { required: required, notes: notes };
+  }
+
+  function lpaMarketLTV(loanType, ltv) {
+    var lt = (loanType || '').toLowerCase();
+    var NORMS = {
+      dscr:   { min:55, target:72, max:80, note:'Full-doc DSCR; max 80% with 1.25x+ coverage' },
+      bridge: { min:55, target:65, max:75, note:'Stabilized-value basis; 65–75% of as-is' },
+      fix:    { min:50, target:70, max:90, note:'90% of cost / 70–75% of ARV' },
+      flip:   { min:50, target:70, max:90, note:'90% of cost / 70–75% of ARV' },
+      ground: { min:50, target:60, max:70, note:'60–65% of stabilized value; draw schedule required' },
+      land:   { min:35, target:45, max:55, note:'40–50% of appraised value; entitlement-dependent' },
+      private:{ min:50, target:60, max:70, note:'Asset-based; 65% typical market ceiling' },
+      hard:   { min:50, target:60, max:70, note:'Short-term; 12–24 month term with balloon' },
+    };
+    var key  = Object.keys(NORMS).find(function(k) { return lt.includes(k); }) || 'private';
+    var norm = NORMS[key];
+    var cur  = parseFloat(ltv || 0);
+    var status = cur <= norm.target ? 'below_market'
+               : cur <= norm.max   ? 'at_market'
+               :                     'above_market';
+    var label  = status === 'below_market' ? 'Conservative — below market avg'
+               : status === 'at_market'    ? 'Within market range'
+               :                             'Above market ceiling';
+    return { norm: norm, current: cur, status: status, label: label };
+  }
+
+  function lpaSellerCarry(state) {
+    var clean = function(v) { return parseFloat(String(v || '').replace(/[^0-9.]/g,'')) || 0; };
+    var loanAmt  = clean(state && (state.loanAmount || state.loan_amount));
+    var purchase = clean(state && (state.purchasePrice || state.purchase_price || state.arv));
+    if (!purchase || !loanAmt) return null;
+    var gap      = purchase - loanAmt;
+    var carryPct = Math.round((gap / purchase) * 100);
+    var ltv      = parseFloat((state && state.ltv) || 0);
+    var notes    = [];
+    var viable   = false;
+    if (ltv >= 65 && ltv <= 80 && gap > 0) {
+      viable = true;
+      notes.push('Seller carry of ~' + carryPct + '% (' + lpaFormatCurrency(gap) + ') bridges gap to first-lien LTV requirement');
+      notes.push('Structure as 2nd lien; confirm first-lien lender permits subordinate financing');
+      notes.push('Typical terms: 6–24 month carry, 0%–market rate, balloon at refi or sale');
+    } else if (ltv < 65) {
+      notes.push('Strong equity position — seller carry not required but can reduce cash-to-close');
+    } else {
+      notes.push('High LTV limits seller carry viability without additional collateral support');
+    }
+    return { viable: viable, gapAmount: gap, carryPct: carryPct, notes: notes };
+  }
+
+  function lpaCapitalStack(rec) {
+    // Renders the capital stack path section in the decision card.
+    // Uses rec.capitalPath if pre-populated by lpaComputeDecision;
+    // otherwise synthesizes paths from deal data.
+    var d       = (rec && rec.deal) || {};
+    var metrics = (rec && rec.metrics) || {};
+    var lt      = (rec && rec.loanType) || '';
+    var ltv     = parseFloat(metrics.ltv || d.ltv || 0);
+    var verdict = (rec && rec.verdict) || '';
+
+    var paths = (rec && rec.capitalPath) ? rec.capitalPath.slice() : [];
+
+    if (!paths.length && ltv > 0) {
+      // Primary product
+      var cls = lpaClassifyProduct({ loanType: lt, ltv: ltv, dscr: metrics.dscr || 0 });
+      if (verdict === 'APPROVED' || verdict === 'CONDITIONS') {
+        paths.push({
+          label: cls.product + ' (Tier ' + cls.tier + ')',
+          desc:  'First-position lien · ' + ltv + '% LTV · ' + cls.note
+        });
+      }
+      // Bridge-to-DSCR for eligible bridge / fix&flip deals
+      if ((lt.toLowerCase().includes('bridge') || lt.toLowerCase().includes('flip')) && ltv <= 70) {
+        paths.push({
+          label: 'Bridge → DSCR Refi',
+          desc:  'Stabilize asset on short-term bridge, then refinance into 30-year DSCR at stabilized value'
+        });
+      }
+      // Cross-collateral for land
+      var cc = lpaCrossCollateral({ loanType: lt, ltv: ltv, entitlement: d.entitlement });
+      if (cc && cc.required) {
+        paths.push({
+          label: 'Cross-Collateral Structure',
+          desc:  'Pledge additional equity asset to satisfy first-lien LTV ceiling: ' + cc.notes[0]
+        });
+      }
+      // Seller carry
+      var sc = lpaSellerCarry({
+        loanType: lt, ltv: ltv,
+        loanAmount:    metrics.loanAmount || metrics.loan_amount || d.loanAmount,
+        purchasePrice: metrics.purchasePrice || metrics.arv || d.arv
+      });
+      if (sc && sc.viable) {
+        paths.push({
+          label: 'Seller Carry (' + sc.carryPct + '% / ' + lpaFormatCurrency(sc.gapAmount) + ')',
+          desc:  sc.notes[0]
+        });
+      }
+      // Hard money fallback if declined or above ceiling
+      if (verdict === 'DECLINED' || verdict === 'DECLINE' || ltv > 80) {
+        paths.push({
+          label: 'Private / Hard Money Bridge',
+          desc:  '12–24 month asset-based bridge while borrower strengthens profile for conventional refi'
+        });
+      }
+    }
+
+    if (!paths.length) return '';
+
+    var html = '<div class="lpa-capital-path"><h4 class="lpa-cp-head">Capital Stack Path</h4>';
+    paths.forEach(function(cp, i) {
+      html += '<div class="lpa-cp-item">' +
+        '<div class="lpa-cp-rank">' + (i + 1) + '</div>' +
+        '<div>' +
+          '<div class="lpa-cp-label">' + (cp.label || cp.product || '') + '</div>' +
+          '<div class="lpa-cp-desc">' + (cp.desc || cp.description || '') + '</div>' +
+        '</div>' +
+      '</div>';
+    });
+    html += '</div>';
+    return html;
   }
 
 
