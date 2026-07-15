@@ -162,6 +162,13 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .lpa-rationale li::before{content:'—';color:var(--text-4);flex-shrink:0}
 .lpa-conditions li{font-size:12px;color:var(--amber);display:flex;gap:6px;line-height:1.5}
 .lpa-conditions li::before{content:'→';flex-shrink:0}
+.lpa-capital-path{margin-top:13px;padding-top:12px;border-top:1px solid var(--border)}
+.lpa-cp-head{font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.07em;margin:0 0 9px 0}
+.lpa-cp-item{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--border)}
+.lpa-cp-item:last-child{border-bottom:none;padding-bottom:0}
+.lpa-cp-rank{width:20px;height:20px;border-radius:50%;background:var(--teal);color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px}
+.lpa-cp-label{font-size:12px;font-weight:600;color:var(--text);margin-bottom:2px}
+.lpa-cp-desc{font-size:11px;color:var(--text-2);line-height:1.5}
 .lpa-action-row{display:flex;gap:7px;margin-top:13px}
 .lpa-act-btn{flex:1;padding:7px 5px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;border:none;display:flex;align-items:center;justify-content:center;gap:5px;font-family:'Inter',sans-serif;transition:opacity .15s}
 .lpa-act-btn:hover{opacity:.82}
@@ -1270,7 +1277,7 @@ var LPA_ST = {
   DSCR_RENT:'dscr_rent', DSCR_EXP:'dscr_exp',
   BRIDGE_VALUE:'bridge_value', BRIDGE_EXIT:'bridge_exit',
   FLIP_ARV:'flip_arv', FLIP_REHAB:'flip_rehab', FLIP_EXP:'flip_exp',
-  LAND_ZONE:'land_zone', LAND_EXIT:'land_exit',
+  LAND_ZONE:'land_zone', LAND_EXIT:'land_exit', LAND_XCOLLAB:'land_xcollab', LAND_SELLER:'land_seller',
   GND_BUDGET:'gnd_budget', GND_PERMITS:'gnd_permits',
   PRIVATE_EXIT:'private_exit', PRIVATE_TERM:'private_term',
   CREDIT:'credit', PROCESSING:'processing', DECISION:'decision'
@@ -1515,6 +1522,30 @@ async function lpaProcess(input) {
 
     case LPA_ST.LAND_EXIT:
       lpaDeal.exitStrategy = v;
+      lpaState = LPA_ST.LAND_XCOLLAB;
+      await lpaAI('Does the borrower own other <strong>free-and-clear properties</strong> that could serve as cross-collateral? If yes, type the approximate combined value (e.g. <em>$450,000</em>). Otherwise select below.',
+        ['No other properties','Unknown at this time','Yes – ~$100,000','Yes – ~$250,000','Yes – ~$500,000+']);
+      break;
+
+    case LPA_ST.LAND_XCOLLAB: {
+      var xcv = lpaToNum(v);
+      if (/^no/i.test(v)) {
+        lpaDeal.crossCollateral = 'No'; lpaDeal.crossCollateralValue = 0;
+      } else if (/unknown/i.test(v)) {
+        lpaDeal.crossCollateral = 'Unknown'; lpaDeal.crossCollateralValue = 0;
+      } else if (xcv > 0) {
+        lpaDeal.crossCollateral = 'Yes'; lpaDeal.crossCollateralValue = xcv;
+      } else {
+        lpaDeal.crossCollateral = 'Yes'; lpaDeal.crossCollateralValue = 0;
+      }
+      lpaState = LPA_ST.LAND_SELLER;
+      await lpaAI('Is <strong>seller financing</strong> a possibility? A seller willing to carry even 10–20% of the purchase price materially restructures the deal\'s capital stack.',
+        ['Yes — Seller Open to Carrying','Possibly — Not Yet Discussed','No — All Cash / Institutional Only']);
+      break;
+    }
+
+    case LPA_ST.LAND_SELLER:
+      lpaDeal.sellerCarry = v;
       lpaState = LPA_ST.CREDIT;
       await lpaCreditQ();
       break;
@@ -1650,6 +1681,16 @@ async function lpaRenderDecision() {
     ? '<div class="lpa-conditions" style="margin-top:12px"><h4>Conditions</h4><ul>' +
       result.conditions.map(function(c){ return '<li>' + c + '</li>'; }).join('') + '</ul></div>' : '';
 
+  var capPathHtml = (result.capitalPath && result.capitalPath.length)
+    ? '<div class="lpa-capital-path"><h4 class="lpa-cp-head">Capital Structure Path</h4>' +
+      result.capitalPath.map(function(p, i) {
+        return '<div class="lpa-cp-item">' +
+          '<div class="lpa-cp-rank">' + (i+1) + '</div>' +
+          '<div><div class="lpa-cp-label">' + p.label + '</div>' +
+          '<div class="lpa-cp-desc">' + p.desc + '</div></div>' +
+        '</div>';
+      }).join('') + '</div>' : '';
+
   var noteHtml = (gl && gl.notes)
     ? '<div style="margin-top:12px;padding:10px 12px;background:var(--teal-dim);border:1px solid var(--teal-border);border-radius:6px;font-size:11px;color:var(--teal)">Lender note applied: ' + gl.notes + '</div>' : '';
 
@@ -1662,7 +1703,7 @@ async function lpaRenderDecision() {
       '<div class="lpa-decision-card">' +
         '<div class="lpa-verdict-badge ' + vClass + '">' + vIcon + ' ' + result.verdict + '</div>' +
         '<div class="lpa-metrics-grid">' + metricsHtml + '</div>' +
-        rationaleHtml + condHtml + noteHtml +
+        rationaleHtml + condHtml + capPathHtml + noteHtml +
         '<div class="lpa-action-row">' +
           '<button class="lpa-act-btn lpa-btn-pdf" onclick="lpaDownloadPDF()">⬇ PDF Report</button>' +
           '<button class="lpa-act-btn lpa-btn-email" onclick="lpaEmailReport()">✉ Email</button>' +
@@ -1692,7 +1733,7 @@ function lpaComputeDecision(d, gl) {
   var minLoan    = (gl && gl.min_loan    != null) ? gl.min_loan    : 0;
   var maxLoan    = (gl && gl.max_loan    != null) ? gl.max_loan    : 99999999;
 
-  var verdict = 'APPROVED', rationale = [], conditions = [];
+  var verdict = 'APPROVED', rationale = [], conditions = [], capitalPath = null;
   var metrics = [
     {label:'Loan-to-Value',  value:ltvP, color:lc},
     {label:'Loan Amount',    value:lpaFmt(d.loanAmount)},
@@ -1760,22 +1801,88 @@ function lpaComputeDecision(d, gl) {
 
   } else if (type.indexOf('land') >= 0) {
     var entitled = (d.zoning||'').toLowerCase().indexOf('unzoned') < 0;
-    metrics.push({label:'Zoning', value:d.zoning || 'Unknown'});
-    metrics.push({label:'Exit Strategy', value:d.exitStrategy || 'Unknown'});
-    if (ltv <= maxLand && entitled && cNum >= minCredit) {
+    var aboveMarket = ltv > 0.65;
+
+    // Cross-collateral
+    var hasCross = /^yes/i.test(d.crossCollateral || '');
+    var crossVal  = d.crossCollateralValue || 0;
+    var blendedLTV = (hasCross && crossVal > 0) ? d.loanAmount / (d.purchasePrice + crossVal) : null;
+
+    // Seller carry
+    var sellerCarry = (d.sellerCarry || '').toLowerCase();
+    var scConfirmed = /^yes/i.test(sellerCarry);
+    var scPossible  = /possib|discuss/i.test(sellerCarry);
+
+    // Effective LTV after cross-collateral
+    var effectiveLTV = blendedLTV !== null ? blendedLTV : ltv;
+
+    metrics.push({label:'Zoning',            value: d.zoning || 'Unknown'});
+    metrics.push({label:'Exit Strategy',      value: d.exitStrategy || 'Unknown'});
+    metrics.push({label:'Market LTV (Raw Land)', value:'50–65% typical', color: aboveMarket ? 'lpa-m-warn' : 'lpa-m-good'});
+    metrics.push({label:'Your LTV Guideline', value:(maxLand*100).toFixed(0)+'%'});
+    if (blendedLTV !== null) {
+      metrics.push({label:'Cross-Collateral Value', value:lpaFmt(crossVal)});
+      metrics.push({label:'Blended LTV',            value:(blendedLTV*100).toFixed(1)+'%',
+                    color: blendedLTV <= 0.45 ? 'lpa-m-good' : blendedLTV <= 0.65 ? 'lpa-m-warn' : 'lpa-m-bad'});
+    }
+
+    if (aboveMarket) {
+      rationale.push('Market context: raw land LTV typically ranges 50–65%. At ' + ltvP + ' this deal exceeds the market ceiling — most hard money lenders cap raw land at 65%.');
+    }
+
+    if (effectiveLTV <= maxLand && entitled && cNum >= minCredit) {
       verdict = 'APPROVED';
-      rationale.push('LTV of ' + ltvP + ' is within the ' + (maxLand*100).toFixed(0) + '% guideline for raw land.');
-      rationale.push('Zoning indicates entitled land — lower risk profile.');
-    } else if (ltv <= maxLand + 0.10) {
+      if (blendedLTV !== null) {
+        rationale.push('Cross-collateralization drops blended LTV to ' + (blendedLTV*100).toFixed(1) + '% — within the ' + (maxLand*100).toFixed(0) + '% guideline.');
+      } else {
+        rationale.push('LTV of ' + ltvP + ' is within the ' + (maxLand*100).toFixed(0) + '% guideline for raw land.');
+      }
+      if (entitled) rationale.push('Zoning indicates entitled land — reduced entitlement risk.');
+    } else if (effectiveLTV <= maxLand + 0.12 || scConfirmed || hasCross) {
       verdict = 'APPROVED WITH CONDITIONS';
-      if (!entitled) conditions.push('Unzoned land — county zoning confirmation letter required.');
+      if (!entitled) conditions.push('Unzoned land — county zoning confirmation letter required before close.');
+      if (effectiveLTV > maxLand) {
+        if (blendedLTV !== null) {
+          rationale.push('Blended LTV of ' + (blendedLTV*100).toFixed(1) + '% with cross-collateral still slightly above the ' + (maxLand*100).toFixed(0) + '% guideline.');
+          conditions.push('Formal cross-collateral agreement and title search on all pledged parcels required at close.');
+        } else if (scConfirmed) {
+          rationale.push('LTV of ' + ltvP + ' above guideline — seller carry note partially offsets exposure.');
+          conditions.push('Seller carry note must be documented, in 2nd position, and included in full loan file.');
+        } else {
+          rationale.push('LTV of ' + ltvP + ' above guideline — cross-collateral or seller carry required to proceed.');
+        }
+      }
       conditions.push('Phase 1 Environmental Site Assessment required.');
-      conditions.push('Survey confirming legal acreage required.');
-      if (cNum < minCredit) conditions.push('Credit below lender minimum of ' + minCredit + '.');
+      conditions.push('Survey confirming legal acreage and boundaries required.');
+      if (cNum < minCredit) conditions.push('Credit below lender minimum of ' + minCredit + ' — compensating factors required.');
     } else {
       verdict = 'DECLINE';
-      rationale.push('LTV of ' + ltvP + ' exceeds the maximum for raw land — insufficient equity position.');
+      rationale.push('LTV of ' + ltvP + ' exceeds the raw land ceiling. Market rate is 50–65%; your guideline is ' + (maxLand*100).toFixed(0) + '%.');
+      if (!hasCross && !scConfirmed) rationale.push('No cross-collateral or seller carry structure identified to bridge the equity gap. See Capital Path below.');
     }
+
+    // Build capital path
+    capitalPath = [];
+    var _rank = 1;
+    if (scConfirmed) {
+      capitalPath.push({rank:_rank++, label:'Seller Carry Note',
+        desc:'Seller confirmed open to carrying. Structure as a subordinated 2nd-position note for 10–25% of the purchase price at 6–8% interest-only, ballooning at sale or refinance. Directly reduces institutional LTV and cash-to-close without requiring additional hard money exposure.'});
+    } else if (scPossible) {
+      capitalPath.push({rank:_rank++, label:'Negotiate Seller Carry (Priority)',
+        desc:'Seller hasn\'t confirmed but the door is open. Sellers with long holding periods (5+ years) often have low basis — a carry note provides tax-deferred installment income at a favorable rate vs. lump-sum. Target 10–20% of purchase price at 6–8% I/O. Lowest-cost path if secured before close.'});
+    }
+    if (hasCross) {
+      var _blDesc = blendedLTV !== null
+        ? 'Pledging ' + lpaFmt(crossVal) + ' in free-and-clear holdings drops blended LTV to ' + (blendedLTV*100).toFixed(1) + '%. '
+        : 'Pledging free-and-clear real estate reduces effective LTV materially. ';
+      capitalPath.push({rank:_rank++, label:'Cross-Collateralization',
+        desc: _blDesc + 'Requires title search and cross-default clause on all parcels. A blended position at or below 45% LTV qualifies for standard hard money rates. Each pledged property must be free-and-clear or substantially unencumbered.'});
+    } else {
+      capitalPath.push({rank:_rank++, label:'Cross-Collateralization (Confirm)',
+        desc:'Ask whether borrower holds free-and-clear real estate. A single $250K–$500K parcel pledged alongside this land can reduce blended LTV below 40% — converting a decline to an approval at standard pricing with no additional borrower cash required.'});
+    }
+    capitalPath.push({rank:_rank++, label:'Hard Money Bridge Loan',
+      desc:'As-submitted LTV: ' + ltvP + '. Standard hard money / bridge terms for raw land: 10–14% interest-only, 12–24 month term, 2–3 origination points, 50–65% max LTV. Exit via entitlement and sale to a developer, or refinance into a construction/perm loan once entitled. Works best when borrower has a pending purchase agreement with a developer or a filed subdivision plat.'});
 
   } else if (type.indexOf('bridge') >= 0) {
     var asIsLTV = d.loanAmount / (d.currentValue || d.purchasePrice);
@@ -1839,7 +1946,7 @@ function lpaComputeDecision(d, gl) {
   }
 
   if (!rationale.length) rationale.push('Deal does not meet program criteria based on submitted parameters.');
-  return {verdict:verdict, metrics:metrics, rationale:rationale, conditions:conditions};
+  return {verdict:verdict, metrics:metrics, rationale:rationale, conditions:conditions, capitalPath:capitalPath};
 }
 
 /* ── PDF ── */
@@ -1924,11 +2031,126 @@ function lpaDownloadPDF() {
     y += 6;
   }
 
+  // ── CAPITAL STRUCTURE PATH
+  if (dd && dd.capitalPath && dd.capitalPath.length) {
+    if (y > 680) { doc.addPage(); y = M; }
+    sec('CAPITAL STRUCTURE PATH');
+    dd.capitalPath.forEach(function(p, i) {
+      if (y > 710) { doc.addPage(); y = M; }
+      doc.setFillColor(14,116,144);
+      doc.circle(M+14, y-3, 8, 'F');
+      doc.setFontSize(9); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
+      doc.text(String(i+1), M+14, y, {align:'center'});
+      doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(20,20,20);
+      doc.text(p.label, M+30, y);
+      y += 14;
+      doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(70,70,80);
+      var cpLines = doc.splitTextToSize(p.desc, W-M*2-30);
+      doc.text(cpLines, M+30, y); y += cpLines.length * 13 + 10;
+    });
+    y += 4;
+  }
+
+  // ── RISK ASSESSMENT TABLE
+  var isLandPDF = (lpaDeal.loanType||'').toLowerCase().indexOf('land') >= 0;
+  var isBridgePDF = (lpaDeal.loanType||'').toLowerCase().indexOf('bridge') >= 0;
+  if (isLandPDF || isBridgePDF) {
+    if (y > 650) { doc.addPage(); y = M; }
+    sec('RISK ASSESSMENT');
+    var riskDims = isLandPDF ? [
+      {dim:'Location / Market Quality', rating:'LOW',     note:'Established market; durable long-run demand floor'},
+      {dim:'Liquidity Risk',            rating:'HIGH',    note:'Vacant land; thin buyer pool; long absorption window typical'},
+      {dim:'LTV vs. Market Norm',       rating: lpaDeal.ltv > 0.65 ? 'ELEVATED' : lpaDeal.ltv > 0.55 ? 'MODERATE' : 'LOW',
+                                         note:'Deal LTV ' + (lpaDeal.ltv*100).toFixed(1) + '% vs. 50–65% raw land market norm'},
+      {dim:'Cash Flow / Carry',         rating:'HIGH',    note:'Zero income; negative carry (taxes, insurance, opportunity cost)'},
+      {dim:'Capital Structure',         rating: (lpaDeal.crossCollateral==='Yes' || /^yes/i.test(lpaDeal.sellerCarry||'')) ? 'MODERATE' : 'ELEVATED',
+                                         note: (lpaDeal.crossCollateral==='Yes') ? 'Cross-collateral pledged — blended LTV improved' : (/^yes/i.test(lpaDeal.sellerCarry||'')) ? 'Seller carry note confirmed — reduces institutional exposure' : 'No cross-collateral or seller carry confirmed to offset LTV'}
+    ] : [
+      {dim:'LTV vs. Guideline', rating: lpaDeal.ltv > 0.70 ? 'ELEVATED' : 'MODERATE', note:'LTV ' + (lpaDeal.ltv*100).toFixed(1) + '%'},
+      {dim:'Borrower Credit',   rating: 'MODERATE', note:'Per credit score on file'},
+      {dim:'Exit Strategy',     rating: lpaDeal.exitStrategy ? 'LOW' : 'ELEVATED', note: lpaDeal.exitStrategy || 'Not confirmed'}
+    ];
+
+    var rCol0 = 200, rCol1 = 75;
+    doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(14,116,144);
+    doc.text('Dimension', M+6, y); doc.text('Rating', M+rCol0+6, y); doc.text('Underwriter Note', M+rCol0+rCol1+6, y);
+    y += 4;
+    doc.setDrawColor(200,220,230); doc.line(M, y, W-M, y); y += 10;
+
+    riskDims.forEach(function(row) {
+      if (y > 720) { doc.addPage(); y = M; }
+      var rColor = row.rating === 'LOW' ? [5,150,105] : row.rating === 'MODERATE' ? [14,116,144] : row.rating === 'ELEVATED' ? [180,83,9] : [220,38,38];
+      doc.setFontSize(9); doc.setFont('helvetica','normal'); doc.setTextColor(30,30,30);
+      var dLines = doc.splitTextToSize(row.dim, rCol0-10);
+      doc.text(dLines, M+6, y);
+      doc.setTextColor(rColor[0],rColor[1],rColor[2]); doc.setFont('helvetica','bold'); doc.setFontSize(8);
+      doc.text(row.rating, M+rCol0+6, y);
+      doc.setTextColor(70,70,70); doc.setFont('helvetica','normal'); doc.setFontSize(9);
+      var nLines = doc.splitTextToSize(row.note, W-M*2-rCol0-rCol1-10);
+      doc.text(nLines, M+rCol0+rCol1+6, y);
+      y += Math.max(dLines.length, nLines.length) * 13 + 4;
+    });
+    y += 8;
+
+    // ── RECOVERY ANALYSIS (land only)
+    if (isLandPDF) {
+      if (y > 640) { doc.addPage(); y = M; }
+      sec('RECOVERY ANALYSIS — DOWNSIDE SCENARIO');
+      var pp = lpaDeal.purchasePrice || 0;
+      var la = lpaDeal.loanAmount || 0;
+      var qsDisc = 0.30; // 30% quick-sale discount midpoint
+      var grossFS = pp * (1 - qsDisc);
+      var netRecov = grossFS * 0.90; // minus 10% disposition costs
+      var coverage = la > 0 ? (netRecov / la) : 0;
+      var recovRows = [
+        ['Basis (purchase price / orderly value)', lpaFmt(pp), 'Desktop value; MAI appraisal required'],
+        ['Quick-sale discount applied (25–35%)', lpaFmt(pp * qsDisc), 'Vacant land; illiquid; long absorption'],
+        ['Gross forced-sale proceeds', lpaFmt(grossFS), 'After discount to orderly value'],
+        ['Disposition + carry + legal (~10%)', '(' + lpaFmt(grossFS * 0.10) + ')', 'RE commission, legal, interest during marketing'],
+        ['Net recovery to lender (stress)', lpaFmt(netRecov), 'Conservative midpoint estimate'],
+        ['Loan-to-net-recovery coverage', coverage.toFixed(2) + '×', coverage >= 1.20 ? 'Adequate — lender covered' : coverage >= 1.0 ? 'Thin — monitor closely' : 'UNDERCOVERED — elevated risk']
+      ];
+      var rC0=220, rC1=130;
+      doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(14,116,144);
+      doc.text('Scenario Component', M+6, y); doc.text('Amount', M+rC0+6, y); doc.text('Note', M+rC0+rC1+6, y);
+      y += 4; doc.setDrawColor(200,220,230); doc.line(M, y, W-M, y); y += 10;
+      recovRows.forEach(function(rr) {
+        if (y > 720) { doc.addPage(); y = M; }
+        var isAlert = rr[0].indexOf('coverage') >= 0 && coverage < 1.2;
+        doc.setFont('helvetica','normal'); doc.setFontSize(9);
+        doc.setTextColor(isAlert ? 180 : 30, isAlert ? 40 : 30, isAlert ? 9 : 30);
+        var s0 = doc.splitTextToSize(rr[0], rC0-10); doc.text(s0, M+6, y);
+        doc.setTextColor(30,30,30); doc.text(rr[1], M+rC0+6, y);
+        doc.setTextColor(70,70,70);
+        var s2 = doc.splitTextToSize(rr[2], W-M*2-rC0-rC1-10); doc.text(s2, M+rC0+rC1+6, y);
+        y += Math.max(s0.length, s2.length) * 13 + 4;
+      });
+      y += 8;
+    }
+  }
+
+  // ── DATA GAPS & CONDITIONS
+  if (isLandPDF && dd && dd.conditions && dd.conditions.length) {
+    if (y > 650) { doc.addPage(); y = M; }
+    sec('DATA GAPS & GATING CONDITIONS');
+    doc.setFontSize(9); doc.setFont('helvetica','normal');
+    dd.conditions.forEach(function(c, i) {
+      if (y > 720) { doc.addPage(); y = M; }
+      doc.setTextColor(160,83,9); doc.setFont('helvetica','bold');
+      doc.text('C-' + (i+1), M+6, y);
+      doc.setTextColor(50,50,50); doc.setFont('helvetica','normal');
+      var cLines = doc.splitTextToSize(c, W-M*2-30);
+      doc.text(cLines, M+30, y); y += cLines.length * 13 + 6;
+    });
+    y += 6;
+  }
+
   if (gl && gl.notes) {
+    if (y > 680) { doc.addPage(); y = M; }
     sec('LENDER NOTES');
     doc.setTextColor(14,116,144);
-    var lines = doc.splitTextToSize(gl.notes, W-M*2-20);
-    doc.text(lines, M+10, y); y += lines.length * 14 + 6;
+    var glLines = doc.splitTextToSize(gl.notes, W-M*2-20);
+    doc.text(glLines, M+10, y); y += glLines.length * 14 + 6;
   }
 
   y = Math.max(y, 640);
@@ -1970,6 +2192,14 @@ function lpaEmailReport() {
   if (dd && dd.conditions && dd.conditions.length) {
     lines.push(''); lines.push('CONDITIONS');
     dd.conditions.forEach(function(c){ lines.push('→ ' + c); });
+  }
+  if (dd && dd.capitalPath && dd.capitalPath.length) {
+    lines.push(''); lines.push('CAPITAL STRUCTURE PATH');
+    dd.capitalPath.forEach(function(p, i){
+      lines.push((i+1) + '. ' + p.label);
+      lines.push('   ' + p.desc);
+      lines.push('');
+    });
   }
   lines.push('');
   lines.push('Prepared by: ' + ((s && s.user && s.user.name) || '') + ' · ' + ((s && s.user && s.user.lender && s.user.lender.lender_name) || ''));
