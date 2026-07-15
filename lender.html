@@ -183,6 +183,37 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .lpa-input::placeholder{color:var(--text-4)}
 .lpa-send{width:38px;height:38px;background:var(--teal);border:none;border-radius:7px;color:#fff;font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:opacity .15s}
 .lpa-send:hover{opacity:.85}.lpa-send:disabled{opacity:.4;cursor:not-allowed}
+/* ── Phase 7: edit form, paste modal, prequal card, upload/paste buttons ── */
+.lpa-upload-btn,.lpa-paste-btn{width:34px;height:38px;background:var(--bg-3);border:1px solid var(--border-dark);border-radius:7px;color:var(--text-3);font-size:16px;cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:background .15s,color .15s}
+.lpa-upload-btn:hover,.lpa-paste-btn:hover{background:var(--bg-2);color:var(--teal)}
+.lpa-edit-form{background:var(--bg-2);border:1px solid var(--border-dark);border-radius:8px;padding:16px}
+.lpa-edit-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.lpa-edit-row label{flex-shrink:0;width:150px;font-size:11px;font-weight:700;color:var(--text-3);font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.5px}
+.lpa-edit-row input,.lpa-edit-row select{flex:1;background:var(--bg-3);border:1px solid var(--border-dark);color:var(--text);border-radius:6px;padding:7px 10px;font-size:13px;font-family:'Inter',sans-serif}
+.lpa-edit-row input:focus,.lpa-edit-row select:focus{outline:none;border-color:var(--teal)}
+.lpa-btn-edit{background:rgba(14,116,144,.12);color:var(--teal);border:1px solid var(--teal-border)}
+.lpa-btn-edit:hover{background:rgba(14,116,144,.22)}
+.lpa-pq-card{background:var(--bg-2);border:1px solid var(--border-dark);border-radius:8px;padding:14px}
+.lpa-pq-row{display:flex;align-items:baseline;gap:10px;padding:5px 0;border-bottom:1px solid var(--border)}
+.lpa-pq-row:last-child{border-bottom:none}
+.lpa-pq-label{flex-shrink:0;width:145px;font-size:10px;color:var(--text-3);font-family:'DM Mono',monospace;text-transform:uppercase}
+.lpa-pq-val{font-size:13px;font-weight:600;color:var(--text)}
+.lpa-pq-questions{margin-top:12px;padding:10px 12px;background:rgba(180,83,9,.07);border:1px solid rgba(180,83,9,.2);border-radius:6px;font-size:12px;color:var(--amber)}
+.lpa-pq-questions ul{margin:4px 0 0 16px;padding:0}.lpa-pq-questions li{margin-bottom:3px}
+.lpa-proc{display:flex;align-items:center;gap:10px;color:var(--text-3);font-size:13px;padding:12px 16px}
+.lpa-proc-ring{width:18px;height:18px;border:2px solid var(--teal-border);border-top-color:var(--teal);border-radius:50%;animation:lpa-spin .8s linear infinite;flex-shrink:0}
+@keyframes lpa-spin{to{transform:rotate(360deg)}}
+#lpa-paste-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:9999;align-items:center;justify-content:center}
+.lpa-paste-inner{background:var(--bg-2);border:1px solid var(--border-dark);border-radius:10px;padding:24px;width:540px;max-width:92vw}
+.lpa-paste-head{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px}
+.lpa-paste-sub{font-size:12px;color:var(--text-3);margin-bottom:14px}
+#lpa-paste-area{width:100%;background:var(--bg-3);border:1px solid var(--border-dark);color:var(--text);border-radius:7px;padding:12px;font-size:13px;font-family:'Inter',sans-serif;resize:vertical;box-sizing:border-box;min-height:160px}
+#lpa-paste-area:focus{outline:none;border-color:var(--teal)}
+.lpa-paste-actions{display:flex;gap:10px;margin-top:12px;justify-content:flex-end}
+.lpa-paste-cancel{background:transparent;border:1px solid var(--border-dark);color:var(--text-3);border-radius:6px;padding:8px 16px;cursor:pointer;font-size:13px}
+.lpa-paste-cancel:hover{color:var(--text);border-color:var(--text-3)}
+.lpa-paste-submit{background:var(--teal);border:none;color:#fff;border-radius:6px;padding:8px 20px;cursor:pointer;font-size:13px;font-weight:600}
+.lpa-paste-submit:hover{opacity:.85}
 /* ── Guidelines panel ── */
 .gl-section{background:var(--bg-2);border:1px solid var(--border);border-radius:10px;margin-bottom:18px;overflow:hidden}
 .gl-section-head{padding:14px 18px;border-bottom:1px solid var(--border);background:var(--bg-3)}
@@ -223,6 +254,9 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
         })(window, document, "clarity", "script", "wymi2q72od");
     </script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>if(typeof pdfjsLib!=='undefined'){pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';}</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
 </head>
 <body>
 <!-- Google Tag Manager (noscript) -->
@@ -471,6 +505,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <div class="lpa-main">
         <div class="lpa-chat" id="lpa-chat"></div>
         <div class="lpa-input-bar">
+          <button class="lpa-upload-btn" onclick="document.getElementById('lpa-doc-input').click()" title="Upload prequal document (PDF, Word, image)">📎</button>
+          <input type="file" id="lpa-doc-input" style="display:none" accept=".pdf,.docx,.doc,.jpg,.jpeg,.png,.gif,.webp" onchange="lpaHandleDocUpload(this)">
+          <button class="lpa-paste-btn" onclick="lpaOpenPasteModal()" title="Paste prequal info">📋</button>
           <textarea class="lpa-input" id="lpa-user-input" placeholder="Type a folio number, address, or answer…" rows="1" onkeydown="lpaHandleKey(event)" oninput="lpaAutoResize(this)"></textarea>
           <button class="lpa-send" id="lpa-send-btn" onclick="lpaSend()">↑</button>
         </div>
@@ -922,6 +959,7 @@ function renderLenderDeals() {
             </div>
           </div>
           <div style="display:flex;gap:8px;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)">
+            <button class="btn btn-ghost" style="flex:1;font-size:12px;padding:7px;color:var(--teal);font-weight:600" onclick="event.stopPropagation();lpaAssessFromPipeline('${m.id}')">⚡ Assess</button>
             <button class="btn btn-ghost" style="flex:1;font-size:12px;padding:7px" onclick="event.stopPropagation();setInterest('${m.id}','interested')">✓ Interested</button>
             <button class="btn btn-ghost" style="flex:1;font-size:12px;padding:7px" onclick="event.stopPropagation();setInterest('${m.id}','term_sheet_issued')">📄 Term Sheet</button>
             <button class="btn btn-ghost" style="flex:1;font-size:12px;padding:7px;color:var(--red)" onclick="event.stopPropagation();setInterest('${m.id}','not_interested')">✗ Pass</button>
@@ -1312,11 +1350,13 @@ var LPA_ST = {
   LAND_ZONE:'land_zone', LAND_EXIT:'land_exit', LAND_XCOLLAB:'land_xcollab', LAND_SELLER:'land_seller',
   GND_BUDGET:'gnd_budget', GND_PERMITS:'gnd_permits',
   PRIVATE_EXIT:'private_exit', PRIVATE_TERM:'private_term',
-  CREDIT:'credit', PROCESSING:'processing', DECISION:'decision'
+  CREDIT:'credit', PROCESSING:'processing', DECISION:'decision',
+  PREQUAL_REVIEW:'prequal_review', PREQUAL_QA:'prequal_qa'
 };
-var lpaState = LPA_ST.PROPERTY;
-var lpaDeal  = {};
-var lpaDeals = [];
+var lpaState        = LPA_ST.PROPERTY;
+var lpaDeal         = {};
+var lpaDeals        = [];
+var lpaPrequalFields = {};
 
 /* ── Guidelines persistence ── */
 function lpaGetGL() {
@@ -1612,6 +1652,40 @@ async function lpaProcess(input) {
       lpaDeal.creditScore = v;
       await lpaRenderDecision();
       return;
+
+    case LPA_ST.PREQUAL_REVIEW:
+      // User correcting extracted prequal fields
+      if (v.toLowerCase() === 'submit') {
+        lpaAcceptPrequal();
+      } else {
+        lpaPrequalFields._rawCorrections = lpaPrequalFields._rawCorrections || [];
+        lpaPrequalFields._rawCorrections.push(v);
+        lpaAddAI('Got it. Anything else to correct? Type <strong>submit</strong> when you're done.');
+        lpaSetInput(true);
+      }
+      return;
+
+    case LPA_ST.PREQUAL_QA:
+      // Collecting missing required fields one at a time
+      var _missing = lpaPrequalFields._missing || [];
+      var _idx = lpaPrequalFields._missingIdx || 0;
+      var _field = _missing[_idx];
+      if (_field === 'property address') { lpaDeal.address = v; }
+      else if (_field === 'purchase price') { lpaDeal.purchasePrice = lpaToNum(v); }
+      else if (_field === 'loan amount') {
+        lpaDeal.loanAmount = lpaToNum(v);
+        lpaDeal.downPayment = (lpaDeal.purchasePrice || 0) - lpaDeal.loanAmount;
+        lpaDeal.ltv = lpaDeal.purchasePrice ? lpaDeal.loanAmount / lpaDeal.purchasePrice : 0;
+      }
+      _idx++;
+      lpaPrequalFields._missingIdx = _idx;
+      if (_idx < _missing.length) {
+        lpaAddAI('Got it. What is the <strong>' + _missing[_idx] + '</strong>?');
+        lpaSetInput(true);
+      } else {
+        await lpaRenderDecision();
+      }
+      return;
   }
 
   lpaSetInput(lpaState !== LPA_ST.DECISION && lpaState !== LPA_ST.PROCESSING);
@@ -1739,6 +1813,7 @@ async function lpaRenderDecision() {
         '<div class="lpa-action-row">' +
           '<button class="lpa-act-btn lpa-btn-pdf" onclick="lpaDownloadPDF()">⬇ PDF Report</button>' +
           '<button class="lpa-act-btn lpa-btn-email" onclick="lpaEmailReport()">✉ Email</button>' +
+          '<button class="lpa-act-btn lpa-btn-edit" onclick="lpaEditAssessment()">✏ Edit Deal</button>' +
           '<button class="lpa-act-btn lpa-btn-new" onclick="lpaNewAssessment()">+ New Deal</button>' +
         '</div>' +
       lpaCapitalStack(rec) +
@@ -3151,10 +3226,469 @@ function lpaLoadRec(id) {
   lpaState = LPA_ST.DECISION;
   lpaChat().innerHTML = '';
   setTimeout(function() {
-    lpaAddAI('Loaded assessment: <strong>' + rec.address + '</strong> — ' + rec.borrower);
-    lpaAddAI('<strong>Decision on file: ' + rec.verdict + '</strong><br>Click <em>+ New</em> to run a new assessment.');
+    lpaAddAI('Loaded: <strong>' + (rec.address || '—') + '</strong>'
+      + (rec.borrower ? ' &middot; ' + rec.borrower : '')
+      + (rec.date    ? ' &middot; <em>' + rec.date + '</em>' : ''));
+    lpaDisplayDecision(rec);
     lpaSetInput(false);
   }, 100);
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════
+   PHASE 7 — Assessment Accessibility · Prequal Upload/Paste · Pipeline-to-Assessment
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Utility: parse currency strings to numbers ── */
+function lpaToNum(s) {
+  if (!s && s !== 0) return 0;
+  return parseFloat(String(s).replace(/[^0-9.]/g, '')) || 0;
+}
+
+/* ── Utility: convert FICO score to range string used by underwriting engine ── */
+function lpaFicoRange(fico) {
+  var f = parseInt(fico) || 680;
+  if (f < 580) return 'Below 580';
+  if (f < 620) return '580–619';
+  if (f < 660) return '620–659';
+  if (f < 700) return '660–699';
+  if (f < 740) return '700–739';
+  return '740+';
+}
+
+/* ── lpaDisplayDecision(rec): render full decision card from a history record ──
+   Called by lpaLoadRec (history load) and lpaAcceptPrequal (after prequal flow).
+   rec must have: rec.deal.decisionData, rec.verdict, rec.deal, rec.id, rec.loanType  */
+function lpaDisplayDecision(rec) {
+  var deal   = rec.deal || {};
+  var result = deal.decisionData || {};
+  var verdict = deal.decision || rec.verdict || '';
+
+  var vClass = verdict === 'APPROVED'                ? 'lpa-v-approve'
+             : verdict === 'APPROVED WITH CONDITIONS' ? 'lpa-v-conditions'
+             : 'lpa-v-decline';
+  var vIcon  = verdict === 'APPROVED' ? '✓' : verdict === 'APPROVED WITH CONDITIONS' ? '⚑' : '✗';
+
+  var metricsHtml = (result.metrics || []).map(function(m) {
+    return '<div class="lpa-metric"><div class="lpa-m-label">' + m.label +
+           '</div><div class="lpa-m-val ' + (m.color || '') + '">' + m.value + '</div></div>';
+  }).join('');
+
+  var rationaleHtml = '<div class="lpa-rationale"><h4>Rationale</h4><ul>' +
+    (result.rationale || []).map(function(r) { return '<li>' + r + '</li>'; }).join('') + '</ul></div>';
+
+  var condHtml = (result.conditions && result.conditions.length)
+    ? '<div class="lpa-conditions" style="margin-top:12px"><h4>Conditions</h4><ul>' +
+      result.conditions.map(function(c) { return '<li>' + c + '</li>'; }).join('') + '</ul></div>' : '';
+
+  var capPathHtml = (result.capitalPath && result.capitalPath.length)
+    ? '<div class="lpa-capital-path"><h4 class="lpa-cp-head">Capital Structure Path</h4>' +
+      result.capitalPath.map(function(p, i) {
+        return '<div class="lpa-cp-item"><div class="lpa-cp-rank">' + (i + 1) + '</div>' +
+               '<div><div class="lpa-cp-label">' + p.label + '</div>' +
+               '<div class="lpa-cp-desc">' + p.desc + '</div></div></div>';
+      }).join('') + '</div>' : '';
+
+  var gl = lpaGetGL();
+  var noteHtml = (gl && gl.notes)
+    ? '<div style="margin-top:12px;padding:10px 12px;background:var(--teal-dim);border:1px solid var(--teal-border);border-radius:6px;font-size:11px;color:var(--teal)">Lender note applied: ' + gl.notes + '</div>' : '';
+
+  var wrap = document.createElement('div');
+  wrap.className = 'lpa-msg ai';
+  wrap.innerHTML =
+    '<div class="lpa-avatar lpa-ai-avatar">AI</div>' +
+    '<div style="flex:1">' +
+      '<div class="lpa-decision-card">' +
+        '<div class="lpa-verdict-badge ' + vClass + '">' + vIcon + ' ' + verdict + '</div>' +
+        '<div class="lpa-metrics-grid">' + metricsHtml + '</div>' +
+        rationaleHtml + condHtml + capPathHtml + noteHtml +
+        '<div class="lpa-action-row">' +
+          '<button class="lpa-act-btn lpa-btn-pdf" onclick="lpaDownloadPDF()">⬇ PDF Report</button>' +
+          '<button class="lpa-act-btn lpa-btn-email" onclick="lpaEmailReport()">✉ Email</button>' +
+          '<button class="lpa-act-btn lpa-btn-edit" onclick="lpaEditAssessment()">✏ Edit Deal</button>' +
+          '<button class="lpa-act-btn lpa-btn-new" onclick="lpaNewAssessment()">+ New Deal</button>' +
+        '</div>' +
+      lpaCapitalStack(rec) +
+      lpaRenderOutcomeStrip(rec) +
+      '</div>' +
+    '</div>';
+  lpaChat().appendChild(wrap);
+  lpaScroll();
+}
+
+/* ── lpaEditAssessment(): show inline edit form for current deal ── */
+function lpaEditAssessment() {
+  var d = lpaDeal || {};
+  var creditOpts = ['Below 580', '580–619', '620–659', '660–699', '700–739', '740+'];
+  var isDSCR  = (d.loanType || '').indexOf('DSCR') >= 0;
+  var isFlip  = (d.loanType || '').indexOf('Flip') >= 0;
+  var isBridge= (d.loanType || '').indexOf('Bridge') >= 0;
+  var isGnd   = (d.loanType || '').indexOf('Ground') >= 0;
+
+  var extraFields = '';
+  if (isDSCR && d.monthlyRent)
+    extraFields += '<div class="lpa-edit-row"><label>Monthly Rent</label><input id="lpa-e-rent" type="text" value="' + lpaFmt(d.monthlyRent).replace('$','') + '"></div>';
+  if (isFlip && d.arv)
+    extraFields += '<div class="lpa-edit-row"><label>ARV</label><input id="lpa-e-arv" type="text" value="' + lpaFmt(d.arv).replace('$','') + '"></div>';
+  if (isBridge && d.asIsValue)
+    extraFields += '<div class="lpa-edit-row"><label>As-Is Value</label><input id="lpa-e-asIs" type="text" value="' + lpaFmt(d.asIsValue).replace('$','') + '"></div>';
+  if (isGnd && d.constructionBudget)
+    extraFields += '<div class="lpa-edit-row"><label>Construction Budget</label><input id="lpa-e-budget" type="text" value="' + lpaFmt(d.constructionBudget).replace('$','') + '"></div>';
+
+  var wrap = document.createElement('div');
+  wrap.className = 'lpa-msg ai';
+  wrap.innerHTML =
+    '<div class="lpa-avatar lpa-ai-avatar">AI</div>' +
+    '<div style="flex:1">' +
+      '<div class="lpa-bubble lpa-ai-bub" style="margin-bottom:10px">Edit deal parameters and resubmit:</div>' +
+      '<div class="lpa-edit-form">' +
+        '<div class="lpa-edit-row"><label>Address</label><input id="lpa-e-addr" type="text" value="' + (d.address || '') + '"></div>' +
+        '<div class="lpa-edit-row"><label>Borrower</label><input id="lpa-e-borr" type="text" value="' + (d.borrowerName || '') + '"></div>' +
+        '<div class="lpa-edit-row"><label>Purchase Price</label><input id="lpa-e-price" type="text" value="' + (d.purchasePrice ? lpaFmt(d.purchasePrice).replace('$','') : '') + '"></div>' +
+        '<div class="lpa-edit-row"><label>Loan Amount</label><input id="lpa-e-loan" type="text" value="' + (d.loanAmount ? lpaFmt(d.loanAmount).replace('$','') : '') + '"></div>' +
+        extraFields +
+        '<div class="lpa-edit-row"><label>Credit Score</label>' +
+          '<select id="lpa-e-credit">' +
+            creditOpts.map(function(o) { return '<option' + (d.creditScore === o ? ' selected' : '') + '>' + o + '</option>'; }).join('') +
+          '</select></div>' +
+        '<div class="lpa-action-row" style="margin-top:14px">' +
+          '<button class="lpa-act-btn lpa-btn-pdf" onclick="lpaResubmitDeal()">⚡ Resubmit Assessment</button>' +
+          '<button class="lpa-act-btn lpa-btn-new" onclick="lpaNewAssessment()">✕ Cancel</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  lpaChat().appendChild(wrap);
+  lpaScroll();
+}
+
+/* ── lpaResubmitDeal(): read edit form, update lpaDeal, re-run decision ── */
+function lpaResubmitDeal() {
+  var g = function(id) { var e = document.getElementById(id); return e ? e.value.trim() : ''; };
+  var price = lpaToNum(g('lpa-e-price'));
+  var loan  = lpaToNum(g('lpa-e-loan'));
+  if (!price || !loan) {
+    lpaAddAI('<span style="color:var(--red)">Please enter both a purchase price and loan amount.</span>');
+    return;
+  }
+  lpaDeal.address      = g('lpa-e-addr')   || lpaDeal.address;
+  lpaDeal.borrowerName = g('lpa-e-borr')   || lpaDeal.borrowerName;
+  lpaDeal.purchasePrice= price;
+  lpaDeal.loanAmount   = loan;
+  lpaDeal.downPayment  = price - loan;
+  lpaDeal.ltv          = loan / price;
+  lpaDeal.creditScore  = g('lpa-e-credit') || lpaDeal.creditScore;
+  var rentEl   = document.getElementById('lpa-e-rent');   if (rentEl)   lpaDeal.monthlyRent       = lpaToNum(rentEl.value);
+  var arvEl    = document.getElementById('lpa-e-arv');    if (arvEl)    lpaDeal.arv               = lpaToNum(arvEl.value);
+  var asIsEl   = document.getElementById('lpa-e-asIs');   if (asIsEl)   lpaDeal.asIsValue          = lpaToNum(asIsEl.value);
+  var budgetEl = document.getElementById('lpa-e-budget'); if (budgetEl) lpaDeal.constructionBudget = lpaToNum(budgetEl.value);
+  lpaDeal.date = new Date().toLocaleDateString('en-US', {year:'numeric',month:'long',day:'numeric'});
+  lpaRenderDecision();
+}
+
+/* ── Pipeline-to-Assessment: populate deal from a pipeline match ── */
+function lpaAssessFromPipeline(matchId) {
+  if (!lenderMatches) return;
+  var m = null;
+  for (var i = 0; i < lenderMatches.length; i++) { if (lenderMatches[i].id === matchId) { m = lenderMatches[i]; break; } }
+  if (!m) return;
+  var d = m.deal_submissions || {};
+  var b = d.borrowers || {};
+  var ltv = parseFloat(d.requested_ltv) / 100 || 0;
+  var loan = parseFloat(d.requested_loan_amount) || 0;
+  var price = (ltv > 0 && loan) ? Math.round(loan / ltv) : 0;
+  lpaDeal = {
+    address      : d.property_address || d.full_address || '',
+    loanType     : lpaMapType(d.deal_type || ''),
+    borrowerName : b.borrower_name || '',
+    clientName   : d.broker_name || '(Direct)',
+    loanAmount   : loan,
+    purchasePrice: price,
+    downPayment  : price - loan,
+    ltv          : ltv,
+    creditScore  : lpaFicoRange(b.fico || b.credit_score || 680)
+  };
+  if (d.monthly_rent)        lpaDeal.monthlyRent        = parseFloat(d.monthly_rent) || 0;
+  if (d.arv)                 lpaDeal.arv                = parseFloat(d.arv) || 0;
+  if (d.exit_strategy)       lpaDeal.exitStrategy       = d.exit_strategy;
+  if (d.loan_term)           lpaDeal.loanTerm           = d.loan_term;
+  switchLenderPanel('assessment');
+  setTimeout(function() {
+    lpaChat().innerHTML = '';
+    lpaState = LPA_ST.PROCESSING;
+    lpaSetInput(false);
+    var creditOpts = ['Below 580','580–619','620–659','660–699','700–739','740+'];
+    var typeOpts = [
+      'Private Money / Hard Money','DSCR – Rental Income Based','Bridge Loan',
+      'Fix & Flip','Ground-Up Construction','Land Loan','Commercial / Mixed-Use'
+    ];
+    var wrap = document.createElement('div');
+    wrap.className = 'lpa-msg ai';
+    wrap.innerHTML =
+      '<div class="lpa-avatar lpa-ai-avatar">AI</div>' +
+      '<div style="flex:1">' +
+        '<div class="lpa-bubble lpa-ai-bub" style="margin-bottom:10px">I\'ve pre-loaded this deal from your pipeline. Review and adjust any field, then run the assessment:</div>' +
+        '<div class="lpa-edit-form">' +
+          '<div class="lpa-edit-row"><label>Address / Folio</label><input id="lpa-p-addr" type="text" value="' + (lpaDeal.address || '') + '"></div>' +
+          '<div class="lpa-edit-row"><label>Loan Product</label>' +
+            '<select id="lpa-p-type">' +
+              typeOpts.map(function(o){ return '<option' + (lpaDeal.loanType === o ? ' selected' : '') + '>' + o + '</option>'; }).join('') +
+            '</select></div>' +
+          '<div class="lpa-edit-row"><label>Borrower</label><input id="lpa-p-borr" type="text" value="' + (lpaDeal.borrowerName || '') + '"></div>' +
+          '<div class="lpa-edit-row"><label>Client / Broker</label><input id="lpa-p-client" type="text" value="' + (lpaDeal.clientName || '') + '"></div>' +
+          '<div class="lpa-edit-row"><label>Purchase Price</label><input id="lpa-p-price" type="text" value="' + (lpaDeal.purchasePrice ? lpaFmt(lpaDeal.purchasePrice).replace('$','') : '') + '"></div>' +
+          '<div class="lpa-edit-row"><label>Loan Amount</label><input id="lpa-p-loan" type="text" value="' + (lpaDeal.loanAmount ? lpaFmt(lpaDeal.loanAmount).replace('$','') : '') + '"></div>' +
+          (lpaDeal.monthlyRent ? '<div class="lpa-edit-row"><label>Monthly Rent</label><input id="lpa-p-rent" type="text" value="' + lpaFmt(lpaDeal.monthlyRent).replace('$','') + '"></div>' : '') +
+          (lpaDeal.arv ? '<div class="lpa-edit-row"><label>ARV</label><input id="lpa-p-arv" type="text" value="' + lpaFmt(lpaDeal.arv).replace('$','') + '"></div>' : '') +
+          '<div class="lpa-edit-row"><label>Credit Score</label>' +
+            '<select id="lpa-p-credit">' +
+              creditOpts.map(function(o){ return '<option' + (lpaDeal.creditScore === o ? ' selected' : '') + '>' + o + '</option>'; }).join('') +
+            '</select></div>' +
+          '<div class="lpa-action-row" style="margin-top:14px">' +
+            '<button class="lpa-act-btn lpa-btn-pdf" onclick="lpaRunPipelineAssessment()">⚡ Run Assessment</button>' +
+            '<button class="lpa-act-btn lpa-btn-new" onclick="lpaNewAssessment()">✕ Start Fresh</button>' +
+          '</div>' +
+        '</div>' +
+      '</div>';
+    lpaChat().appendChild(wrap);
+    lpaScroll();
+  }, 200);
+}
+
+/* ── lpaRunPipelineAssessment(): read the pre-fill form and fire off decision ── */
+function lpaRunPipelineAssessment() {
+  var g = function(id) { var e = document.getElementById(id); return e ? e.value.trim() : ''; };
+  var price = lpaToNum(g('lpa-p-price'));
+  var loan  = lpaToNum(g('lpa-p-loan'));
+  if (!price || !loan) {
+    lpaAddAI('<span style="color:var(--red)">Please enter both a purchase price and loan amount.</span>');
+    return;
+  }
+  lpaDeal.address      = g('lpa-p-addr')   || lpaDeal.address;
+  lpaDeal.loanType     = g('lpa-p-type')   || lpaDeal.loanType;
+  lpaDeal.borrowerName = g('lpa-p-borr')   || lpaDeal.borrowerName;
+  lpaDeal.clientName   = g('lpa-p-client') || lpaDeal.clientName || '(Direct)';
+  lpaDeal.purchasePrice= price;
+  lpaDeal.loanAmount   = loan;
+  lpaDeal.downPayment  = price - loan;
+  lpaDeal.ltv          = loan / price;
+  lpaDeal.creditScore  = g('lpa-p-credit') || lpaDeal.creditScore;
+  var rentEl = document.getElementById('lpa-p-rent'); if (rentEl) lpaDeal.monthlyRent = lpaToNum(rentEl.value);
+  var arvEl  = document.getElementById('lpa-p-arv');  if (arvEl)  lpaDeal.arv = lpaToNum(arvEl.value);
+  lpaRenderDecision();
+}
+
+/* ── Prequal paste modal ── */
+function lpaOpenPasteModal() {
+  var el = document.getElementById('lpa-paste-modal');
+  if (el) { el.style.display = 'flex'; }
+  setTimeout(function() {
+    var ta = document.getElementById('lpa-paste-area');
+    if (ta) { ta.value = ''; ta.focus(); }
+  }, 60);
+}
+function lpaClosePasteModal() {
+  var el = document.getElementById('lpa-paste-modal');
+  if (el) el.style.display = 'none';
+}
+function lpaSubmitPastedPrequal() {
+  var ta = document.getElementById('lpa-paste-area');
+  var text = ta ? ta.value.trim() : '';
+  if (!text) { return; }
+  lpaClosePasteModal();
+  if (document.getElementById('lp-assessment-panel').style.display === 'none') {
+    switchLenderPanel('assessment');
+  }
+  lpaStartPrequalFlow(text, null);
+}
+
+/* ── Prequal document upload ── */
+function lpaHandleDocUpload(input) {
+  var file = input && input.files && input.files[0];
+  if (!file) return;
+  input.value = '';
+  if (file.size > 12 * 1024 * 1024) {
+    lpaAddAI('<span style="color:var(--red)">File too large — max 12 MB.</span>');
+    return;
+  }
+  if (document.getElementById('lp-assessment-panel').style.display === 'none') {
+    switchLenderPanel('assessment');
+  }
+  var ext = (file.name.split('.').pop() || '').toLowerCase();
+  var proc = document.createElement('div');
+  proc.id  = 'lpa-proc-upload';
+  proc.className = 'lpa-msg ai';
+  proc.innerHTML = '<div class="lpa-avatar lpa-ai-avatar">AI</div><div class="lpa-proc"><div class="lpa-proc-ring"></div>Reading <strong>' + file.name + '</strong>…</div>';
+  lpaChat().appendChild(proc);
+  lpaScroll();
+  lpaSetInput(false);
+  if (ext === 'pdf') {
+    lpaExtractPDFText(file)
+      .then(function(t) { proc.remove(); lpaStartPrequalFlow(t, file.name); })
+      .catch(function() { proc.remove(); lpaAddAI('Could not read the PDF. Try pasting the text using the \U0001f4cb button instead.'); lpaSetInput(true); });
+  } else if (ext === 'docx' || ext === 'doc') {
+    lpaExtractDocxText(file)
+      .then(function(t) { proc.remove(); lpaStartPrequalFlow(t, file.name); })
+      .catch(function() { proc.remove(); lpaAddAI('Could not read the Word document. Try pasting the text using the \U0001f4cb button instead.'); lpaSetInput(true); });
+  } else if (['jpg','jpeg','png','gif','webp'].indexOf(ext) >= 0) {
+    var reader = new FileReader();
+    reader.onload = function(ev) { proc.remove(); lpaStartPrequalFlow('[IMAGE]' + ev.target.result, file.name); };
+    reader.onerror = function() { proc.remove(); lpaAddAI('Could not read the image file.'); lpaSetInput(true); };
+    reader.readAsDataURL(file);
+  } else {
+    proc.remove();
+    lpaAddAI('Unsupported file type. Upload a PDF, Word document, or image.');
+    lpaSetInput(true);
+  }
+}
+
+function lpaExtractPDFText(file) {
+  return new Promise(function(resolve, reject) {
+    if (typeof pdfjsLib === 'undefined') { reject(new Error('pdf.js not loaded')); return; }
+    var reader = new FileReader();
+    reader.onload = function(ev) {
+      pdfjsLib.getDocument({ data: new Uint8Array(ev.target.result) }).promise.then(function(pdf) {
+        var pages = Math.min(pdf.numPages, 25);
+        var tasks = [];
+        for (var p = 1; p <= pages; p++) { tasks.push(pdf.getPage(p).then(function(pg) { return pg.getTextContent().then(function(tc) { return tc.items.map(function(it){ return it.str; }).join(' '); }); })); }
+        Promise.all(tasks).then(function(texts) { resolve(texts.join('\n')); }).catch(reject);
+      }).catch(reject);
+    };
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function lpaExtractDocxText(file) {
+  return new Promise(function(resolve, reject) {
+    if (typeof mammoth === 'undefined') { reject(new Error('mammoth not loaded')); return; }
+    var reader = new FileReader();
+    reader.onload = function(ev) { mammoth.extractRawText({ arrayBuffer: ev.target.result }).then(function(r) { resolve(r.value); }).catch(reject); };
+    reader.onerror = reject;
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+/* ── lpaStartPrequalFlow: send text/image to Netlify function, show confirmation ── */
+async function lpaStartPrequalFlow(text, fileName) {
+  var isImage  = text && text.startsWith('[IMAGE]');
+  var proc = document.createElement('div');
+  proc.className = 'lpa-msg ai';
+  proc.innerHTML = '<div class="lpa-avatar lpa-ai-avatar">AI</div><div class="lpa-proc"><div class="lpa-proc-ring"></div>'
+    + (fileName ? 'Analyzing <strong>' + fileName + '</strong>' : 'Analyzing prequal information') + '…</div>';
+  lpaChat().appendChild(proc);
+  lpaScroll();
+  lpaSetInput(false);
+  var payload = isImage
+    ? { image: text.slice('[IMAGE]'.length) }
+    : { text: (text || '').slice(0, 11000) };
+  var fields = null;
+  try {
+    var res = await fetch('/.netlify/functions/lender-prequal-extract', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    if (res.ok) fields = await res.json();
+  } catch(e) {}
+  proc.remove();
+  if (!fields || fields.error) {
+    lpaAddAI('I couldn’t reach the extraction service. You can start a new assessment manually or try pasting the text again.');
+    lpaSetInput(true);
+    return;
+  }
+  lpaPrequalFields = fields;
+  lpaShowPrequalConfirm(fields);
+}
+
+/* ── lpaShowPrequalConfirm: display extracted fields for lender review ── */
+function lpaShowPrequalConfirm(fields) {
+  var rows = [
+    ['Property / Address', fields.address],
+    ['Loan Product',       fields.loanType],
+    ['Borrower',           fields.borrowerName],
+    ['Client / Broker',    fields.clientName],
+    ['Purchase Price',     fields.purchasePrice != null ? lpaFmt(fields.purchasePrice) : null],
+    ['Loan Amount',        fields.loanAmount    != null ? lpaFmt(fields.loanAmount)    : null],
+    ['Down Payment',       fields.downPayment   != null ? lpaFmt(fields.downPayment)   : null],
+    ['Credit Score',       fields.creditScore],
+    ['Monthly Rent',       fields.monthlyRent   != null ? lpaFmt(fields.monthlyRent)   : null],
+    ['ARV',                fields.arv           != null ? lpaFmt(fields.arv)           : null],
+    ['As-Is Value',        fields.asIsValue     != null ? lpaFmt(fields.asIsValue)     : null],
+    ['Exit Strategy',      fields.exitStrategy],
+    ['Loan Term',          fields.loanTerm],
+    ['Permit Status',      fields.permitStatus]
+  ].filter(function(r) { return r[1] != null && r[1] !== ''; });
+
+  var tableHtml = rows.map(function(r) {
+    return '<div class="lpa-pq-row"><span class="lpa-pq-label">' + r[0] + '</span><span class="lpa-pq-val">' + r[1] + '</span></div>';
+  }).join('');
+
+  var qHtml = (fields.questions && fields.questions.length)
+    ? '<div class="lpa-pq-questions"><strong>Needs clarification:</strong><ul>' +
+      fields.questions.map(function(q) { return '<li>' + q + '</li>'; }).join('') + '</ul></div>' : '';
+
+  var wrap = document.createElement('div');
+  wrap.className = 'lpa-msg ai';
+  wrap.innerHTML =
+    '<div class="lpa-avatar lpa-ai-avatar">AI</div>' +
+    '<div style="flex:1">' +
+      '<div class="lpa-bubble lpa-ai-bub" style="margin-bottom:10px">Here’s what I extracted. Review for accuracy, then proceed or edit:</div>' +
+      '<div class="lpa-pq-card">' +
+        tableHtml + qHtml +
+        '<div class="lpa-action-row" style="margin-top:14px">' +
+          '<button class="lpa-act-btn lpa-btn-pdf" onclick="lpaAcceptPrequal()">✓ Looks Good — Run Assessment</button>' +
+          '<button class="lpa-act-btn lpa-btn-edit" onclick="lpaEditPrequal()">✏ Edit Fields</button>' +
+          '<button class="lpa-act-btn lpa-btn-new" onclick="lpaNewAssessment()">✕ Start Fresh</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  lpaChat().appendChild(wrap);
+  lpaScroll();
+}
+
+/* ── lpaAcceptPrequal: map extracted fields to lpaDeal and run or collect missing ── */
+function lpaAcceptPrequal() {
+  var f = lpaPrequalFields;
+  lpaDeal = {};
+  lpaDeal.address           = f.address           || '';
+  lpaDeal.loanType          = lpaMapType(f.loanType || '');
+  lpaDeal.borrowerName      = f.borrowerName       || '';
+  lpaDeal.clientName        = f.clientName         || '(Direct)';
+  lpaDeal.purchasePrice     = lpaToNum(f.purchasePrice);
+  lpaDeal.loanAmount        = lpaToNum(f.loanAmount);
+  lpaDeal.downPayment       = lpaDeal.purchasePrice - lpaDeal.loanAmount;
+  lpaDeal.ltv               = lpaDeal.purchasePrice ? lpaDeal.loanAmount / lpaDeal.purchasePrice : 0;
+  lpaDeal.creditScore       = f.creditScore        || '660–699';
+  if (f.monthlyRent)        lpaDeal.monthlyRent        = lpaToNum(f.monthlyRent);
+  if (f.arv)                lpaDeal.arv                = lpaToNum(f.arv);
+  if (f.asIsValue)          lpaDeal.asIsValue          = lpaToNum(f.asIsValue);
+  if (f.constructionBudget) lpaDeal.constructionBudget = lpaToNum(f.constructionBudget);
+  if (f.exitStrategy)       lpaDeal.exitStrategy       = f.exitStrategy;
+  if (f.loanTerm)           lpaDeal.loanTerm           = f.loanTerm;
+  if (f.permitStatus)       lpaDeal.permitStatus       = f.permitStatus;
+
+  var missing = [];
+  if (!lpaDeal.address)       missing.push('property address');
+  if (!lpaDeal.purchasePrice) missing.push('purchase price');
+  if (!lpaDeal.loanAmount)    missing.push('loan amount');
+
+  if (missing.length) {
+    lpaPrequalFields._missing    = missing;
+    lpaPrequalFields._missingIdx = 0;
+    lpaAddAI('Almost there — I still need: <strong>' + missing.join(', ') + '</strong>. Please type the <strong>' + missing[0] + '</strong> below.');
+    lpaState = LPA_ST.PREQUAL_QA;
+    lpaSetInput(true);
+  } else {
+    lpaRenderDecision();
+  }
+}
+
+/* ── lpaEditPrequal: let lender type corrections before resubmitting ── */
+function lpaEditPrequal() {
+  lpaState = LPA_ST.PREQUAL_REVIEW;
+  lpaPrequalFields._rawCorrections = [];
+  lpaAddAI('Type any corrections (e.g. "Purchase price is $850,000" or "Borrower is ABC LLC"). When finished, type <strong>submit</strong> to run the assessment.');
+  lpaSetInput(true);
 }
 
 function lpaNewAssessment() {
@@ -3195,6 +3729,19 @@ function lpaCreditNum(s) {
   return 760;
 }
 </script>
-/* lpa_phase6_applied */
+<!-- Phase 7: prequal paste modal -->
+<div id="lpa-paste-modal" onclick="if(event.target===this)lpaClosePasteModal()">
+  <div class="lpa-paste-inner">
+    <div class="lpa-paste-head">Paste Prequal Information</div>
+    <div class="lpa-paste-sub">Paste the text from any loan application, prequal letter, or deal summary. The AI will extract the relevant fields.</div>
+    <textarea id="lpa-paste-area" placeholder="Paste prequal info here&#8230;" rows="8"></textarea>
+    <div class="lpa-paste-actions">
+      <button class="lpa-paste-cancel" onclick="lpaClosePasteModal()">Cancel</button>
+      <button class="lpa-paste-submit" onclick="lpaSubmitPastedPrequal()">&#128301; Extract &amp; Assess</button>
+    </div>
+  </div>
+</div>
+
+/* lpa_phase7_applied */
 </body>
 </html>
