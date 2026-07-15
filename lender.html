@@ -2265,8 +2265,9 @@ async function lpaRenderDecision() {
     var term   = parseInt(gl.rate_term || TERMS[key], 10);
     var amort  = AMORTS[key];
 
-    // LTV adjustment
+    // LTV adjustment — Phase 6: normalize decimal (0.76) to percent (76)
     var ltvN = parseFloat(ltv || 0);
+    if (ltvN > 0 && ltvN < 1) ltvN *= 100;
     if (ltvN > 75) rate += 1.0;
     else if (ltvN > 70) rate += 0.5;
 
@@ -2490,6 +2491,58 @@ async function lpaRenderDecision() {
   }
 
 
+// ── Phase 6: Capital path options for non-land products ─────────────────────
+function lpaCapitalPathOptions(d, maxLTV) {
+  var paths = [];
+  var ltv      = parseFloat(d.ltv || 0);
+  var loanAmt  = parseFloat(d.loanAmount || 0);
+  var purPrice = parseFloat(d.currentValue || d.purchasePrice || 0);
+  var downPmt  = parseFloat(d.downPayment || Math.max(0, purPrice - loanAmt));
+  if (ltv <= maxLTV || purPrice <= 0 || loanAmt <= 0) return paths;
+
+  var targetLoan = Math.round(purPrice * maxLTV);
+  var addlDown   = Math.round(loanAmt - targetLoan);
+  var newDown    = Math.round(downPmt + addlDown);
+  var newDownPct = purPrice > 0 ? (newDown / purPrice * 100).toFixed(0) : '—';
+
+  // Option A: Increase Down Payment
+  if (addlDown > 0) {
+    paths.push({ rank: 1, label: 'Increase Down Payment to Reduce LTV',
+      desc: 'The submitted loan of ' + lpaFmt(loanAmt) + ' represents ' + (ltv*100).toFixed(1) + '% LTV, '
+          + 'above the ' + (maxLTV*100).toFixed(0) + '% program maximum. '
+          + 'To qualify within guidelines, reduce the loan to ' + lpaFmt(targetLoan)
+          + ' by increasing the down payment by ' + lpaFmt(addlDown)
+          + ' (' + (addlDown/purPrice*100).toFixed(1) + '% of purchase price). '
+          + 'New down payment: ' + lpaFmt(newDown) + ' (' + newDownPct + '% of purchase price). '
+          + 'Simplest path — no additional lenders, no subordination agreement, no pricing adjustment.'
+    });
+  }
+
+  // Option B: Obtain a Subordinated Second Lien
+  var secondAmt  = Math.round(loanAmt - targetLoan);
+  var secondPct  = purPrice > 0 ? (secondAmt / purPrice * 100).toFixed(1) : '—';
+  var cltvPct    = (ltv * 100).toFixed(1);
+  if (secondAmt > 0) {
+    paths.push({ rank: 2, label: 'Obtain a Subordinated Second Lien',
+      desc: 'Structure as a two-position capital stack: '
+          + '(1) Senior first-position lien at ' + lpaFmt(targetLoan) + ' (' + (maxLTV*100).toFixed(0) + '% LTV) — '
+          + 'funded by this lender within program guidelines. '
+          + '(2) Subordinated 2nd-position note at ' + lpaFmt(secondAmt) + ' (' + secondPct + '% of value) — '
+          + 'sourced from a bridge, private, or mezzanine lender at 13–16% interest-only, '
+          + '12–18 month term, 3–4 origination points. '
+          + 'Combined LTV (CLTV): ' + cltvPct + '%. '
+          + 'This lender\'s exposure is capped at ' + (maxLTV*100).toFixed(0) + '% LTV; '
+          + 'borrower avoids additional cash injection. '
+          + 'Requirements: subordination agreement signed by 2nd lien holder; '
+          + 'borrower must qualify for combined debt service on both positions; '
+          + 'CLTV must be disclosed in loan file. '
+          + 'Typical 2nd lien sources: local private funds, HML co-lenders, family office capital.'
+    });
+  }
+
+  return paths;
+}
+
 function lpaComputeDecision(d, gl) {
   var ltv  = d.ltv || 0;
   var cNum = lpaCreditNum(d.creditScore || '');
@@ -2540,6 +2593,9 @@ function lpaComputeDecision(d, gl) {
       verdict = 'APPROVED';
       rationale.push('DSCR of ' + dscr.toFixed(2) + 'x exceeds the 1.25x threshold — property cash-flows adequately.');
       rationale.push('LTV of ' + ltvP + ' is within the ' + (maxDSCR*100).toFixed(0) + '% guideline.');
+      rationale.push('Annual NOI: ' + lpaFmt(Math.round(noi)) + ' (EGI ' + lpaFmt(Math.round(d.monthlyRent*12*0.95)) + ' less operating expenses ' + lpaFmt(Math.round(d.monthlyExp*12||0)) + '). Est. annual debt service: ' + lpaFmt(Math.round(pmt*12)) + ' (' + lpaFmt(Math.round(pmt)) + '/mo at ' + (rate*100).toFixed(2) + '% P&I). Coverage: ' + dscr.toFixed(2) + 'x.');
+      var _ds90 = ((d.monthlyRent*12*0.90) - (d.monthlyExp*12||0)) / (pmt*12);
+      rationale.push('Stress test at 10% vacancy: DSCR ' + _ds90.toFixed(2) + 'x — ' + (_ds90 >= 1.0 ? 'property services debt under moderate stress.' : 'deal breaks debt-service covenant under stress — recommend 6-month PITIA reserves.'));
     } else if (dscr >= 1.0 && ltv <= maxDSCR + 0.05) {
       verdict = 'APPROVED WITH CONDITIONS';
       if (dscr < 1.25)       { rationale.push('DSCR of ' + dscr.toFixed(2) + 'x is below the preferred 1.25x.'); conditions.push('Provide executed leases and 12-month rental history.'); }
@@ -2563,6 +2619,11 @@ function lpaComputeDecision(d, gl) {
       verdict = 'APPROVED';
       rationale.push('Loan-to-ARV of ' + (ltvArv*100).toFixed(1) + '% is within the 70% threshold.');
       rationale.push('Borrower has documented fix-and-flip experience.');
+      var _hMo = 9, _cR = 0.105;
+      var _carry = Math.round(d.loanAmount * _cR * (_hMo / 12));
+      var _exitV = d.arv || d.purchasePrice;
+      var _gPft  = Math.round(_exitV - d.purchasePrice - (d.rehabBudget||0) - _carry);
+      rationale.push('Estimated deal economics (' + _hMo + '-month hold at ' + (_cR*100).toFixed(1) + '% carry): ARV ' + lpaFmt(_exitV) + ' − purchase ' + lpaFmt(d.purchasePrice) + ' − rehab ' + lpaFmt(d.rehabBudget||0) + ' − carry ' + lpaFmt(_carry) + ' = est. gross profit ' + lpaFmt(_gPft) + ' (' + (_exitV > 0 ? (_gPft/_exitV*100).toFixed(0) : '0') + '% of ARV).');
     } else if (ltvArv <= 0.80) {
       verdict = 'APPROVED WITH CONDITIONS';
       if (ltvArv > 0.70) { rationale.push('Loan-to-ARV of ' + (ltvArv*100).toFixed(1) + '% exceeds preferred 70%.'); conditions.push('Independent appraisal confirming ARV required prior to close.'); }
@@ -2667,6 +2728,8 @@ function lpaComputeDecision(d, gl) {
     if (asIsLTV <= maxBridge && cNum >= minCredit) {
       verdict = 'APPROVED';
       rationale.push('As-is LTV of ' + (asIsLTV*100).toFixed(1) + '% is within the ' + (maxBridge*100).toFixed(0) + '% bridge guideline.');
+      rationale.push('Bridge structure: interest-only, 12–18 month term. Indicative rate band: ' + (asIsLTV <= 0.60 ? '9.0–9.5' : asIsLTV <= 0.65 ? '9.5–10.5' : '10.0–11.0') + '%. Est. monthly I/O at 9.5% reference: ' + lpaFmt(Math.round(d.loanAmount * 0.095 / 12)) + '. Exit via: ' + (d.exitStrategy || 'sale or refinance') + '.');
+      rationale.push('Exit risk: verify that the ' + (d.exitStrategy||'stated exit') + ' timeline aligns with bridge term. ' + (asIsLTV <= maxBridge - 0.05 ? 'Strong equity cushion — refi qualification risk is low.' : 'Moderate LTV — confirm DSCR or sale price feasibility before committing term.'));
     } else if (asIsLTV <= maxBridge + 0.10) {
       verdict = 'APPROVED WITH CONDITIONS';
       if (asIsLTV > maxBridge) { rationale.push('As-is LTV of ' + (asIsLTV*100).toFixed(1) + '% slightly above bridge guideline.'); conditions.push('Rate adjustment of +0.5–1% to compensate for LTV.'); }
@@ -2689,6 +2752,7 @@ function lpaComputeDecision(d, gl) {
       verdict = 'APPROVED';
       rationale.push('LTC of ' + (ltc*100).toFixed(1) + '% is within the ' + (maxGnd*100).toFixed(0) + '% ground-up guideline.');
       rationale.push('Permits approved — project is shovel-ready.');
+      rationale.push('Cost structure: land/acquisition ' + lpaFmt(d.purchasePrice||0) + ' (' + (totalCost > 0 ? Math.round((d.purchasePrice||0)/totalCost*100) : 0) + '%) + construction ' + lpaFmt(d.constructionBudget||0) + ' (' + (totalCost > 0 ? Math.round((d.constructionBudget||0)/totalCost*100) : 0) + '%) = total cost ' + lpaFmt(totalCost) + '. Borrower equity: ' + lpaFmt(Math.round(totalCost - d.loanAmount)) + ' (' + (100 - ltc*100).toFixed(1) + '% of total cost). Loan disbursed via draw schedule; third-party inspector verification required at each milestone.');
     } else if (ltc <= maxGnd + 0.10) {
       verdict = 'APPROVED WITH CONDITIONS';
       conditions.push('Construction loan to fund via draw schedule with independent inspector sign-off.');
@@ -2708,6 +2772,8 @@ function lpaComputeDecision(d, gl) {
       verdict = 'APPROVED';
       rationale.push('LTV of ' + ltvP + ' is within the ' + (maxPrivate*100).toFixed(0) + '% private money guideline.');
       rationale.push('Clear exit strategy identified: ' + d.exitStrategy + '.');
+      rationale.push('First-lien collateral at ' + ltvP + ' — ' + (ltv <= 0.60 ? 'conservative LTV: strong equity cushion for lender.' : ltv <= 0.65 ? 'moderate LTV: standard hard-money exposure.' : 'approaching guideline ceiling — confirm collateral liquidity and exit timeline.'));
+      rationale.push('Indicative pricing: ' + (ltv <= 0.65 ? '10.5–11.0' : '11.0–11.5') + '% I/O, 12–24 month term, 2–3 origination points (per program pricing). Exit via ' + (d.exitStrategy||'stated strategy') + ' should align with loan term.');
     } else if (ltv <= maxPrivate + 0.05) {
       verdict = 'APPROVED WITH CONDITIONS';
       if (ltv > maxPrivate) { rationale.push('LTV of ' + ltvP + ' exceeds preferred ' + (maxPrivate*100).toFixed(0) + '%.' ); conditions.push('Rate adjustment of +1–2% to reflect elevated LTV.'); }
@@ -2720,6 +2786,18 @@ function lpaComputeDecision(d, gl) {
   }
 
   if (!rationale.length) rationale.push('Deal does not meet program criteria based on submitted parameters.');
+
+  // Phase 6: auto-build capital path for non-land types when deal needs restructuring
+  if (!capitalPath && verdict !== 'APPROVED') {
+    var _mLTV = type.indexOf('dscr') >= 0   ? maxDSCR
+              : (type.indexOf('fix') >= 0 || type.indexOf('flip') >= 0) ? maxFlip
+              : type.indexOf('bridge') >= 0  ? maxBridge
+              : type.indexOf('ground') >= 0  ? maxGnd
+              : maxPrivate;
+    var _extras = lpaCapitalPathOptions(d, _mLTV);
+    if (_extras.length) capitalPath = _extras;
+  }
+
   return {verdict:verdict, metrics:metrics, rationale:rationale, conditions:conditions, capitalPath:capitalPath};
 }
 
@@ -2805,6 +2883,28 @@ function lpaDownloadPDF() {
     y += 6;
   }
 
+  // ── INDICATIVE PRICING (Phase 5 integration) — Phase 6 ─────────────────────
+  if (typeof lpaPricingEngine === 'function' && lpaDeal.loanType) {
+    var _px = lpaPricingEngine(lpaDeal.loanType, lpaDeal.ltv, lpaDeal.creditScore);
+    if (_px) {
+      if (y > 680) { doc.addPage(); y = M; }
+      sec('INDICATIVE PRICING');
+      doc.setFontSize(10); doc.setFont('helvetica','normal'); doc.setTextColor(50,50,50);
+      var _pAmort = _px.amort > 0 ? _px.amort + '-mo amortization' : 'Interest-only';
+      var _pLines = [
+        'Rate: ' + _px.rate.toFixed(2) + '% | Origination Points: ' + _px.points.toFixed(1) + ' | Term: ' + _px.term + ' months | Structure: ' + _pAmort,
+        'Pricing reflects submitted LTV (' + ((lpaDeal.ltv||0)*100).toFixed(1) + '%) and credit profile. Reducing LTV below 70% may lower rate by 0.5–1.0%.',
+        'Indicative only — final pricing subject to full underwrite and lender approval.'
+      ];
+      _pLines.forEach(function(ln) {
+        var lns = doc.splitTextToSize(ln, W-M*2-20);
+        doc.text(lns, M+10, y); y += lns.length * 14;
+      });
+      y += 8;
+    }
+  }
+
+
   // ── CAPITAL STRUCTURE PATH
   if (dd && dd.capitalPath && dd.capitalPath.length) {
     if (y > 680) { doc.addPage(); y = M; }
@@ -2826,9 +2926,14 @@ function lpaDownloadPDF() {
   }
 
   // ── RISK ASSESSMENT TABLE
-  var isLandPDF = (lpaDeal.loanType||'').toLowerCase().indexOf('land') >= 0;
-  var isBridgePDF = (lpaDeal.loanType||'').toLowerCase().indexOf('bridge') >= 0;
-  if (isLandPDF || isBridgePDF) {
+  var _ltPDF    = (lpaDeal.loanType||'').toLowerCase();
+  var isLandPDF   = _ltPDF.indexOf('land') >= 0;
+  var isBridgePDF = _ltPDF.indexOf('bridge') >= 0;
+  var isDSCRPDF   = _ltPDF.indexOf('dscr') >= 0;
+  var isFlipPDF   = _ltPDF.indexOf('flip') >= 0 || _ltPDF.indexOf('fix') >= 0;
+  var isGndPDF    = _ltPDF.indexOf('ground') >= 0;
+  // Phase 6: risk table shown for ALL loan types
+  {
     if (y > 650) { doc.addPage(); y = M; }
     sec('RISK ASSESSMENT');
     var riskDims = isLandPDF ? [
@@ -2839,10 +2944,31 @@ function lpaDownloadPDF() {
       {dim:'Cash Flow / Carry',         rating:'HIGH',    note:'Zero income; negative carry (taxes, insurance, opportunity cost)'},
       {dim:'Capital Structure',         rating: (lpaDeal.crossCollateral==='Yes' || /^yes/i.test(lpaDeal.sellerCarry||'')) ? 'MODERATE' : 'ELEVATED',
                                          note: (lpaDeal.crossCollateral==='Yes') ? 'Cross-collateral pledged — blended LTV improved' : (/^yes/i.test(lpaDeal.sellerCarry||'')) ? 'Seller carry note confirmed — reduces institutional exposure' : 'No cross-collateral or seller carry confirmed to offset LTV'}
+    ] : isBridgePDF ? [
+      {dim:'LTV vs. Guideline',  rating: lpaDeal.ltv > 0.70 ? 'ELEVATED' : lpaDeal.ltv > 0.65 ? 'MODERATE' : 'LOW', note:'As-is LTV ' + (lpaDeal.ltv*100).toFixed(1) + '% vs. bridge guideline'},
+      {dim:'Borrower Credit',    rating: 'MODERATE', note:'Per credit score on file'},
+      {dim:'Exit Strategy',      rating: lpaDeal.exitStrategy ? 'LOW' : 'ELEVATED', note: (lpaDeal.exitStrategy || 'Not confirmed') + ' — verify timeline vs. bridge term'},
+      {dim:'Liquidity / Market', rating: 'MODERATE', note:'Bridge loan assumes stabilization or sale within term; market risk if exit delayed'}
+    ] : isDSCRPDF ? [
+      {dim:'DSCR Coverage',       rating: (lpaDeal.decisionData&&lpaDeal.decisionData.metrics||[]).some(function(m){return m.label==='DSCR'&&parseFloat(m.value)>=1.25;}) ? 'LOW' : (lpaDeal.decisionData&&lpaDeal.decisionData.metrics||[]).some(function(m){return m.label==='DSCR'&&parseFloat(m.value)>=1.0;}) ? 'MODERATE' : 'ELEVATED', note:'Debt service coverage ratio vs. 1.25x preferred threshold'},
+      {dim:'LTV vs. Guideline',   rating: lpaDeal.ltv > 0.75 ? 'ELEVATED' : lpaDeal.ltv > 0.70 ? 'MODERATE' : 'LOW', note:'LTV ' + (lpaDeal.ltv*100).toFixed(1) + '% vs. DSCR program guideline'},
+      {dim:'Rental Income Risk',  rating: 'MODERATE', note:'Market rental vacancy; lease renewal risk; management quality'},
+      {dim:'Exit / Hold Risk',    rating: 'LOW', note:'Income-producing asset; refi or long-term hold; stable liquidity'}
+    ] : isFlipPDF ? [
+      {dim:'Rehab Execution Risk', rating: 'MODERATE', note:'Contractor reliability, scope creep, cost overruns on budget'},
+      {dim:'ARV / Exit Price',     rating: lpaDeal.ltv > 0.70 ? 'ELEVATED' : 'MODERATE', note:'Loan/ARV ' + (lpaDeal.ltv*100).toFixed(1) + '% — ARV must be achieved on sale to cover payoff'},
+      {dim:'Hold Period / Carry',  rating: 'MODERATE', note:'Typically 6–12 months; extended holds erode profit margin'},
+      {dim:'Market Absorption',    rating: 'LOW', note:'Assumes end-buyer financing available at projected price; confirm days-on-market'}
+    ] : isGndPDF ? [
+      {dim:'Construction Risk',     rating: 'MODERATE', note:'Budget overruns, contractor default, timeline slippage'},
+      {dim:'Permit & Entitlement',  rating: (lpaDeal.permitStatus||'').toLowerCase().indexOf('approved')>=0 ? 'LOW' : 'ELEVATED', note:(lpaDeal.permitStatus||'Pending') + ' — permits must be issued before first draw'},
+      {dim:'LTC vs. Guideline',     rating: lpaDeal.ltv > 0.80 ? 'ELEVATED' : lpaDeal.ltv > 0.70 ? 'MODERATE' : 'LOW', note:'Loan-to-cost ' + (lpaDeal.ltv*100).toFixed(1) + '% — higher LTC = less borrower equity at risk'},
+      {dim:'Completion & Exit',     rating: 'MODERATE', note:'Construction-to-sale or perm-refi; verify absorption and market pricing at completion'}
     ] : [
-      {dim:'LTV vs. Guideline', rating: lpaDeal.ltv > 0.70 ? 'ELEVATED' : 'MODERATE', note:'LTV ' + (lpaDeal.ltv*100).toFixed(1) + '%'},
-      {dim:'Borrower Credit',   rating: 'MODERATE', note:'Per credit score on file'},
-      {dim:'Exit Strategy',     rating: lpaDeal.exitStrategy ? 'LOW' : 'ELEVATED', note: lpaDeal.exitStrategy || 'Not confirmed'}
+      {dim:'Collateral Coverage',  rating: lpaDeal.ltv > 0.70 ? 'ELEVATED' : lpaDeal.ltv > 0.65 ? 'MODERATE' : 'LOW', note:'First-lien LTV ' + (lpaDeal.ltv*100).toFixed(1) + '% vs. private money guideline'},
+      {dim:'Exit Strategy',        rating: lpaDeal.exitStrategy ? 'LOW' : 'ELEVATED', note: (lpaDeal.exitStrategy || 'Not confirmed') + ' — timeline should fit loan term'},
+      {dim:'Borrower Credit',      rating: 'MODERATE', note:'Per credit score on file; compensating factors considered'},
+      {dim:'Asset Liquidity',      rating: 'MODERATE', note:'Private money relies on collateral value; thin markets may extend liquidation timeline'}
     ];
 
     var rCol0 = 200, rCol1 = 75;
@@ -3069,5 +3195,6 @@ function lpaCreditNum(s) {
   return 760;
 }
 </script>
+/* lpa_phase6_applied */
 </body>
 </html>
