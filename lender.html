@@ -557,6 +557,22 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         </div>
       </div>
 
+
+      <div class="gl-section">
+        <div class="gl-section-head">
+          <div class="gl-section-title">Pricing &amp; Loan Terms</div>
+          <div class="gl-section-sub">Used to generate term sheets. Leave blank to use market defaults by product type.</div>
+        </div>
+        <div class="gl-body">
+          <div class="gl-grid">
+            <div class="gl-field"><label>Base Rate Override (%)</label><input id="gl-rate-base" type="number" step="0.25" min="5" max="20" placeholder="e.g. 9.5 (auto by product)"></div>
+            <div class="gl-field"><label>Rate Spread Adjustment (%)</label><input id="gl-rate-spread" type="number" step="0.25" min="-3" max="5" placeholder="e.g. 0.5 (added to base)"></div>
+            <div class="gl-field"><label>Origination Points Override</label><input id="gl-rate-points" type="number" step="0.25" min="0" max="10" placeholder="e.g. 2.5 (auto by product)"></div>
+            <div class="gl-field"><label>Default Loan Term (months)</label><input id="gl-rate-term" type="number" min="6" max="360" placeholder="e.g. 12 for bridge, 360 for DSCR"></div>
+          </div>
+        </div>
+      </div>
+
       <button class="gl-save-btn" onclick="lpaSaveGuidelines()">Save Guidelines</button>
     </div>
   </div>
@@ -926,6 +942,9 @@ async function setInterest(matchId, status) {
   if (m) m.interest_level = status;
   renderLenderStats(); renderLenderDeals();
   showToast('Deal status updated', 'success');
+  if (status === 'term_sheet_issued' && typeof lpaGenerateTermSheet === 'function') {
+    lpaGenerateTermSheet(matchId);
+  }
   if (status === 'interested' || status === 'term_sheet_issued') {
     const deal = m?.deals;
     fetch('/.netlify/functions/notion-lender-sync', {
@@ -2218,6 +2237,256 @@ async function lpaRenderDecision() {
     });
     html += '</div>';
     return html;
+  }
+
+
+  // ── Phase 5: Pricing Engine + Term Sheet Generator ───────────────────────
+
+  function lpaPricingEngine(loanType, ltv, fico) {
+    var gl = (typeof lpaGetGL === 'function') ? lpaGetGL() : {};
+    var lt = (loanType || '').toLowerCase();
+
+    // Base rate table by product (market private-lending rates, %)
+    var BASE = { dscr:7.5, bridge:9.5, fix:10.5, flip:10.5, land:11.0, ground:10.0, private:11.5, commercial:8.5 };
+    var POINTS = { dscr:2.0, bridge:2.5, fix:3.0, flip:3.0, land:3.0, ground:2.5, private:3.0, commercial:2.0 };
+    var TERMS  = { dscr:360, bridge:12, fix:12, flip:12, land:24, ground:18, private:12, commercial:300 };
+    var AMORTS = { dscr:360, bridge:360, fix:0, flip:0, land:0, ground:0, private:360, commercial:360 };
+
+    var key = 'private';
+    if (lt.includes('dscr'))   key = 'dscr';
+    else if (lt.includes('bridge'))  key = 'bridge';
+    else if (lt.includes('fix') || lt.includes('flip')) key = 'fix';
+    else if (lt.includes('land'))    key = 'land';
+    else if (lt.includes('ground'))  key = 'ground';
+    else if (lt.includes('commercial') || lt.includes('mixed')) key = 'commercial';
+
+    var rate   = parseFloat(gl.rate_base || BASE[key]);
+    var points = parseFloat(gl.rate_points || POINTS[key]);
+    var term   = parseInt(gl.rate_term || TERMS[key], 10);
+    var amort  = AMORTS[key];
+
+    // LTV adjustment
+    var ltvN = parseFloat(ltv || 0);
+    if (ltvN > 75) rate += 1.0;
+    else if (ltvN > 70) rate += 0.5;
+
+    // FICO adjustment
+    var ficoN = parseInt(fico || 720, 10);
+    if (ficoN < 620) rate += 1.5;
+    else if (ficoN < 640) rate += 1.0;
+    else if (ficoN < 680) rate += 0.5;
+
+    // Spread adjustment from lender setting
+    rate += parseFloat(gl.rate_spread || 0);
+
+    return {
+      rate:   Math.round(rate * 100) / 100,
+      points: Math.round(points * 100) / 100,
+      term:   term,
+      amort:  amort,
+      key:    key
+    };
+  }
+
+  function lpaGenerateTermSheet(matchId) {
+    var m = (typeof lenderMatches !== 'undefined') ? lenderMatches.find(function(x) { return x.id === matchId; }) : null;
+    if (!m) { if (typeof showToast === 'function') showToast('Deal not found', 'error'); return; }
+
+    var d  = m.deal_submissions || {};
+    var s  = m.deal_scores || {};
+    var br = d.borrowers || {};
+    var sess = (typeof getLenderSession === 'function') ? getLenderSession() : {};
+    var user = sess.user || {};
+    var ldr  = user.lender || {};
+
+    var lenderName  = ldr.lender_name || user.name || 'Lender';
+    var lenderEmail = user.email || '';
+    var dealType    = d.deal_type || 'Private Money';
+    var address     = d.property_address || d.full_address || d.city || 'Subject Property';
+    var loanAmt     = parseFloat(d.requested_loan_amount || 0);
+    var ltv         = parseFloat(d.requested_ltv || 0);
+    var dscr        = parseFloat(d.dscr || 0);
+    var arv         = parseFloat(d.arv || 0);
+    var fico        = parseInt((br.fico || ''), 10) || 0;
+    var borrower    = br.borrower_name || 'Borrower';
+    var score       = s.total_fundability_score || '—';
+
+    var pricing = lpaPricingEngine(dealType, ltv, fico);
+    var today   = new Date();
+    var expiry  = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
+    var fmt     = function(dt) { return dt.toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' }); };
+    var fmtCur  = function(n) { return '$' + Math.round(n).toLocaleString(); };
+    var fmtPct  = function(n) { return n > 0 ? n.toFixed(2) + '%' : '—'; };
+    var termLbl = pricing.term === 360 ? '30 Years' : pricing.term === 300 ? '25 Years' : pricing.term + ' Months';
+    var amortLbl = pricing.amort > 0 ? (pricing.amort + ' months') : 'Interest Only';
+
+    // ── Build PDF via jsPDF ───────────────────────────────────────────────────
+    if (typeof window.jspdf === 'undefined' && typeof window.jsPDF === 'undefined') {
+      if (typeof showToast === 'function') showToast('PDF library not available', 'error');
+      return;
+    }
+    var jsPDF = (window.jspdf && window.jspdf.jsPDF) || window.jsPDF;
+    var doc = new jsPDF({ unit:'pt', format:'letter' });
+
+    var pw = doc.internal.pageSize.getWidth();
+    var margin = 54;
+    var cw = pw - margin * 2;
+    var y = margin;
+
+    // Header band
+    doc.setFillColor(15, 34, 64);  // --navy
+    doc.rect(0, 0, pw, 78, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text(lenderName, margin, 34);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(180, 200, 220);
+    doc.text('NON-BINDING TERM SHEET  |  COMMERCIAL REAL ESTATE', margin, 52);
+    if (lenderEmail) doc.text(lenderEmail, margin, 64);
+    y = 102;
+
+    // Dates row
+    doc.setTextColor(90, 100, 115);
+    doc.setFontSize(8);
+    doc.text('DATE OF ISSUE', margin, y);
+    doc.text('EXPIRATION DATE', pw / 2, y);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(20, 30, 50);
+    y += 13;
+    doc.text(fmt(today), margin, y);
+    doc.text(fmt(expiry), pw / 2, y);
+    y += 22;
+
+    // Divider
+    doc.setDrawColor(220, 226, 234);
+    doc.setLineWidth(0.75);
+    doc.line(margin, y, pw - margin, y);
+    y += 18;
+
+    // Section helper
+    var sectionHead = function(label) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7.5);
+      doc.setTextColor(14, 116, 144);  // --teal
+      doc.text(label.toUpperCase(), margin, y);
+      y += 3;
+      doc.setDrawColor(14, 116, 144);
+      doc.setLineWidth(0.5);
+      doc.line(margin, y, pw - margin, y);
+      doc.setDrawColor(220, 226, 234);
+      y += 12;
+    };
+
+    // Row helper (two-column)
+    var row = function(label, value, label2, value2) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(8);
+      doc.setTextColor(110, 120, 135);
+      doc.text(label, margin, y);
+      if (label2) doc.text(label2, pw / 2, y);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10.5);
+      doc.setTextColor(20, 30, 50);
+      y += 13;
+      doc.text(String(value), margin, y);
+      if (value2 !== undefined) doc.text(String(value2), pw / 2, y);
+      y += 18;
+    };
+
+    // SUBJECT PROPERTY
+    sectionHead('Subject Property');
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(20, 30, 50);
+    doc.text(address, margin, y, { maxWidth: cw });
+    var addrLines = doc.splitTextToSize(address, cw);
+    y += addrLines.length * 14 + 4;
+    row('Deal Type', dealType, 'Capital Readiness Score', score + ' / 100');
+
+    // BORROWER
+    sectionHead('Borrower');
+    row('Borrower Name', borrower, 'FICO Score', fico > 0 ? String(fico) : '—');
+    row('Experience Level', br.experience_level || '—', 'Completed Deals', String(br.experience_count || 0));
+
+    // PROPOSED LOAN TERMS
+    sectionHead('Proposed Loan Terms');
+    row('Loan Amount', fmtCur(loanAmt), 'Loan Type', dealType);
+    row('Interest Rate', fmtPct(pricing.rate) + ' (variable per credit)', 'Origination Points', pricing.points.toFixed(2) + ' pts');
+    row('Loan Term', termLbl, 'Amortization', amortLbl);
+    if (ltv > 0) row('LTV', fmtPct(ltv), dscr > 0 ? 'DSCR' : 'ARV', dscr > 0 ? dscr.toFixed(2) + 'x' : (arv > 0 ? fmtCur(arv) : '—'));
+
+    // CONDITIONS PRECEDENT
+    sectionHead('Conditions Precedent');
+    var conditions = [
+      'Satisfactory completion of lender due diligence including title search and property inspection.',
+      'Borrower to provide executed purchase/sale agreement, prior 2 years tax returns, and entity docs.',
+      'Appraisal or BPO acceptable to lender confirming value assumptions.',
+      'Evidence of adequate property and liability insurance naming lender as mortgagee/loss payee.',
+      'Execution of lender\'s standard loan documents including note, mortgage, and personal guaranty.'
+    ];
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(50, 60, 75);
+    conditions.forEach(function(c, i) {
+      var lines = doc.splitTextToSize((i + 1) + '.  ' + c, cw - 10);
+      doc.text(lines, margin + 4, y);
+      y += lines.length * 12 + 4;
+    });
+    y += 6;
+
+    // DISCLAIMER
+    doc.setDrawColor(220, 226, 234);
+    doc.line(margin, y, pw - margin, y);
+    y += 12;
+    doc.setFont('helvetica', 'italic');
+    doc.setFontSize(7.5);
+    doc.setTextColor(140, 150, 165);
+    var disclaimer = 'This term sheet is non-binding and does not constitute a commitment to lend. All terms are indicative only and subject to change pending completion of underwriting and due diligence. Issuance does not obligate ' + lenderName + ' to fund. This document is confidential and intended solely for the named borrower.';
+    var dLines = doc.splitTextToSize(disclaimer, cw);
+    doc.text(dLines, margin, y);
+    y += dLines.length * 10 + 18;
+
+    // SIGNATURE BLOCK
+    sectionHead('Acknowledged & Accepted');
+    var sigY = y;
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(50, 60, 75);
+    doc.text('Lender Representative:', margin, sigY);
+    doc.line(margin, sigY + 20, margin + 200, sigY + 20);
+    doc.setFontSize(8);
+    doc.setTextColor(140, 150, 165);
+    doc.text(lenderName, margin, sigY + 32);
+    doc.text('Date: _______________', margin, sigY + 44);
+
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(50, 60, 75);
+    doc.text('Borrower:', pw / 2, sigY);
+    doc.line(pw / 2, sigY + 20, pw / 2 + 200, sigY + 20);
+    doc.setFontSize(8);
+    doc.setTextColor(140, 150, 165);
+    doc.text(borrower, pw / 2, sigY + 32);
+    doc.text('Date: _______________', pw / 2, sigY + 44);
+
+    // Footer
+    var fpY = doc.internal.pageSize.getHeight() - 28;
+    doc.setDrawColor(15, 34, 64);
+    doc.setLineWidth(0.5);
+    doc.line(margin, fpY - 6, pw - margin, fpY - 6);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7);
+    doc.setTextColor(140, 150, 165);
+    doc.text('Generated by Underlytix Deal Assessment AI  |  underlytix.com', margin, fpY);
+    doc.text('Page 1 of 1', pw - margin, fpY, { align: 'right' });
+
+    // Download
+    var fname = 'term-sheet-' + address.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase().slice(0, 40) + '-' + today.toISOString().slice(0, 10) + '.pdf';
+    doc.save(fname);
+    if (typeof showToast === 'function') showToast('Term sheet downloaded', 'success');
   }
 
 
