@@ -1344,12 +1344,14 @@ var LPA_ST = {
   PROPERTY:'property', LOAN_TYPE:'loan_type',
   CLIENT_NAME:'client_name', BORROWER_NAME:'borrower_name',
   DEAL_BASICS:'deal_basics', DOWN_PAYMENT:'down_payment',
+  REFI_BALANCE:'refi_balance', REFI_CASHOUT:'refi_cashout',
   DSCR_RENT:'dscr_rent', DSCR_EXP:'dscr_exp',
   BRIDGE_VALUE:'bridge_value', BRIDGE_EXIT:'bridge_exit',
   FLIP_ARV:'flip_arv', FLIP_REHAB:'flip_rehab', FLIP_EXP:'flip_exp',
   LAND_ZONE:'land_zone', LAND_EXIT:'land_exit', LAND_XCOLLAB:'land_xcollab', LAND_SELLER:'land_seller',
   GND_BUDGET:'gnd_budget', GND_PERMITS:'gnd_permits',
   PRIVATE_EXIT:'private_exit', PRIVATE_TERM:'private_term',
+  ARV_Q:'arv_q',
   CREDIT:'credit', PROCESSING:'processing', DECISION:'decision',
   PREQUAL_REVIEW:'prequal_review', PREQUAL_QA:'prequal_qa'
 };
@@ -1500,7 +1502,7 @@ async function lpaProcess(input) {
       lpaDeal.address = v;
       lpaState = LPA_ST.LOAN_TYPE;
       await lpaAI('Got it — <strong>' + v + '</strong>. What type of financing is the borrower seeking?',
-        ['Private Money / Hard Money','DSCR – Rental Income','Bridge Loan','Fix & Flip','Ground-Up Construction','Land Loan','Commercial / Mixed-Use']);
+        ['Private Money / Hard Money','DSCR – Rental Income','Bridge Loan','Fix & Flip','Ground-Up Construction','Land Loan','Commercial / Mixed-Use','Refinance / Refi']);
       break;
 
     case LPA_ST.LOAN_TYPE:
@@ -1518,17 +1520,25 @@ async function lpaProcess(input) {
     case LPA_ST.BORROWER_NAME:
       lpaDeal.borrowerName = v;
       lpaState = LPA_ST.DEAL_BASICS;
-      await lpaAI('What is the <strong>purchase price</strong> or current appraised value? (e.g. $610,000 or 610k)');
+      var _bIsRefi = (lpaDeal.loanType || '').toLowerCase().indexOf('refi') >= 0;
+      await lpaAI(_bIsRefi
+        ? 'What is the current <strong>property value</strong>? (As-is market value or recent appraisal — e.g. $850,000)'
+        : 'What is the <strong>purchase price</strong> or current appraised value? (e.g. $610,000 or 610k)');
       break;
 
     case LPA_ST.DEAL_BASICS:
       lpaDeal.purchasePrice = lpaToNum(v);
       if (!lpaDeal.purchasePrice) {
-        await lpaAI("I didn't catch that — please enter the purchase price (e.g. $610,000 or 610k).", [], 300);
+        await lpaAI("I didn't catch that — please enter the property value (e.g. $610,000 or 610k).", [], 300);
         lpaSetInput(true); return;
       }
-      lpaState = LPA_ST.DOWN_PAYMENT;
-      await lpaAI('How much is the borrower putting down? (Dollar amount or percentage — e.g. "$110,000" or "18%")');
+      if ((lpaDeal.loanType || '').toLowerCase().indexOf('refi') >= 0) {
+        lpaState = LPA_ST.REFI_BALANCE;
+        await lpaAI('What is the <strong>outstanding loan balance</strong> being refinanced? (e.g. $520,000)');
+      } else {
+        lpaState = LPA_ST.DOWN_PAYMENT;
+        await lpaAI('How much is the borrower putting down? (Dollar amount or percentage — e.g. "$110,000" or "18%")');
+      }
       break;
 
     case LPA_ST.DOWN_PAYMENT:
@@ -1562,8 +1572,8 @@ async function lpaProcess(input) {
 
     case LPA_ST.BRIDGE_EXIT:
       lpaDeal.exitStrategy = v;
-      lpaState = LPA_ST.CREDIT;
-      await lpaCreditQ();
+      lpaState = LPA_ST.ARV_Q;
+      await lpaAI('What is the <strong>projected stabilized / After-Repair Value (ARV)</strong>? Enter 0 if same as current as-is value.');
       break;
 
     case LPA_ST.FLIP_ARV:
@@ -1631,8 +1641,8 @@ async function lpaProcess(input) {
 
     case LPA_ST.GND_PERMITS:
       lpaDeal.permitStatus = v;
-      lpaState = LPA_ST.CREDIT;
-      await lpaCreditQ();
+      lpaState = LPA_ST.ARV_Q;
+      await lpaAI('What is the projected <strong>After-Construction Value (ARV)</strong>? (Estimated market value once complete — e.g. $1,200,000)');
       break;
 
     case LPA_ST.PRIVATE_EXIT:
@@ -1644,6 +1654,33 @@ async function lpaProcess(input) {
 
     case LPA_ST.PRIVATE_TERM:
       lpaDeal.loanTerm = v;
+      lpaState = LPA_ST.CREDIT;
+      await lpaCreditQ();
+      break;
+
+    case LPA_ST.REFI_BALANCE:
+      lpaDeal.existingBalance = lpaToNum(v);
+      if (!lpaDeal.existingBalance) {
+        await lpaAI("Please enter the outstanding loan balance (e.g. $520,000 or 520k).", [], 300);
+        lpaSetInput(true); return;
+      }
+      lpaState = LPA_ST.REFI_CASHOUT;
+      await lpaAI('How much <strong>cash-out</strong> is the borrower requesting? (Enter 0 for a rate-and-term refi — e.g. $50,000 or 0)');
+      break;
+
+    case LPA_ST.REFI_CASHOUT:
+      lpaDeal.cashOutAmount = lpaToNum(v) || 0;
+      lpaDeal.currentValue  = lpaDeal.purchasePrice;  // purchasePrice stored the as-is value
+      lpaDeal.loanAmount    = lpaDeal.existingBalance + lpaDeal.cashOutAmount;
+      lpaDeal.ltv           = lpaDeal.currentValue > 0 ? lpaDeal.loanAmount / lpaDeal.currentValue : 0;
+      lpaDeal.isRefi        = true;
+      lpaState = LPA_ST.CREDIT;
+      await lpaCreditQ();
+      break;
+
+    case LPA_ST.ARV_Q:
+      var _arvNum = lpaToNum(v);
+      lpaDeal.arv = _arvNum > 0 ? _arvNum : (lpaDeal.currentValue || lpaDeal.purchasePrice || 0);
       lpaState = LPA_ST.CREDIT;
       await lpaCreditQ();
       break;
@@ -1693,6 +1730,7 @@ async function lpaProcess(input) {
 
 function lpaMapType(raw) {
   var r = raw.toLowerCase();
+  if (r.indexOf('refi') >= 0 || r.indexOf('refinanc') >= 0) return 'Refinance / Refi';
   if (r.indexOf('dscr') >= 0 || r.indexOf('rental') >= 0) return 'DSCR – Rental Income Based';
   if (r.indexOf('bridge') >= 0)                            return 'Bridge Loan';
   if (r.indexOf('flip') >= 0)                              return 'Fix & Flip';
@@ -2001,13 +2039,18 @@ async function lpaRenderDecision() {
 
       // ── Metrics grid (2 columns) ─────────────────────────────────────────────
       var metrics = (rec && rec.metrics) || {};
+      var _pdfRS  = lpaComputeRiskScore(d, null);
+      var _pdfFSB = d.arv || d.currentValue || d.purchasePrice || 0;
+      var _pdfFSV = Math.round(_pdfFSB * 0.65);
       var pairs = [
-        ['Loan Amount',   lpaFormatCurrency(metrics.loanAmount || metrics.loan_amount || 0)],
-        ['LTV',           metrics.ltv ? metrics.ltv + '%' : (d.ltv ? d.ltv + '%' : '—')],
-        ['Loan Type',     rec.loanType || '—'],
-        ['DSCR',          metrics.dscr || '—'],
-        ['ARV',           lpaFormatCurrency(metrics.arv || d.arv || 0)],
-        ['Asset Type',    metrics.assetType || rec.assetType || d.assetType || '—'],
+        ['Loan Amount',        lpaFormatCurrency(d.loanAmount || metrics.loanAmount || metrics.loan_amount || 0)],
+        ['LTV',                d.ltv ? (d.ltv * 100).toFixed(1) + '%' : (metrics.ltv ? metrics.ltv + '%' : '—')],
+        ['Loan Type',          rec.loanType || '—'],
+        ['DSCR',               metrics.dscr || (d.dscr ? d.dscr.toFixed(2) + 'x' : '—')],
+        ['ARV',                lpaFormatCurrency(d.arv || d.currentValue || d.purchasePrice || 0)],
+        ['Asset Type',         metrics.assetType || rec.assetType || d.assetType || '—'],
+        ['Risk Score',         _pdfRS + '/100'],
+        ['Fire Sale Value',    lpaFormatCurrency(_pdfFSV)],
       ];
       var col1 = M, col2 = W / 2 + 10;
       pairs.forEach(function(pair, i) {
@@ -2119,6 +2162,9 @@ async function lpaRenderDecision() {
     var conditions = (rec && rec.conditions) || [];
     var capitalPath = (rec && rec.capitalPath) || [];
 
+    var _emailRS  = lpaComputeRiskScore(d, null);
+    var _emailFSB = d.arv || d.currentValue || d.purchasePrice || 0;
+    var _emailFSV = Math.round(_emailFSB * 0.65);
     var subject = 'Deal Assessment — ' + address;
     var lines = [
       'UNDERLYTIX DEAL ASSESSMENT',
@@ -2127,10 +2173,12 @@ async function lpaRenderDecision() {
       'Property:    ' + address,
       'Verdict:     ' + verdict,
       'Loan Type:   ' + (rec.loanType || '—'),
-      'Loan Amount: ' + lpaFormatCurrency(metrics.loanAmount || metrics.loan_amount || 0),
-      'LTV:         ' + (metrics.ltv ? metrics.ltv + '%' : (d.ltv ? d.ltv + '%' : '—')),
-      'DSCR:        ' + (metrics.dscr || '—'),
-      'ARV:         ' + lpaFormatCurrency(metrics.arv || d.arv || 0),
+      'Loan Amount: ' + lpaFormatCurrency(d.loanAmount || metrics.loanAmount || metrics.loan_amount || 0),
+      'LTV:         ' + (d.ltv ? (d.ltv * 100).toFixed(1) + '%' : (metrics.ltv ? metrics.ltv + '%' : '—')),
+      'DSCR:        ' + (metrics.dscr || (d.dscr ? d.dscr.toFixed(2) + 'x' : '—')),
+      'ARV:         ' + lpaFormatCurrency(d.arv || d.currentValue || d.purchasePrice || 0),
+      'Risk Score:  ' + _emailRS + '/100',
+      'Fire Sale:   ' + lpaFormatCurrency(_emailFSV),
       '',
     ];
     if (rationale.length) {
@@ -2618,6 +2666,57 @@ function lpaCapitalPathOptions(d, maxLTV) {
   return paths;
 }
 
+function lpaComputeRiskScore(d, gl) {
+  var type  = (d.loanType || '').toLowerCase();
+  var ltv   = d.ltv || 0;
+  var cNum  = lpaCreditNum(d.creditScore || '');
+  var score = 0;
+
+  // Collateral / LTV — 40 pts (lower LTV = higher score)
+  var maxLTV = 0.75;
+  if (gl) {
+    if (type.indexOf('dscr') >= 0 || type.indexOf('rental') >= 0) maxLTV = (gl.ltv_dscr    != null) ? gl.ltv_dscr    : 0.75;
+    else if (type.indexOf('bridge') >= 0)                          maxLTV = (gl.ltv_bridge  != null) ? gl.ltv_bridge  : 0.65;
+    else if (type.indexOf('flip') >= 0)                            maxLTV = (gl.ltv_flip    != null) ? gl.ltv_flip    : 0.85;
+    else if (type.indexOf('land') >= 0)                            maxLTV = (gl.ltv_land    != null) ? gl.ltv_land    : 0.55;
+    else if (type.indexOf('ground') >= 0 || type.indexOf('const') >= 0) maxLTV = (gl.ltv_gnd != null) ? gl.ltv_gnd : 0.75;
+    else                                                           maxLTV = (gl.ltv_private  != null) ? gl.ltv_private : 0.70;
+  }
+  var ltvCeiling = maxLTV * 1.5;
+  var collateral = ltv <= 0 ? 40 : Math.max(0, Math.round(40 * (1 - ltv / ltvCeiling)));
+  score += collateral;
+
+  // Cash Flow / Deal Quality — 25 pts
+  var cf = 0;
+  if (type.indexOf('dscr') >= 0 || type.indexOf('rental') >= 0) {
+    var dscr = d.dscr || 0;
+    cf = dscr >= 1.5 ? 25 : dscr >= 1.25 ? 20 : dscr >= 1.0 ? 12 : dscr > 0 ? 5 : 8;
+  } else {
+    // Asset-based proxy: LTV conservatism
+    cf = ltv <= 0.55 ? 25 : ltv <= 0.65 ? 20 : ltv <= 0.75 ? 14 : ltv <= 0.85 ? 8 : 4;
+  }
+  score += cf;
+
+  // Borrower Credit — 20 pts
+  var credit = cNum >= 740 ? 20 : cNum >= 700 ? 17 : cNum >= 660 ? 13 : cNum >= 620 ? 9 : cNum >= 580 ? 4 : 0;
+  score += credit;
+
+  // Exit Strategy / Experience — 15 pts
+  var exit = 5;
+  if (type.indexOf('refi') >= 0 || type.indexOf('refinanc') >= 0) {
+    exit = 14;
+  } else if (type.indexOf('flip') >= 0 && d.priorFlips && parseInt(d.priorFlips) >= 3) {
+    exit = 15;
+  } else if (type.indexOf('flip') >= 0 && d.priorFlips && parseInt(d.priorFlips) >= 1) {
+    exit = 12;
+  } else if (d.exitStrategy && d.exitStrategy.length > 3) {
+    exit = 12;
+  }
+  score += exit;
+
+  return Math.min(100, Math.max(0, score));
+}
+
 function lpaComputeDecision(d, gl) {
   var ltv  = d.ltv || 0;
   var cNum = lpaCreditNum(d.creditScore || '');
@@ -2635,12 +2734,22 @@ function lpaComputeDecision(d, gl) {
   var minLoan    = (gl && gl.min_loan    != null) ? gl.min_loan    : 0;
   var maxLoan    = (gl && gl.max_loan    != null) ? gl.max_loan    : 99999999;
 
+  var riskScore   = lpaComputeRiskScore(d, gl);
+  var riskClass   = riskScore >= 70 ? 'lpa-m-good' : riskScore >= 50 ? 'lpa-m-warn' : 'lpa-m-bad';
+  var fsBase      = d.arv || d.currentValue || d.purchasePrice || 0;
+  var fireSaleVal = Math.round(fsBase * 0.65);
+  var fsvCov      = d.loanAmount > 0 ? fireSaleVal / d.loanAmount : 0;
+  var fsvClass    = fsvCov >= 1.0 ? 'lpa-m-good' : fsvCov >= 0.85 ? 'lpa-m-warn' : 'lpa-m-bad';
+
   var verdict = 'APPROVED', rationale = [], conditions = [], capitalPath = null;
+  var _isRefi = !!d.isRefi;
   var metrics = [
     {label:'Loan-to-Value',  value:ltvP, color:lc},
     {label:'Loan Amount',    value:lpaFmt(d.loanAmount)},
-    {label:'Purchase Price', value:lpaFmt(d.purchasePrice)},
-    {label:'Down Payment',   value:lpaFmt(d.downPayment) + ' (' + ((d.downPayment/d.purchasePrice)*100).toFixed(0) + '%)', color:lc}
+    {label:_isRefi ? 'Current Property Value' : 'Purchase Price', value:lpaFmt(_isRefi ? (d.currentValue || d.purchasePrice) : d.purchasePrice)},
+    _isRefi
+      ? {label:'Existing Balance', value:lpaFmt(d.existingBalance || 0)}
+      : {label:'Down Payment', value:lpaFmt(d.downPayment) + ' (' + (d.purchasePrice > 0 ? ((d.downPayment/d.purchasePrice)*100).toFixed(0) : 0) + '%)', color:lc}
   ];
 
   // loan size guard
@@ -2839,6 +2948,27 @@ function lpaComputeDecision(d, gl) {
       rationale.push('LTC of ' + (ltc*100).toFixed(1) + '% exceeds the maximum — insufficient borrower equity in the deal.');
     }
 
+  } else if (type.indexOf('refi') >= 0 || type.indexOf('refinanc') >= 0) {
+    var _refiType  = (d.cashOutAmount && d.cashOutAmount > 0) ? 'Cash-Out Refinance' : 'Rate-and-Term Refinance';
+    var _cashOut   = d.cashOutAmount || 0;
+    var _existBal  = d.existingBalance || 0;
+    metrics.push({label:'Refi Type',         value:_refiType});
+    metrics.push({label:'Existing Balance',   value:lpaFmt(_existBal)});
+    if (_cashOut > 0) metrics.push({label:'Cash-Out Amount', value:lpaFmt(_cashOut)});
+    if (ltv <= maxPrivate && cNum >= minCredit) {
+      verdict = 'APPROVED';
+      rationale.push(_refiType + ': existing balance ' + lpaFmt(_existBal) + (_cashOut > 0 ? ', cash-out ' + lpaFmt(_cashOut) : '') + ' — new loan ' + lpaFmt(d.loanAmount) + ' at ' + ltvP + ' LTV.');
+      rationale.push('LTV of ' + ltvP + ' is within the ' + (maxPrivate*100).toFixed(0) + '% guideline.');
+      rationale.push('Refi transactions carry lower origination risk — borrower has established payment history on subject property. Indicative rate: ' + (ltv <= 0.65 ? '9.5–10.5' : '10.5–11.0') + '% I/O, 12–24 month term, 1–2 origination points.');
+    } else if (ltv <= maxPrivate + 0.05) {
+      verdict = 'APPROVED WITH CONDITIONS';
+      if (ltv > maxPrivate) { rationale.push('LTV of ' + ltvP + ' slightly above the ' + (maxPrivate*100).toFixed(0) + '% guideline.'); conditions.push('Rate adjustment of +0.5–1.0% to reflect elevated LTV.'); }
+      if (cNum < minCredit) conditions.push('Credit below lender minimum of ' + minCredit + ' — compensating factors required.');
+    } else {
+      verdict = 'DECLINE';
+      rationale.push('Refi LTV of ' + ltvP + ' exceeds the maximum — insufficient equity in the property for lender coverage.');
+    }
+
   } else {
     // Private money / commercial
     metrics.push({label:'Exit Strategy', value:d.exitStrategy || 'Unknown'});
@@ -2873,7 +3003,11 @@ function lpaComputeDecision(d, gl) {
     if (_extras.length) capitalPath = _extras;
   }
 
-  return {verdict:verdict, metrics:metrics, rationale:rationale, conditions:conditions, capitalPath:capitalPath};
+  metrics.unshift({label:'Risk Score', value:riskScore+'/100', color:riskClass});
+  metrics.push({label:'Fire Sale Value (65% ARV)', value:lpaFmt(fireSaleVal)});
+  if (d.loanAmount > 0) metrics.push({label:'FSV Coverage', value:fsvCov.toFixed(2)+'x', color:fsvClass});
+
+  return {verdict:verdict, metrics:metrics, rationale:rationale, conditions:conditions, capitalPath:capitalPath, riskScore:riskScore, fireSaleValue:fireSaleVal};
 }
 
 /* ── PDF ── */
@@ -2919,17 +3053,30 @@ function lpaDownloadPDF() {
   rw('Borrower',      lpaDeal.borrowerName || '_____________');
   y += 8;
 
+  var _dlRS  = lpaComputeRiskScore(lpaDeal, null);
+  var _dlFSB = lpaDeal.arv || lpaDeal.currentValue || lpaDeal.purchasePrice || 0;
+  var _dlFSV = Math.round(_dlFSB * 0.65);
+  var _dlIsRefi = !!lpaDeal.isRefi;
+
   sec('PROPERTY & LOAN');
   rw('Address / Folio', lpaDeal.address);
   rw('Loan Product',    lpaDeal.loanType);
-  rw('Purchase Price',  lpaFmt(lpaDeal.purchasePrice));
+  if (_dlIsRefi) {
+    rw('Current Property Value', lpaFmt(lpaDeal.currentValue || lpaDeal.purchasePrice));
+    rw('Existing Balance',       lpaFmt(lpaDeal.existingBalance));
+    if (lpaDeal.cashOutAmount > 0) rw('Cash-Out Amount', lpaFmt(lpaDeal.cashOutAmount));
+  } else {
+    rw('Purchase Price',  lpaFmt(lpaDeal.purchasePrice));
+    rw('Down Payment',    lpaFmt(lpaDeal.downPayment) + ' (' + (lpaDeal.purchasePrice > 0 ? ((lpaDeal.downPayment/lpaDeal.purchasePrice)*100).toFixed(0) : 0) + '%)');
+  }
   rw('Loan Amount',     lpaFmt(lpaDeal.loanAmount));
-  rw('Down Payment',    lpaFmt(lpaDeal.downPayment) + ' (' + ((lpaDeal.downPayment/lpaDeal.purchasePrice)*100).toFixed(0) + '%)');
   rw('LTV',             (lpaDeal.ltv*100).toFixed(1) + '%');
-  if (lpaDeal.creditScore)       rw('Credit Score', lpaDeal.creditScore);
-  if (lpaDeal.monthlyRent)       rw('Monthly Rent', lpaFmt(lpaDeal.monthlyRent));
-  if (lpaDeal.arv)               rw('ARV', lpaFmt(lpaDeal.arv));
-  if (lpaDeal.exitStrategy)      rw('Exit Strategy', lpaDeal.exitStrategy);
+  rw('Risk Score',      _dlRS + '/100');
+  rw('Fire Sale Value', lpaFmt(_dlFSV) + ' (65% of ARV/Value)');
+  if (lpaDeal.creditScore)        rw('Credit Score', lpaDeal.creditScore);
+  if (lpaDeal.monthlyRent)        rw('Monthly Rent', lpaFmt(lpaDeal.monthlyRent));
+  if (lpaDeal.arv)                rw('ARV', lpaFmt(lpaDeal.arv));
+  if (lpaDeal.exitStrategy)       rw('Exit Strategy', lpaDeal.exitStrategy);
   if (lpaDeal.constructionBudget) rw('Construction Budget', lpaFmt(lpaDeal.constructionBudget));
   y += 8;
 
