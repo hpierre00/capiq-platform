@@ -1502,7 +1502,7 @@ async function lpaProcess(input) {
       lpaDeal.address = v;
       lpaState = LPA_ST.LOAN_TYPE;
       await lpaAI('Got it — <strong>' + v + '</strong>. What type of financing is the borrower seeking?',
-        ['Private Money / Hard Money','DSCR – Rental Income','Bridge Loan','Fix & Flip','Ground-Up Construction','Land Loan','Commercial / Mixed-Use','Refinance / Refi']);
+        ['Private Money / Hard Money','Refinance / Refi','Bridge Loan','DSCR – Rental Income','Fix & Flip','Ground-Up Construction','Land Loan','Commercial / Mixed-Use']);
       break;
 
     case LPA_ST.LOAN_TYPE:
