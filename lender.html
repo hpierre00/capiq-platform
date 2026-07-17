@@ -1501,6 +1501,12 @@ async function lpaProcess(input) {
 
     case LPA_ST.PROPERTY:
       lpaDeal.address = v;
+      lpaDeal.marketData = null;
+      // Pull live market value + comps + county tax/zoning in the background; used at decision time.
+      fetch('/.netlify/functions/property-data', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ address: v }) })
+        .then(function(r){ return r.json(); })
+        .then(function(pd){ if (pd && pd.success && pd.value) lpaDeal.marketData = pd; })
+        .catch(function(){});
       lpaState = LPA_ST.PROP_TYPE;
       await lpaAI('Got it — <strong>' + v + '</strong>. First, the gating step. What is the <strong>property type</strong>? This sets the valuation model and program fit.',
         ['SFR (1 unit)','2–4 Unit','Multifamily 5+','Condo / Townhome','Mixed-Use','Commercial','Land / Lot']);
@@ -2746,6 +2752,20 @@ function lpaSegmentProperty(d) {
 
 // AVM valuation with tiered model routing and localStorage calibration
 function lpaComputeAppraisedValue(d) {
+  // Live market data (from the property-data provider) becomes the primary appraised value.
+  if (d && d.marketData && d.marketData.value) {
+    var _mlow = d.marketData.valueLow, _mhigh = d.marketData.valueHigh;
+    return {
+      value: d.marketData.value,
+      model: (d.marketData.source || 'Market') + ' live AVM',
+      confidence: 'Market-sourced',
+      segment: lpaSegmentProperty(d),
+      low: _mlow || null, high: _mhigh || null, live: true,
+      comps: d.marketData.comps || [],
+      note: 'Live automated valuation from ' + (d.marketData.source || 'provider') + ' comparable sales' +
+            (_mlow && _mhigh ? ' (range ' + lpaFmt(_mlow) + ' to ' + lpaFmt(_mhigh) + ')' : '') + '. Verify against a licensed appraisal before funding.'
+    };
+  }
   var seg     = lpaSegmentProperty(d);
   var baseVal = d.arv || d.currentValue || d.purchasePrice || 0;
 
@@ -2976,28 +2996,53 @@ function lpaBuildNarrative(ctx) {
     apHtml = 'the county property appraiser or assessor of record, <a href="' + searchUrl + '" target="_blank" rel="noopener">find the official site for this address</a> (folio, zoning, current-year taxes)';
     apText = 'County property appraiser: ' + searchUrl;
   }
+  var md = d.marketData || null;
+  var comps = (md && Array.isArray(md.comps)) ? md.comps.filter(function(c){ return c && c.price; }).slice(0,5) : [];
+  var compsHtml = '';
+  if (comps.length) {
+    compsHtml = '<div style="overflow-x:auto;margin:6px 0"><table style="width:100%;border-collapse:collapse;font-size:11px">' +
+      '<thead><tr style="color:var(--text-4);text-align:left"><th style="padding:3px 6px;font-weight:600">Comparable sale</th><th style="padding:3px 6px;font-weight:600">Sold</th><th style="padding:3px 6px;font-weight:600">Price</th><th style="padding:3px 6px;font-weight:600">$/sqft</th></tr></thead><tbody>' +
+      comps.map(function(c){ return '<tr>' +
+        '<td style="padding:3px 6px">' + (c.address || 'Comp') + '</td>' +
+        '<td style="padding:3px 6px">' + (c.soldDate ? String(c.soldDate).slice(0,10) : 'n/a') + '</td>' +
+        '<td style="padding:3px 6px">' + fmt(c.price) + '</td>' +
+        '<td style="padding:3px 6px">' + (c.ppsf ? '$' + c.ppsf : 'n/a') + '</td>' +
+      '</tr>'; }).join('') + '</tbody></table></div>';
+  }
+  var valHtml = (md && md.value)
+    ? (md.source || 'Provider') + ' live automated valuation ' + fmt(md.value) + ((md.valueLow && md.valueHigh) ? ' (range ' + fmt(md.valueLow) + ' to ' + fmt(md.valueHigh) + ')' : '') + ', sourced from MLS closings and public records. This remains an automated estimate; confirm with a licensed appraisal.'
+    : (appraisal.model || 'automated valuation model') + (appraisal.confidence ? ' (confidence ' + appraisal.confidence + ')' : '') + '. This is an automated model estimate, not an appraisal or a verified value. Confirm with a licensed appraisal or the county records below.';
+  var taxHtml = (md && md.taxAmount)
+    ? 'current-year taxes ' + fmt(md.taxAmount) + (md.taxYear ? ' (' + md.taxYear + ')' : '') + (md.zoning ? ', zoning ' + md.zoning : '') + ', via ' + (md.source || 'provider') + ' and public records. Confirm at ' + apHtml + '.'
+    : 'not asserted here. Verify at ' + apHtml + '.';
+  var compsLine = comps.length
+    ? comps.length + ' recent closed comparable sales from ' + (md.source || 'the provider') + ' (MLS and public records), listed in the table below.'
+    : 'not fabricated. Pull recent closed comparable sales from the county records above or a licensed MLS or data provider before relying on them.';
+
   var sourceItems = [
-    { label:'Assessed value', text:(appraisal.model || 'automated valuation model') + (appraisal.confidence ? ' (confidence ' + appraisal.confidence + ')' : '') + '. This is an automated model estimate, not an appraisal or a verified value. Confirm with a licensed appraisal or the county records.' },
+    { label:'Assessed value', text: valHtml },
     { label:'Risk assessment', text:'Computed by the Underlytix composite model from the figures you entered: LTV and leverage, asset liquidity, exit strength, sponsor experience, and fire sale coverage of ' + fmt(fsv) + '. The inputs are your submissions; the scores are model derived, not third party data.' },
-    { label:'Zoning and current-year taxes', text:'Not asserted here. Verify at ' + apText + '.' },
-    { label:'Comparable sales', text:'Not fabricated. Pull recent closed comparable sales from the county records above or a licensed MLS or data provider before relying on them.' }
+    { label:'Zoning and current-year taxes', text: (md && md.taxAmount) ? ('Current-year taxes ' + fmt(md.taxAmount) + (md.taxYear ? ' (' + md.taxYear + ')' : '') + (md.zoning ? ', zoning ' + md.zoning : '') + ', via ' + (md.source || 'provider') + ' and public records. Confirm at ' + apText + '.') : ('Not asserted here. Verify at ' + apText + '.') },
+    { label:'Comparable sales', text: comps.length ? (comps.length + ' recent closed comparable sales from ' + (md.source || 'the provider') + '. ' + comps.map(function(c){ return (c.address || 'Comp') + ' ' + fmt(c.price) + (c.soldDate ? ' on ' + String(c.soldDate).slice(0,10) : ''); }).join('; ') + '.') : 'Not fabricated. Pull recent closed comparable sales from the county records or a licensed MLS or data provider before relying on them.' }
   ];
-  var disclaimerText = 'Every figure in this report except the ones you entered is a model estimate. Nothing here is independently verified market data, an appraisal, or a commitment to lend. Verify value, zoning, taxes, and comparable sales against the official county source before funding.';
+  var disclaimerText = (md && md.value)
+    ? 'Value, comps, and county figures are sourced from ' + (md.source || 'a licensed data provider') + ' (MLS closings and public records) and are estimates, not an appraisal or a commitment to lend. The risk scores are model derived from your inputs. Confirm value and comps with a licensed appraisal before funding.'
+    : 'Every figure in this report except the ones you entered is a model estimate. Nothing here is independently verified market data, an appraisal, or a commitment to lend. Verify value, zoning, taxes, and comparable sales against the official county source before funding.';
 
   function P(h){ return '<p style="margin:0 0 8px;font-size:12px;line-height:1.6;color:var(--text-2)">' + h + '</p>'; }
   function S(title, body){ return '<div class="lpa-rationale" style="margin-top:12px"><h4>' + title + '</h4>' + body + '</div>'; }
   var html = '';
   sections.forEach(function(sc){ html += S(sc.title, sc.paras.map(P).join('')); });
   var srcHtml = '<ul style="margin:0 0 8px;padding-left:18px;font-size:11.5px;line-height:1.6;color:var(--text-3)">' +
-    '<li><strong>Assessed value:</strong> ' + (appraisal.model || 'automated valuation model') + (appraisal.confidence ? ' (confidence ' + appraisal.confidence + ')' : '') + '. This is an automated <em>model estimate</em>, not an appraisal or a verified value. Confirm with a licensed appraisal or the county records below.</li>' +
+    '<li><strong>Assessed value:</strong> ' + valHtml + '</li>' +
     '<li><strong>Risk assessment:</strong> computed by the Underlytix composite model from the figures you entered (LTV and leverage, asset liquidity, exit strength, sponsor experience, and fire-sale coverage of ' + fmt(fsv) + '). The inputs are your submissions; the scores are model-derived, not third-party data.</li>' +
-    '<li><strong>Zoning and current-year taxes:</strong> not asserted here. Verify at ' + apHtml + '.</li>' +
-    '<li><strong>Comparable sales:</strong> not fabricated. Pull recent closed comparable sales from the county records above or a licensed MLS or data provider before relying on them.</li>' +
-    '</ul>';
+    '<li><strong>Zoning and current-year taxes:</strong> ' + taxHtml + '</li>' +
+    '<li><strong>Comparable sales:</strong> ' + compsLine + '</li>' +
+    '</ul>' + compsHtml;
   var disclaimerHtml = '<p style="margin:6px 0 0;font-size:10.5px;color:var(--text-4)"><strong>Full disclosure:</strong> ' + disclaimerText + '</p>';
   html += S('Data Sources &amp; Verification', srcHtml + disclaimerHtml);
 
-  return { html: html, sections: sections, sources: { items: sourceItems, disclaimer: disclaimerText, apText: apText } };
+  return { html: html, sections: sections, sources: { items: sourceItems, disclaimer: disclaimerText, apText: apText, comps: comps, valueSource: (md && md.source) || null } };
 }
 // Req 3 — exit-strength agent: scores the takeout (sale / refi into DSCR-perm / completion-then-lease) and flags term mismatch.
 function lpaAssessExitStrength(d) {
@@ -3720,6 +3765,23 @@ function lpaDownloadPDF() {
       doc.text(_nd(it.label), M, y); y += 14;
       _para(it.text, {size:10, lh:13.5}); y += 10;
     });
+    if (_src.comps && _src.comps.length) {
+      if (y > 670) { doc.addPage(); y = M; }
+      doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(14,116,144);
+      doc.text('RECENT COMPARABLE SALES (' + _nd(_src.valueSource || 'provider') + ')', M, y); y += 15;
+      doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(120,130,140);
+      doc.text('Comparable', M, y); doc.text('Sold', M+250, y); doc.text('Price', M+320, y); doc.text('$/sqft', M+410, y); y += 12;
+      doc.setFont('helvetica','normal'); doc.setTextColor(40,40,40); doc.setFontSize(9);
+      _src.comps.forEach(function(c) {
+        if (y > 730) { doc.addPage(); y = M; }
+        doc.text(_nd(String(c.address || 'Comp')).slice(0,44), M, y);
+        doc.text(c.soldDate ? String(c.soldDate).slice(0,10) : 'n/a', M+250, y);
+        doc.text(c.price != null ? ('$' + Math.round(c.price).toLocaleString()) : 'n/a', M+320, y);
+        doc.text(c.ppsf ? ('$' + c.ppsf) : 'n/a', M+410, y);
+        y += 13;
+      });
+      y += 8;
+    }
     if (_src.disclaimer) {
       if (y > 690) { doc.addPage(); y = M; }
       doc.setDrawColor(200,210,220); doc.line(M, y, W-M, y); y += 16;
