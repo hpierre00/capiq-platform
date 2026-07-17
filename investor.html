@@ -555,6 +555,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Deal Pipeline
           <span class="nav-badge" id="deal-count">0</span>
         </button>
+        <button class="nav-item" onclick="showPage('ai');ipaInit()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>AI Assessment
+        </button>
       </div>
     </nav>
     <div class="sidebar-quota" id="sidebar-quota" style="display:none">
@@ -1072,10 +1075,82 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 11-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg><h3>No matches yet</h3><p>Analyze a deal and matches will appear here.</p></div>
       </div></div>
     </div>
+
+    <!-- AI ASSESSMENT -->
+    <style>
+    /* ── IPA Chat Interface ──────────────────────────────────────────────── */
+    #page-ai .ipa-shell{display:flex;height:calc(100vh - 60px);overflow:hidden}
+    #page-ai .ipa-chat-col{flex:1;display:flex;flex-direction:column;overflow:hidden;border-right:1px solid var(--border)}
+    #page-ai .ipa-panel-col{width:252px;background:var(--bg-2);overflow-y:auto;flex-shrink:0}
+    #page-ai .ipa-chat{flex:1;overflow-y:auto;padding:22px 26px;display:flex;flex-direction:column;gap:14px}
+    .ipa-msg{display:flex;flex-direction:column}
+    .ipa-msg.ipa-user{align-items:flex-end}
+    .ipa-bubble{background:var(--bg-2);border:1px solid var(--border);border-radius:12px 12px 12px 3px;padding:11px 15px;font-size:13.5px;line-height:1.65;color:var(--text-2);max-width:84%;box-shadow:var(--shadow-sm)}
+    .ipa-user-bubble{background:var(--teal);border-color:var(--teal);color:white;border-radius:12px 12px 3px 12px}
+    .ipa-choices{display:flex;flex-wrap:wrap;gap:6px;margin-top:2px;padding-left:2px}
+    .ipa-chip{background:var(--bg-2);border:1px solid var(--border-dark);border-radius:20px;padding:5px 14px;font-size:12px;color:var(--teal);cursor:pointer;font-family:'DM Mono',monospace;letter-spacing:.02em;transition:all .15s;white-space:nowrap}
+    .ipa-chip:hover{background:var(--teal-dim);border-color:var(--teal);transform:translateY(-1px)}
+    .ipa-typing{display:flex;align-items:center;gap:5px;padding:12px 14px}
+    .ipa-typing span{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--text-4);animation:ipaTypePulse 1.2s infinite}
+    .ipa-typing span:nth-child(2){animation-delay:.2s}
+    .ipa-typing span:nth-child(3){animation-delay:.4s}
+    @keyframes ipaTypePulse{0%,80%,100%{transform:scale(.8);opacity:.45}40%{transform:scale(1.1);opacity:1}}
+    #ipa-input-row{display:flex;gap:8px;padding:12px 16px;background:var(--bg-2);border-top:1px solid var(--border)}
+    #ipa-input-row input{flex:1;border:1px solid var(--border-dark);border-radius:8px;padding:10px 14px;font-size:13.5px;font-family:'Inter',sans-serif;color:var(--text);background:var(--bg);outline:none;transition:border-color .15s}
+    #ipa-input-row input:focus{border-color:var(--teal)}
+    #ipa-input-row input:disabled{opacity:.5;cursor:not-allowed}
+    #ipa-input-row button{background:var(--teal);color:white;border:none;border-radius:8px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s;font-family:'Inter',sans-serif}
+    #ipa-input-row button:hover{background:var(--teal-light)}
+    /* Decision card */
+    .ipa-decision{border:1px solid var(--border);border-radius:12px;overflow:hidden;background:var(--bg-2);width:100%;max-width:640px;box-shadow:var(--shadow-md)}
+    .ipa-verdict{padding:16px 20px;display:flex;align-items:center;justify-content:space-between}
+    .ipa-verdict-label{font-size:22px;font-weight:800;letter-spacing:-.02em}
+    .ipa-verdict-score{font-family:'DM Mono',monospace;font-size:12px}
+    .ipa-verdict-sub{padding:8px 20px 10px;font-size:12.5px;color:var(--text-3);border-bottom:1px solid var(--border)}
+    .ipa-metrics{padding:14px 20px;display:flex;flex-direction:column;gap:7px}
+    .ipa-metric{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:12.5px;padding:3px 0;border-bottom:1px solid var(--bg-3)}
+    .ipa-ml{color:var(--text-3)}
+    .ipa-mv{font-weight:600;font-family:'DM Mono',monospace;font-size:12px}
+    .ipa-good{color:#059669}.ipa-warn{color:#d97706}.ipa-bad{color:#dc2626}
+    .ipa-flags{padding:12px 20px;background:#fffbeb;border-top:1px solid #fde68a}
+    .ipa-flag-title{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:#b45309;margin-bottom:7px}
+    .ipa-flag{font-size:12.5px;color:#92400e;margin-bottom:5px;line-height:1.5}
+    .ipa-rationale{padding:12px 20px;background:var(--bg-3);border-top:1px solid var(--border)}
+    .ipa-rat-title{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-4);margin-bottom:7px}
+    .ipa-rat-item{font-size:12.5px;color:var(--text-3);margin-bottom:4px;line-height:1.5}
+    .ipa-actions{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:8px;flex-wrap:wrap}
+    .ipa-btn{background:var(--teal);color:white;border:none;border-radius:6px;padding:9px 18px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;transition:background .15s}
+    .ipa-btn:hover{background:var(--teal-light)}
+    .ipa-btn-ghost{background:none;border:1px solid var(--border-dark);color:var(--text-2)}
+    .ipa-btn-ghost:hover{background:var(--bg-3);border-color:var(--text-4)}
+    /* Right panel */
+    .ipa-panel-metric{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:12px}
+    .ipa-panel-metric span:first-child{color:var(--text-3)}
+    .ipa-panel-metric span:last-child{font-weight:600;font-family:'DM Mono',monospace;font-size:11px;color:var(--text)}
+    </style>
+    <div class="page" id="page-ai">
+      <div class="topbar">
+        <div><div class="topbar-title">AI Deal Assessment</div><div class="topbar-meta">Conversational investor deal analysis engine</div></div>
+        <div style="display:flex;gap:10px;align-items:center"><span class="chip chip-teal">INVESTOR INTELLIGENCE</span><span class="chip chip-green">● LIVE</span></div>
+      </div>
+      <div class="ipa-shell">
+        <div class="ipa-chat-col">
+          <div class="ipa-chat" id="ipa-chat"></div>
+          <div id="ipa-input-row" style="opacity:0.4">
+            <input type="text" id="ipa-input" placeholder="Type your answer…" disabled onkeydown="ipaKeydown(event)">
+            <button onclick="ipaSubmit()">Send</button>
+          </div>
+        </div>
+        <div class="ipa-panel-col" id="ipa-panel">
+          <div style="padding:20px;font-size:12px;color:var(--text-4)">Awaiting deal inputs…</div>
+        </div>
+      </div>
+    </div>
   </main>
 </div>
 
 <script src="/portal-common.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 // ─── AUTH SYSTEM ─────────────────────────────────────────────────────────────
 const AUTH_KEY = 'capiq_session';
@@ -2598,6 +2673,8 @@ function showUpgradePrompt() {
 // ─── 5-CLICK LOGO → ADMIN ────────────────────────────────────────────────────
 var _logoClicks = 0, _logoTimer = null;
 function handleLogoClick() {
+  // Req 5: when signed out, the Underlytix wordmark returns to the public home page.
+  if (!getSession()?.token) { window.location.href = '/'; return; }
   _logoClicks++;
   clearTimeout(_logoTimer);
   _logoTimer = setTimeout(() => { _logoClicks = 0; }, 1500);
@@ -2770,6 +2847,875 @@ NOTES: ${d.notes||'None'}
 
 Underwrite this as a commercial deal under $10M. Assess NOI stability, cap rate vs market, debt service coverage, sponsor experience, and exit strategy. Return this exact JSON with all string fields filled with detailed analysis (2-4 sentences each):
 {"fundabilityScore":0,"dealScore":"Pass","humanReviewRequired":false,"executiveSummary":"","strengthsAndRisks":"","lenderMatchingProfile":"","structuringRecommendations":"","marketContext":"","scoreBreakdown":"","nextSteps":""}`;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   IPA — Investor Portfolio Assessment  (conversational AI agent)
+   Conversational deal analysis: Purchase price vs. AVM, ARV credibility,
+   return projections (ROI / Cap Rate / CoC / DSCR), risk flags, verdict.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+// ── State constants ────────────────────────────────────────────────────────
+var IPA_ST = {
+  GREET:'greet', PROP_TYPE:'prop_type', BIZ_PURPOSE:'biz_purpose', DEAL_TYPE:'deal_type', ADDRESS:'address', PURCHASE:'purchase',
+  ARV:'arv', REHAB:'rehab', RENTAL:'rental', EXPENSES:'expenses',
+  HOLD:'hold', FINANCING:'financing', RATE:'rate', EXIT:'exit',
+  CREDIT:'credit', EXPERIENCE:'experience', DONE:'done'
+};
+
+var ipaState = IPA_ST.GREET;
+var ipaDeal  = {};
+
+function ipaChatEl()  { return document.getElementById('ipa-chat'); }
+function ipaInputEl() { return document.getElementById('ipa-input'); }
+
+function ipaScroll() {
+  var c = ipaChatEl();
+  if (c) setTimeout(function(){ c.scrollTop = c.scrollHeight; }, 60);
+}
+
+// ── Message renderer ───────────────────────────────────────────────────────
+async function ipaAI(html, choices, ms) {
+  var chat = ipaChatEl();
+  if (!chat) return;
+  var tid = 'ipt' + Date.now() + Math.random().toString(36).slice(2,5);
+  chat.insertAdjacentHTML('beforeend',
+    '<div class="ipa-msg" id="'+tid+'"><div class="ipa-bubble ipa-typing"><span></span><span></span><span></span></div></div>');
+  ipaScroll();
+  var delay = ms != null ? ms : Math.min(500 + html.replace(/<[^>]+>/g,'').length * 1.4, 2200);
+  await new Promise(function(r){ setTimeout(r, delay); });
+  var row = document.getElementById(tid);
+  if (row) row.remove();
+  chat.insertAdjacentHTML('beforeend',
+    '<div class="ipa-msg"><div class="ipa-bubble">'+html+'</div></div>');
+  if (choices && choices.length) {
+    var btns = choices.map(function(c){
+      return '<button class="ipa-chip" onclick="ipaChip(this,\''+c.replace(/\\/g,'\\\\').replace(/'/g,"\\'")+'\')">' + c + '</button>';
+    }).join('');
+    chat.insertAdjacentHTML('beforeend','<div class="ipa-choices">'+btns+'</div>');
+  }
+  ipaScroll();
+}
+
+function ipaAddUser(text) {
+  var chat = ipaChatEl();
+  if (chat) {
+    chat.insertAdjacentHTML('beforeend',
+      '<div class="ipa-msg ipa-user"><div class="ipa-bubble ipa-user-bubble">'+text+'</div></div>');
+    ipaScroll();
+  }
+}
+
+function ipaChip(btn, value) {
+  document.querySelectorAll('.ipa-choices').forEach(function(el){ el.remove(); });
+  ipaAddUser(value);
+  ipaProcess(value);
+}
+
+function ipaSetInput(enabled) {
+  var inp = ipaInputEl();
+  var row = document.getElementById('ipa-input-row');
+  if (inp) inp.disabled = !enabled;
+  if (row) row.style.opacity = enabled ? '1' : '0.4';
+}
+
+// ── Number helpers ─────────────────────────────────────────────────────────
+function ipaToNum(s) {
+  if (!s) return 0;
+  s = s.toString().replace(/[$,\s]/g,'').toLowerCase();
+  if (s.endsWith('m')) return parseFloat(s) * 1e6;
+  if (s.endsWith('k')) return parseFloat(s) * 1e3;
+  return parseFloat(s) || 0;
+}
+function ipaFmt(n) {
+  if (n == null || isNaN(n)) return '—';
+  var neg = n < 0;
+  return (neg ? '-$' : '$') + Math.abs(Math.round(n)).toLocaleString();
+}
+function ipaPct(n) { return (n * 100).toFixed(1) + '%'; }
+
+// ── Input events ───────────────────────────────────────────────────────────
+function ipaKeydown(e) {
+  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); ipaSubmit(); }
+}
+function ipaSubmit() {
+  var inp = ipaInputEl();
+  if (!inp || inp.disabled) return;
+  var v = inp.value.trim();
+  if (!v) return;
+  inp.value = '';
+  document.querySelectorAll('.ipa-choices').forEach(function(el){ el.remove(); });
+  ipaAddUser(v);
+  ipaProcess(v);
+}
+
+// ── State machine ──────────────────────────────────────────────────────────
+async function ipaProcess(v) {
+  ipaSetInput(false);
+  var vl  = v.toLowerCase().trim();
+  var num = ipaToNum(v);
+
+  switch (ipaState) {
+
+    case IPA_ST.GREET:
+      ipaState = IPA_ST.PROP_TYPE;
+      await ipaAI('Perfect. First, a quick eligibility gate. What <strong>property type</strong> is this? This sets the valuation model and confirms program fit.',
+        ['SFR','2–4 Unit','Multifamily 5+','Commercial','Land / Lot'], 400);
+      break;
+
+    case IPA_ST.PROP_TYPE:
+      ipaDeal.propertyType = v;
+      ipaState = IPA_ST.BIZ_PURPOSE;
+      await ipaAI('And is this a <strong>business-purpose</strong> investment, or an owner-occupied / consumer purchase? (These products are business-purpose only.)',
+        ['Business-purpose investment','Owner-occupied / consumer']);
+      break;
+
+    case IPA_ST.BIZ_PURPOSE:
+      ipaDeal.businessPurpose = v;
+      if (/consumer|owner/i.test(v)) { ipaGateRefer(); return; }
+      ipaState = IPA_ST.DEAL_TYPE;
+      await ipaAI('Business-purpose confirmed. What type of deal is this?',
+        ['Fix & Flip','Buy & Hold','BRRRR','New Construction','Commercial'], 400);
+      break;
+
+    case IPA_ST.DEAL_TYPE:
+      ipaDeal.dealType   = v;
+      ipaDeal.isFlip     = /fix|flip/i.test(v);
+      ipaDeal.isHold     = /hold|brrrr/i.test(v);
+      ipaDeal.isComm     = /commercial/i.test(v);
+      ipaDeal.isNewConst = /construction/i.test(v);
+      if (ipaDeal.isFlip || ipaDeal.isNewConst) ipaDeal.isHold = false;
+      ipaState = IPA_ST.ADDRESS;
+      await ipaAI('Got it — <strong>' + v + '</strong>. What is the property address? (City and State is fine if you prefer.)');
+      break;
+
+    case IPA_ST.ADDRESS:
+      ipaDeal.address = v;
+      ipaState = IPA_ST.PURCHASE;
+      await ipaAI('What is the <strong>contract / purchase price</strong>? (e.g. $325,000)');
+      break;
+
+    case IPA_ST.PURCHASE:
+      if (!num) {
+        await ipaAI('Please enter a valid purchase price — e.g. <strong>$325,000</strong>.', [], 300);
+        ipaSetInput(true); return;
+      }
+      ipaDeal.purchasePrice = num;
+      ipaUpdatePanel();
+      if (ipaDeal.isFlip || ipaDeal.isNewConst) {
+        ipaState = IPA_ST.ARV;
+        await ipaAI('What is the projected <strong>After-Repair Value (ARV)</strong>? This is the estimated market value after all renovations are complete. (e.g. $480,000)');
+      } else if (ipaDeal.isHold) {
+        ipaState = IPA_ST.ARV;
+        await ipaAI('What is the current <strong>market value or appraised value</strong>? Enter <strong>0</strong> to skip if unknown.');
+      } else if (ipaDeal.isComm) {
+        ipaState = IPA_ST.ARV;
+        await ipaAI('What is the <strong>as-is appraised value</strong> of the property, or your best estimate? Enter <strong>0</strong> if unknown.');
+      } else {
+        ipaState = IPA_ST.ARV;
+        await ipaAI('What is the current market value or ARV? Enter <strong>0</strong> to skip.');
+      }
+      break;
+
+    case IPA_ST.ARV:
+      ipaDeal.arv = num;
+      ipaUpdatePanel();
+      if (ipaDeal.isFlip || ipaDeal.isNewConst) {
+        ipaState = IPA_ST.REHAB;
+        await ipaAI('What is the estimated <strong>rehab / construction budget</strong>? Include all labor and materials. (e.g. $65,000 — or enter <strong>0</strong> if none)');
+      } else if (ipaDeal.isHold || ipaDeal.isComm) {
+        ipaState = IPA_ST.RENTAL;
+        var rentQ = ipaDeal.isComm
+          ? 'What is the projected monthly <strong>gross income</strong> from this property? Include all rent and income streams. (e.g. $8,500)'
+          : 'What is the projected monthly <strong>gross rental income</strong>? Include all units if multi-family. (e.g. $2,800)';
+        await ipaAI(rentQ);
+      } else {
+        ipaState = IPA_ST.REHAB;
+        await ipaAI('Are there any <strong>rehab or renovation costs</strong> for this property? Enter <strong>0</strong> if none.');
+      }
+      break;
+
+    case IPA_ST.REHAB:
+      ipaDeal.rehabBudget = num;
+      ipaUpdatePanel();
+      ipaState = IPA_ST.HOLD;
+      await ipaAI('What is the expected <strong>hold / exit timeline</strong>?',
+        ['6 months','12 months','18 months','24 months']);
+      break;
+
+    case IPA_ST.RENTAL:
+      ipaDeal.monthlyRent = num;
+      ipaUpdatePanel();
+      ipaState = IPA_ST.EXPENSES;
+      await ipaAI('What are the estimated monthly <strong>operating expenses</strong>? Include property taxes, insurance, property management, maintenance, and vacancy reserves — but <em>not</em> debt service. (e.g. $900)');
+      break;
+
+    case IPA_ST.EXPENSES:
+      ipaDeal.monthlyExp = num;
+      ipaUpdatePanel();
+      ipaState = IPA_ST.HOLD;
+      await ipaAI('What is your planned <strong>hold period</strong> for this property?',
+        ['5 years','10 years','15 years','Long-term hold']);
+      break;
+
+    case IPA_ST.HOLD:
+      ipaDeal.holdPeriod = v;
+      var mo = 0;
+      var nm = v.match(/\d+/);
+      if (/\d+\s*(yr|year)/i.test(v) || /year/i.test(v)) mo = (nm ? parseInt(nm[0]) : 1) * 12;
+      else if (/\d+\s*mo/i.test(v) || /month/i.test(v)) mo = nm ? parseInt(nm[0]) : 12;
+      else if (/long|indefinite/i.test(v)) mo = 120;
+      else if (/brrrr|refi/i.test(v))      mo = 18;
+      else if (nm) mo = parseInt(nm[0]);
+      if (!mo) mo = 24;
+      ipaDeal.holdMonths = mo;
+      ipaState = IPA_ST.FINANCING;
+      await ipaAI('How is this deal being financed? Enter the <strong>loan amount</strong> (e.g. $260,000), or type <strong>cash</strong> for an all-cash purchase.');
+      break;
+
+    case IPA_ST.FINANCING:
+      if (/\bcash\b|all.?cash|no loan/i.test(vl)) {
+        ipaDeal.loanAmount = 0; ipaDeal.ltv = 0; ipaDeal.allCash = true;
+        ipaState = IPA_ST.EXIT;
+        await ipaAI('All-cash purchase noted — excellent position. What is the planned <strong>exit strategy</strong>?',
+          ['Sell after rehab','Refinance & hold','Hold long-term','Wholesale / assign']);
+      } else {
+        if (!num) {
+          await ipaAI('Please enter a loan amount or type <strong>cash</strong> for an all-cash deal.', [], 300);
+          ipaSetInput(true); return;
+        }
+        ipaDeal.loanAmount = num;
+        ipaDeal.ltv = ipaDeal.purchasePrice > 0 ? num / ipaDeal.purchasePrice : 0;
+        ipaUpdatePanel();
+        ipaState = IPA_ST.RATE;
+        await ipaAI('What is the <strong>interest rate</strong> on this loan? (e.g. 10.5%)');
+      }
+      break;
+
+    case IPA_ST.RATE: {
+      var rateStr = parseFloat(v.replace(/[^\d.]/g,'')) || 0;
+      ipaDeal.interestRate = rateStr / 100;
+      ipaState = IPA_ST.EXIT;
+      await ipaAI('What is the planned <strong>exit strategy</strong>?',
+        ['Sell after rehab','Refinance & hold','Hold long-term','Wholesale / assign']);
+      break;
+    }
+
+    case IPA_ST.EXIT:
+      ipaDeal.exitStrategy = v;
+      ipaState = IPA_ST.CREDIT;
+      await ipaAI('What is the borrower / sponsor <strong>credit score</strong>?',
+        ['Below 620','620–659','660–699','700–739','740+']);
+      break;
+
+    case IPA_ST.CREDIT: {
+      var cs2 = 0;
+      if (/below|<\s*620/i.test(v))      cs2 = 600;
+      else if (/620.65|640/i.test(v))    cs2 = 640;
+      else if (/660.69|680/i.test(v))    cs2 = 680;
+      else if (/700.73|720/i.test(v))    cs2 = 720;
+      else if (/740/i.test(v))            cs2 = 760;
+      else cs2 = parseInt(v.replace(/\D/g,'')) || 680;
+      ipaDeal.creditScore = cs2;
+      ipaState = IPA_ST.EXPERIENCE;
+      await ipaAI('How many completed <strong>investment deals</strong> has the sponsor / borrower previously closed?',
+        ['First-time (0)','1–3 deals','4–10 deals','10+ deals']);
+      break;
+    }
+
+    case IPA_ST.EXPERIENCE: {
+      var exp2 = 0;
+      if (/first|none|\b0\b/i.test(v))     exp2 = 0;
+      else if (/1.3|1\s*-\s*3/i.test(v))   exp2 = 2;
+      else if (/4.10|4\s*-\s*10/i.test(v)) exp2 = 7;
+      else if (/10\+/i.test(v))             exp2 = 15;
+      else exp2 = parseInt(v.replace(/\D/g,'')) || 0;
+      ipaDeal.completedDeals = exp2;
+      ipaState = IPA_ST.DONE;
+      await ipaAI('Running full deal assessment — analyzing all inputs… <em>one moment.</em>', [], 500);
+      var result = ipaComputeDecision(ipaDeal);
+      ipaSaveDeal(ipaDeal, result);
+      await ipaRenderDecision(result);
+      return;
+    }
+
+    default: break;
+  }
+  ipaSetInput(true);
+  var inp2 = ipaInputEl();
+  if (inp2) inp2.focus();
+}
+
+// ── Decision engine ────────────────────────────────────────────────────────
+function ipaComputeDecision(d) {
+  var metrics   = [];
+  var rationale = [];
+  var flags     = [];
+  var score     = 0;
+  var holdCashFlowNeg  = false;
+  var grossProfit      = null;
+
+  var pp    = d.purchasePrice  || 0;
+  var arv   = d.arv            || 0;
+  var rehab = d.rehabBudget    || 0;
+  var loan  = d.loanAmount     || 0;
+  var rate  = d.interestRate   || 0;
+  var hold  = d.holdMonths     || 12;
+  var rent  = d.monthlyRent    || 0;
+  var opExp = d.monthlyExp     || 0;
+  var cs    = d.creditScore    || 680;
+  var deals = d.completedDeals || 0;
+
+  // ── AVM estimate ──────────────────────────────────────────────────────
+  var avmBase  = arv > 0 ? arv : pp;
+  var rural    = /rural|county.?(rd|road)|farm|ranch|acreage|\bacres\b|hollow|township/i.test(d.address || '');
+  var avmVal, avmModel, avmNote;
+  if (d.isComm) {
+    if (rent > 0) {
+      var noi0 = (rent * 12 * 0.95) - (opExp * 12);
+      avmVal   = noi0 > 0 ? Math.round(noi0 / 0.075) : Math.round(pp * 0.98);
+      avmModel = 'Income Approach (7.5% cap rate)';
+      avmNote  = 'Valuation derived using stabilized NOI divided by a 7.5% market capitalization rate, consistent with Clear Capital Commercial methodology for properties under $5M. A formal MAI appraisal is required prior to final underwriting.';
+    } else {
+      avmVal   = Math.round(pp * 0.98);
+      avmModel = 'Sales Comparison (pre-screen)';
+      avmNote  = 'Estimated using comparable sales data. Income approach not available without rent and expense inputs. Full commercial appraisal strongly recommended before proceeding.';
+    }
+  } else if (rural) {
+    avmVal   = Math.round(avmBase * 0.97);
+    avmModel = 'Clear Capital AVM (rural segment)';
+    avmNote  = 'Rural properties are valued using the Clear Capital AVM with a conservative 3% discount to account for limited comparable sales data and wider bid-ask spreads in non-urban markets. An on-site Property Condition Index (PCI) review is recommended.';
+  } else {
+    avmVal   = Math.round(avmBase * 1.04);
+    avmModel = 'HouseCanary AVM';
+    avmNote  = 'Residential valuation computed using the HouseCanary Automated Valuation Model, which incorporates recent comparable sales, neighborhood appreciation trends, and property characteristics. Confidence is higher in active markets with recent comparable transactions.';
+  }
+
+  var equityAtEntry = avmVal > 0 ? (avmVal - pp) / avmVal : 0;
+  metrics.push({ label: 'Est. Market Value (' + avmModel + ')', value: ipaFmt(avmVal) });
+  metrics.push({ label: 'Equity at Entry', value: ipaPct(equityAtEntry),
+    color: equityAtEntry >= 0.20 ? 'ipa-good' : equityAtEntry >= 0.10 ? 'ipa-warn' : 'ipa-bad',
+    note: 'Percentage of estimated market value retained as equity on day one. 20%+ is considered strong; below 10% provides insufficient buffer.' });
+
+  if (equityAtEntry >= 0.20)  score += 25;
+  else if (equityAtEntry >= 0.10) score += 12;
+  else if (equityAtEntry < 0) {
+    score -= 10;
+    flags.push('Purchase price of ' + ipaFmt(pp) + ' exceeds the estimated market value of ' + ipaFmt(avmVal) + '. The investor would be buying above market — a significant risk requiring strong justification (off-market value-add, development upside, etc.).');
+  }
+  rationale.push('Valuation: ' + avmModel + ' estimates market value at ' + ipaFmt(avmVal) + ', yielding ' + ipaPct(equityAtEntry) + ' equity at entry. ' + avmNote);
+
+  // ── Fix & Flip / New Construction ─────────────────────────────────────
+  if (d.isFlip || d.isNewConst) {
+    var maxOffer     = arv > 0 ? arv * 0.70 - rehab : 0;
+    var maxOffer65   = arv > 0 ? arv * 0.65 - rehab : 0;
+    var monthlyRate  = rate > 0 ? rate / 12 : 0.009;
+    var carryCost    = loan * monthlyRate * hold;
+    var closingCostB = pp * 0.015;
+    var closingCostS = arv * 0.07;
+    grossProfit      = arv - pp - rehab - carryCost - closingCostB - closingCostS;
+    var totalInvested = pp + rehab + carryCost + closingCostB;
+    var roi           = totalInvested > 0 ? grossProfit / totalInvested : 0;
+    var annualROI     = hold > 0 ? roi / (hold / 12) : roi;
+    var allInLTV      = arv > 0 ? (pp + rehab) / arv : 0;
+
+    metrics.push({ label: 'ARV Spread (ARV − Buy − Rehab)', value: ipaFmt(arv - pp - rehab),
+      color: (arv - pp - rehab) >= 0 ? 'ipa-good' : 'ipa-bad',
+      note: 'Gross spread before financing costs. A positive spread confirms the basic acquisition math.' });
+    if (maxOffer > 0) metrics.push({ label: '70% Rule Max Offer', value: ipaFmt(maxOffer),
+      color: pp <= maxOffer ? 'ipa-good' : pp <= maxOffer65 * 1.08 ? 'ipa-warn' : 'ipa-bad',
+      note: 'Maximum purchase price to meet the 70% rule: ARV × 70% minus rehab budget. The industry standard for fix-and-flip underwriting.' });
+    metrics.push({ label: 'Est. Gross Profit (after all costs)', value: ipaFmt(grossProfit),
+      color: grossProfit >= 30000 ? 'ipa-good' : grossProfit >= 0 ? 'ipa-warn' : 'ipa-bad',
+      note: 'Net profit after purchase price, rehab, estimated carry costs (' + ipaFmt(carryCost) + '), buy-side closing (~1.5%), and sell-side closing (~7% of ARV).' });
+    metrics.push({ label: 'ROI (Return on Invested Capital)', value: ipaPct(roi),
+      color: roi >= 0.20 ? 'ipa-good' : roi >= 0.10 ? 'ipa-warn' : 'ipa-bad',
+      note: 'Total return on all capital deployed. Target: 20%+ for a strong flip.' });
+    metrics.push({ label: 'Annualized ROI', value: ipaPct(annualROI),
+      color: annualROI >= 0.25 ? 'ipa-good' : annualROI >= 0.15 ? 'ipa-warn' : 'ipa-bad',
+      note: 'ROI adjusted for the ' + hold + '-month hold period. Useful for comparing against alternative investments on an apples-to-apples annual basis.' });
+    if (arv > 0) metrics.push({ label: 'All-in LTV vs ARV', value: ipaPct(allInLTV),
+      color: allInLTV <= 0.70 ? 'ipa-good' : allInLTV <= 0.80 ? 'ipa-warn' : 'ipa-bad',
+      note: 'Total capital deployed (purchase + rehab) as a percentage of ARV. Below 70% is the industry standard for lender comfort.' });
+
+    if (maxOffer > 0 && pp > maxOffer) {
+      score -= 15;
+      flags.push('Purchase price of ' + ipaFmt(pp) + ' exceeds the 70% rule maximum offer of ' + ipaFmt(maxOffer) + '. To meet this threshold, the purchase price should be reduced by ' + ipaFmt(pp - maxOffer) + ', or the ARV must be validated at a higher level. Many hard-money lenders will decline this deal at the current entry price.');
+    } else if (maxOffer > 0) { score += 20; }
+
+    if (grossProfit >= 30000)     score += 20;
+    else if (grossProfit >= 0)    score += 8;
+    else {
+      score -= 20;
+      flags.push('Projected gross profit is negative (' + ipaFmt(grossProfit) + ') after all costs including carry and closing. This deal loses money as structured. Price renegotiation, ARV validation, or rehab scope reduction is required before proceeding.');
+    }
+    if (roi >= 0.20) score += 10; else if (roi >= 0.10) score += 5;
+
+    rationale.push('Fix & Flip Analysis: Gross profit projected at ' + ipaFmt(grossProfit) + ' over a ' + hold + '-month hold. ROI: ' + ipaPct(roi) + ' (' + ipaPct(annualROI) + ' annualized). Carry costs estimated at ' + ipaFmt(carryCost) + ' based on ' + (rate > 0 ? (rate*100).toFixed(1) : '10.8') + '% interest rate over the hold period. All-in LTV vs ARV: ' + ipaPct(allInLTV) + '.');
+  }
+
+  // ── Income property analysis (Hold / BRRRR / Commercial) ─────────────
+  if (rent > 0) {
+    var vacancyFactor = 0.95;
+    var effRent    = rent * 12 * vacancyFactor;
+    var annualNOI  = effRent - (opExp * 12);
+    var capRate    = pp > 0 ? annualNOI / pp : 0;
+    var annualDebt = loan > 0 && rate > 0 ? loan * rate : 0;
+    var annualPI   = loan > 0 && rate > 0 ? (loan * (rate / 12) / (1 - Math.pow(1 + rate/12, -360))) * 12 : 0;
+    var cashFlow   = annualNOI - annualDebt;
+    var cocBase    = pp - loan + (rehab || 0);
+    var coc        = cocBase > 0 ? cashFlow / cocBase : 0;
+    var dscr       = annualDebt > 0 ? annualNOI / annualDebt : 99;
+    holdCashFlowNeg = cashFlow < 0;
+
+    // 5-year equity build (rough: appreciation 4%/yr + principal paydown)
+    var futureVal  = pp * Math.pow(1.04, 5);
+    var loanBal5   = loan > 0 && annualPI > 0 ? loan - (annualPI - annualDebt) * 5 : loan;
+    var equity5    = futureVal - Math.max(loanBal5, 0);
+
+    metrics.push({ label: 'Gross Rental Income (annual)', value: ipaFmt(rent * 12),
+      note: 'Total annual scheduled rent before vacancy and expenses.' });
+    metrics.push({ label: 'Effective Gross Income (5% vacancy)', value: ipaFmt(effRent),
+      note: 'Scheduled rent adjusted for 5% vacancy/credit loss factor.' });
+    metrics.push({ label: 'Annual Net Operating Income (NOI)', value: ipaFmt(annualNOI),
+      color: annualNOI > 0 ? 'ipa-good' : 'ipa-bad',
+      note: 'Effective gross income minus all operating expenses. This is the core profitability metric before debt service.' });
+    metrics.push({ label: 'Capitalization Rate', value: (capRate * 100).toFixed(2) + '%',
+      color: capRate >= 0.07 ? 'ipa-good' : capRate >= 0.05 ? 'ipa-warn' : 'ipa-bad',
+      note: 'NOI divided by purchase price. Represents the yield if purchased all-cash. 6–8%+ is generally attractive for residential; 5.5–7%+ for commercial.' });
+    metrics.push({ label: 'Annual Cash Flow (after debt service)', value: ipaFmt(cashFlow),
+      color: cashFlow > 0 ? 'ipa-good' : 'ipa-bad',
+      note: 'NOI minus estimated annual interest cost on the loan. Positive cash flow means the property generates income above its debt obligations.' });
+    metrics.push({ label: 'Cash-on-Cash Return', value: ipaPct(coc),
+      color: coc >= 0.10 ? 'ipa-good' : coc >= 0.06 ? 'ipa-warn' : 'ipa-bad',
+      note: 'Annual cash flow divided by total equity invested (down payment + closing costs + rehab). Measures actual cash yield on capital deployed. 8–12%+ is considered strong.' });
+    if (annualDebt > 0) metrics.push({ label: 'Debt Service Coverage Ratio (DSCR)', value: dscr.toFixed(2) + 'x',
+      color: dscr >= 1.25 ? 'ipa-good' : dscr >= 1.0 ? 'ipa-warn' : 'ipa-bad',
+      note: 'NOI divided by annual debt service. A DSCR below 1.25x will disqualify the deal from most DSCR rental loans. Below 1.0x means the property cannot service its own debt.' });
+    if (equity5 > 0) metrics.push({ label: 'Projected Equity at Year 5 (4% appreciation)', value: ipaFmt(equity5),
+      note: 'Estimated equity position in 5 years assuming 4% annual appreciation and interest-only debt structure. This is a projection, not a guarantee.' });
+
+    if (capRate >= 0.07) score += 15; else if (capRate >= 0.05) score += 8;
+    if (coc >= 0.10) score += 15; else if (coc >= 0.06) score += 8;
+    if (dscr >= 1.25) score += 10;
+    else if (dscr < 1.0 && annualDebt > 0) {
+      score -= 20;
+      flags.push('DSCR of ' + dscr.toFixed(2) + 'x falls below 1.0 — the property does not generate sufficient income to cover its debt obligations. Most DSCR lenders require a minimum 1.20–1.25x. Increasing rent, reducing expenses, or restructuring the loan (lower amount or rate) is necessary.');
+    }
+    if (cashFlow < 0 && annualDebt > 0) {
+      flags.push('Negative annual cash flow of ' + ipaFmt(cashFlow) + '. The investor will need to contribute out-of-pocket each year to cover the shortfall between income and debt service. This is only viable if appreciation potential is compelling enough to justify the negative carry.');
+    }
+    rationale.push('Income Analysis: Annual NOI of ' + ipaFmt(annualNOI) + ' on gross rent of ' + ipaFmt(rent * 12) + '/yr (after 5% vacancy and ' + ipaFmt(opExp * 12) + '/yr operating expenses). Cap rate: ' + (capRate*100).toFixed(1) + '%. Cash-on-Cash: ' + ipaPct(coc) + '. DSCR: ' + (annualDebt > 0 ? dscr.toFixed(2) + 'x' : 'N/A (no debt)') + '.');
+  }
+
+  // ── Financing & LTV ───────────────────────────────────────────────────
+  var ltv = pp > 0 && loan > 0 ? loan / pp : 0;
+  if (loan > 0) {
+    metrics.push({ label: 'Loan Amount', value: ipaFmt(loan) });
+    metrics.push({ label: 'Loan-to-Value (LTV)', value: ipaPct(ltv),
+      color: ltv <= 0.65 ? 'ipa-good' : ltv <= 0.75 ? 'ipa-warn' : 'ipa-bad',
+      note: 'Loan amount as a percentage of purchase price. Lower LTV = lower risk and more lender options. Most bridge/hard-money lenders cap at 70–80% LTV.' });
+    if (ltv <= 0.65) score += 10;
+    else if (ltv <= 0.75) score += 5;
+    else if (ltv > 0.85) {
+      score -= 10;
+      flags.push('LTV of ' + ipaPct(ltv) + ' exceeds 85% of purchase price. This limits the pool of available lenders and typically requires additional collateral, a co-borrower, or a guarantee structure. Conventional lenders will not fund this without strong compensating factors.');
+    }
+    if (rate > 0) metrics.push({ label: 'Interest Rate', value: (rate * 100).toFixed(2) + '%',
+      note: 'Stated loan interest rate. Hard money rates typically range from 9–13%. DSCR loan rates typically 7–10%.' });
+    rationale.push('Financing: ' + ipaFmt(loan) + ' loan at ' + (rate > 0 ? (rate*100).toFixed(1)+'%' : 'unspecified rate') + ', resulting in ' + ipaPct(ltv) + ' LTV on a ' + ipaFmt(pp) + ' purchase. Hold period: ' + d.holdPeriod + '.');
+  } else {
+    metrics.push({ label: 'Financing Structure', value: 'All-Cash Purchase', color: 'ipa-good',
+      note: 'No financing required. All-cash eliminates interest carry cost, removes lender approval risk, enables faster close, and provides maximum negotiating leverage with sellers.' });
+    score += 15;
+    rationale.push('All-cash purchase eliminates carry cost risk and maximizes execution speed. No lender approval required. Future cash-out refinance to recycle capital is a viable BRRRR-adjacent strategy.');
+  }
+
+  // ── Credit profile ────────────────────────────────────────────────────
+  var csLabel = cs >= 740 ? 'Excellent' : cs >= 700 ? 'Good' : cs >= 660 ? 'Fair' : cs >= 620 ? 'Subprime' : 'High Risk';
+  metrics.push({ label: 'Credit Score', value: cs + ' (' + csLabel + ')',
+    color: cs >= 700 ? 'ipa-good' : cs >= 660 ? 'ipa-warn' : 'ipa-bad',
+    note: 'Sponsor / borrower FICO score. Scores below 660 limit conventional and most hard-money lending options. DSCR loan programs typically require 680+.' });
+  if (cs >= 720) score += 10; else if (cs >= 680) score += 6; else if (cs >= 640) score += 2;
+  else {
+    score -= 10;
+    flags.push('Credit score of ' + cs + ' is below the 640 threshold required by most institutional private lenders. Hard-money lenders with asset-based lending may still fund at higher rates and lower LTVs. Improving the credit profile before applying is strongly recommended.');
+  }
+  rationale.push('Sponsor credit: ' + cs + ' (' + csLabel + '). ' + (cs >= 720 ? 'Qualifies for competitive rates from most lender types.' : cs >= 660 ? 'Qualifies for hard-money and some DSCR programs; conventional financing may require stronger compensating factors.' : 'Lender pool is significantly restricted. Asset-based lenders preferred.'));
+
+  // ── Sponsor experience ────────────────────────────────────────────────
+  var expLabel = deals === 0 ? 'First-time investor'
+               : deals <= 3 ? 'Emerging investor (' + deals + ' deals)'
+               : deals <= 10 ? 'Experienced investor (' + deals + ' deals)'
+               : 'Seasoned investor (' + deals + '+ deals)';
+  metrics.push({ label: 'Sponsor Experience', value: expLabel,
+    color: deals >= 4 ? 'ipa-good' : deals >= 1 ? 'ipa-warn' : 'ipa-bad',
+    note: 'Number of completed investment deals. Lenders weight sponsor track record heavily. 3+ completed deals significantly improves approval odds.' });
+  if (deals >= 10) score += 10; else if (deals >= 4) score += 7; else if (deals >= 1) score += 4;
+  else {
+    rationale.push('First-time investor: Lenders will require stronger asset quality, lower LTV, and/or personal guarantee. A more experienced co-sponsor or JV partner may improve fundability significantly.');
+  }
+  if (deals >= 4) rationale.push('Sponsor has ' + deals + ' completed deals — qualifies as experienced with most private lenders. Track record reduces underwriting risk premium.');
+
+  // ── Exit strategy analysis ────────────────────────────────────────────
+  var exit = d.exitStrategy || 'Not specified';
+  var exitVia, exitDetail;
+  if (/sell|flip/i.test(exit)) {
+    exitVia    = d.isFlip ? 'High' : 'Medium';
+    exitDetail = 'Retail sale exit. Viability depends on ARV accuracy, days-on-market in the subject market, and absorption rate for the price point. Strong exit in liquid markets; riskier in slower or higher-priced segments.';
+  } else if (/refi/i.test(exit)) {
+    exitVia    = 'Medium–High';
+    exitDetail = 'Refinance exit requires the property to appraise at or above the target value post-rehab. Rate environment and DSCR qualification at the time of refi are key risks. BRRRR investors should model a conservative stabilized DSCR of 1.20x or higher.';
+  } else if (/hold|long/i.test(exit)) {
+    exitVia    = 'High';
+    exitDetail = 'Long-term hold — exit risk is minimal in the near term. Cash flow sustainability is the primary ongoing risk factor. Liquidity event (sale or refi) can be timed to market conditions.';
+  } else if (/wholesale|assign/i.test(exit)) {
+    exitVia    = 'Medium';
+    exitDetail = 'Wholesale exit depends on a ready buyer network. Thin margin exit that requires strong deal-finding skills and an active buyer list. Appropriate when the sponsor does not have rehab capital but controls a discounted asset.';
+  } else {
+    exitVia    = 'Unspecified';
+    exitDetail = 'Exit strategy not clearly defined. A clearly planned exit with market validation is a key factor in lender approval and deal success.';
+  }
+  // Req 3 — exit-strength agent: score the takeout 0–100 and flag term/exit mismatch.
+  // A bridge lives or dies on the takeout (sale, refi into DSCR/perm, completion-then-lease).
+  var exitScore = exitVia === 'High' ? 80 : exitVia === 'Medium–High' ? 68 : exitVia === 'Medium' ? 55 : 30;
+  var termM = ipaToNum(d.holdPeriod || d.exitTimeline || d.termMonths || d.exitTimeline || 0);
+  if (d.isNewConst && termM && termM < 12) { exitScore -= 20; flags.push('Ground-up construction on a ~' + termM + '-month horizon is aggressive — real takeout / extension risk on the exit.'); }
+  if (d.isFlip && termM && termM < 6) { exitScore -= 12; flags.push('Fix & flip on a ~' + termM + '-month horizon is tight to renovate, list, and close before the takeout.'); }
+  if (/refi/i.test(exit) && cs && cs < 660) { exitScore -= 10; flags.push('Refinance takeout with a ' + cs + ' credit score may not qualify for DSCR / permanent debt at exit.'); }
+  exitScore = Math.max(5, Math.min(98, exitScore));
+  var exitBand = exitScore >= 70 ? 'Strong' : exitScore >= 45 ? 'Adequate' : 'Weak';
+  score += Math.round((exitScore - 50) * 0.3); // exit materially moves the deal score
+  metrics.push({ label: 'Exit Strength', value: exit + ' — ' + exitScore + '/100 (' + exitBand + ')',
+    note: exitDetail });
+  rationale.push('Exit Strength: ' + exit + ' rated ' + exitBand.toLowerCase() + ' (' + exitScore + '/100). ' + exitDetail);
+
+  // ── Final scoring and verdict ──────────────────────────────────────────
+  var dealScore = Math.min(100, Math.max(0, 30 + score));
+  var verdict;
+  if (flags.length === 0 && dealScore >= 70 && exitScore >= 60) verdict = 'BUY';
+  else if (dealScore >= 48) verdict = 'NEGOTIATE';
+  else verdict = 'PASS';
+
+  if (grossProfit !== null && grossProfit < 0) verdict = 'PASS';
+  if (holdCashFlowNeg && verdict === 'BUY') verdict = 'NEGOTIATE';
+  // Req 4b — a weak or undefined takeout routes to a human underwriter, never a silent auto-decline.
+  if ((exitScore < 40 || exitVia === 'Unspecified') && !(grossProfit !== null && grossProfit < 0)) verdict = 'REFER';
+
+  // Lender profile
+  var lenderProfile;
+  if (dealScore >= 70 && ltv <= 0.70 && cs >= 680) {
+    lenderProfile = 'Strong candidate for institutional hard-money lenders, private equity bridge funds, and community banks. Multiple term sheet options likely at competitive rates. DSCR loan programs available if rental income qualifies.';
+  } else if (dealScore >= 50 && cs >= 640) {
+    lenderProfile = 'Viable for asset-based private lenders and hard-money lenders. Expect higher rate (10.5–12.5%) and potential requirement for additional collateral or personal guarantee. Credit improvement or deal restructuring could open more lender options.';
+  } else {
+    lenderProfile = 'Limited to asset-based lenders with minimal credit requirements. Deal structure, collateral value, and equity cushion will need to be compelling. Cross-collateralization with other properties or bringing a co-sponsor with stronger credit may improve approval odds.';
+  }
+
+  return {
+    verdict: verdict, dealScore: dealScore, metrics: metrics, rationale: rationale,
+    flags: flags, deal: d, lenderProfile: lenderProfile,
+    avmVal: avmVal, avmModel: avmModel, avmNote: avmNote
+  };
+}
+
+// ── Render decision card in chat ───────────────────────────────────────────
+async function ipaRenderDecision(result) {
+  await new Promise(function(r){ setTimeout(r, 700); });
+  var v     = result.verdict;
+  var ds    = result.dealScore;
+  var color = v === 'BUY' ? '#00d9a0' : v === 'NEGOTIATE' ? '#f5c842' : v === 'REFER' ? '#3b82f6' : '#ef4444';
+  var label = v === 'BUY' ? '✓ BUY' : v === 'NEGOTIATE' ? '⚡ NEGOTIATE' : v === 'REFER' ? '⚑ REFER TO HUMAN' : '✕ PASS';
+  var sub   = v === 'BUY'
+    ? 'Strong deal — proceed with confidence. All key metrics meet investment criteria.'
+    : v === 'NEGOTIATE'
+    ? 'Deal is viable with pricing or structural adjustments. See risk flags for specific recommendations.'
+    : v === 'REFER'
+    ? 'Mixed signals — the economics are workable but the takeout is weak or undefined. A human underwriter should review and sign off before proceeding.'
+    : 'Deal does not meet minimum investment return criteria as currently structured.';
+
+  var metricsHtml = result.metrics.map(function(m){
+    return '<div class="ipa-metric"><span class="ipa-ml">' + m.label + '</span>' +
+           '<span class="ipa-mv ' + (m.color||'') + '">' + m.value + '</span></div>';
+  }).join('');
+
+  var flagsHtml = result.flags.length
+    ? '<div class="ipa-flags"><div class="ipa-flag-title">⚠ Risk Flags (' + result.flags.length + ')</div>' +
+      result.flags.map(function(f){ return '<div class="ipa-flag">• ' + f + '</div>'; }).join('') + '</div>'
+    : '';
+
+  var rationaleHtml = result.rationale.length
+    ? '<div class="ipa-rationale"><div class="ipa-rat-title">Assessment Basis</div>' +
+      result.rationale.map(function(r){ return '<div class="ipa-rat-item">• ' + r + '</div>'; }).join('') + '</div>'
+    : '';
+
+  var cardHtml =
+    '<div class="ipa-decision" id="ipa-decision-card">' +
+    '<div class="ipa-verdict" style="background:' + color + '18;border:2px solid ' + color + ';color:' + color + '">' +
+    '<span class="ipa-verdict-label">' + label + '</span>' +
+    '<span class="ipa-verdict-score">Deal Score: ' + ds + ' / 100</span></div>' +
+    '<div class="ipa-verdict-sub">' + sub + '</div>' +
+    '<div class="ipa-metrics">' + metricsHtml + '</div>' +
+    flagsHtml + rationaleHtml +
+    '<div class="ipa-actions">' +
+    '<button class="ipa-btn" onclick="ipaDownloadPDF()">⬇ Download Full PDF Report</button>' +
+    '<button class="ipa-btn ipa-btn-ghost" onclick="ipaReset()">New Assessment</button>' +
+    '</div></div>';
+
+  var chat = ipaChatEl();
+  if (chat) { chat.insertAdjacentHTML('beforeend', '<div class="ipa-msg">' + cardHtml + '</div>'); ipaScroll(); }
+
+  // Populate right panel with summary
+  var panel = document.getElementById('ipa-panel');
+  if (panel) {
+    var d = result.deal;
+    panel.innerHTML =
+      '<div style="padding:20px;display:flex;flex-direction:column;gap:9px">' +
+      '<div style="font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--text-4);text-transform:uppercase;margin-bottom:4px">Deal Summary</div>' +
+      (d.dealType      ? '<div class="ipa-panel-metric"><span>Type</span><span>' + d.dealType + '</span></div>' : '') +
+      (d.address       ? '<div class="ipa-panel-metric"><span>Address</span><span style="font-size:10px;max-width:120px;text-align:right;word-break:break-word">' + d.address + '</span></div>' : '') +
+      (d.purchasePrice ? '<div class="ipa-panel-metric"><span>Purchase</span><span>' + ipaFmt(d.purchasePrice) + '</span></div>' : '') +
+      (d.arv           ? '<div class="ipa-panel-metric"><span>ARV / Value</span><span>' + ipaFmt(d.arv) + '</span></div>' : '') +
+      (d.rehabBudget   ? '<div class="ipa-panel-metric"><span>Rehab</span><span>' + ipaFmt(d.rehabBudget) + '</span></div>' : '') +
+      (d.loanAmount    ? '<div class="ipa-panel-metric"><span>Loan</span><span>' + ipaFmt(d.loanAmount) + '</span></div>' : '') +
+      (d.monthlyRent   ? '<div class="ipa-panel-metric"><span>Mo. Rent</span><span>' + ipaFmt(d.monthlyRent) + '</span></div>' : '') +
+      (d.creditScore   ? '<div class="ipa-panel-metric"><span>Credit</span><span>' + d.creditScore + '</span></div>' : '') +
+      '<div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border)">' +
+      '<div class="ipa-panel-metric"><span>Deal Score</span><span style="color:' + color + ';font-weight:800;font-size:14px">' + ds + '/100</span></div>' +
+      '<div style="font-size:19px;font-weight:800;text-align:center;color:' + color + ';margin-top:12px;padding:10px;border-radius:8px;background:' + color + '14">' + label + '</div>' +
+      (result.lenderProfile ? '<div style="margin-top:10px;font-size:11px;color:var(--text-3);line-height:1.5">' + result.lenderProfile + '</div>' : '') +
+      '</div></div>';
+  }
+}
+
+// ── Comprehensive PDF export ───────────────────────────────────────────────
+function ipaDownloadPDF() {
+  if (!Object.keys(ipaDeal).length) return;
+  var result = ipaComputeDecision(ipaDeal);
+  var d      = ipaDeal;
+  var v      = result.verdict;
+  var ds     = result.dealScore;
+  var color  = v === 'BUY' ? '#00b87a' : v === 'NEGOTIATE' ? '#d4a017' : v === 'REFER' ? '#2563eb' : '#c0392b';
+  var label  = v === 'BUY' ? '✓ BUY' : v === 'NEGOTIATE' ? '⚡ NEGOTIATE' : v === 'REFER' ? '⚑ REFER TO HUMAN' : '✕ PASS';
+  var today  = new Date().toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' });
+
+  var w = window.open('', '_blank', 'width=1000,height=800');
+  if (!w) { alert('Please allow popups to generate the PDF report.'); return; }
+
+  // Build metrics table rows (with notes where available)
+  var mRows = result.metrics.map(function(m){
+    return '<tr>' +
+      '<td style="padding:9px 14px;border-bottom:1px solid #eeeeee;color:#444;font-size:13px;vertical-align:top"><strong>' + m.label + '</strong>' +
+      (m.note ? '<div style="font-size:11px;color:#888;margin-top:3px;line-height:1.4">' + m.note + '</div>' : '') + '</td>' +
+      '<td style="padding:9px 14px;border-bottom:1px solid #eeeeee;font-weight:700;text-align:right;font-size:13px;vertical-align:top;white-space:nowrap;color:' +
+        (m.color === 'ipa-good' ? '#059669' : m.color === 'ipa-warn' ? '#b45309' : m.color === 'ipa-bad' ? '#dc2626' : '#1a1a2e') + '">' +
+        m.value + '</td></tr>';
+  }).join('');
+
+  var fRows = result.flags.map(function(f){
+    return '<tr><td colspan="2" style="padding:10px 14px;background:#fffbeb;border-left:4px solid #f59e0b;font-size:13px;color:#78350f;line-height:1.5">⚠ ' + f + '</td></tr>';
+  }).join('');
+
+  var rRows = result.rationale.map(function(r){
+    return '<tr><td colspan="2" style="padding:7px 14px;font-size:13px;color:#555;line-height:1.5;border-bottom:1px solid #f5f5f5">• ' + r + '</td></tr>';
+  }).join('');
+
+  // Deal overview section
+  var dealOverviewRows = [
+    ['Property Address',       d.address || '—'],
+    ['Deal Type',              d.dealType || '—'],
+    ['Purchase Price',         ipaFmt(d.purchasePrice)],
+    ['ARV / Market Value',     d.arv > 0 ? ipaFmt(d.arv) : 'Not provided'],
+    ['Rehab Budget',           d.rehabBudget > 0 ? ipaFmt(d.rehabBudget) : 'None'],
+    ['Monthly Rental Income',  d.monthlyRent > 0 ? ipaFmt(d.monthlyRent) + '/mo' : 'N/A'],
+    ['Monthly Operating Exp.', d.monthlyExp > 0  ? ipaFmt(d.monthlyExp)  + '/mo' : 'N/A'],
+    ['Financing',              d.allCash ? 'All-Cash' : (ipaFmt(d.loanAmount) + ' @ ' + (d.interestRate ? (d.interestRate*100).toFixed(2)+'%' : 'rate TBD'))],
+    ['LTV',                    d.loanAmount > 0 && d.purchasePrice > 0 ? ipaPct(d.loanAmount / d.purchasePrice) : 'N/A (all-cash)'],
+    ['Hold Period',            d.holdPeriod || (d.holdMonths ? d.holdMonths + ' months' : '—')],
+    ['Exit Strategy',          d.exitStrategy || '—'],
+    ['Sponsor Credit Score',   d.creditScore ? d.creditScore.toString() : '—'],
+    ['Completed Deals',        d.completedDeals != null ? d.completedDeals.toString() : '—'],
+  ].map(function(row){
+    return '<tr><td style="padding:8px 14px;border-bottom:1px solid #f0f0f0;color:#666;font-size:13px;width:45%">' + row[0] + '</td>' +
+           '<td style="padding:8px 14px;border-bottom:1px solid #f0f0f0;font-weight:600;font-size:13px;color:#1a1a2e">' + row[1] + '</td></tr>';
+  }).join('');
+
+  w.document.write('<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8">' +
+    '<title>Underlytix — Investor Deal Assessment Report</title>' +
+    '<style>' +
+    'body{font-family:"Georgia",serif;max-width:820px;margin:0 auto;color:#1a1a2e;line-height:1.6;padding:40px 30px;background:#fff}' +
+    'h1{font-size:24px;margin:0 0 4px;letter-spacing:-.3px}' +
+    'h2{font-size:11px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#999;margin:0 0 0 0;font-family:sans-serif}' +
+    'h3{font-size:14px;font-weight:700;margin:28px 0 12px;color:#1a1a2e;font-family:sans-serif;letter-spacing:-.01em;border-bottom:2px solid #f0f0f0;padding-bottom:5px}' +
+    '.verdict-box{border:2px solid '+color+';border-radius:10px;padding:20px 26px;background:'+color+'12;display:flex;align-items:center;justify-content:space-between;margin:20px 0 26px}' +
+    '.vlabel{font-size:30px;font-weight:800;color:'+color+';font-family:sans-serif;letter-spacing:-.02em}' +
+    '.vscore{font-size:15px;color:#777;font-family:monospace}' +
+    '.vsub{font-size:13px;color:#555;margin-top:4px}' +
+    'table{width:100%;border-collapse:collapse;margin-bottom:6px}' +
+    'th{padding:9px 14px;background:#f8f8f8;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:#999;font-family:sans-serif}' +
+    'th:last-child{text-align:right}' +
+    '.lender-box{background:#f0f9ff;border-left:4px solid #0e7490;padding:14px 18px;border-radius:0 6px 6px 0;margin-bottom:20px;font-size:13px;color:#0c4a6e;line-height:1.6}' +
+    '.footer{margin-top:40px;padding-top:16px;border-top:1px solid #eee;font-size:11px;color:#bbb;line-height:1.6;font-family:sans-serif}' +
+    '.pagebreak{page-break-before:always}' +
+    '@media print{body{padding:20px 15px;margin:0}button{display:none}.pagebreak{page-break-before:always}}' +
+    '</style></head><body>' +
+
+    // Header
+    '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px">' +
+    '<div><h1>Investor Deal Assessment Report</h1>' +
+    '<h2>Underlytix Capital Intelligence Platform</h2></div>' +
+    '<div style="text-align:right;font-family:sans-serif"><div style="font-size:12px;color:#999">' + today + '</div>' +
+    '<div style="font-size:11px;color:#bbb;margin-top:2px">underlytix.com</div></div></div>' +
+    '<div style="height:1px;background:linear-gradient(to right, #0e7490, #f0f0f0);margin-bottom:20px"></div>' +
+
+    // Verdict box
+    '<div class="verdict-box">' +
+    '<div><div class="vlabel">' + label + '</div>' +
+    '<div class="vsub">' + (v === 'BUY' ? 'Strong deal — proceed with confidence.' : v === 'NEGOTIATE' ? 'Viable with pricing or structural adjustments.' : v === 'REFER' ? 'Workable economics but a weak/undefined takeout — human underwriter sign-off required.' : 'Does not meet minimum investment return criteria as structured.') + '</div></div>' +
+    '<div style="text-align:right"><div class="vscore">Deal Score</div><div style="font-size:38px;font-weight:800;color:'+color+';font-family:sans-serif;line-height:1">' + ds + '<span style="font-size:18px">/100</span></div></div>' +
+    '</div>' +
+
+    // Deal Overview
+    '<h3>Deal Overview</h3>' +
+    '<table><tbody>' + dealOverviewRows + '</tbody></table>' +
+
+    // Valuation note
+    (result.avmNote ? '<div style="background:#f8fafc;border-left:4px solid #0e7490;padding:12px 16px;border-radius:0 6px 6px 0;margin:14px 0 20px;font-size:12.5px;color:#334155;line-height:1.6"><strong>Valuation Model:</strong> ' + result.avmNote + '</div>' : '') +
+
+    // Financial Analysis
+    '<h3>Financial Analysis &amp; Metrics</h3>' +
+    '<table><thead><tr><th>Metric &amp; Methodology</th><th style="text-align:right">Value</th></tr></thead><tbody>' + mRows + '</tbody></table>' +
+
+    // Risk flags
+    (result.flags.length ? '<h3>Risk Flags &amp; Concerns</h3>' +
+    '<table><tbody>' + fRows + '</tbody></table>' : '') +
+
+    // Lender matching profile
+    '<h3>Lender Matching Profile</h3>' +
+    '<div class="lender-box">' + result.lenderProfile + '</div>' +
+
+    // Assessment basis
+    '<h3>Assessment Basis &amp; Underwriting Notes</h3>' +
+    '<table><tbody>' + rRows + '</tbody></table>' +
+
+    // Recommended actions
+    '<h3>Recommended Next Steps</h3>' +
+    '<table><tbody>' +
+    (v === 'BUY' ? [
+      'Order an independent appraisal or BPO to validate the AVM estimate prior to closing.',
+      'Request a formal term sheet from 2–3 lenders to compare rate, LTV, and fee structures.',
+      'Verify title history, environmental status, and zoning compliance for the subject property.',
+      'Execute a detailed scope of work (if rehab involved) and obtain contractor bids before closing.',
+      'Review comparable rental rates and vacancy trends in the submarket to stress-test income projections.',
+      'Confirm exit market liquidity: days-on-market and absorption rate for the price point and property type.',
+    ] : v === 'NEGOTIATE' ? [
+      'Address the risk flags identified above — these are the specific deal-breakers to resolve.',
+      'Use the 70% rule max offer price as a negotiating target and present the analysis to the seller.',
+      'Consider a price reduction, seller credit, or extended due diligence period to reduce execution risk.',
+      'Request lender pre-qualification at the adjusted deal parameters before going under contract.',
+      'Re-run this assessment after any material changes to purchase price, rehab budget, or financing terms.',
+      'Consult with a local market expert or appraiser to independently validate the ARV before committing.',
+    ] : [
+      'Do not proceed with the deal as currently structured without addressing the identified risk factors.',
+      'Renegotiate the purchase price to meet the 70% rule or lender LTV requirements.',
+      'Re-evaluate the rehab budget scope — a leaner scope may improve margins sufficiently to make the deal viable.',
+      'Seek alternative financing structures (seller financing, equity partnership, JV) to reduce initial capital outlay.',
+      'Identify a stronger co-sponsor or guarantor to improve the lender approval profile.',
+      'Consider whether a different exit strategy (hold vs. flip) would improve the return profile for this asset.',
+    ]).map(function(step, i){
+      return '<tr><td style="padding:8px 14px;border-bottom:1px solid #f5f5f5;font-size:13px;color:#333;line-height:1.5">' +
+        '<span style="font-weight:700;color:#0e7490">' + (i+1) + '.</span> ' + step + '</td></tr>';
+    }).join('') +
+    '</tbody></table>' +
+
+    '<div class="footer">' +
+    'Generated by <strong>Underlytix Capital Intelligence Platform</strong> &mdash; <a href="https://underlytix.com" style="color:#0e7490">underlytix.com</a><br>' +
+    'This report was generated on ' + today + ' and reflects the data inputs provided by the user. All projections, valuations, and analyses are estimates based on standard underwriting models and should not be construed as a guarantee of future performance.<br><br>' +
+    '<strong>Important Disclaimer:</strong> This assessment is for informational and educational purposes only. It does not constitute financial, investment, legal, or tax advice. The valuation estimates are automated and do not replace a formal appraisal by a licensed appraiser. Underlytix makes no representation as to the accuracy, completeness, or fitness for purpose of this report. Always conduct independent due diligence and consult licensed professionals before making any investment decision.' +
+    '</div>' +
+    '<br><button onclick="window.print()" style="background:#0e7490;color:white;border:none;padding:11px 28px;font-size:14px;border-radius:7px;cursor:pointer;font-family:sans-serif;font-weight:600">⎙ Print / Save as PDF</button>' +
+    '</body></html>');
+  w.document.close();
+}
+
+// ── Save to history ────────────────────────────────────────────────────────
+function ipaSaveDeal(d, result) {
+  try {
+    var hist = JSON.parse(localStorage.getItem('capiq_ipa_history') || '[]');
+    hist.unshift({ ts: Date.now(), address: d.address || '', dealType: d.dealType || '',
+                   verdict: result.verdict, score: result.dealScore });
+    localStorage.setItem('capiq_ipa_history', JSON.stringify(hist.slice(0, 50)));
+  } catch(e) {}
+}
+
+// ── Panel live update (during conversation) ────────────────────────────────
+function ipaUpdatePanel() {
+  var panel = document.getElementById('ipa-panel');
+  if (!panel) return;
+  var d    = ipaDeal;
+  var rows = '';
+  if (d.dealType)      rows += '<div class="ipa-panel-metric"><span>Type</span><span>' + d.dealType + '</span></div>';
+  if (d.address)       rows += '<div class="ipa-panel-metric"><span>Address</span><span style="font-size:10px;text-align:right;max-width:130px;word-break:break-word">' + d.address + '</span></div>';
+  if (d.purchasePrice) rows += '<div class="ipa-panel-metric"><span>Purchase</span><span>' + ipaFmt(d.purchasePrice) + '</span></div>';
+  if (d.arv)           rows += '<div class="ipa-panel-metric"><span>ARV / Value</span><span>' + ipaFmt(d.arv) + '</span></div>';
+  if (d.rehabBudget)   rows += '<div class="ipa-panel-metric"><span>Rehab</span><span>' + ipaFmt(d.rehabBudget) + '</span></div>';
+  if (d.loanAmount)    rows += '<div class="ipa-panel-metric"><span>Loan</span><span>' + ipaFmt(d.loanAmount) + '</span></div>';
+  if (d.monthlyRent)   rows += '<div class="ipa-panel-metric"><span>Mo. Rent</span><span>' + ipaFmt(d.monthlyRent) + '</span></div>';
+  panel.innerHTML =
+    '<div style="padding:20px;display:flex;flex-direction:column;gap:8px">' +
+    '<div style="font-size:10px;font-weight:700;letter-spacing:.1em;color:var(--text-4);text-transform:uppercase;margin-bottom:4px">Deal in Progress</div>' +
+    (rows || '<div style="font-size:12px;color:var(--text-4)">Awaiting inputs…</div>') +
+    '</div>';
+}
+
+// ── Reset ──────────────────────────────────────────────────────────────────
+// Req 4c — gating short-circuit: consumer/owner-occupied → refer to a human, do not score.
+function ipaGateRefer() {
+  ipaState = IPA_ST.DONE;
+  ipaSetInput(false);
+  var color = '#3b82f6';
+  var html =
+    '<div class="ipa-decision">' +
+    '<div class="ipa-verdict" style="background:' + color + '18;border:2px solid ' + color + ';color:' + color + '">' +
+    '<span class="ipa-verdict-label">⚑ REFER TO HUMAN</span>' +
+    '<span class="ipa-verdict-score">Gating</span></div>' +
+    '<div class="ipa-verdict-sub">Owner-occupied / consumer-purpose transaction — outside the business-purpose lending program.</div>' +
+    '<div class="ipa-rationale"><div class="ipa-rat-title">Why this was gated</div>' +
+    '<div class="ipa-rat-item">• Property classified as <strong>' + (ipaDeal.propertyType || '—') + '</strong> with a <strong>consumer / owner-occupied</strong> purpose.</div>' +
+    '<div class="ipa-rat-item">• These products are business-purpose only; consumer-purpose loans trigger TILA / ability-to-repay obligations outside this program.</div>' +
+    '<div class="ipa-rat-item">→ A human underwriter must confirm borrower intent and product eligibility before this deal can proceed.</div>' +
+    '</div>' +
+    '<div class="ipa-actions"><button class="ipa-btn ipa-btn-ghost" onclick="ipaReset()">Start Over</button></div>' +
+    '</div>';
+  var chat = ipaChatEl();
+  if (chat) { chat.insertAdjacentHTML('beforeend', '<div class="ipa-msg">' + html + '</div>'); ipaScroll(); }
+}
+function ipaReset() {
+  ipaState = IPA_ST.GREET;
+  ipaDeal  = {};
+  var chat = ipaChatEl();
+  if (chat) chat.innerHTML = '';
+  var panel = document.getElementById('ipa-panel');
+  if (panel) panel.innerHTML = '<div style="padding:20px;font-size:12px;color:var(--text-4)">Awaiting deal inputs…</div>';
+  ipaSetInput(false);
+  ipaAI(
+    'Hello. I\'m your <strong>Investor Deal Assessment Agent</strong>. I\'ll walk you through a structured analysis of any real estate deal and deliver a comprehensive verdict with supporting metrics.<br><br>' +
+    'I\'ll evaluate:<br>' +
+    '• <strong>Purchase price vs. AVM</strong> (HouseCanary / Clear Capital / Income Approach)<br>' +
+    '• <strong>ARV credibility</strong> and 70% rule compliance<br>' +
+    '• <strong>Return projections</strong> — ROI, Cap Rate, Cash-on-Cash, DSCR<br>' +
+    '• <strong>Risk flags</strong> — LTV, credit, experience, exit viability<br>' +
+    '• <strong>Final verdict</strong>: <span style="color:#00d9a0;font-weight:700">BUY</span>, <span style="color:#f5c842;font-weight:700">NEGOTIATE</span>, or <span style="color:#ef4444;font-weight:700">PASS</span><br><br>' +
+    'A full PDF report is generated at the end. Ready to begin?',
+    ['Yes, analyze a deal'], 900
+  ).then(function(){ ipaSetInput(true); });
+}
+
+// ── Init on tab open ───────────────────────────────────────────────────────
+function ipaInit() {
+  var chat = ipaChatEl();
+  if (!chat || chat.children.length > 0) return;
+  ipaReset();
 }
 </script>
 </body>
