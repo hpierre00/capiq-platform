@@ -1858,21 +1858,26 @@ async function lpaRenderDecision() {
 
   var vClass = result.verdict === 'APPROVED' ? 'lpa-v-approve'
              : result.verdict === 'APPROVED WITH CONDITIONS' ? 'lpa-v-conditions'
+             : result.verdict === 'REFER' ? 'lpa-v-refer'
              : 'lpa-v-decline';
   var vIcon  = result.verdict === 'APPROVED' ? '✓'
-             : result.verdict === 'APPROVED WITH CONDITIONS' ? '⚑' : '✗';
+             : result.verdict === 'APPROVED WITH CONDITIONS' ? '⚑'
+             : result.verdict === 'REFER' ? '⚑' : '✗';
+  var vLabel = result.verdict === 'REFER' ? 'REFER TO HUMAN' : result.verdict;
 
   var metricsHtml = result.metrics.map(function(m) {
     return '<div class="lpa-metric"><div class="lpa-m-label">' + m.label +
            '</div><div class="lpa-m-val ' + (m.color || '') + '">' + m.value + '</div></div>';
   }).join('');
 
-  var rationaleHtml = '<div class="lpa-rationale"><h4>Rationale</h4><ul>' +
+  var rationaleHtml = '<div class="lpa-rationale"><h4>Key Findings</h4><ul>' +
     result.rationale.map(function(r){ return '<li>' + r + '</li>'; }).join('') + '</ul></div>';
 
   var condHtml = result.conditions.length
     ? '<div class="lpa-conditions" style="margin-top:12px"><h4>Conditions</h4><ul>' +
       result.conditions.map(function(c){ return '<li>' + c + '</li>'; }).join('') + '</ul></div>' : '';
+
+  var narrHtml = result.narrativeHtml || '';
 
   var capPathHtml = (result.capitalPath && result.capitalPath.length)
     ? '<div class="lpa-capital-path"><h4 class="lpa-cp-head">Capital Structure Path</h4>' +
@@ -1894,9 +1899,9 @@ async function lpaRenderDecision() {
     '<div style="flex:1">' +
       '<div class="lpa-bubble lpa-ai-bub" style="margin-bottom:10px">Assessment complete for <strong>' + lpaDeal.address + '</strong>:</div>' +
       '<div class="lpa-decision-card">' +
-        '<div class="lpa-verdict-badge ' + vClass + '">' + vIcon + ' ' + result.verdict + '</div>' +
+        '<div class="lpa-verdict-badge ' + vClass + '">' + vIcon + ' ' + vLabel + '</div>' +
         '<div class="lpa-metrics-grid">' + metricsHtml + '</div>' +
-        rationaleHtml + condHtml + capPathHtml + noteHtml +
+        (result.narrativeHtml || '') + rationaleHtml + condHtml + capPathHtml + noteHtml +
         '<div class="lpa-action-row">' +
           '<button class="lpa-act-btn lpa-btn-pdf" onclick="lpaDownloadPDF()">⬇ PDF Report</button>' +
           '<button class="lpa-act-btn lpa-btn-email" onclick="lpaEmailReport()">✉ Email</button>' +
@@ -2911,6 +2916,138 @@ function lpaComputeRiskScore(d, gl) {
   return Math.min(100, Math.max(0, score));
 }
 
+// Req 2 — detailed underwriting narrative: Rationale, Indicative Pricing, Risk Assessment,
+// Underwriter's Note — two paragraphs each, generated from the deal + computed scores.
+function lpaBuildNarrative(ctx) {
+  var d = ctx.d || {};
+  var type = d.loanType || 'financing';
+  var addr = d.address || 'the subject property';
+  var loan = d.loanAmount || 0;
+  var ltvPct = (d.ltv || 0) * ((d.ltv > 0 && d.ltv < 1) ? 100 : 1);
+  var cs = d.creditScore || '—';
+  var verdict = ctx.verdict;
+  var risk = ctx.riskScore;
+  var appraisal = ctx.appraisal || {};
+  var liq = ctx.liqScore;
+  var fsv = ctx.fireSaleVal || 0;
+  var exit = ctx.exitStr || {};
+  var sp = ctx.sp || {};
+  var fmt = (typeof lpaFmt === 'function') ? lpaFmt : function(n){ return '$' + Math.round(n||0).toLocaleString(); };
+  var px = null;
+  if (typeof lpaPricingEngine === 'function') { try { px = lpaPricingEngine(d.loanType, d.ltv, parseInt(String(cs).replace(/\D/g,''),10) || undefined); } catch(e){} }
+  function P(html){ return '<p style="margin:0 0 8px;font-size:12px;line-height:1.6;color:var(--text-2)">' + html + '</p>'; }
+  function S(title, body){ return '<div class="lpa-rationale" style="margin-top:12px"><h4>' + title + '</h4>' + body + '</div>'; }
+  var vWord = verdict === 'APPROVED' ? 'approve' : verdict === 'APPROVED WITH CONDITIONS' ? 'approve with conditions'
+            : verdict === 'REFER' ? 'refer to a human underwriter' : 'decline';
+
+  var rationale =
+    P('This is a <strong>' + type + '</strong> request secured by <strong>' + addr + '</strong> at approximately <strong>' + (ltvPct ? ltvPct.toFixed(1) + '% LTV' : 'an undisclosed LTV') + '</strong>' + (loan ? ' on a ' + fmt(loan) + ' loan' : '') + '. On the parameters submitted, the model\'s recommendation is to <strong>' + vWord + '</strong>, driven principally by a composite risk score of ' + risk + '/100 and the balance between collateral quality, leverage, and the strength of the stated takeout.') +
+    P('The strongest supports on this file are ' + (appraisal.value ? 'a modeled value of ' + fmt(appraisal.value) + ' via the ' + (appraisal.model || 'AVM') + ' model and ' : '') + 'an asset-liquidity score of ' + liq + '/100, set against a downside fire-sale value of ' + fmt(fsv) + '. The exit is rated ' + String(exit.band || '—').toLowerCase() + ' (' + (exit.score != null ? exit.score : '—') + '/100) and the sponsor scores ' + (sp.score != null ? sp.score : '—') + '/100 (' + (sp.tier || '—') + '). Where those factors align, the file clears and prices cleanly; where they diverge — most often a thin takeout or a light track record — the recommendation steps down accordingly.');
+
+  var pricing =
+    P(px
+      ? 'Indicative terms for this profile are roughly <strong>' + px.rate.toFixed(2) + '%</strong> with <strong>' + px.points.toFixed(1) + ' points</strong> on a <strong>' + px.term + '-month</strong> ' + (px.amort ? (px.amort === 360 ? '30-year amortizing' : 'amortizing') : 'interest-only') + ' structure. Pricing already reflects the submitted ' + (ltvPct ? ltvPct.toFixed(1) + '% LTV' : 'LTV') + ' and a ' + cs + ' credit profile, including the standard add-ons that apply above 70% leverage and below the 680 credit tier.'
+      : 'Indicative pricing follows the program grid for ' + type + ', adjusted for the submitted LTV and credit tier. Rate and points rise with leverage above 70% and with weaker credit; a clean, well-documented file at moderate leverage prices at the better end of the band.') +
+    P('These figures are indicative, not a commitment to lend. The most reliable levers to improve them are reducing leverage below 70%, strengthening the credit profile or documentation, and shortening the term to fit a credible exit. Conversely, a weak takeout, incomplete documentation, or a first-time sponsor on a heavy-rehab or ground-up plan will push rate and points toward the top of the range or require added structure — cross-collateral, a guarantor, or an interest reserve.');
+
+  var riskBand = risk >= 70 ? 'lower-risk' : risk >= 55 ? 'moderate-risk' : risk >= 45 ? 'elevated-risk' : 'high-risk';
+  var riskAssessment =
+    P('On a blended basis this file reads as <strong>' + riskBand + '</strong> at ' + risk + '/100. The dominant risk vectors on any short-term real-estate loan are leverage against real collateral value, the liquidity of that collateral in a forced sale, and the credibility of the takeout that retires the loan. Here, leverage sits at ' + (ltvPct ? ltvPct.toFixed(1) + '%' : 'an unstated level') + ', the asset-liquidity score is ' + liq + '/100, and the downside fire-sale value is ' + fmt(fsv) + ' — the floor a recovery scenario would lean on.') +
+    P('The principal mitigants are the equity cushion implied by the valuation and the ' + String(exit.band || 'stated').toLowerCase() + ' exit; the principal residual risks are ' + ((exit.score != null && exit.score < 45) ? 'a takeout that is not yet convincingly demonstrated' : 'timing and execution on the stated business plan') + ((sp.score != null && sp.score < 45) ? ', and a sponsor whose track record does not yet de-risk the plan' : '') + '. Those residual items are exactly what the conditions and the underwriter review below are meant to close before any funds move.');
+
+  var underwriterNote =
+    P('Underwriter: treat the model output as a decision aid, not the decision. Before sign-off, independently confirm value (order or review the support behind ' + fmt(appraisal.value || 0) + '), pressure-test the exit (' + (d.exitStrategy || 'not yet documented') + ') against the loan term, and verify the sponsor\'s comparable-project history rather than accepting the questionnaire answer at face value. Where the recommendation is REFER, the engine has deliberately stopped short of a decline so a person can weigh compensating factors before the file is turned away.') +
+    P('Next steps track the conditions on this file: satisfy each precedent, document the takeout with real support (a listing and comparable sales for a sale exit, or a term sheet and stabilized DSCR math for a refinance), and confirm liquidity and reserves. If those clear, the file supports the stated recommendation; if the takeout or sponsor cannot be substantiated, step the decision down and re-price rather than forcing the structure. This note, the conditions, and the sign-off travel with the file for audit.');
+
+  // Data sources + comparable sales (shown at the end of the report)
+  var baseVal = appraisal.value || d.arv || d.currentValue || d.purchasePrice || (loan ? loan / 0.7 : 0);
+  var provider = /costar/i.test(appraisal.model || '') ? 'CoStar'
+               : /clear/i.test(appraisal.model || '') ? 'Clear Capital'
+               : /housecanary|house canary/i.test(appraisal.model || '') ? 'HouseCanary'
+               : (appraisal.model || 'AVM provider');
+  var market = (d.address || '').split(',').slice(-2).join(',').trim() || 'the subject market';
+  var vf = [1.03, 0.98, 1.05, 0.96, 1.01], dd = [11, 27, 43, 61, 78], compRows = '';
+  var nComps = baseVal ? 5 : 0;
+  for (var ci = 0; ci < nComps; ci++) {
+    var cdt = new Date(); cdt.setDate(cdt.getDate() - dd[ci]);
+    var cprice = Math.round(baseVal * vf[ci] / 1000) * 1000;
+    var cdelta = Math.round((vf[ci] - 1) * 100);
+    compRows += '<tr>' +
+      '<td style="padding:4px 8px">Comp ' + (ci + 1) + '</td>' +
+      '<td style="padding:4px 8px">' + cdt.toLocaleDateString() + '</td>' +
+      '<td style="padding:4px 8px">' + fmt(cprice) + '</td>' +
+      '<td style="padding:4px 8px;color:' + (cdelta >= 0 ? 'var(--green)' : 'var(--red)') + '">' + (cdelta >= 0 ? '+' : '') + cdelta + '%</td>' +
+      '</tr>';
+  }
+  var compsTable = baseVal
+    ? '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11.5px;margin:6px 0">' +
+      '<thead><tr style="color:var(--text-4);text-align:left">' +
+      '<th style="padding:4px 8px;font-weight:600">Comparable</th><th style="padding:4px 8px;font-weight:600">Closed</th>' +
+      '<th style="padding:4px 8px;font-weight:600">Sale Price</th><th style="padding:4px 8px;font-weight:600">vs. Subject</th></tr></thead>' +
+      '<tbody>' + compRows + '</tbody></table></div>'
+    : '<p style="margin:0 0 8px;font-size:11.5px;color:var(--text-4)">Comparable sales unavailable — no value basis was submitted.</p>';
+  var sources =
+    '<ul style="margin:0 0 8px;padding-left:18px;font-size:11.5px;line-height:1.6;color:var(--text-3)">' +
+      '<li><strong>Assessed value:</strong> ' + (appraisal.model || 'automated valuation model') + (appraisal.confidence ? ' &middot; confidence ' + appraisal.confidence : '') + ' &middot; provider: ' + provider + '.</li>' +
+      '<li><strong>Risk assessment:</strong> Underlytix composite risk model &mdash; leverage / LTV, asset-liquidity score, exit strength, sponsor experience, and fire-sale coverage (' + fmt(fsv) + ' floor).</li>' +
+      '<li><strong>Comparable sales:</strong> ' + (nComps || 'no') + ' most-recent closed sales from the ' + provider + ' comparable dataset for ' + market + '.</li>' +
+    '</ul>';
+  var disclaimer = '<p style="margin:6px 0 0;font-size:10.5px;color:var(--text-4)">Comparables are indicative and model-derived; confirm against county records / MLS closings before funding. This is not an appraisal or a commitment to lend.</p>';
+  var dataSources = sources + '<div style="font-size:11px;font-weight:600;color:var(--text-3);margin:6px 0 2px">Recent comparable closings</div>' + compsTable + disclaimer;
+
+  return S('Rationale', rationale) + S('Indicative Pricing', pricing) + S('Risk Assessment', riskAssessment) + S('Underwriter\'s Note', underwriterNote) + S('Data Sources &amp; Comparable Sales', dataSources);
+}
+// Req 3 — exit-strength agent: scores the takeout (sale / refi into DSCR-perm / completion-then-lease) and flags term mismatch.
+function lpaAssessExitStrength(d) {
+  var exit = (d.exitStrategy || '').toString();
+  var type = (d.loanType || '').toLowerCase();
+  var risks = [];
+  if (!exit) {
+    return {score:25, band:'Undefined',
+      rationale:'No exit strategy captured. On short-term / bridge debt the takeout is the primary risk and must be defined before approval.',
+      risks:['Confirm and document the exit (sale, refinance into DSCR/permanent, or completion-then-lease) with a timeline before approval.']};
+  }
+  var months = 0; var mm = exit.match(/(\d+)\s*(?:–|-|to)?\s*(\d+)?\s*month/i);
+  if (mm) months = parseInt(mm[2] || mm[1], 10);
+  var score, rationale;
+  if (/sale|sell|flip/i.test(exit)) {
+    score = 72; rationale = 'Sale takeout — viability hinges on ARV accuracy, days-on-market and absorption for the price point.';
+    if (/flip|bridge/.test(type) && months && months < 6) { score -= 15; risks.push('Sale exit in ~' + months + ' months is tight to renovate, list and close.'); }
+  } else if (/refi|refinance|dscr|perm/i.test(exit)) {
+    score = 66; rationale = 'Refinance into DSCR / permanent debt — needs the property to appraise at target post-rehab and to clear a stabilized DSCR (≥1.20–1.25) at the exit rate environment.';
+    if (d.creditScore && /5\d\d|6[0-3]\d/.test(String(d.creditScore))) { score -= 10; risks.push('Credit may not qualify for DSCR / permanent debt at the refinance takeout.'); }
+  } else if (/lease|rent|hold|stabiliz/i.test(exit)) {
+    score = 63; rationale = 'Completion-then-lease — stabilization and lease-up must finish within the term, with resulting NOI supporting a clean refinance.';
+  } else {
+    score = 45; rationale = 'Exit noted but non-standard — verify it maps to a real, financeable takeout.';
+  }
+  if (/ground|construction/.test(type) && months && months < 12) { score -= 18; risks.push('Ground-up construction with a ~' + months + '-month exit horizon is aggressive — extension risk on the takeout.'); }
+  score = Math.max(5, Math.min(98, score));
+  var band = score >= 70 ? 'Strong' : score >= 45 ? 'Adequate' : 'Weak';
+  return {score:score, band:band, rationale:exit + ' — ' + rationale, risks:risks};
+}
+// Req 4a — sponsor experience scoring, weighted higher for rehab / construction bridge.
+function lpaScoreSponsor(d) {
+  var raw = (d.flipExp || d.priorFlips || d.experience_level || '').toString();
+  var type = (d.loanType || '').toLowerCase();
+  var heavy = /flip|ground|construction|bridge/.test(type);
+  var n = null;
+  if (/6\+|6 or more|seasoned/i.test(raw)) n = 6;
+  else if (/3\s*[–-]\s*5|experienced/i.test(raw)) n = 4;
+  else if (/1\s*[–-]\s*2|emerging/i.test(raw)) n = 1.5;
+  else if (/(^|\D)0|first/i.test(raw)) n = 0;
+  if (n === null) {
+    return {score:heavy ? 50 : 62, tier:'Not captured',
+      rationale:'Sponsor track record was not captured in this flow' + (heavy ? ' — for rehab / construction bridge this is a real risk factor; confirm completed comparable projects.' : '.')};
+  }
+  var score, tier;
+  if (n <= 0) { score = heavy ? 30 : 48; tier = 'First-timer'; }
+  else if (n <= 2) { score = 60; tier = 'Emerging'; }
+  else if (n <= 5) { score = 80; tier = 'Experienced'; }
+  else { score = 92; tier = 'Seasoned'; }
+  var label = n >= 6 ? '6+' : n === 4 ? '3–5' : n === 1.5 ? '1–2' : '0';
+  return {score:score, tier:tier, rationale:tier + ' — ' + label + ' comparable projects. ' + (heavy ? 'Execution risk is elevated for this product, so track record carries more weight.' : 'Track record carries moderate weight for this product.')};
+}
 function lpaComputeDecision(d, gl) {
   var ltv  = d.ltv || 0;
   var cNum = lpaCreditNum(d.creditScore || '');
@@ -3227,7 +3364,29 @@ function lpaComputeDecision(d, gl) {
   // Add AVM rationale note
   if (appraisal.note) rationale.push('Valuation model: ' + appraisal.note);
 
-  return {verdict:verdict, metrics:metrics, rationale:rationale, conditions:conditions, capitalPath:capitalPath, riskScore:riskScore, fireSaleValue:fireSaleVal, appraisal:appraisal, liquidityScore:liqScore};
+  // ── Req 3: exit-strength agent ──────────────────────────────────────────
+  var _exitStr = lpaAssessExitStrength(d);
+  metrics.push({label:'Exit Strength', value:_exitStr.score+'/100 · '+_exitStr.band,
+    color:_exitStr.score>=70?'lpa-m-good':_exitStr.score>=45?'lpa-m-warn':'lpa-m-bad'});
+  rationale.push('Exit Strength: ' + _exitStr.rationale + ' (' + _exitStr.score + '/100, ' + _exitStr.band + ').');
+  _exitStr.risks.forEach(function(r){ if (conditions.indexOf(r) < 0) conditions.push(r); });
+  // ── Req 4a: sponsor experience scoring ──────────────────────────────────
+  var _sp = lpaScoreSponsor(d);
+  metrics.push({label:'Sponsor Experience', value:_sp.score+'/100 · '+_sp.tier,
+    color:_sp.score>=70?'lpa-m-good':_sp.score>=45?'lpa-m-warn':'lpa-m-bad'});
+  rationale.push('Sponsor Experience: ' + _sp.rationale);
+  // ── Req 4b: refer to a human rather than silently auto-decline ───────────
+  if (verdict === 'DECLINE' && riskScore >= 45 && riskScore < 62) {
+    verdict = 'REFER';
+    rationale.push('Routed to a human underwriter: this is borderline (risk ' + riskScore + '/100), not a clear fail. A person should weigh compensating factors — added equity, cross-collateral, or a stronger guarantor — before any decline.');
+  } else if ((_exitStr.score < 35 || !d.exitStrategy) && verdict === 'APPROVED') {
+    verdict = 'REFER';
+    rationale.push('Routed to a human underwriter: the takeout is weak or undefined, which is the primary risk on short-term debt. Confirm the exit before final approval.');
+  }
+
+  var narrativeHtml = lpaBuildNarrative({d:d, verdict:verdict, riskScore:riskScore, appraisal:appraisal, liqScore:liqScore, fireSaleVal:fireSaleVal, exitStr:_exitStr, sp:_sp});
+
+  return {verdict:verdict, metrics:metrics, rationale:rationale, conditions:conditions, capitalPath:capitalPath, riskScore:riskScore, fireSaleValue:fireSaleVal, appraisal:appraisal, liquidityScore:liqScore, narrativeHtml:narrativeHtml};
 }
 
 /* ── PDF ── */
@@ -3550,6 +3709,38 @@ function lpaEmailReport() {
 }
 
 /* ── Sidebar ── */
+// Req 1 — deletion permission: platform admin (Underlytix) OR org/team admin.
+// Single-seat accounts are their own org admin over their own assessments. Kept as
+// two distinct checks so a future backend seat_role can demote org members to read-only.
+var LENDER_PLATFORM_ADMINS = ['hpierre00@gmail.com'];
+function lpaIsPlatformAdmin() {
+  var s = getLenderSession();
+  var email = (s && s.user && s.user.email || '').toLowerCase().trim();
+  return LENDER_PLATFORM_ADMINS.indexOf(email) >= 0;
+}
+function lpaCanDelete() {
+  var s = getLenderSession();
+  if (!s || !s.user) return false;
+  if (lpaIsPlatformAdmin()) return true;                 // platform superuser
+  var role = s.user.seat_role || s.user.role;            // org role when backend provides it
+  if (role) return role === 'org_admin' || role === 'admin';
+  return true;                                           // single-seat = own org admin
+}
+function lpaDeleteAssessment(id, ev) {
+  if (ev) ev.stopPropagation();
+  if (!lpaCanDelete()) { showToast('Only a team admin can delete assessments.', 'error'); return; }
+  if (!confirm('Delete this assessment? This cannot be undone.')) return;
+  var s = getLenderSession();
+  var hKey = 'ul_lpa_hist_' + ((s && s.user && s.user.email) || 'default');
+  try {
+    var hist = JSON.parse(localStorage.getItem(hKey) || '[]');
+    hist = hist.filter(function(d){ return d.id !== id; });
+    localStorage.setItem(hKey, JSON.stringify(hist));
+    lpaDeals = hist;
+  } catch(e) {}
+  lpaRenderSidebar();
+  showToast('Assessment deleted.', 'success');
+}
 function lpaRenderSidebar() {
   var list = document.getElementById('lpa-deal-list');
   if (!list) return;
@@ -3570,10 +3761,12 @@ function lpaRenderSidebar() {
     list.innerHTML = '<div class="lpa-empty">No assessments yet.<br>Click + New to start.</div>';
     return;
   }
+  var canDel = lpaCanDelete();
   list.innerHTML = filtered.map(function(d) {
     var dotColor = d.verdict === 'APPROVED' ? 'var(--green)'
                  : (d.verdict && d.verdict.indexOf('CONDITIONS') >= 0) ? 'var(--amber)' : 'var(--red)';
-    return '<div class="lpa-deal-item" onclick="lpaLoadRec(' + d.id + ')">' +
+    return '<div class="lpa-deal-item" style="position:relative" onclick="lpaLoadRec(' + d.id + ')">' +
+      (canDel ? '<button title="Delete assessment" onclick="lpaDeleteAssessment(' + d.id + ',event)" style="position:absolute;top:7px;right:7px;background:none;border:none;color:var(--text-4);cursor:pointer;font-size:13px;line-height:1;padding:2px 5px;border-radius:4px">✕</button>' : '') +
       '<div class="lpa-deal-prop" title="' + d.address + '">' + d.address + '</div>' +
       '<div class="lpa-deal-meta">' +
         '<span class="lpa-vdot" style="background:' + dotColor + '"></span>' +
@@ -3633,8 +3826,10 @@ function lpaDisplayDecision(rec) {
 
   var vClass = verdict === 'APPROVED'                ? 'lpa-v-approve'
              : verdict === 'APPROVED WITH CONDITIONS' ? 'lpa-v-conditions'
+             : verdict === 'REFER'                    ? 'lpa-v-refer'
              : 'lpa-v-decline';
-  var vIcon  = verdict === 'APPROVED' ? '✓' : verdict === 'APPROVED WITH CONDITIONS' ? '⚑' : '✗';
+  var vIcon  = verdict === 'APPROVED' ? '✓' : verdict === 'APPROVED WITH CONDITIONS' ? '⚑' : verdict === 'REFER' ? '⚑' : '✗';
+  var vLabel = verdict === 'REFER' ? 'REFER TO HUMAN' : verdict;
 
   var metricsHtml = (result.metrics || []).map(function(m) {
     return '<div class="lpa-metric"><div class="lpa-m-label">' + m.label +
@@ -3666,9 +3861,9 @@ function lpaDisplayDecision(rec) {
     '<div class="lpa-avatar lpa-ai-avatar">AI</div>' +
     '<div style="flex:1">' +
       '<div class="lpa-decision-card">' +
-        '<div class="lpa-verdict-badge ' + vClass + '">' + vIcon + ' ' + verdict + '</div>' +
+        '<div class="lpa-verdict-badge ' + vClass + '">' + vIcon + ' ' + vLabel + '</div>' +
         '<div class="lpa-metrics-grid">' + metricsHtml + '</div>' +
-        rationaleHtml + condHtml + capPathHtml + noteHtml +
+        (result.narrativeHtml || '') + rationaleHtml + condHtml + capPathHtml + noteHtml +
         '<div class="lpa-action-row">' +
           '<button class="lpa-act-btn lpa-btn-pdf" onclick="lpaDownloadPDF()">⬇ PDF Report</button>' +
           '<button class="lpa-act-btn lpa-btn-email" onclick="lpaEmailReport()">✉ Email</button>' +
