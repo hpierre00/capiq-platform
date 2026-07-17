@@ -2959,43 +2959,30 @@ function lpaBuildNarrative(ctx) {
     P('Underwriter: treat the model output as a decision aid, not the decision. Before sign-off, independently confirm value (order or review the support behind ' + fmt(appraisal.value || 0) + '), pressure-test the exit (' + (d.exitStrategy || 'not yet documented') + ') against the loan term, and verify the sponsor\'s comparable-project history rather than accepting the questionnaire answer at face value. Where the recommendation is REFER, the engine has deliberately stopped short of a decline so a person can weigh compensating factors before the file is turned away.') +
     P('Next steps track the conditions on this file: satisfy each precedent, document the takeout with real support (a listing and comparable sales for a sale exit, or a term sheet and stabilized DSCR math for a refinance), and confirm liquidity and reserves. If those clear, the file supports the stated recommendation; if the takeout or sponsor cannot be substantiated, step the decision down and re-price rather than forcing the structure. This note, the conditions, and the sign-off travel with the file for audit.');
 
-  // Data sources + comparable sales (shown at the end of the report)
-  var baseVal = appraisal.value || d.arv || d.currentValue || d.purchasePrice || (loan ? loan / 0.7 : 0);
-  var provider = /costar/i.test(appraisal.model || '') ? 'CoStar'
-               : /clear/i.test(appraisal.model || '') ? 'Clear Capital'
-               : /housecanary|house canary/i.test(appraisal.model || '') ? 'HouseCanary'
-               : (appraisal.model || 'AVM provider');
-  var market = (d.address || '').split(',').slice(-2).join(',').trim() || 'the subject market';
-  var vf = [1.03, 0.98, 1.05, 0.96, 1.01], dd = [11, 27, 43, 61, 78], compRows = '';
-  var nComps = baseVal ? 5 : 0;
-  for (var ci = 0; ci < nComps; ci++) {
-    var cdt = new Date(); cdt.setDate(cdt.getDate() - dd[ci]);
-    var cprice = Math.round(baseVal * vf[ci] / 1000) * 1000;
-    var cdelta = Math.round((vf[ci] - 1) * 100);
-    compRows += '<tr>' +
-      '<td style="padding:4px 8px">Comp ' + (ci + 1) + '</td>' +
-      '<td style="padding:4px 8px">' + cdt.toLocaleDateString() + '</td>' +
-      '<td style="padding:4px 8px">' + fmt(cprice) + '</td>' +
-      '<td style="padding:4px 8px;color:' + (cdelta >= 0 ? 'var(--green)' : 'var(--red)') + '">' + (cdelta >= 0 ? '+' : '') + cdelta + '%</td>' +
-      '</tr>';
+  // Data sources + verification — NO fabricated data. Model outputs are labeled as
+  // estimates; anything that would be third-party "data" (zoning, taxes, comps) is shown
+  // only as a link to the authoritative public source for the underwriter to verify.
+  var addr = d.address || '';
+  var searchUrl = 'https://www.google.com/search?q=' + encodeURIComponent(addr + ' county property appraiser folio zoning taxes');
+  var apLine;
+  if (/miami|dade|south miami|coral gables|hialeah|homestead/i.test(addr)) {
+    apLine = 'the <strong>Miami-Dade County Property Appraiser</strong> &mdash; <a href="https://www.miamidade.gov/pa/property_search.asp" target="_blank" rel="noopener">miamidade.gov/pa</a> (search the address for folio, zoning, and current-year taxes)';
+  } else if (/,\s*FL\b|florida/i.test(addr)) {
+    apLine = 'the county property appraiser of record &mdash; <a href="' + searchUrl + '" target="_blank" rel="noopener">find the official appraiser site for this address</a> (FL counties publish folio, zoning, and current-year taxes online)';
+  } else {
+    apLine = 'the county property appraiser / assessor of record &mdash; <a href="' + searchUrl + '" target="_blank" rel="noopener">find the official site for this address</a> (folio, zoning, current-year taxes)';
   }
-  var compsTable = baseVal
-    ? '<div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:11.5px;margin:6px 0">' +
-      '<thead><tr style="color:var(--text-4);text-align:left">' +
-      '<th style="padding:4px 8px;font-weight:600">Comparable</th><th style="padding:4px 8px;font-weight:600">Closed</th>' +
-      '<th style="padding:4px 8px;font-weight:600">Sale Price</th><th style="padding:4px 8px;font-weight:600">vs. Subject</th></tr></thead>' +
-      '<tbody>' + compRows + '</tbody></table></div>'
-    : '<p style="margin:0 0 8px;font-size:11.5px;color:var(--text-4)">Comparable sales unavailable — no value basis was submitted.</p>';
   var sources =
     '<ul style="margin:0 0 8px;padding-left:18px;font-size:11.5px;line-height:1.6;color:var(--text-3)">' +
-      '<li><strong>Assessed value:</strong> ' + (appraisal.model || 'automated valuation model') + (appraisal.confidence ? ' &middot; confidence ' + appraisal.confidence : '') + ' &middot; provider: ' + provider + '.</li>' +
-      '<li><strong>Risk assessment:</strong> Underlytix composite risk model &mdash; leverage / LTV, asset-liquidity score, exit strength, sponsor experience, and fire-sale coverage (' + fmt(fsv) + ' floor).</li>' +
-      '<li><strong>Comparable sales:</strong> ' + (nComps || 'no') + ' most-recent closed sales from the ' + provider + ' comparable dataset for ' + market + '.</li>' +
+      '<li><strong>Assessed value:</strong> ' + (appraisal.model || 'automated valuation model') + (appraisal.confidence ? ' &middot; confidence ' + appraisal.confidence : '') + '. This is an automated <em>model estimate</em>, not an appraisal or a verified value &mdash; confirm with a licensed appraisal or the county records below.</li>' +
+      '<li><strong>Risk assessment:</strong> computed by the Underlytix composite model from the figures you entered (LTV / leverage, asset-liquidity, exit strength, sponsor experience, and fire-sale coverage of ' + fmt(fsv) + '). The inputs are your submissions; the scores are model-derived, not third-party data.</li>' +
+      '<li><strong>Zoning &amp; current-year taxes:</strong> not asserted here. Verify at ' + apLine + '.</li>' +
+      '<li><strong>Comparable sales:</strong> not fabricated. Pull recent closed comps from the county records above or a licensed MLS / data provider before relying on them.</li>' +
     '</ul>';
-  var disclaimer = '<p style="margin:6px 0 0;font-size:10.5px;color:var(--text-4)">Comparables are indicative and model-derived; confirm against county records / MLS closings before funding. This is not an appraisal or a commitment to lend.</p>';
-  var dataSources = sources + '<div style="font-size:11px;font-weight:600;color:var(--text-3);margin:6px 0 2px">Recent comparable closings</div>' + compsTable + disclaimer;
+  var disclaimer = '<p style="margin:6px 0 0;font-size:10.5px;color:var(--text-4)"><strong>Full disclosure:</strong> every figure in this report except the ones you entered is a model estimate. Nothing here is independently verified market data, an appraisal, or a commitment to lend. Verify value, zoning, taxes, and comparable sales against the official county source before funding.</p>';
+  var dataSources = sources + disclaimer;
 
-  return S('Rationale', rationale) + S('Indicative Pricing', pricing) + S('Risk Assessment', riskAssessment) + S('Underwriter\'s Note', underwriterNote) + S('Data Sources &amp; Comparable Sales', dataSources);
+  return S('Rationale', rationale) + S('Indicative Pricing', pricing) + S('Risk Assessment', riskAssessment) + S('Underwriter\'s Note', underwriterNote) + S('Data Sources &amp; Verification', dataSources);
 }
 // Req 3 — exit-strength agent: scores the takeout (sale / refi into DSCR-perm / completion-then-lease) and flags term mismatch.
 function lpaAssessExitStrength(d) {
