@@ -160,7 +160,7 @@ select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='ht
 .lpa-rationale h4,.lpa-conditions h4{font-size:10px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.07em;margin:0 0 7px 0}
 .lpa-rationale ul,.lpa-conditions ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:4px}
 .lpa-rationale li{font-size:12px;color:var(--text-2);display:flex;gap:6px;line-height:1.5}
-.lpa-rationale li::before{content:'—';color:var(--text-4);flex-shrink:0}
+.lpa-rationale li::before{content:'\2022';color:var(--teal);flex-shrink:0}
 .lpa-conditions li{font-size:12px;color:var(--amber);display:flex;gap:6px;line-height:1.5}
 .lpa-conditions li::before{content:'→';flex-shrink:0}
 .lpa-capital-path{margin-top:13px;padding-top:12px;border-top:1px solid var(--border)}
@@ -1798,7 +1798,9 @@ async function lpaCreditQ() {
 }
 
 /* ── Decision Engine ── */
-// Req 4c — gating short-circuit: consumer / owner-occupied → refer to a human, do not underwrite.
+// Replace em/en dashes with professional punctuation in visible output text.
+function lpaNoDash(s){ return String(s == null ? '' : s).replace(/\s*[—–]\s*/g, ', ').replace(/\s{2,}/g,' '); }
+// Req 4c — gating short-circuit: consumer / owner-occupied refer to a human, do not underwrite.
 function lpaGateRefer() {
   var wrap = document.createElement('div');
   wrap.className = 'lpa-msg ai';
@@ -1871,11 +1873,11 @@ async function lpaRenderDecision() {
   }).join('');
 
   var rationaleHtml = '<div class="lpa-rationale"><h4>Key Findings</h4><ul>' +
-    result.rationale.map(function(r){ return '<li>' + r + '</li>'; }).join('') + '</ul></div>';
+    result.rationale.map(function(r){ return '<li>' + lpaNoDash(r) + '</li>'; }).join('') + '</ul></div>';
 
   var condHtml = result.conditions.length
     ? '<div class="lpa-conditions" style="margin-top:12px"><h4>Conditions</h4><ul>' +
-      result.conditions.map(function(c){ return '<li>' + c + '</li>'; }).join('') + '</ul></div>' : '';
+      result.conditions.map(function(c){ return '<li>' + lpaNoDash(c) + '</li>'; }).join('') + '</ul></div>' : '';
 
   var narrHtml = result.narrativeHtml || '';
 
@@ -2917,14 +2919,15 @@ function lpaComputeRiskScore(d, gl) {
 }
 
 // Req 2 — detailed underwriting narrative: Rationale, Indicative Pricing, Risk Assessment,
-// Underwriter's Note — two paragraphs each, generated from the deal + computed scores.
+// Underwriter's Note (two paragraphs each) plus Data Sources. Returns { html, sections, sources }
+// so both the on-screen card and the PDF render the same content. No em or en dashes in the prose.
 function lpaBuildNarrative(ctx) {
   var d = ctx.d || {};
   var type = d.loanType || 'financing';
   var addr = d.address || 'the subject property';
   var loan = d.loanAmount || 0;
   var ltvPct = (d.ltv || 0) * ((d.ltv > 0 && d.ltv < 1) ? 100 : 1);
-  var cs = d.creditScore || '—';
+  var cs = d.creditScore || 'n/a';
   var verdict = ctx.verdict;
   var risk = ctx.riskScore;
   var appraisal = ctx.appraisal || {};
@@ -2935,54 +2938,66 @@ function lpaBuildNarrative(ctx) {
   var fmt = (typeof lpaFmt === 'function') ? lpaFmt : function(n){ return '$' + Math.round(n||0).toLocaleString(); };
   var px = null;
   if (typeof lpaPricingEngine === 'function') { try { px = lpaPricingEngine(d.loanType, d.ltv, parseInt(String(cs).replace(/\D/g,''),10) || undefined); } catch(e){} }
-  function P(html){ return '<p style="margin:0 0 8px;font-size:12px;line-height:1.6;color:var(--text-2)">' + html + '</p>'; }
-  function S(title, body){ return '<div class="lpa-rationale" style="margin-top:12px"><h4>' + title + '</h4>' + body + '</div>'; }
   var vWord = verdict === 'APPROVED' ? 'approve' : verdict === 'APPROVED WITH CONDITIONS' ? 'approve with conditions'
             : verdict === 'REFER' ? 'refer to a human underwriter' : 'decline';
+  var riskBand = risk >= 70 ? 'lower risk' : risk >= 55 ? 'moderate risk' : risk >= 45 ? 'elevated risk' : 'high risk';
 
-  var rationale =
-    P('This is a <strong>' + type + '</strong> request secured by <strong>' + addr + '</strong> at approximately <strong>' + (ltvPct ? ltvPct.toFixed(1) + '% LTV' : 'an undisclosed LTV') + '</strong>' + (loan ? ' on a ' + fmt(loan) + ' loan' : '') + '. On the parameters submitted, the model\'s recommendation is to <strong>' + vWord + '</strong>, driven principally by a composite risk score of ' + risk + '/100 and the balance between collateral quality, leverage, and the strength of the stated takeout.') +
-    P('The strongest supports on this file are ' + (appraisal.value ? 'a modeled value of ' + fmt(appraisal.value) + ' via the ' + (appraisal.model || 'AVM') + ' model and ' : '') + 'an asset-liquidity score of ' + liq + '/100, set against a downside fire-sale value of ' + fmt(fsv) + '. The exit is rated ' + String(exit.band || '—').toLowerCase() + ' (' + (exit.score != null ? exit.score : '—') + '/100) and the sponsor scores ' + (sp.score != null ? sp.score : '—') + '/100 (' + (sp.tier || '—') + '). Where those factors align, the file clears and prices cleanly; where they diverge — most often a thin takeout or a light track record — the recommendation steps down accordingly.');
+  var sections = [
+    { title:'Rationale', paras:[
+      'This is a <strong>' + type + '</strong> request secured by <strong>' + addr + '</strong> at approximately <strong>' + (ltvPct ? ltvPct.toFixed(1) + '% LTV' : 'an undisclosed LTV') + '</strong>' + (loan ? ' on a ' + fmt(loan) + ' loan' : '') + '. On the parameters submitted, the model recommends to <strong>' + vWord + '</strong>. That recommendation is driven principally by a composite risk score of ' + risk + '/100 and by the balance between collateral quality, leverage, and the strength of the stated takeout.',
+      'The strongest supports on this file are ' + (appraisal.value ? 'a modeled value of ' + fmt(appraisal.value) + ' via the ' + (appraisal.model || 'AVM') + ' model, together with ' : '') + 'an asset liquidity score of ' + liq + '/100, set against a downside fire sale value of ' + fmt(fsv) + '. The exit is rated ' + String(exit.band || 'not set').toLowerCase() + ' at ' + (exit.score != null ? exit.score : 'n/a') + '/100, and the sponsor scores ' + (sp.score != null ? sp.score : 'n/a') + '/100 (' + (sp.tier || 'not captured') + '). Where those factors align, the file clears and prices cleanly. Where they diverge, most often through a thin takeout or a light track record, the recommendation steps down accordingly.'
+    ]},
+    { title:'Indicative Pricing', paras:[
+      (px
+        ? 'Indicative terms for this profile are approximately <strong>' + px.rate.toFixed(2) + '%</strong> with <strong>' + px.points.toFixed(1) + ' points</strong> on a <strong>' + px.term + ' month</strong> ' + (px.amort ? (px.amort === 360 ? '30 year amortizing' : 'amortizing') : 'interest only') + ' structure. Pricing already reflects the submitted ' + (ltvPct ? ltvPct.toFixed(1) + '% LTV' : 'LTV') + ' and a ' + cs + ' credit profile, including the standard adjustments that apply above 70% leverage and below the 680 credit tier.'
+        : 'Indicative pricing follows the program grid for ' + type + ', adjusted for the submitted LTV and credit tier. Rate and points rise with leverage above 70% and with weaker credit. A clean, well documented file at moderate leverage prices at the better end of the band.'),
+      'These figures are indicative, not a commitment to lend. The most reliable levers to improve them are reducing leverage below 70%, strengthening the credit profile or documentation, and shortening the term to fit a credible exit. A weak takeout, incomplete documentation, or a first time sponsor on a heavy rehab or ground up plan will push rate and points toward the top of the range, or require added structure such as cross collateral, a guarantor, or an interest reserve.'
+    ]},
+    { title:'Risk Assessment', paras:[
+      'On a blended basis this file reads as <strong>' + riskBand + '</strong> at ' + risk + '/100. The dominant risk vectors on any short term real estate loan are leverage against real collateral value, the liquidity of that collateral in a forced sale, and the credibility of the takeout that retires the loan. Here, leverage sits at ' + (ltvPct ? ltvPct.toFixed(1) + '%' : 'an unstated level') + ', the asset liquidity score is ' + liq + '/100, and the downside fire sale value is ' + fmt(fsv) + ', which is the floor a recovery scenario would lean on.',
+      'The principal mitigants are the equity cushion implied by the valuation and the ' + String(exit.band || 'stated').toLowerCase() + ' exit. The principal residual risks are ' + ((exit.score != null && exit.score < 45) ? 'a takeout that is not yet convincingly demonstrated' : 'timing and execution on the stated business plan') + ((sp.score != null && sp.score < 45) ? ', together with a sponsor whose track record does not yet reduce execution risk' : '') + '. Those residual items are exactly what the conditions and the underwriter review are meant to close before any funds move.'
+    ]},
+    { title:"Underwriter's Note", paras:[
+      'Underwriter: treat the model output as a decision aid, not the decision. Before sign off, independently confirm value by ordering or reviewing the support behind ' + fmt(appraisal.value || 0) + ', pressure test the exit (' + (d.exitStrategy || 'not yet documented') + ') against the loan term, and verify the sponsor comparable project history rather than accepting the questionnaire answer at face value. Where the recommendation is REFER, the engine has deliberately stopped short of a decline so a person can weigh compensating factors before the file is turned away.',
+      'Next steps track the conditions on this file: satisfy each precedent, document the takeout with real support such as a listing and comparable sales for a sale exit, or a term sheet and stabilized DSCR math for a refinance, and confirm liquidity and reserves. If those clear, the file supports the stated recommendation. If the takeout or sponsor cannot be substantiated, step the decision down and re price rather than forcing the structure. This note, the conditions, and the sign off travel with the file for audit.'
+    ]}
+  ];
 
-  var pricing =
-    P(px
-      ? 'Indicative terms for this profile are roughly <strong>' + px.rate.toFixed(2) + '%</strong> with <strong>' + px.points.toFixed(1) + ' points</strong> on a <strong>' + px.term + '-month</strong> ' + (px.amort ? (px.amort === 360 ? '30-year amortizing' : 'amortizing') : 'interest-only') + ' structure. Pricing already reflects the submitted ' + (ltvPct ? ltvPct.toFixed(1) + '% LTV' : 'LTV') + ' and a ' + cs + ' credit profile, including the standard add-ons that apply above 70% leverage and below the 680 credit tier.'
-      : 'Indicative pricing follows the program grid for ' + type + ', adjusted for the submitted LTV and credit tier. Rate and points rise with leverage above 70% and with weaker credit; a clean, well-documented file at moderate leverage prices at the better end of the band.') +
-    P('These figures are indicative, not a commitment to lend. The most reliable levers to improve them are reducing leverage below 70%, strengthening the credit profile or documentation, and shortening the term to fit a credible exit. Conversely, a weak takeout, incomplete documentation, or a first-time sponsor on a heavy-rehab or ground-up plan will push rate and points toward the top of the range or require added structure — cross-collateral, a guarantor, or an interest reserve.');
-
-  var riskBand = risk >= 70 ? 'lower-risk' : risk >= 55 ? 'moderate-risk' : risk >= 45 ? 'elevated-risk' : 'high-risk';
-  var riskAssessment =
-    P('On a blended basis this file reads as <strong>' + riskBand + '</strong> at ' + risk + '/100. The dominant risk vectors on any short-term real-estate loan are leverage against real collateral value, the liquidity of that collateral in a forced sale, and the credibility of the takeout that retires the loan. Here, leverage sits at ' + (ltvPct ? ltvPct.toFixed(1) + '%' : 'an unstated level') + ', the asset-liquidity score is ' + liq + '/100, and the downside fire-sale value is ' + fmt(fsv) + ' — the floor a recovery scenario would lean on.') +
-    P('The principal mitigants are the equity cushion implied by the valuation and the ' + String(exit.band || 'stated').toLowerCase() + ' exit; the principal residual risks are ' + ((exit.score != null && exit.score < 45) ? 'a takeout that is not yet convincingly demonstrated' : 'timing and execution on the stated business plan') + ((sp.score != null && sp.score < 45) ? ', and a sponsor whose track record does not yet de-risk the plan' : '') + '. Those residual items are exactly what the conditions and the underwriter review below are meant to close before any funds move.');
-
-  var underwriterNote =
-    P('Underwriter: treat the model output as a decision aid, not the decision. Before sign-off, independently confirm value (order or review the support behind ' + fmt(appraisal.value || 0) + '), pressure-test the exit (' + (d.exitStrategy || 'not yet documented') + ') against the loan term, and verify the sponsor\'s comparable-project history rather than accepting the questionnaire answer at face value. Where the recommendation is REFER, the engine has deliberately stopped short of a decline so a person can weigh compensating factors before the file is turned away.') +
-    P('Next steps track the conditions on this file: satisfy each precedent, document the takeout with real support (a listing and comparable sales for a sale exit, or a term sheet and stabilized DSCR math for a refinance), and confirm liquidity and reserves. If those clear, the file supports the stated recommendation; if the takeout or sponsor cannot be substantiated, step the decision down and re-price rather than forcing the structure. This note, the conditions, and the sign-off travel with the file for audit.');
-
-  // Data sources + verification — NO fabricated data. Model outputs are labeled as
-  // estimates; anything that would be third-party "data" (zoning, taxes, comps) is shown
-  // only as a link to the authoritative public source for the underwriter to verify.
-  var addr = d.address || '';
-  var searchUrl = 'https://www.google.com/search?q=' + encodeURIComponent(addr + ' county property appraiser folio zoning taxes');
-  var apLine;
+  // Data sources and verification. No fabricated data.
+  var searchUrl = 'https://www.google.com/search?q=' + encodeURIComponent((addr || '') + ' county property appraiser folio zoning taxes');
+  var apHtml, apText;
   if (/miami|dade|south miami|coral gables|hialeah|homestead/i.test(addr)) {
-    apLine = 'the <strong>Miami-Dade County Property Appraiser</strong> &mdash; <a href="https://www.miamidade.gov/pa/property_search.asp" target="_blank" rel="noopener">miamidade.gov/pa</a> (search the address for folio, zoning, and current-year taxes)';
+    apHtml = 'the <strong>Miami-Dade County Property Appraiser</strong>, <a href="https://www.miamidade.gov/pa/property_search.asp" target="_blank" rel="noopener">miamidade.gov/pa</a> (search the address for folio, zoning, and current-year taxes)';
+    apText = 'Miami-Dade County Property Appraiser: https://www.miamidade.gov/pa/property_search.asp';
   } else if (/,\s*FL\b|florida/i.test(addr)) {
-    apLine = 'the county property appraiser of record &mdash; <a href="' + searchUrl + '" target="_blank" rel="noopener">find the official appraiser site for this address</a> (FL counties publish folio, zoning, and current-year taxes online)';
+    apHtml = 'the county property appraiser of record, <a href="' + searchUrl + '" target="_blank" rel="noopener">find the official appraiser site for this address</a> (Florida counties publish folio, zoning, and current-year taxes online)';
+    apText = 'County property appraiser (FL): ' + searchUrl;
   } else {
-    apLine = 'the county property appraiser / assessor of record &mdash; <a href="' + searchUrl + '" target="_blank" rel="noopener">find the official site for this address</a> (folio, zoning, current-year taxes)';
+    apHtml = 'the county property appraiser or assessor of record, <a href="' + searchUrl + '" target="_blank" rel="noopener">find the official site for this address</a> (folio, zoning, current-year taxes)';
+    apText = 'County property appraiser: ' + searchUrl;
   }
-  var sources =
-    '<ul style="margin:0 0 8px;padding-left:18px;font-size:11.5px;line-height:1.6;color:var(--text-3)">' +
-      '<li><strong>Assessed value:</strong> ' + (appraisal.model || 'automated valuation model') + (appraisal.confidence ? ' &middot; confidence ' + appraisal.confidence : '') + '. This is an automated <em>model estimate</em>, not an appraisal or a verified value &mdash; confirm with a licensed appraisal or the county records below.</li>' +
-      '<li><strong>Risk assessment:</strong> computed by the Underlytix composite model from the figures you entered (LTV / leverage, asset-liquidity, exit strength, sponsor experience, and fire-sale coverage of ' + fmt(fsv) + '). The inputs are your submissions; the scores are model-derived, not third-party data.</li>' +
-      '<li><strong>Zoning &amp; current-year taxes:</strong> not asserted here. Verify at ' + apLine + '.</li>' +
-      '<li><strong>Comparable sales:</strong> not fabricated. Pull recent closed comps from the county records above or a licensed MLS / data provider before relying on them.</li>' +
-    '</ul>';
-  var disclaimer = '<p style="margin:6px 0 0;font-size:10.5px;color:var(--text-4)"><strong>Full disclosure:</strong> every figure in this report except the ones you entered is a model estimate. Nothing here is independently verified market data, an appraisal, or a commitment to lend. Verify value, zoning, taxes, and comparable sales against the official county source before funding.</p>';
-  var dataSources = sources + disclaimer;
+  var sourceItems = [
+    { label:'Assessed value', text:(appraisal.model || 'automated valuation model') + (appraisal.confidence ? ' (confidence ' + appraisal.confidence + ')' : '') + '. This is an automated model estimate, not an appraisal or a verified value. Confirm with a licensed appraisal or the county records.' },
+    { label:'Risk assessment', text:'Computed by the Underlytix composite model from the figures you entered: LTV and leverage, asset liquidity, exit strength, sponsor experience, and fire sale coverage of ' + fmt(fsv) + '. The inputs are your submissions; the scores are model derived, not third party data.' },
+    { label:'Zoning and current-year taxes', text:'Not asserted here. Verify at ' + apText + '.' },
+    { label:'Comparable sales', text:'Not fabricated. Pull recent closed comparable sales from the county records above or a licensed MLS or data provider before relying on them.' }
+  ];
+  var disclaimerText = 'Every figure in this report except the ones you entered is a model estimate. Nothing here is independently verified market data, an appraisal, or a commitment to lend. Verify value, zoning, taxes, and comparable sales against the official county source before funding.';
 
-  return S('Rationale', rationale) + S('Indicative Pricing', pricing) + S('Risk Assessment', riskAssessment) + S('Underwriter\'s Note', underwriterNote) + S('Data Sources &amp; Verification', dataSources);
+  function P(h){ return '<p style="margin:0 0 8px;font-size:12px;line-height:1.6;color:var(--text-2)">' + h + '</p>'; }
+  function S(title, body){ return '<div class="lpa-rationale" style="margin-top:12px"><h4>' + title + '</h4>' + body + '</div>'; }
+  var html = '';
+  sections.forEach(function(sc){ html += S(sc.title, sc.paras.map(P).join('')); });
+  var srcHtml = '<ul style="margin:0 0 8px;padding-left:18px;font-size:11.5px;line-height:1.6;color:var(--text-3)">' +
+    '<li><strong>Assessed value:</strong> ' + (appraisal.model || 'automated valuation model') + (appraisal.confidence ? ' (confidence ' + appraisal.confidence + ')' : '') + '. This is an automated <em>model estimate</em>, not an appraisal or a verified value. Confirm with a licensed appraisal or the county records below.</li>' +
+    '<li><strong>Risk assessment:</strong> computed by the Underlytix composite model from the figures you entered (LTV and leverage, asset liquidity, exit strength, sponsor experience, and fire-sale coverage of ' + fmt(fsv) + '). The inputs are your submissions; the scores are model-derived, not third-party data.</li>' +
+    '<li><strong>Zoning and current-year taxes:</strong> not asserted here. Verify at ' + apHtml + '.</li>' +
+    '<li><strong>Comparable sales:</strong> not fabricated. Pull recent closed comparable sales from the county records above or a licensed MLS or data provider before relying on them.</li>' +
+    '</ul>';
+  var disclaimerHtml = '<p style="margin:6px 0 0;font-size:10.5px;color:var(--text-4)"><strong>Full disclosure:</strong> ' + disclaimerText + '</p>';
+  html += S('Data Sources &amp; Verification', srcHtml + disclaimerHtml);
+
+  return { html: html, sections: sections, sources: { items: sourceItems, disclaimer: disclaimerText, apText: apText } };
 }
 // Req 3 — exit-strength agent: scores the takeout (sale / refi into DSCR-perm / completion-then-lease) and flags term mismatch.
 function lpaAssessExitStrength(d) {
@@ -3371,9 +3386,9 @@ function lpaComputeDecision(d, gl) {
     rationale.push('Routed to a human underwriter: the takeout is weak or undefined, which is the primary risk on short-term debt. Confirm the exit before final approval.');
   }
 
-  var narrativeHtml = lpaBuildNarrative({d:d, verdict:verdict, riskScore:riskScore, appraisal:appraisal, liqScore:liqScore, fireSaleVal:fireSaleVal, exitStr:_exitStr, sp:_sp});
+  var _narr = lpaBuildNarrative({d:d, verdict:verdict, riskScore:riskScore, appraisal:appraisal, liqScore:liqScore, fireSaleVal:fireSaleVal, exitStr:_exitStr, sp:_sp});
 
-  return {verdict:verdict, metrics:metrics, rationale:rationale, conditions:conditions, capitalPath:capitalPath, riskScore:riskScore, fireSaleValue:fireSaleVal, appraisal:appraisal, liquidityScore:liqScore, narrativeHtml:narrativeHtml};
+  return {verdict:verdict, metrics:metrics, rationale:rationale, conditions:conditions, capitalPath:capitalPath, riskScore:riskScore, fireSaleValue:fireSaleVal, appraisal:appraisal, liquidityScore:liqScore, narrativeHtml:_narr.html, narrativeSections:_narr.sections, narrativeSources:_narr.sources};
 }
 
 /* ── PDF ── */
@@ -3452,27 +3467,62 @@ function lpaDownloadPDF() {
   doc.text(lpaDeal.decision || '', W/2, y+23, {align:'center'});
   y += 50;
 
-  var dd = lpaDeal.decisionData;
-  sec('RATIONALE');
-  doc.setFontSize(10); doc.setFont('helvetica','normal'); doc.setTextColor(50,50,50);
-  (dd && dd.rationale || []).forEach(function(r) {
-    var lines = doc.splitTextToSize('— ' + r, W-M*2-20);
-    doc.text(lines, M+10, y); y += lines.length * 14;
-  });
-  y += 6;
+  var dd = lpaDeal.decisionData || {};
+  // Strip HTML tags and em/en dashes for clean, professional PDF text.
+  function _nd(s){ return String(s == null ? '' : s).replace(/<[^>]+>/g,'').replace(/&mdash;|&ndash;/g,', ').replace(/&amp;/g,'&').replace(/&middot;/g,'|').replace(/\s*[—–]\s*/g,', ').replace(/\s{2,}/g,' ').trim(); }
+  function _para(txt, opts){ opts = opts || {};
+    doc.setFontSize(opts.size||10); doc.setFont('helvetica', opts.bold?'bold':'normal');
+    doc.setTextColor(opts.r!=null?opts.r:55, opts.g!=null?opts.g:65, opts.b!=null?opts.b:75);
+    var lines = doc.splitTextToSize(_nd(txt), W-M*2-(opts.indent||0));
+    if (y + lines.length*(opts.lh||13) > 745) { doc.addPage(); y = M; }
+    doc.text(lines, M+(opts.indent||0), y); y += lines.length*(opts.lh||13);
+  }
 
-  if (dd && dd.conditions && dd.conditions.length) {
+  // KEY METRICS grid (two columns) mirrors the on-screen metric cards
+  if (dd.metrics && dd.metrics.length) {
+    sec('KEY METRICS');
+    var _colW = (W-M*2)/2;
+    for (var _mi=0; _mi<dd.metrics.length; _mi+=2) {
+      if (y > 720) { doc.addPage(); y = M; }
+      for (var _cc=0; _cc<2; _cc++) {
+        var _m = dd.metrics[_mi+_cc]; if (!_m) continue;
+        var _cx = M + _cc*_colW;
+        doc.setFontSize(7.5); doc.setFont('helvetica','bold'); doc.setTextColor(120,130,140);
+        doc.text(String(_m.label||'').toUpperCase(), _cx+4, y);
+        doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(20,20,20);
+        doc.text(_nd(_m.value), _cx+4, y+13);
+      }
+      y += 32;
+    }
+    y += 4;
+  }
+
+  // Narrative sections: Rationale, Indicative Pricing, Risk Assessment, Underwriter's Note
+  (dd.narrativeSections || []).forEach(function(scn) {
+    if (y > 700) { doc.addPage(); y = M; }
+    sec(String(scn.title||'').toUpperCase());
+    (scn.paras || []).forEach(function(p) { _para(p, {size:10, lh:13.5}); y += 4; });
+    y += 4;
+  });
+
+  // KEY FINDINGS (metric-level reasons)
+  if (dd.rationale && dd.rationale.length) {
+    if (y > 700) { doc.addPage(); y = M; }
+    sec('KEY FINDINGS');
+    dd.rationale.forEach(function(r) { _para('-  ' + _nd(r), {size:10, indent:12, lh:13.5}); y += 2; });
+    y += 4;
+  }
+
+  // CONDITIONS
+  if (dd.conditions && dd.conditions.length) {
+    if (y > 700) { doc.addPage(); y = M; }
     sec('CONDITIONS');
-    doc.setTextColor(160,100,0);
-    dd.conditions.forEach(function(c) {
-      var lines = doc.splitTextToSize('→ ' + c, W-M*2-20);
-      doc.text(lines, M+10, y); y += lines.length * 14;
-    });
-    y += 6;
+    dd.conditions.forEach(function(c) { _para('-  ' + _nd(c), {size:10, indent:12, lh:13.5, r:160, g:100, b:0}); y += 2; });
+    y += 4;
   }
 
   // ── INDICATIVE PRICING (Phase 5 integration) — Phase 6 ─────────────────────
-  if (typeof lpaPricingEngine === 'function' && lpaDeal.loanType) {
+  if (false) { // Indicative pricing is now covered by the Indicative Pricing narrative section above.
     var _px = lpaPricingEngine(lpaDeal.loanType, lpaDeal.ltv, lpaDeal.creditScore);
     if (_px) {
       if (y > 680) { doc.addPage(); y = M; }
@@ -3653,6 +3703,33 @@ function lpaDownloadPDF() {
   doc.setFontSize(8); doc.setTextColor(100,120,160);
   doc.text('This assessment is for informational purposes only and does not constitute a commitment to lend.', W/2, 768, {align:'center'});
   doc.text('© ' + new Date().getFullYear() + ' Underlytix · Confidential', W/2, 782, {align:'center'});
+
+  // ADDITIONAL PAGE: DATA SOURCES & VERIFICATION
+  doc.addPage(); y = M;
+  doc.setFillColor(15,34,64); doc.rect(0,0,W,50,'F');
+  doc.setFontSize(13); doc.setFont('helvetica','bold'); doc.setTextColor(255,255,255);
+  doc.text('DATA SOURCES & VERIFICATION', M, 30);
+  doc.setFontSize(8); doc.setFont('helvetica','normal'); doc.setTextColor(150,170,200);
+  doc.text(_nd(lpaDeal.address || ''), W-M, 30, {align:'right'});
+  y = 80;
+  var _src = dd && dd.narrativeSources;
+  if (_src && _src.items && _src.items.length) {
+    _src.items.forEach(function(it) {
+      if (y > 720) { doc.addPage(); y = M; }
+      doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(14,116,144);
+      doc.text(_nd(it.label), M, y); y += 14;
+      _para(it.text, {size:10, lh:13.5}); y += 10;
+    });
+    if (_src.disclaimer) {
+      if (y > 690) { doc.addPage(); y = M; }
+      doc.setDrawColor(200,210,220); doc.line(M, y, W-M, y); y += 16;
+      doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(150,90,0);
+      doc.text('FULL DISCLOSURE', M, y); y += 14;
+      _para(_src.disclaimer, {size:9.5, lh:13, r:120, g:90, b:20});
+    }
+  } else {
+    _para('Data sources were not captured for this saved assessment. Re-run the deal to generate the full data-sources page with verification links.', {size:10});
+  }
 
   doc.save('Underlytix_Assessment_' + (lpaDeal.address||'deal').replace(/[^a-z0-9]/gi,'_') + '.pdf');
 }

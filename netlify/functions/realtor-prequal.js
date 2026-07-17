@@ -375,6 +375,53 @@ If you don't have enough information yet, set "ready": false and omit the other 
       return new Response(JSON.stringify({ success: true, history }), { status: 200, headers: cors });
     }
 
+    // ── DELETE (admin-gated) ───────────────────────────────────────────────────
+    if (action === "delete") {
+      if (!token) return new Response(JSON.stringify({ error: "Token required" }), { status: 401, headers: cors });
+      const delId = body.id;
+      if (!delId) return new Response(JSON.stringify({ error: "id required" }), { status: 400, headers: cors });
+
+      const authRes = await fetch(REALTOR_AUTH_FN, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "verify", token }),
+      });
+      const authData = await authRes.json();
+      if (!authData.valid) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: cors });
+
+      // Two distinct authorities (kept separate for the audit trail):
+      //  - platform admin (Underlytix) may delete any prequal
+      //  - otherwise the row must belong to the calling realtor (single-seat = own admin)
+      const PLATFORM_ADMINS = ["hpierre00@gmail.com"];
+      const email = (authData.realtor.email || "").toLowerCase().trim();
+      const role = authData.realtor.seat_role || authData.realtor.role || null;
+      const isPlatformAdmin = PLATFORM_ADMINS.includes(email);
+      const isOrgAdmin = role === "org_admin" || role === "admin";
+
+      let delUrl = `${SUPABASE_URL}/rest/v1/client_prequals?id=eq.${encodeURIComponent(delId)}`;
+      if (!isPlatformAdmin && !isOrgAdmin) {
+        delUrl += `&realtor_id=eq.${authData.realtor.id}`;
+      }
+
+      const delRes = await fetch(delUrl, {
+        method: "DELETE",
+        headers: {
+          "apikey": SVC_KEY,
+          "Authorization": `Bearer ${SVC_KEY}`,
+          "Prefer": "return=representation",
+        },
+      });
+      if (!delRes.ok) {
+        const e = await delRes.json().catch(() => ({}));
+        return new Response(JSON.stringify({ success: false, error: e.message || "Delete failed" }), { status: 500, headers: cors });
+      }
+      const deleted = await delRes.json().catch(() => []);
+      if (!deleted || !deleted.length) {
+        return new Response(JSON.stringify({ success: false, error: "Not found or not permitted" }), { status: 403, headers: cors });
+      }
+      return new Response(JSON.stringify({ success: true, deleted: deleted.length, by: isPlatformAdmin ? "platform_admin" : "owner" }), { status: 200, headers: cors });
+    }
+
     // ── CHECKOUT ──────────────────────────────────────────────────────────────
     if (action === "create_checkout") {
       if (!token) return new Response(JSON.stringify({ error: "Token required" }), { status: 401, headers: cors });
