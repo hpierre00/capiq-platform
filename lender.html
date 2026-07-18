@@ -1353,7 +1353,8 @@ var LPA_ST = {
   GND_BUDGET:'gnd_budget', GND_PERMITS:'gnd_permits',
   PRIVATE_EXIT:'private_exit', PRIVATE_TERM:'private_term',
   ARV_Q:'arv_q',
-  CREDIT:'credit', PROCESSING:'processing', DECISION:'decision',
+  CREDIT:'credit', EXIT_REQ:'exit_req', SPONSOR_REQ:'sponsor_req', RATE_REQ:'rate_req',
+  PROCESSING:'processing', DECISION:'decision',
   PREQUAL_REVIEW:'prequal_review', PREQUAL_QA:'prequal_qa'
 };
 var lpaState        = LPA_ST.PROPERTY;
@@ -1717,8 +1718,33 @@ async function lpaProcess(input) {
 
     case LPA_ST.CREDIT:
       lpaDeal.creditScore = v;
-      await lpaRenderDecision();
+      await lpaPostCreditGate();
       return;
+
+    case LPA_ST.EXIT_REQ:
+      lpaDeal.exitStrategy = v;
+      await lpaPostCreditGate();
+      return;
+
+    case LPA_ST.SPONSOR_REQ:
+      lpaDeal.sponsorExp = v;
+      lpaDeal.flipExp = lpaDeal.flipExp || v;
+      await lpaPostCreditGate();
+      return;
+
+    case LPA_ST.RATE_REQ: {
+      var _rin = (v || '').toString().toLowerCase();
+      if (/default/.test(_rin)) {
+        lpaDeal.rateOverride = null; lpaDeal.pointsOverride = null;
+      } else {
+        var _nums = (String(v).match(/\d+(\.\d+)?/g) || []).map(parseFloat);
+        if (_nums.length >= 1) lpaDeal.rateOverride = _nums[0];
+        if (_nums.length >= 2) lpaDeal.pointsOverride = _nums[1];
+      }
+      lpaDeal.rateSet = true;
+      await lpaPostCreditGate();
+      return;
+    }
 
     case LPA_ST.PREQUAL_REVIEW:
       // User correcting extracted prequal fields
@@ -1795,6 +1821,32 @@ async function lpaProductQ(type) {
   else
     await lpaAI("What is the borrower's <strong>exit strategy</strong>?",
       ['Sale of Property','Cash-Out Refinance','Development / Build-Out','Business Revenue']);
+}
+
+// Mandatory pre-decision gate: exit strategy, sponsor experience, and per-deal rate/points.
+async function lpaPostCreditGate() {
+  if (!lpaDeal.exitStrategy) {
+    lpaState = LPA_ST.EXIT_REQ;
+    await lpaAI("What is the borrower's <strong>exit strategy</strong> and timeframe? A clearly defined, well timed exit is scored more favorably.",
+      ['Sale within 6 months','Sale within 12 months','Refinance into DSCR within 12 months','Refinance into permanent debt within 18 to 24 months','Completion then lease and refinance','Sell after stabilization']);
+    return;
+  }
+  if (!lpaDeal.sponsorExp && !lpaDeal.flipExp) {
+    lpaState = LPA_ST.SPONSOR_REQ;
+    await lpaAI("How many <strong>comparable projects</strong> has the sponsor completed in this asset class and strategy? More experience lowers the risk weighting.",
+      ['0 (first-timer)','1 to 2 projects','3 to 5 projects','6+ projects']);
+    return;
+  }
+  if (!lpaDeal.rateSet) {
+    lpaState = LPA_ST.RATE_REQ;
+    var _def = (typeof lpaPricingEngine === 'function') ? lpaPricingEngine(lpaDeal.loanType, lpaDeal.ltv, lpaDeal.creditScore) : null;
+    var _dr = _def ? _def.rate.toFixed(2) : '11.50';
+    var _dp = _def ? _def.points.toFixed(1) : '3.0';
+    await lpaAI("Set the <strong>rate and points</strong> for this deal. The program default is <strong>" + _dr + "%</strong> at <strong>" + _dp + " points</strong>. Reply with your own as rate, points (for example 11.5, 3), or accept the default.",
+      ['Use default (' + _dr + '% / ' + _dp + ' pts)']);
+    return;
+  }
+  await lpaRenderDecision();
 }
 
 async function lpaCreditQ() {
@@ -2465,12 +2517,16 @@ async function lpaRenderDecision() {
     // Spread adjustment from lender setting
     rate += parseFloat(gl.rate_spread || 0);
 
+    // Per-deal override: the lender can set rate and points for this specific deal.
+    var _ro = (typeof lpaDeal !== 'undefined' && lpaDeal && lpaDeal.rateOverride   != null) ? lpaDeal.rateOverride   : null;
+    var _po = (typeof lpaDeal !== 'undefined' && lpaDeal && lpaDeal.pointsOverride != null) ? lpaDeal.pointsOverride : null;
     return {
-      rate:   Math.round(rate * 100) / 100,
-      points: Math.round(points * 100) / 100,
+      rate:   _ro != null ? Math.round(_ro * 100) / 100 : Math.round(rate * 100) / 100,
+      points: _po != null ? Math.round(_po * 100) / 100 : Math.round(points * 100) / 100,
       term:   term,
       amort:  amort,
-      key:    key
+      key:    key,
+      lenderSet: (_ro != null || _po != null)
     };
   }
 
@@ -2887,55 +2943,64 @@ function lpaComputeLiquidityScore(d, seg) {
   return Math.min(100, Math.max(0, score));
 }
 
-function lpaComputeRiskScore(d, gl) {
+// Leverage and equity are measured against the real appraised value when available.
+// On a refinance, estimated value replaces purchase price. Substantial equity always
+// scores positively, and sponsor experience and exit strength lower risk.
+function lpaEffectiveValue(d) {
+  var type = (d.loanType || '').toLowerCase();
+  var isRefi = type.indexOf('refi') >= 0 || type.indexOf('refinanc') >= 0 || !!d.isRefi;
+  var apprVal = (d.marketData && d.marketData.value) || d.appraisedValue || 0;
+  return apprVal || (isRefi ? (d.currentValue || d.purchasePrice) : (d.purchasePrice || d.currentValue)) || 0;
+}
+// Expected-loss risk model. Loss Given Default is driven by the recovery value of the
+// real appraised collateral in a forced sale; Probability of Default is driven by borrower
+// credit, exit strength, sponsor experience, and cash flow. Expected Loss = PD x LGD, and
+// the risk score is the inverse of expected loss on the lender's exposure. A loan well
+// below the liquidation value of the collateral has LGD near zero and is low risk.
+function lpaRiskModel(d, gl) {
   var type  = (d.loanType || '').toLowerCase();
-  var ltv   = d.ltv || 0;
+  var loan  = d.loanAmount || 0;
+  var value = lpaEffectiveValue(d);
   var cNum  = lpaCreditNum(d.creditScore || '');
-  var score = 0;
 
-  // Collateral / LTV — 40 pts (lower LTV = higher score)
-  var maxLTV = 0.75;
-  if (gl) {
-    if (type.indexOf('dscr') >= 0 || type.indexOf('rental') >= 0) maxLTV = (gl.ltv_dscr    != null) ? gl.ltv_dscr    : 0.75;
-    else if (type.indexOf('bridge') >= 0)                          maxLTV = (gl.ltv_bridge  != null) ? gl.ltv_bridge  : 0.65;
-    else if (type.indexOf('flip') >= 0)                            maxLTV = (gl.ltv_flip    != null) ? gl.ltv_flip    : 0.85;
-    else if (type.indexOf('land') >= 0)                            maxLTV = (gl.ltv_land    != null) ? gl.ltv_land    : 0.55;
-    else if (type.indexOf('ground') >= 0 || type.indexOf('const') >= 0) maxLTV = (gl.ltv_gnd != null) ? gl.ltv_gnd : 0.75;
-    else                                                           maxLTV = (gl.ltv_private  != null) ? gl.ltv_private : 0.70;
-  }
-  var ltvCeiling = maxLTV * 1.5;
-  var collateral = ltv <= 0 ? 40 : Math.max(0, Math.round(40 * (1 - ltv / ltvCeiling)));
-  score += collateral;
+  // Loss Given Default: recovery from the collateral, net of a liquidity haircut.
+  var seg = (typeof lpaSegmentProperty === 'function') ? lpaSegmentProperty(d) : 'residential-standard';
+  var liq = (typeof lpaComputeLiquidityScore === 'function') ? lpaComputeLiquidityScore(d, seg) : 60;
+  liq = Math.max(0, Math.min(100, liq));
+  var liqFactor = 0.62 + 0.26 * (liq / 100);            // forced-sale recovery: 62% to 88% of value
+  var recovery  = value * liqFactor;
+  var exposure  = loan * 1.12;                          // principal plus ~12% carry, legal, and holding
+  var lgd       = exposure > 0 ? Math.max(0, Math.min(1, (exposure - recovery) / exposure)) : 0;
 
-  // Cash Flow / Deal Quality — 25 pts
-  var cf = 0;
+  // Probability of Default: borrower quality adjusted for execution and takeout risk.
+  var pd = cNum >= 760 ? 0.03 : cNum >= 720 ? 0.05 : cNum >= 680 ? 0.08 : cNum >= 640 ? 0.13 : cNum >= 600 ? 0.20 : cNum > 0 ? 0.30 : 0.12;
+  var ex = (typeof lpaAssessExitStrength === 'function') ? lpaAssessExitStrength(d) : { score: 50 };
+  pd *= (1.4 - 0.8 * ((ex.score || 50) / 100));          // strong exit ~0.6x, weak exit ~1.4x
+  var sp = (typeof lpaScoreSponsor === 'function') ? lpaScoreSponsor(d) : { score: 55 };
+  pd *= (1.3 - 0.6 * ((sp.score || 55) / 100));          // seasoned ~0.72x, first-timer ~1.15x
   if (type.indexOf('dscr') >= 0 || type.indexOf('rental') >= 0) {
     var dscr = d.dscr || 0;
-    cf = dscr >= 1.5 ? 25 : dscr >= 1.25 ? 20 : dscr >= 1.0 ? 12 : dscr > 0 ? 5 : 8;
-  } else {
-    // Asset-based proxy: LTV conservatism
-    cf = ltv <= 0.55 ? 25 : ltv <= 0.65 ? 20 : ltv <= 0.75 ? 14 : ltv <= 0.85 ? 8 : 4;
+    pd *= dscr >= 1.35 ? 0.8 : dscr >= 1.2 ? 0.95 : dscr >= 1.0 ? 1.15 : dscr > 0 ? 1.5 : 1.2;
   }
-  score += cf;
+  pd = Math.max(0.01, Math.min(0.6, pd));
 
-  // Borrower Credit — 20 pts
-  var credit = cNum >= 740 ? 20 : cNum >= 700 ? 17 : cNum >= 660 ? 13 : cNum >= 620 ? 9 : cNum >= 580 ? 4 : 0;
-  score += credit;
+  // Expected loss on exposure, and a risk score where higher is safer.
+  var el = pd * lgd;
+  var elDollars = Math.round(el * exposure);
+  var raw = 0.85 * el + 0.15 * (pd * 0.5);
+  var score = Math.round(100 * (1 - Math.min(1, raw / 0.20)));   // ~20% expected loss maps to 0
+  score = Math.max(0, Math.min(100, score));
 
-  // Exit Strategy / Experience — 15 pts
-  var exit = 5;
-  if (type.indexOf('refi') >= 0 || type.indexOf('refinanc') >= 0) {
-    exit = 14;
-  } else if (type.indexOf('flip') >= 0 && d.priorFlips && parseInt(d.priorFlips) >= 3) {
-    exit = 15;
-  } else if (type.indexOf('flip') >= 0 && d.priorFlips && parseInt(d.priorFlips) >= 1) {
-    exit = 12;
-  } else if (d.exitStrategy && d.exitStrategy.length > 3) {
-    exit = 12;
-  }
-  score += exit;
-
-  return Math.min(100, Math.max(0, score));
+  var ltvOfValue = value > 0 ? loan / value : (d.ltv || 0);
+  return {
+    score: score, pd: pd, lgd: lgd, el: el, elDollars: elDollars,
+    value: value, recovery: Math.round(recovery), exposure: Math.round(exposure),
+    ltvOfValue: ltvOfValue, equityPct: Math.max(0, 1 - ltvOfValue),
+    liqFactor: liqFactor, exitScore: ex.score, sponsorScore: sp.score
+  };
+}
+function lpaComputeRiskScore(d, gl) {
+  return lpaRiskModel(d, gl).score;
 }
 
 // Req 2 — detailed underwriting narrative: Rationale, Indicative Pricing, Risk Assessment,
@@ -3075,13 +3140,13 @@ function lpaAssessExitStrength(d) {
 }
 // Req 4a — sponsor experience scoring, weighted higher for rehab / construction bridge.
 function lpaScoreSponsor(d) {
-  var raw = (d.flipExp || d.priorFlips || d.experience_level || '').toString();
+  var raw = (d.sponsorExp || d.flipExp || d.priorFlips || d.experience_level || '').toString();
   var type = (d.loanType || '').toLowerCase();
   var heavy = /flip|ground|construction|bridge/.test(type);
   var n = null;
   if (/6\+|6 or more|seasoned/i.test(raw)) n = 6;
-  else if (/3\s*[–-]\s*5|experienced/i.test(raw)) n = 4;
-  else if (/1\s*[–-]\s*2|emerging/i.test(raw)) n = 1.5;
+  else if (/3\s*(?:to|[–-])\s*5|experienced/i.test(raw)) n = 4;
+  else if (/1\s*(?:to|[–-])\s*2|emerging/i.test(raw)) n = 1.5;
   else if (/(^|\D)0|first/i.test(raw)) n = 0;
   if (n === null) {
     return {score:heavy ? 50 : 62, tier:'Not captured',
@@ -3096,7 +3161,9 @@ function lpaScoreSponsor(d) {
   return {score:score, tier:tier, rationale:tier + ' — ' + label + ' comparable projects. ' + (heavy ? 'Execution risk is elevated for this product, so track record carries more weight.' : 'Track record carries moderate weight for this product.')};
 }
 function lpaComputeDecision(d, gl) {
-  var ltv  = d.ltv || 0;
+  var _effVal = lpaEffectiveValue(d);
+  // Leverage is measured against the appraised value when available. On a refinance, estimated value replaces purchase price.
+  var ltv  = (_effVal > 0 && d.loanAmount > 0) ? (d.loanAmount / _effVal) : (d.ltv || 0);
   var cNum = lpaCreditNum(d.creditScore || '');
   var ltvP = (ltv * 100).toFixed(1) + '%';
   var lc   = ltv <= 0.65 ? 'lpa-m-good' : ltv <= 0.75 ? 'lpa-m-warn' : 'lpa-m-bad';
@@ -3112,7 +3179,8 @@ function lpaComputeDecision(d, gl) {
   var minLoan    = (gl && gl.min_loan    != null) ? gl.min_loan    : 0;
   var maxLoan    = (gl && gl.max_loan    != null) ? gl.max_loan    : 99999999;
 
-  var riskScore   = lpaComputeRiskScore(d, gl);
+  var _rm         = lpaRiskModel(d, gl);
+  var riskScore   = _rm.score;
   var riskClass   = riskScore >= 70 ? 'lpa-m-good' : riskScore >= 50 ? 'lpa-m-warn' : 'lpa-m-bad';
   var fsBase      = d.arv || d.currentValue || d.purchasePrice || 0;
   var fireSaleVal = Math.round(fsBase * 0.65);
@@ -3393,6 +3461,12 @@ function lpaComputeDecision(d, gl) {
   }
 
   metrics.unshift({label:'Risk Score', value:riskScore+'/100', color:riskClass});
+  // Expected-loss model transparency
+  metrics.push({label:'LTV of Appraised Value', value:(_rm.ltvOfValue*100).toFixed(1)+'%', color:_rm.ltvOfValue<=0.65?'lpa-m-good':_rm.ltvOfValue<=0.75?'lpa-m-warn':'lpa-m-bad'});
+  metrics.push({label:'Equity Cushion', value:(_rm.equityPct*100).toFixed(1)+'%', color:_rm.equityPct>=0.35?'lpa-m-good':_rm.equityPct>=0.20?'lpa-m-warn':'lpa-m-bad'});
+  metrics.push({label:'Prob. of Default (model)', value:(_rm.pd*100).toFixed(1)+'%', color:_rm.pd<=0.08?'lpa-m-good':_rm.pd<=0.18?'lpa-m-warn':'lpa-m-bad'});
+  metrics.push({label:'Loss Given Default (model)', value:(_rm.lgd*100).toFixed(1)+'%', color:_rm.lgd<=0.05?'lpa-m-good':_rm.lgd<=0.20?'lpa-m-warn':'lpa-m-bad'});
+  metrics.push({label:'Expected Loss (model)', value:(_rm.el*100).toFixed(2)+'% ('+lpaFmt(_rm.elDollars)+')', color:_rm.el<=0.01?'lpa-m-good':_rm.el<=0.05?'lpa-m-warn':'lpa-m-bad'});
   metrics.push({label:'Fire Sale Value (65% ARV)', value:lpaFmt(fireSaleVal)});
   if (d.loanAmount > 0) metrics.push({label:'FSV Coverage', value:fsvCov.toFixed(2)+'x', color:fsvClass});
 
@@ -3423,12 +3497,19 @@ function lpaComputeDecision(d, gl) {
     color:_sp.score>=70?'lpa-m-good':_sp.score>=45?'lpa-m-warn':'lpa-m-bad'});
   rationale.push('Sponsor Experience: ' + _sp.rationale);
   // ── Req 4b: refer to a human rather than silently auto-decline ───────────
+  var _basisV = lpaEffectiveValue(d);
+  var _eqPct = _basisV > 0 ? Math.max(0, 1 - (d.loanAmount || 0) / _basisV) : 0;
   if (verdict === 'DECLINE' && riskScore >= 45 && riskScore < 62) {
     verdict = 'REFER';
-    rationale.push('Routed to a human underwriter: this is borderline (risk ' + riskScore + '/100), not a clear fail. A person should weigh compensating factors — added equity, cross-collateral, or a stronger guarantor — before any decline.');
+    rationale.push('Routed to a human underwriter: this is borderline (risk ' + riskScore + '/100), not a clear fail. A person should weigh compensating factors such as added equity, cross-collateral, or a stronger guarantor before any decline.');
   } else if ((_exitStr.score < 35 || !d.exitStrategy) && verdict === 'APPROVED') {
-    verdict = 'REFER';
-    rationale.push('Routed to a human underwriter: the takeout is weak or undefined, which is the primary risk on short-term debt. Confirm the exit before final approval.');
+    if (riskScore >= 70 || _eqPct >= 0.40) {
+      // Strong, well-collateralized file: approve with a condition rather than refer.
+      conditions.push('Document and time-bind the exit strategy before closing. The file is otherwise well collateralized at roughly ' + Math.round(_eqPct * 100) + '% equity against appraised value.');
+    } else {
+      verdict = 'REFER';
+      rationale.push('Routed to a human underwriter: the takeout is weak or undefined on a file that is not otherwise strongly collateralized. Confirm the exit before final approval.');
+    }
   }
 
   var _narr = lpaBuildNarrative({d:d, verdict:verdict, riskScore:riskScore, appraisal:appraisal, liqScore:liqScore, fireSaleVal:fireSaleVal, exitStr:_exitStr, sp:_sp});
