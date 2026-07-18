@@ -11,6 +11,7 @@
 // and against their terms). RentCast carries the same MLS closings and public records
 // those sites display, returned through a licensed API.
 
+// redeploy marker: 2026-07-17 activate RENTCAST_API_KEY
 const RENTCAST_BASE = "https://api.rentcast.io/v1";
 
 exports.handler = async (event) => {
