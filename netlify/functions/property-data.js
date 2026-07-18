@@ -82,8 +82,12 @@ exports.handler = async (event) => {
       });
 
     let taxYear = null, taxAmount = null, assessedValue = null, zoning = null, lastSalePrice = null, lastSaleDate = null;
+    let subjectSqft = null, subjectBeds = null, subjectBaths = null;
     if (prop) {
       zoning = prop.zoning || null;
+      subjectSqft = prop.squareFootage || null;
+      subjectBeds = prop.bedrooms != null ? prop.bedrooms : null;
+      subjectBaths = prop.bathrooms != null ? prop.bathrooms : null;
       lastSalePrice = prop.lastSalePrice != null ? prop.lastSalePrice : null;
       lastSaleDate = prop.lastSaleDate || null;
       const taxes = prop.propertyTaxes || {};
@@ -114,6 +118,9 @@ exports.handler = async (event) => {
         zoning: zoning,
         lastSalePrice: lastSalePrice,
         lastSaleDate: lastSaleDate,
+        subjectSqft: subjectSqft,
+        subjectBeds: subjectBeds,
+        subjectBaths: subjectBaths,
         debug: debug,
       }),
     };

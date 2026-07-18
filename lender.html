@@ -1829,12 +1829,14 @@ async function lpaPostCreditGate() {
     lpaState = LPA_ST.EXIT_REQ;
     await lpaAI("What is the borrower's <strong>exit strategy</strong> and timeframe? A clearly defined, well timed exit is scored more favorably.",
       ['Sale within 6 months','Sale within 12 months','Refinance into DSCR within 12 months','Refinance into permanent debt within 18 to 24 months','Completion then lease and refinance','Sell after stabilization']);
+    lpaSetInput(true);
     return;
   }
   if (!lpaDeal.sponsorExp && !lpaDeal.flipExp) {
     lpaState = LPA_ST.SPONSOR_REQ;
     await lpaAI("How many <strong>comparable projects</strong> has the sponsor completed in this asset class and strategy? More experience lowers the risk weighting.",
       ['0 (first-timer)','1 to 2 projects','3 to 5 projects','6+ projects']);
+    lpaSetInput(true);
     return;
   }
   if (!lpaDeal.rateSet) {
@@ -1844,6 +1846,7 @@ async function lpaPostCreditGate() {
     var _dp = _def ? _def.points.toFixed(1) : '3.0';
     await lpaAI("Set the <strong>rate and points</strong> for this deal. The program default is <strong>" + _dr + "%</strong> at <strong>" + _dp + " points</strong>. Reply with your own as rate, points (for example 11.5, 3), or accept the default.",
       ['Use default (' + _dr + '% / ' + _dp + ' pts)']);
+    lpaSetInput(true);
     return;
   }
   await lpaRenderDecision();
@@ -3063,14 +3066,25 @@ function lpaBuildNarrative(ctx) {
   }
   var md = d.marketData || null;
   var comps = (md && Array.isArray(md.comps)) ? md.comps.filter(function(c){ return c && c.price; }).slice(0,5) : [];
+  var subjSqft = (md && md.subjectSqft) || null;
+  var subjVal  = (md && md.value) || (appraisal && appraisal.value) || null;
+  var subjPpsf = (subjVal && subjSqft) ? Math.round(subjVal / subjSqft) : null;
   var compsHtml = '';
   if (comps.length) {
+    var _subjRow = '<tr style="background:var(--teal-dim);font-weight:600">' +
+      '<td style="padding:3px 6px">Subject: ' + (addr || 'this property') + '</td>' +
+      '<td style="padding:3px 6px">appraised</td>' +
+      '<td style="padding:3px 6px">' + (subjVal ? fmt(subjVal) : 'n/a') + '</td>' +
+      '<td style="padding:3px 6px">' + (subjSqft ? subjSqft.toLocaleString() : 'n/a') + '</td>' +
+      '<td style="padding:3px 6px">' + (subjPpsf ? '$' + subjPpsf : 'n/a') + '</td></tr>';
     compsHtml = '<div style="overflow-x:auto;margin:6px 0"><table style="width:100%;border-collapse:collapse;font-size:11px">' +
-      '<thead><tr style="color:var(--text-4);text-align:left"><th style="padding:3px 6px;font-weight:600">Comparable sale</th><th style="padding:3px 6px;font-weight:600">Sold</th><th style="padding:3px 6px;font-weight:600">Price</th><th style="padding:3px 6px;font-weight:600">$/sqft</th></tr></thead><tbody>' +
+      '<thead><tr style="color:var(--text-4);text-align:left"><th style="padding:3px 6px;font-weight:600">Property</th><th style="padding:3px 6px;font-weight:600">Sold</th><th style="padding:3px 6px;font-weight:600">Price</th><th style="padding:3px 6px;font-weight:600">Sq Ft</th><th style="padding:3px 6px;font-weight:600">$/sqft</th></tr></thead><tbody>' +
+      _subjRow +
       comps.map(function(c){ return '<tr>' +
         '<td style="padding:3px 6px">' + (c.address || 'Comp') + '</td>' +
         '<td style="padding:3px 6px">' + (c.soldDate ? String(c.soldDate).slice(0,10) : 'n/a') + '</td>' +
         '<td style="padding:3px 6px">' + fmt(c.price) + '</td>' +
+        '<td style="padding:3px 6px">' + (c.squareFootage ? c.squareFootage.toLocaleString() : 'n/a') + '</td>' +
         '<td style="padding:3px 6px">' + (c.ppsf ? '$' + c.ppsf : 'n/a') + '</td>' +
       '</tr>'; }).join('') + '</tbody></table></div>';
   }
@@ -3107,7 +3121,7 @@ function lpaBuildNarrative(ctx) {
   var disclaimerHtml = '<p style="margin:6px 0 0;font-size:10.5px;color:var(--text-4)"><strong>Full disclosure:</strong> ' + disclaimerText + '</p>';
   html += S('Data Sources &amp; Verification', srcHtml + disclaimerHtml);
 
-  return { html: html, sections: sections, sources: { items: sourceItems, disclaimer: disclaimerText, apText: apText, comps: comps, valueSource: (md && md.source) || null } };
+  return { html: html, sections: sections, sources: { items: sourceItems, disclaimer: disclaimerText, apText: apText, comps: comps, valueSource: (md && md.source) || null, subject: { address: addr, sqft: subjSqft, value: subjVal, ppsf: subjPpsf } } };
 }
 // Req 3 — exit-strength agent: scores the takeout (sale / refi into DSCR-perm / completion-then-lease) and flags term mismatch.
 function lpaAssessExitStrength(d) {
@@ -3849,16 +3863,25 @@ function lpaDownloadPDF() {
     if (_src.comps && _src.comps.length) {
       if (y > 670) { doc.addPage(); y = M; }
       doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(14,116,144);
-      doc.text('RECENT COMPARABLE SALES (' + _nd(_src.valueSource || 'provider') + ')', M, y); y += 15;
+      doc.text('SUBJECT vs RECENT COMPARABLE SALES (' + _nd(_src.valueSource || 'provider') + ')', M, y); y += 15;
       doc.setFontSize(8); doc.setFont('helvetica','bold'); doc.setTextColor(120,130,140);
-      doc.text('Comparable', M, y); doc.text('Sold', M+250, y); doc.text('Price', M+320, y); doc.text('$/sqft', M+410, y); y += 12;
+      doc.text('Property', M, y); doc.text('Sold', M+235, y); doc.text('Price', M+305, y); doc.text('Sq Ft', M+385, y); doc.text('$/sqft', M+450, y); y += 12;
+      var _sj = _src.subject || {};
+      doc.setFont('helvetica','bold'); doc.setTextColor(14,116,144); doc.setFontSize(9);
+      doc.text(('Subject: ' + _nd(String(_sj.address || 'this property'))).slice(0,42), M, y);
+      doc.text('appraised', M+235, y);
+      doc.text(_sj.value != null ? ('$' + Math.round(_sj.value).toLocaleString()) : 'n/a', M+305, y);
+      doc.text(_sj.sqft != null ? Number(_sj.sqft).toLocaleString() : 'n/a', M+385, y);
+      doc.text(_sj.ppsf != null ? ('$' + _sj.ppsf) : 'n/a', M+450, y);
+      y += 13;
       doc.setFont('helvetica','normal'); doc.setTextColor(40,40,40); doc.setFontSize(9);
       _src.comps.forEach(function(c) {
         if (y > 730) { doc.addPage(); y = M; }
-        doc.text(_nd(String(c.address || 'Comp')).slice(0,44), M, y);
-        doc.text(c.soldDate ? String(c.soldDate).slice(0,10) : 'n/a', M+250, y);
-        doc.text(c.price != null ? ('$' + Math.round(c.price).toLocaleString()) : 'n/a', M+320, y);
-        doc.text(c.ppsf ? ('$' + c.ppsf) : 'n/a', M+410, y);
+        doc.text(_nd(String(c.address || 'Comp')).slice(0,42), M, y);
+        doc.text(c.soldDate ? String(c.soldDate).slice(0,10) : 'n/a', M+235, y);
+        doc.text(c.price != null ? ('$' + Math.round(c.price).toLocaleString()) : 'n/a', M+305, y);
+        doc.text(c.squareFootage != null ? Number(c.squareFootage).toLocaleString() : 'n/a', M+385, y);
+        doc.text(c.ppsf ? ('$' + c.ppsf) : 'n/a', M+450, y);
         y += 13;
       });
       y += 8;
