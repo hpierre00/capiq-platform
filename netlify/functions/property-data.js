@@ -43,22 +43,27 @@ exports.handler = async (event) => {
     const h = { "X-Api-Key": key, "Accept": "application/json" };
     const q = encodeURIComponent(address);
 
+    const debug = {};
     // 1) AVM sale value estimate + comparable sales used
     let value = null;
     try {
       const r = await fetch(`${RENTCAST_BASE}/avm/value?address=${q}&compCount=5`, { headers: h });
-      if (r.ok) value = await r.json();
-    } catch (e) { /* provider soft-fail */ }
+      debug.valueStatus = r.status;
+      const txt = await r.text();
+      if (r.ok) { try { value = JSON.parse(txt); } catch (e) { debug.valueParse = String(e); } }
+      else { debug.valueBody = txt.slice(0, 300); }
+    } catch (e) { debug.valueErr = String(e); }
 
     // 2) Property record: last sale, tax assessments, property taxes, zoning
     let prop = null;
     try {
       const r = await fetch(`${RENTCAST_BASE}/properties?address=${q}`, { headers: h });
+      debug.propStatus = r.status;
+      const txt = await r.text();
       if (r.ok) {
-        const arr = await r.json();
-        prop = Array.isArray(arr) ? arr[0] : arr;
-      }
-    } catch (e) { /* provider soft-fail */ }
+        try { const arr = JSON.parse(txt); prop = Array.isArray(arr) ? arr[0] : arr; } catch (e) { debug.propParse = String(e); }
+      } else { debug.propBody = txt.slice(0, 300); }
+    } catch (e) { debug.propErr = String(e); }
 
     const comps = (value && Array.isArray(value.comparables) ? value.comparables : [])
       .slice(0, 5)
@@ -109,6 +114,7 @@ exports.handler = async (event) => {
         zoning: zoning,
         lastSalePrice: lastSalePrice,
         lastSaleDate: lastSaleDate,
+        debug: debug,
       }),
     };
   } catch (e) {
