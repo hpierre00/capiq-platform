@@ -1905,6 +1905,46 @@ Return this exact JSON with all string fields filled with detailed analysis (2-4
 {"fundabilityScore":0,"dealScore":"Pass","humanReviewRequired":false,"executiveSummary":"","strengthsAndRisks":"","lenderMatchingProfile":"","structuringRecommendations":"","marketContext":"","scoreBreakdown":"","nextSteps":""}`;
 }
 
+// Sourced valuation for the main Deal Intelligence Report: pulls live property data for the deal
+// address and reconciles a value by property type (excluding new-construction comps), so the report
+// shows a sourced, confidence-graded value rather than only the AI narrative. Returns
+// {available:false} when there is no live data for the address (honest no-data state, never a
+// fabricated number).
+async function ipaSourcedValuation(dealData) {
+  try {
+    var addr = (dealData && dealData.location) || '';
+    if (!addr) return { available: false, reason: 'no address' };
+    var resp = await fetch('/.netlify/functions/property-data', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: addr })
+    });
+    var pd = await resp.json();
+    if (!pd || !pd.success || !pd.value) return { available: false, reason: (pd && pd.error) || 'no data' };
+    var dt = dealData.dealType || '';
+    var adapter = {
+      isComm: dealData.market === 'Commercial',
+      isNewConst: dt === 'New Construction',
+      isFlip: dt === 'Fix & Flip',
+      purchasePrice: dealData.purchasePrice || 0,
+      arv: dealData.arv || 0,
+      rehabBudget: dealData.rehabBudget || 0,
+      monthlyRent: dealData.monthlyRent || (dealData.grossIncome ? dealData.grossIncome / 12 : 0),
+      monthlyExp: dealData.expenses ? dealData.expenses / 12 : 0,
+      grossIncome: dealData.grossIncome || 0,
+      noi: dealData.noi || 0,
+      capRate: dealData.capRate || 0,
+      squareFootage: pd.subjectSqft || 0
+    };
+    var r = ipaReconcileValue(pd, adapter);
+    return {
+      available: true, source: pd.source || 'provider',
+      value: r.value, method: r.method, confidence: r.confidence, reasons: r.reasons || [],
+      excludedNew: r.excludedNew || 0, providerRaw: pd.value, valueLow: pd.valueLow || null, valueHigh: pd.valueHigh || null,
+      taxYear: pd.taxYear || null, taxAmount: pd.taxAmount || null, zoning: pd.zoning || null,
+      subjectSqft: pd.subjectSqft || null, subjectYearBuilt: pd.subjectYearBuilt || null, comps: pd.comps || []
+    };
+  } catch (e) { return { available: false, reason: String((e && e.message) || e) }; }
+}
+
 async function analyzeDeal() {
   const access = await checkAccess();
   updateUsageUI(access);
@@ -2007,7 +2047,21 @@ async function analyzeDeal() {
       investorName: sessionForEmail?.investor?.name || '',
       dealCode: 'DL-' + Math.random().toString(36).substr(2, 8).toUpperCase(),
     };
-    const analysisPrompt = isComm ? buildCommercialPrompt(enrichedDealData) : buildPrompt(enrichedDealData);
+    // Sourced valuation: fetch live property data and reconcile a value before the AI analysis,
+    // then attach it to the deal and hand it to the prompt as authoritative ground truth so the
+    // narrative uses the sourced value instead of inventing one.
+    const sourcedValuation = await ipaSourcedValuation(dealData);
+    enrichedDealData.sourcedValuation = sourcedValuation;
+    dealData.sourcedValuation = sourcedValuation;
+    let analysisPrompt = isComm ? buildCommercialPrompt(enrichedDealData) : buildPrompt(enrichedDealData);
+    if (sourcedValuation && sourcedValuation.available) {
+      analysisPrompt += '\n\nAUTHORITATIVE SOURCED VALUATION (use this as the market value; do not state a different market value): '
+        + sourcedValuation.source + ' data reconciled by ' + sourcedValuation.method + ' = $' + Math.round(sourcedValuation.value).toLocaleString()
+        + ', valuation confidence ' + sourcedValuation.confidence
+        + (sourcedValuation.reasons && sourcedValuation.reasons.length ? ' (' + sourcedValuation.reasons.join('; ') + ')' : '')
+        + '. Provider raw AVM $' + Math.round(sourcedValuation.providerRaw).toLocaleString() + '.'
+        + (sourcedValuation.confidence === 'Low' ? ' Treat the value as low-confidence and recommend a full appraisal before funding.' : '');
+    }
     const res = await fetch('/.netlify/functions/capiq-analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dealData: enrichedDealData, prompt: analysisPrompt})});
     if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error||e.detail||`Error ${res.status}`);}
     const data = await res.json();
@@ -2069,7 +2123,30 @@ function renderResult(a, d) {
       <div><div style="font-size:13px;font-weight:600;color:var(--text)">${m.name}</div><div style="font-size:11px;color:var(--text-4);margin-top:2px">${m.type}</div></div>
       <div style="text-align:right"><div style="font-family:'DM Mono',monospace;font-size:16px;font-weight:700;color:var(--teal)">${m.score}</div><div style="font-size:10px;color:var(--text-4)">MATCH SCORE</div></div>
     </div>`).join(''):'<p style="font-size:13px;color:var(--text-3);padding:16px 0">No qualifying lender matches found for this deal structure.</p>';
+  const sv = d && d.sourcedValuation;
+  let svHtml = '';
+  if (sv && sv.available) {
+    const cc = sv.confidence==='High'?'var(--green)':sv.confidence==='Medium'?'var(--amber)':'var(--red)';
+    const rawRow = (sv.providerRaw && Math.abs(sv.providerRaw - sv.value)/sv.value >= 0.05)
+      ? `<div style="font-size:12px;color:var(--text-3);margin-top:4px">Provider AVM (raw): ${ipaFmt(sv.providerRaw)}</div>` : '';
+    const compRows = (sv.comps||[]).slice(0,5).map(c=>`<tr><td style="padding:4px 8px">${c.address||''}</td><td style="padding:4px 8px;text-align:right">${c.price?ipaFmt(c.price):'—'}</td><td style="padding:4px 8px;text-align:right">${c.squareFootage||'—'}</td><td style="padding:4px 8px;text-align:right">${c.yearBuilt||'—'}</td></tr>`).join('');
+    const subjRow = `<tr style="background:var(--teal-dim);font-weight:600"><td style="padding:4px 8px">Subject: ${d.location||''}</td><td style="padding:4px 8px;text-align:right">${ipaFmt(sv.value)}</td><td style="padding:4px 8px;text-align:right">${sv.subjectSqft||'—'}</td><td style="padding:4px 8px;text-align:right">${sv.subjectYearBuilt||'—'}</td></tr>`;
+    svHtml = `
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-header"><div class="card-title">Sourced Valuation</div><span class="verdict-badge" style="background:${cc}1a;color:${cc};border:1px solid ${cc}55">● ${sv.confidence.toUpperCase()} CONFIDENCE${sv.confidence==='Low'?' — FULL APPRAISAL':''}</span></div>
+      <div class="card-body">
+        <div><div style="font-size:11px;color:var(--text-4)">EST. MARKET VALUE</div><div style="font-family:'DM Mono',monospace;font-size:22px;font-weight:700;color:var(--text)">${ipaFmt(sv.value)}</div><div style="font-size:11px;color:var(--text-3)">${sv.source} data, ${sv.method}</div>${rawRow}</div>
+        <div style="font-size:12px;color:var(--text-3);margin-top:10px;line-height:1.6">${sv.reasons.map(r=>'• '+r).join('<br>')}</div>
+        ${(sv.taxYear||sv.zoning)?`<div style="font-size:12px;color:var(--text-3);margin-top:8px">${sv.zoning?('Zoning: '+sv.zoning+'   '):''}${sv.taxYear?('Taxes '+sv.taxYear+': '+ipaFmt(sv.taxAmount||0)):''}</div>`:''}
+        ${compRows?`<table style="width:100%;border-collapse:collapse;margin-top:12px;font-size:12px"><thead><tr style="color:var(--text-4);text-align:left"><th style="padding:4px 8px">Comparable (like condition)</th><th style="padding:4px 8px;text-align:right">Sale</th><th style="padding:4px 8px;text-align:right">Sq Ft</th><th style="padding:4px 8px;text-align:right">Year</th></tr></thead><tbody>${subjRow}${compRows}</tbody></table>`:''}
+        <div style="font-size:11px;color:var(--text-4);margin-top:8px">Sourced from ${sv.source} and reconciled by property type${sv.excludedNew?(', excluding '+sv.excludedNew+' newer or new-construction sale'+(sv.excludedNew>1?'s':'')):''}. ${sv.confidence==='Low'?'Low-confidence: order a full appraisal rather than relying on the point estimate.':'Verify against a licensed appraisal before funding.'}</div>
+      </div>
+    </div>`;
+  } else if (sv && !sv.available) {
+    svHtml = `<div class="card" style="margin-bottom:16px"><div class="card-header"><div class="card-title">Sourced Valuation</div></div><div class="card-body"><p style="font-size:13px;color:var(--text-3)">No live property data was available for this address, so the figures in this report are derived from your entered numbers and are not an independently sourced valuation. Confirm with a licensed appraisal.</p></div></div>`;
+  }
   document.getElementById('result-content').innerHTML = `
+    ${svHtml}
     <div class="card" style="margin-bottom:16px">
       <div class="card-header"><div class="card-title">Deal Intelligence Report</div><div style="display:flex;align-items:center;gap:10px"><span id="deal-code-badge" style="display:none;font-family:'DM Mono',monospace;font-size:11px;background:var(--teal-dim);color:var(--teal);border:1px solid var(--teal-border);padding:3px 10px;border-radius:4px"></span><span class="verdict-badge ${vc}">● ${a.dealScore.toUpperCase()}</span></div></div>
       <div class="card-body">
