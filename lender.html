@@ -2968,7 +2968,26 @@ function lpaReconcileValue(md, d) {
   var type = (d.loanType || '').toLowerCase();
   var sqft = md.subjectSqft || d.squareFootage || 0;
   var avm  = md.value || 0, lo = md.valueLow || 0, hi = md.valueHigh || 0;
-  var comps = (md.comps || []).filter(function(c){ return c && c.price && c.squareFootage; });
+  var allComps = (md.comps || []).filter(function(c){ return c && c.price && c.squareFootage; });
+  // Like-condition comp selection: newer and new-construction sales carry a builder premium and
+  // no deferred maintenance, so they distort the value of an older subject. Exclude comps built
+  // within the last three years, or 15+ years newer than the subject, unless the subject is
+  // itself new. Age is a proxy for condition. If too few like comps remain, keep the full set
+  // and flag the value low-confidence rather than trust a thin like-condition sample.
+  var _curYr = new Date().getFullYear();
+  var subjYr = md.subjectYearBuilt || d.yearBuilt || null;
+  var subjIsNew = subjYr ? (subjYr >= _curYr - 3) : false;
+  var excludedNew = [];
+  var likeComps = allComps.filter(function(c){
+    var cy = c.yearBuilt || null;
+    if (!cy) return true;                              // no age data: keep, cannot judge condition
+    var isNew = cy >= _curYr - 3;                       // new / near-new construction
+    var muchNewer = subjYr ? (cy - subjYr >= 15) : false;
+    if (!subjIsNew && (isNew || muchNewer)) { excludedNew.push(c); return false; }
+    return true;
+  });
+  var thinLike = (likeComps.length < 3 && excludedNew.length > 0);
+  var comps = (likeComps.length >= 3) ? likeComps : allComps;
   var ppsf  = comps.map(function(c){ return c.price / c.squareFootage; }).filter(function(x){ return x > 0; });
   var meanP = ppsf.length ? ppsf.reduce(function(x,y){return x+y;},0)/ppsf.length : 0;
   var cv    = meanP ? lpaStdev(ppsf) / meanP : 0;
@@ -3006,9 +3025,15 @@ function lpaReconcileValue(md, d) {
   else if (rangeWidth >= 0.18) { if (conf === 'High') conf = 'Medium'; reasons.push('the model value range spans ' + Math.round(rangeWidth*100) + '% of value'); }
   if (comps.length < 3) { conf = 'Low'; reasons.push('fewer than three usable comparables'); }
   if (avm && value && Math.abs(avm - value) / value >= 0.20) { if (conf === 'High') conf = 'Medium'; reasons.push('the automated point estimate differs from the reconciled comp value by ' + Math.round(Math.abs(avm - value) / value * 100) + '%'); }
-  if (!reasons.length) reasons.push('comparables are tight and the value range is narrow');
+  if (thinLike) {
+    conf = 'Low';
+    reasons.push('the comparable set is dominated by newer or new construction; like-condition evidence is thin, so a full appraisal is required rather than a value pulled from superior comps');
+  } else if (excludedNew.length > 0) {
+    reasons.push('excluded ' + excludedNew.length + ' newer or new-construction sale' + (excludedNew.length > 1 ? 's' : '') + ' to keep the comparables in like condition with the subject');
+  }
+  if (!reasons.length) reasons.push('comparables are tight, like-condition, and the value range is narrow');
 
-  return { value: value, method: method, medianPpsf: medianP ? Math.round(medianP) : null, cv: cv, rangeWidth: rangeWidth, confidence: conf, reasons: reasons, compCount: comps.length, salesVal: salesVal };
+  return { value: value, method: method, medianPpsf: medianP ? Math.round(medianP) : null, cv: cv, rangeWidth: rangeWidth, confidence: conf, reasons: reasons, compCount: comps.length, excludedNew: excludedNew.length, salesVal: salesVal };
 }
 
 // Leverage and equity are measured against the reconciled appraised value when available.

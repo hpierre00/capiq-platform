@@ -76,18 +76,20 @@ exports.handler = async (event) => {
           ppsf: (c.price && c.squareFootage) ? Math.round(c.price / c.squareFootage) : null,
           beds: c.bedrooms != null ? c.bedrooms : null,
           baths: c.bathrooms != null ? c.bathrooms : null,
+          yearBuilt: c.yearBuilt != null ? c.yearBuilt : null,
           distanceMi: c.distance != null ? Math.round(c.distance * 100) / 100 : null,
           correlation: c.correlation != null ? c.correlation : null,
         };
       });
 
     let taxYear = null, taxAmount = null, assessedValue = null, zoning = null, lastSalePrice = null, lastSaleDate = null;
-    let subjectSqft = null, subjectBeds = null, subjectBaths = null;
+    let subjectSqft = null, subjectBeds = null, subjectBaths = null, subjectYearBuilt = null;
     if (prop) {
       zoning = prop.zoning || null;
       subjectSqft = prop.squareFootage || null;
       subjectBeds = prop.bedrooms != null ? prop.bedrooms : null;
       subjectBaths = prop.bathrooms != null ? prop.bathrooms : null;
+      subjectYearBuilt = prop.yearBuilt != null ? prop.yearBuilt : null;
       lastSalePrice = prop.lastSalePrice != null ? prop.lastSalePrice : null;
       lastSaleDate = prop.lastSaleDate || null;
       const taxes = prop.propertyTaxes || {};
@@ -121,6 +123,7 @@ exports.handler = async (event) => {
         subjectSqft: subjectSqft,
         subjectBeds: subjectBeds,
         subjectBaths: subjectBaths,
+        subjectYearBuilt: subjectYearBuilt,
         debug: debug,
       }),
     };
