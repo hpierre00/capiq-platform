@@ -2991,6 +2991,14 @@ async function ipaProcess(v) {
 
     case IPA_ST.ADDRESS:
       ipaDeal.address = v;
+      // Fetch live property data (value, comps, tax, zoning, year built) for a sourced valuation.
+      // Fire-and-forget: it resolves well before the decision runs and never blocks the intake.
+      fetch('/.netlify/functions/property-data', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address: v })
+      }).then(function(r){ return r.json(); })
+        .then(function(pd){ if (pd && pd.success && pd.value) ipaDeal.marketData = pd; })
+        .catch(function(){});
       ipaState = IPA_ST.PURCHASE;
       await ipaAI('What is the <strong>contract / purchase price</strong>? (e.g. $325,000)');
       break;
@@ -3147,6 +3155,77 @@ async function ipaProcess(v) {
 }
 
 // ── Decision engine ────────────────────────────────────────────────────────
+function ipaMedian(a){ if(!a||!a.length) return null; var s=a.slice().sort(function(x,y){return x-y;}); var m=Math.floor(s.length/2); return s.length%2 ? s[m] : (s[m-1]+s[m])/2; }
+function ipaStdev(a){ if(!a||a.length<2) return 0; var mean=a.reduce(function(x,y){return x+y;},0)/a.length; var v=a.reduce(function(x,y){return x+Math.pow(y-mean,2);},0)/a.length; return Math.sqrt(v); }
+
+// Reconcile market value by the standard appraisal approach for the property type (USPAP-aligned)
+// and grade reliability. New and materially-newer comps are excluded so a builder premium does not
+// inflate an older subject. Mirrors the lender engine's lpaReconcileValue. Pure function.
+function ipaReconcileValue(md, d) {
+  md = md || {}; d = d || {};
+  var sqft = md.subjectSqft || d.squareFootage || 0;
+  var avm  = md.value || 0, lo = md.valueLow || 0, hi = md.valueHigh || 0;
+  var allComps = (md.comps || []).filter(function(c){ return c && c.price && c.squareFootage; });
+  var _curYr = new Date().getFullYear();
+  var subjYr = md.subjectYearBuilt || d.yearBuilt || null;
+  var subjIsNew = (subjYr ? (subjYr >= _curYr - 3) : false) || !!d.isNewConst;
+  var excludedNew = [];
+  var likeComps = allComps.filter(function(c){
+    var cy = c.yearBuilt || null;
+    if (!cy) return true;                              // no age data: keep, cannot judge condition
+    var isNew = cy >= _curYr - 3;                       // new / near-new construction
+    var muchNewer = subjYr ? (cy - subjYr >= 15) : false;
+    if (!subjIsNew && (isNew || muchNewer)) { excludedNew.push(c); return false; }
+    return true;
+  });
+  var thinLike = (likeComps.length < 3 && excludedNew.length > 0);
+  var comps = (likeComps.length >= 3) ? likeComps : allComps;
+  var ppsf  = comps.map(function(c){ return c.price / c.squareFootage; }).filter(function(x){ return x > 0; });
+  var meanP = ppsf.length ? ppsf.reduce(function(x,y){return x+y;},0)/ppsf.length : 0;
+  var cv    = meanP ? ipaStdev(ppsf) / meanP : 0;
+  var rangeWidth = (avm && lo && hi) ? (hi - lo) / avm : 0;
+  var trimmed = ppsf.slice().sort(function(x,y){return x-y;});
+  if (trimmed.length >= 5) trimmed = trimmed.slice(1, -1);
+  var medianP = ipaMedian(trimmed);
+
+  var isIncome = (d.isComm && (d.monthlyRent || 0) > 0) || d.noi || d.grossIncome;
+  var isConstruction = !!d.isNewConst;
+  var salesVal = (medianP && sqft) ? Math.round(medianP * sqft) : (avm || 0);
+  var method, value;
+  if (isConstruction && ((d.purchasePrice || 0) + (d.rehabBudget || d.constructionBudget || 0) > 0)) {
+    method = 'Cost approach (land plus construction)';
+    value = Math.round((d.purchasePrice || 0) + (d.rehabBudget || d.constructionBudget || 0));
+  } else if (isIncome) {
+    var noi = d.noi || ((d.monthlyRent || 0) * 12 * 0.95 - (d.monthlyExp || 0) * 12);
+    var cap = d.capRate ? (d.capRate > 1 ? d.capRate / 100 : d.capRate) : 0.068;
+    var incomeVal = (noi > 0 && cap > 0) ? Math.round(noi / cap) : 0;
+    if (incomeVal && salesVal) { method = 'Income approach reconciled with sales comparison'; value = Math.round(incomeVal * 0.6 + salesVal * 0.4); }
+    else if (incomeVal) { method = 'Income approach (NOI over cap rate)'; value = incomeVal; }
+    else { method = 'Sales comparison'; value = salesVal; }
+  } else {
+    if (medianP && sqft) { method = 'Sales comparison (median of comps, outliers trimmed)'; value = salesVal; }
+    else { method = 'Automated model estimate'; value = avm; }
+  }
+  if (!value) value = avm;
+
+  var reasons = [], conf = 'High';
+  if (cv >= 0.25) { conf = 'Low'; reasons.push('comparable price per square foot varies widely (CV ' + Math.round(cv*100) + '%)'); }
+  else if (cv >= 0.12) { conf = 'Medium'; reasons.push('moderate spread in comparable price per square foot (CV ' + Math.round(cv*100) + '%)'); }
+  if (rangeWidth >= 0.35) { conf = 'Low'; reasons.push('the model value range spans ' + Math.round(rangeWidth*100) + '% of value'); }
+  else if (rangeWidth >= 0.18) { if (conf === 'High') conf = 'Medium'; reasons.push('the model value range spans ' + Math.round(rangeWidth*100) + '% of value'); }
+  if (comps.length < 3) { conf = 'Low'; reasons.push('fewer than three usable comparables'); }
+  if (avm && value && Math.abs(avm - value) / value >= 0.20) { if (conf === 'High') conf = 'Medium'; reasons.push('the automated point estimate differs from the reconciled comp value by ' + Math.round(Math.abs(avm - value) / value * 100) + '%'); }
+  if (thinLike) {
+    conf = 'Low';
+    reasons.push('the comparable set is dominated by newer or new construction; like-condition evidence is thin, so a full appraisal is required rather than a value pulled from superior comps');
+  } else if (excludedNew.length > 0) {
+    reasons.push('excluded ' + excludedNew.length + ' newer or new-construction sale' + (excludedNew.length > 1 ? 's' : '') + ' to keep the comparables in like condition with the subject');
+  }
+  if (!reasons.length) reasons.push('comparables are tight, like-condition, and the value range is narrow');
+
+  return { value: value, method: method, medianPpsf: medianP ? Math.round(medianP) : null, cv: cv, rangeWidth: rangeWidth, confidence: conf, reasons: reasons, compCount: comps.length, excludedNew: excludedNew.length, salesVal: salesVal };
+}
+
 function ipaComputeDecision(d) {
   var metrics   = [];
   var rationale = [];
@@ -3169,30 +3248,48 @@ function ipaComputeDecision(d) {
   // ── AVM estimate ──────────────────────────────────────────────────────
   var avmBase  = arv > 0 ? arv : pp;
   var rural    = /rural|county.?(rd|road)|farm|ranch|acreage|\bacres\b|hollow|township/i.test(d.address || '');
-  var avmVal, avmModel, avmNote;
-  if (d.isComm) {
+  var avmVal, avmModel, avmNote, avmConf = null, avmReasons = [], avmLow = false, avmRaw = null;
+  // Live property-data override: when a sourced value is available, reconcile it by the appraisal
+  // approach appropriate to the property type, exclude new-construction comps, and grade confidence.
+  var _rec = (d.marketData && d.marketData.value) ? ipaReconcileValue(d.marketData, d) : null;
+  if (_rec) {
+    avmVal     = _rec.value;
+    avmModel   = (d.marketData.source || 'Market') + ' data, ' + _rec.method;
+    avmConf    = _rec.confidence;
+    avmReasons = _rec.reasons || [];
+    avmLow     = (_rec.confidence === 'Low');
+    avmRaw     = d.marketData.value;
+    avmNote    = _rec.method + ' from ' + (d.marketData.source || 'provider') + ' comparable sales. Valuation confidence ' + _rec.confidence +
+                 (avmReasons.length ? ' because ' + avmReasons.join('; ') : '') +
+                 (avmLow ? '. Low-confidence: order a full appraisal rather than relying on the point estimate.' : '. Verify against a licensed appraisal before funding.');
+  } else if (d.isComm) {
     if (rent > 0) {
       var noi0 = (rent * 12 * 0.95) - (opExp * 12);
       avmVal   = noi0 > 0 ? Math.round(noi0 / 0.075) : Math.round(pp * 0.98);
-      avmModel = 'Income Approach (7.5% cap rate)';
-      avmNote  = 'Valuation derived using stabilized NOI divided by a 7.5% market capitalization rate, consistent with Clear Capital Commercial methodology for properties under $5M. A formal MAI appraisal is required prior to final underwriting.';
+      avmModel = 'Income approach (7.5% cap rate, from entered figures)';
+      avmNote  = 'Estimated from entered NOI divided by a 7.5% market cap rate. This is a screening estimate from your inputs, not a sourced valuation. A formal MAI appraisal is required prior to final underwriting.';
     } else {
       avmVal   = Math.round(pp * 0.98);
-      avmModel = 'Sales Comparison (pre-screen)';
-      avmNote  = 'Estimated using comparable sales data. Income approach not available without rent and expense inputs. Full commercial appraisal strongly recommended before proceeding.';
+      avmModel = 'Screening estimate (entered figures)';
+      avmNote  = 'Estimated from your entered purchase price; no rent and expense inputs for an income approach and no live comparable data available. A full commercial appraisal is required before proceeding.';
     }
   } else if (rural) {
     avmVal   = Math.round(avmBase * 0.97);
-    avmModel = 'Clear Capital AVM (rural segment)';
-    avmNote  = 'Rural properties are valued using the Clear Capital AVM with a conservative 3% discount to account for limited comparable sales data and wider bid-ask spreads in non-urban markets. An on-site Property Condition Index (PCI) review is recommended.';
+    avmModel = 'Screening estimate (rural, entered figures)';
+    avmNote  = 'Estimated from your entered value with a conservative 3% discount for thin rural comparables; no live comparable data was available. This is not a sourced valuation. An on-site appraisal is recommended.';
   } else {
     avmVal   = Math.round(avmBase * 1.04);
-    avmModel = 'HouseCanary AVM';
-    avmNote  = 'Residential valuation computed using the HouseCanary Automated Valuation Model, which incorporates recent comparable sales, neighborhood appreciation trends, and property characteristics. Confidence is higher in active markets with recent comparable transactions.';
+    avmModel = 'Screening estimate (entered figures)';
+    avmNote  = 'Estimated from your entered ARV or purchase price; no live comparable data was available for this address. This is a screening estimate from your inputs, not a sourced valuation. Confirm with a licensed appraisal.';
   }
 
   var equityAtEntry = avmVal > 0 ? (avmVal - pp) / avmVal : 0;
   metrics.push({ label: 'Est. Market Value (' + avmModel + ')', value: ipaFmt(avmVal) });
+  if (avmConf) {
+    metrics.push({ label: 'Valuation Confidence', value: avmConf + (avmLow ? ' — full appraisal required' : ''),
+      color: avmConf === 'High' ? 'ipa-good' : avmConf === 'Medium' ? 'ipa-warn' : 'ipa-bad' });
+    if (avmRaw && avmVal && Math.abs(avmRaw - avmVal) / avmVal >= 0.05) metrics.push({ label: 'Provider AVM (raw)', value: ipaFmt(avmRaw) });
+  }
   metrics.push({ label: 'Equity at Entry', value: ipaPct(equityAtEntry),
     color: equityAtEntry >= 0.20 ? 'ipa-good' : equityAtEntry >= 0.10 ? 'ipa-warn' : 'ipa-bad',
     note: 'Percentage of estimated market value retained as equity on day one. 20%+ is considered strong; below 10% provides insufficient buffer.' });
@@ -3204,6 +3301,7 @@ function ipaComputeDecision(d) {
     flags.push('Purchase price of ' + ipaFmt(pp) + ' exceeds the estimated market value of ' + ipaFmt(avmVal) + '. The investor would be buying above market — a significant risk requiring strong justification (off-market value-add, development upside, etc.).');
   }
   rationale.push('Valuation: ' + avmModel + ' estimates market value at ' + ipaFmt(avmVal) + ', yielding ' + ipaPct(equityAtEntry) + ' equity at entry. ' + avmNote);
+  avmReasons.forEach(function(r){ rationale.push('Valuation confidence: ' + r + '.'); });
 
   // ── Fix & Flip / New Construction ─────────────────────────────────────
   if (d.isFlip || d.isNewConst) {
@@ -3402,6 +3500,13 @@ function ipaComputeDecision(d) {
   // Req 4b — a weak or undefined takeout routes to a human underwriter, never a silent auto-decline.
   if ((exitScore < 40 || exitVia === 'Unspecified') && !(grossProfit !== null && grossProfit < 0)) verdict = 'REFER';
 
+  // Valuation-confidence gate: a low-confidence value (dispersed comps, wide range, or a comp set
+  // dominated by newer construction) cannot carry a clean BUY. Flag it and route to a full appraisal.
+  if (avmLow) {
+    flags.push('Automated value is low-confidence (' + avmReasons.join('; ') + '). Order a full appraisal before funding; do not rely on the point estimate for pricing or leverage.');
+    if (verdict === 'BUY') verdict = 'NEGOTIATE';
+  }
+
   // Lender profile
   var lenderProfile;
   if (dealScore >= 70 && ltv <= 0.70 && cs >= 680) {
@@ -3415,7 +3520,8 @@ function ipaComputeDecision(d) {
   return {
     verdict: verdict, dealScore: dealScore, metrics: metrics, rationale: rationale,
     flags: flags, deal: d, lenderProfile: lenderProfile,
-    avmVal: avmVal, avmModel: avmModel, avmNote: avmNote
+    avmVal: avmVal, avmModel: avmModel, avmNote: avmNote,
+    avmConfidence: avmConf, avmReasons: avmReasons, lowConfidence: avmLow, avmRaw: avmRaw
   };
 }
 
