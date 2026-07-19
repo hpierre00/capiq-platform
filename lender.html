@@ -2811,18 +2811,29 @@ function lpaSegmentProperty(d) {
 
 // AVM valuation with tiered model routing and localStorage calibration
 function lpaComputeAppraisedValue(d) {
-  // Live market data (from the property-data provider) becomes the primary appraised value.
+  // Live market data (from the property-data provider) becomes the primary appraised value,
+  // reconciled by the appraisal approach appropriate to the property type (USPAP-aligned) and
+  // graded for reliability. A wide comp spread or value range flags the value as low-confidence.
   if (d && d.marketData && d.marketData.value) {
     var _mlow = d.marketData.valueLow, _mhigh = d.marketData.valueHigh;
+    var _rec = (d._reconciled && d._reconciled.value) ? d._reconciled : lpaReconcileValue(d.marketData, d);
+    var _avmRaw = d.marketData.value;
+    var _confNote = _rec.reasons && _rec.reasons.length ? _rec.reasons.join('; ') : '';
     return {
-      value: d.marketData.value,
-      model: (d.marketData.source || 'Market') + ' live AVM',
-      confidence: 'Market-sourced',
+      value: _rec.value,
+      avmRaw: _avmRaw,
+      model: (d.marketData.source || 'Market') + ' data, ' + _rec.method,
+      confidence: _rec.confidence,
+      confidenceReasons: _rec.reasons || [],
+      medianPpsf: _rec.medianPpsf, cv: _rec.cv, rangeWidth: _rec.rangeWidth, compCount: _rec.compCount,
+      lowConfidence: (_rec.confidence === 'Low'),
       segment: lpaSegmentProperty(d),
       low: _mlow || null, high: _mhigh || null, live: true,
       comps: d.marketData.comps || [],
-      note: 'Live automated valuation from ' + (d.marketData.source || 'provider') + ' comparable sales' +
-            (_mlow && _mhigh ? ' (range ' + lpaFmt(_mlow) + ' to ' + lpaFmt(_mhigh) + ')' : '') + '. Verify against a licensed appraisal before funding.'
+      note: _rec.method + ' from ' + (d.marketData.source || 'provider') + ' comparable sales' +
+            (_mlow && _mhigh ? ' (provider range ' + lpaFmt(_mlow) + ' to ' + lpaFmt(_mhigh) + ')' : '') +
+            '. Valuation confidence ' + _rec.confidence + (_confNote ? ' because ' + _confNote : '') +
+            (_rec.confidence === 'Low' ? '. Automated value is low-confidence: order a full appraisal before funding rather than relying on the point estimate.' : '. Verify against a licensed appraisal before funding.')
     };
   }
   var seg     = lpaSegmentProperty(d);
@@ -2946,13 +2957,66 @@ function lpaComputeLiquidityScore(d, seg) {
   return Math.min(100, Math.max(0, score));
 }
 
-// Leverage and equity are measured against the real appraised value when available.
-// On a refinance, estimated value replaces purchase price. Substantial equity always
-// scores positively, and sponsor experience and exit strength lower risk.
+function lpaMedian(a){ if(!a||!a.length) return null; var s=a.slice().sort(function(x,y){return x-y;}); var m=Math.floor(s.length/2); return s.length%2 ? s[m] : (s[m-1]+s[m])/2; }
+function lpaStdev(a){ if(!a||a.length<2) return 0; var mean=a.reduce(function(x,y){return x+y;},0)/a.length; var v=a.reduce(function(x,y){return x+Math.pow(y-mean,2);},0)/a.length; return Math.sqrt(v); }
+
+// Reconcile an appraised value using the standard approach for the property type
+// (sales comparison for residential, income for rentals and commercial, cost for
+// ground-up), aligned to USPAP practice, and grade the reliability of the result.
+function lpaReconcileValue(md, d) {
+  md = md || {}; d = d || {};
+  var type = (d.loanType || '').toLowerCase();
+  var sqft = md.subjectSqft || d.squareFootage || 0;
+  var avm  = md.value || 0, lo = md.valueLow || 0, hi = md.valueHigh || 0;
+  var comps = (md.comps || []).filter(function(c){ return c && c.price && c.squareFootage; });
+  var ppsf  = comps.map(function(c){ return c.price / c.squareFootage; }).filter(function(x){ return x > 0; });
+  var meanP = ppsf.length ? ppsf.reduce(function(x,y){return x+y;},0)/ppsf.length : 0;
+  var cv    = meanP ? lpaStdev(ppsf) / meanP : 0;
+  var rangeWidth = (avm && lo && hi) ? (hi - lo) / avm : 0;
+  // Trim the single highest and lowest comp price-per-sqft when we have enough comps.
+  var trimmed = ppsf.slice().sort(function(x,y){return x-y;});
+  if (trimmed.length >= 5) trimmed = trimmed.slice(1, -1);
+  var medianP = lpaMedian(trimmed);
+
+  var isIncome = /dscr|rental/.test(type) || d.noi || d.grossIncome;
+  var isConstruction = /ground|construct/.test(type);
+  var salesVal = (medianP && sqft) ? Math.round(medianP * sqft) : (avm || 0);
+  var method, value;
+  if (isConstruction && ((d.purchasePrice || 0) + (d.constructionBudget || 0) > 0)) {
+    method = 'Cost approach (land plus construction)';
+    value = Math.round((d.purchasePrice || 0) + (d.constructionBudget || 0));
+  } else if (isIncome) {
+    var noi = d.noi || ((d.monthlyRent || 0) * 12 * 0.60);
+    var cap = d.capRate ? (d.capRate > 1 ? d.capRate / 100 : d.capRate) : 0.068;
+    var incomeVal = (noi > 0 && cap > 0) ? Math.round(noi / cap) : 0;
+    if (incomeVal && salesVal) { method = 'Income approach reconciled with sales comparison'; value = Math.round(incomeVal * 0.6 + salesVal * 0.4); }
+    else if (incomeVal) { method = 'Income approach (NOI over cap rate)'; value = incomeVal; }
+    else { method = 'Sales comparison'; value = salesVal; }
+  } else {
+    if (medianP && sqft) { method = 'Sales comparison (median of comps, outliers trimmed)'; value = salesVal; }
+    else { method = 'Automated model estimate'; value = avm; }
+  }
+  if (!value) value = avm;
+
+  // Reliability grade
+  var reasons = [], conf = 'High';
+  if (cv >= 0.25) { conf = 'Low'; reasons.push('comparable price per square foot varies widely (CV ' + Math.round(cv*100) + '%)'); }
+  else if (cv >= 0.12) { conf = 'Medium'; reasons.push('moderate spread in comparable price per square foot (CV ' + Math.round(cv*100) + '%)'); }
+  if (rangeWidth >= 0.35) { conf = 'Low'; reasons.push('the model value range spans ' + Math.round(rangeWidth*100) + '% of value'); }
+  else if (rangeWidth >= 0.18) { if (conf === 'High') conf = 'Medium'; reasons.push('the model value range spans ' + Math.round(rangeWidth*100) + '% of value'); }
+  if (comps.length < 3) { conf = 'Low'; reasons.push('fewer than three usable comparables'); }
+  if (avm && value && Math.abs(avm - value) / value >= 0.20) { if (conf === 'High') conf = 'Medium'; reasons.push('the automated point estimate differs from the reconciled comp value by ' + Math.round(Math.abs(avm - value) / value * 100) + '%'); }
+  if (!reasons.length) reasons.push('comparables are tight and the value range is narrow');
+
+  return { value: value, method: method, medianPpsf: medianP ? Math.round(medianP) : null, cv: cv, rangeWidth: rangeWidth, confidence: conf, reasons: reasons, compCount: comps.length, salesVal: salesVal };
+}
+
+// Leverage and equity are measured against the reconciled appraised value when available.
+// On a refinance, estimated value replaces purchase price.
 function lpaEffectiveValue(d) {
   var type = (d.loanType || '').toLowerCase();
   var isRefi = type.indexOf('refi') >= 0 || type.indexOf('refinanc') >= 0 || !!d.isRefi;
-  var apprVal = (d.marketData && d.marketData.value) || d.appraisedValue || 0;
+  var apprVal = (d._reconciled && d._reconciled.value) || (d.marketData && d.marketData.value) || d.appraisedValue || 0;
   return apprVal || (isRefi ? (d.currentValue || d.purchasePrice) : (d.purchasePrice || d.currentValue)) || 0;
 }
 // Expected-loss risk model. Loss Given Default is driven by the recovery value of the
@@ -2971,7 +3035,12 @@ function lpaRiskModel(d, gl) {
   var liq = (typeof lpaComputeLiquidityScore === 'function') ? lpaComputeLiquidityScore(d, seg) : 60;
   liq = Math.max(0, Math.min(100, liq));
   var liqFactor = 0.62 + 0.26 * (liq / 100);            // forced-sale recovery: 62% to 88% of value
-  var recovery  = value * liqFactor;
+  // Valuation-confidence haircut: when the automated value is low-confidence (dispersed comps
+  // or a wide value range) we cannot trust the point estimate, so we recover against a more
+  // conservative collateral figure until a full appraisal confirms value.
+  var _vc = (d._reconciled && d._reconciled.confidence) || (d.marketData && d.marketData.value ? null : null);
+  var confHaircut = _vc === 'Low' ? 0.85 : _vc === 'Medium' ? 0.95 : 1.0;
+  var recovery  = value * liqFactor * confHaircut;
   var exposure  = loan * 1.12;                          // principal plus ~12% carry, legal, and holding
   var lgd       = exposure > 0 ? Math.max(0, Math.min(1, (exposure - recovery) / exposure)) : 0;
 
@@ -2999,7 +3068,8 @@ function lpaRiskModel(d, gl) {
     score: score, pd: pd, lgd: lgd, el: el, elDollars: elDollars,
     value: value, recovery: Math.round(recovery), exposure: Math.round(exposure),
     ltvOfValue: ltvOfValue, equityPct: Math.max(0, 1 - ltvOfValue),
-    liqFactor: liqFactor, exitScore: ex.score, sponsorScore: sp.score
+    liqFactor: liqFactor, confHaircut: confHaircut, valueConfidence: _vc || 'n/a',
+    exitScore: ex.score, sponsorScore: sp.score
   };
 }
 function lpaComputeRiskScore(d, gl) {
@@ -3175,6 +3245,9 @@ function lpaScoreSponsor(d) {
   return {score:score, tier:tier, rationale:tier + ' — ' + label + ' comparable projects. ' + (heavy ? 'Execution risk is elevated for this product, so track record carries more weight.' : 'Track record carries moderate weight for this product.')};
 }
 function lpaComputeDecision(d, gl) {
+  // Reconcile the appraised value by the property-type-appropriate approach and grade its
+  // reliability once, up front, so effective value, the risk model, and the report all agree.
+  d._reconciled = (d.marketData && d.marketData.value) ? lpaReconcileValue(d.marketData, d) : null;
   var _effVal = lpaEffectiveValue(d);
   // Leverage is measured against the appraised value when available. On a refinance, estimated value replaces purchase price.
   var ltv  = (_effVal > 0 && d.loanAmount > 0) ? (d.loanAmount / _effVal) : (d.ltv || 0);
@@ -3492,7 +3565,14 @@ function lpaComputeDecision(d, gl) {
     var avmClass = avmDelta !== null && parseFloat(avmDelta) >= 20 ? 'lpa-m-good'
                  : avmDelta !== null && parseFloat(avmDelta) >= 5  ? 'lpa-m-warn' : 'lpa-m-bad';
     metrics.push({label:avmLabel, value:avmValStr, color:avmClass});
-    metrics.push({label:'Valuation Confidence', value:appraisal.confidence});
+    var _confColor = appraisal.confidence === 'High' ? 'lpa-m-good'
+                   : appraisal.confidence === 'Medium' ? 'lpa-m-warn'
+                   : appraisal.confidence === 'Low' ? 'lpa-m-bad' : '';
+    var _confVal = appraisal.confidence + (appraisal.lowConfidence ? ' — full appraisal required' : '');
+    metrics.push({label:'Valuation Confidence', value:_confVal, color:_confColor});
+    if (appraisal.avmRaw && appraisal.value && Math.abs(appraisal.avmRaw - appraisal.value) / appraisal.value >= 0.05) {
+      metrics.push({label:'Provider AVM (raw)', value:lpaFmt(appraisal.avmRaw)});
+    }
   }
   metrics.push({label:'Asset Liquidity Score', value:liqScore+'/100', color:liqClass});
 
@@ -3526,9 +3606,23 @@ function lpaComputeDecision(d, gl) {
     }
   }
 
+  // ── Valuation-confidence flag: a wide comp spread or value range means the automated point
+  // estimate cannot be trusted. Mark the file low-confidence, require a full appraisal, and do
+  // not let an unverified value carry a clean approval on its own. ─────────────────────────
+  var _lowConf = !!(appraisal && appraisal.lowConfidence);
+  if (_lowConf) {
+    var _why = (appraisal.confidenceReasons && appraisal.confidenceReasons.length) ? appraisal.confidenceReasons.join('; ') : 'comparable evidence is dispersed';
+    var _apprCond = 'Order a full appraisal before funding. The automated value is low-confidence because ' + _why + ', so the point estimate is not reliable for setting leverage. Underwrite to the appraised value, not the model value.';
+    if (conditions.indexOf(_apprCond) < 0) conditions.push(_apprCond);
+    rationale.push('Valuation confidence is Low: ' + _why + '. The property is flagged for a full appraisal rather than relying on the automated point estimate, and the collateral recovery used in the risk model is haircut accordingly.');
+    if (verdict === 'APPROVED') {
+      verdict = 'APPROVED WITH CONDITIONS';
+    }
+  }
+
   var _narr = lpaBuildNarrative({d:d, verdict:verdict, riskScore:riskScore, appraisal:appraisal, liqScore:liqScore, fireSaleVal:fireSaleVal, exitStr:_exitStr, sp:_sp});
 
-  return {verdict:verdict, metrics:metrics, rationale:rationale, conditions:conditions, capitalPath:capitalPath, riskScore:riskScore, fireSaleValue:fireSaleVal, appraisal:appraisal, liquidityScore:liqScore, narrativeHtml:_narr.html, narrativeSections:_narr.sections, narrativeSources:_narr.sources};
+  return {verdict:verdict, metrics:metrics, rationale:rationale, conditions:conditions, capitalPath:capitalPath, riskScore:riskScore, fireSaleValue:fireSaleVal, appraisal:appraisal, liquidityScore:liqScore, lowConfidence:_lowConf, narrativeHtml:_narr.html, narrativeSections:_narr.sections, narrativeSources:_narr.sources};
 }
 
 /* ── PDF ── */
