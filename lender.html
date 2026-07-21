@@ -3101,6 +3101,66 @@ function lpaComputeRiskScore(d, gl) {
   return lpaRiskModel(d, gl).score;
 }
 
+// Annual debt service: interest-only for bridge and short-term paper, fully amortizing
+// (30 year) for DSCR and rental loans.
+function lpaAnnualDebtService(loan, rate, amortizing) {
+  if (!(loan > 0) || !(rate > 0)) return 0;
+  if (!amortizing) return loan * rate;
+  var i = rate / 12, n = 360, f = i * Math.pow(1 + i, n) / (Math.pow(1 + i, n) - 1);
+  return loan * f * 12;
+}
+function lpaLoanFromDebtService(annualDS, rate, amortizing) {
+  if (!(annualDS > 0) || !(rate > 0)) return 0;
+  if (!amortizing) return annualDS / rate;
+  var i = rate / 12, n = 360, f = i * Math.pow(1 + i, n) / (Math.pow(1 + i, n) - 1);
+  return (annualDS / 12) / f;
+}
+// Lender credit metrics: DSCR, debt yield, LTC, max supportable loan (the binding constraint
+// across LTV, LTC, debt yield and DSCR), break-even occupancy, and downside stress cases.
+function lpaCreditMetrics(d, gl) {
+  var type = (d.loanType || '').toLowerCase();
+  var V = lpaEffectiveValue(d);
+  var L = d.loanAmount || 0;
+  var cost = (d.purchasePrice || 0) + (d.rehabBudget || d.constructionBudget || 0);
+  if (!cost) cost = d.arv || V;
+  var amortizing = type.indexOf('dscr') >= 0 || type.indexOf('rental') >= 0;
+  var r = null;
+  if (d.rateOverride != null) r = d.rateOverride;
+  else if (typeof lpaPricingEngine === 'function') { try { var px = lpaPricingEngine(d.loanType, (V > 0 ? L / V : (d.ltv || 0)), lpaCreditNum(d.creditScore || '')); if (px && px.rate != null) r = px.rate; } catch (e) {} }
+  if (r == null) r = 11.0;
+  r = r > 1 ? r / 100 : r;
+  var gpr = (d.monthlyRent || 0) * 12, opex = (d.monthlyExp || 0) * 12;
+  var noi = gpr > 0 ? (gpr * 0.95 - opex) : (d.noi || 0);
+  var hasIncome = noi > 0;
+  var ds = lpaAnnualDebtService(L, r, amortizing);
+  var dscr = (hasIncome && ds > 0) ? noi / ds : null;
+  var debtYield = (hasIncome && L > 0) ? noi / L : null;
+  var ltv = V > 0 ? L / V : null;
+  var ltc = cost > 0 ? L / cost : null;
+  var breakEvenOcc = gpr > 0 ? (ds + opex) / gpr : null;
+  var maxLTV = type.indexOf('dscr') >= 0 ? (gl && gl.ltv_dscr != null ? gl.ltv_dscr : 0.75)
+             : type.indexOf('bridge') >= 0 ? (gl && gl.ltv_bridge != null ? gl.ltv_bridge : 0.65)
+             : type.indexOf('flip') >= 0 ? (gl && gl.ltv_flip != null ? gl.ltv_flip : 0.85)
+             : type.indexOf('land') >= 0 ? (gl && gl.ltv_land != null ? gl.ltv_land : 0.55)
+             : (type.indexOf('ground') >= 0 || type.indexOf('construct') >= 0) ? (gl && gl.ltv_gnd != null ? gl.ltv_gnd : 0.75)
+             : (gl && gl.ltv_private != null ? gl.ltv_private : 0.70);
+  var maxLTC = 0.85, targetDY = 0.09, targetDSCR = 1.25;
+  var byLTV = V > 0 ? maxLTV * V : Infinity;
+  var byLTC = cost > 0 ? maxLTC * cost : Infinity;
+  var byDY = hasIncome ? noi / targetDY : Infinity;
+  var byDSCR = hasIncome ? lpaLoanFromDebtService(noi / targetDSCR, r, amortizing) : Infinity;
+  var sizes = [{ k: 'LTV', v: byLTV }, { k: 'LTC', v: byLTC }, { k: 'debt yield', v: byDY }, { k: 'DSCR', v: byDSCR }].filter(function (x) { return isFinite(x.v) && x.v > 0; });
+  var maxLoan = sizes.length ? Math.min.apply(null, sizes.map(function (x) { return x.v; })) : null;
+  var binding = maxLoan != null ? (sizes.filter(function (x) { return x.v === maxLoan; })[0] || {}).k : null;
+  var stress = {
+    ltvV10: V > 0 ? L / (V * 0.9) : null,
+    ltvV20: V > 0 ? L / (V * 0.8) : null,
+    dscrRateUp: hasIncome ? noi / lpaAnnualDebtService(L, r + 0.02, amortizing) : null,
+    dscrOcc90: (gpr > 0 && ds > 0) ? (gpr * 0.90 - opex) / ds : null
+  };
+  return { hasIncome: hasIncome, noi: noi, ds: ds, rate: r, dscr: dscr, debtYield: debtYield, ltv: ltv, ltc: ltc, cost: cost, value: V, loan: L, breakEvenOcc: breakEvenOcc, maxLoan: maxLoan, binding: binding, maxLTV: maxLTV, maxLTC: maxLTC, targetDSCR: targetDSCR, targetDY: targetDY, stress: stress, amortizing: amortizing };
+}
+
 // Req 2 — detailed underwriting narrative: Rationale, Indicative Pricing, Risk Assessment,
 // Underwriter's Note (two paragraphs each) plus Data Sources. Returns { html, sections, sources }
 // so both the on-screen card and the PDF render the same content. No em or en dashes in the prose.
@@ -3601,6 +3661,17 @@ function lpaComputeDecision(d, gl) {
   }
   metrics.push({label:'Asset Liquidity Score', value:liqScore+'/100', color:liqClass});
 
+  // ── Credit metrics + downside stress test ───────────────────────────────
+  var _cm = lpaCreditMetrics(d, gl);
+  if (_cm.debtYield != null) metrics.push({label:'Debt Yield', value:(_cm.debtYield*100).toFixed(1)+'%', color:_cm.debtYield>=0.10?'lpa-m-good':_cm.debtYield>=0.08?'lpa-m-warn':'lpa-m-bad'});
+  if (_cm.dscr != null) metrics.push({label:'DSCR (as sized)', value:_cm.dscr.toFixed(2)+'x', color:_cm.dscr>=1.25?'lpa-m-good':_cm.dscr>=1.10?'lpa-m-warn':'lpa-m-bad'});
+  if (_cm.ltc != null) metrics.push({label:'Loan-to-Cost (LTC)', value:(_cm.ltc*100).toFixed(1)+'%', color:_cm.ltc<=0.80?'lpa-m-good':_cm.ltc<=0.90?'lpa-m-warn':'lpa-m-bad'});
+  if (_cm.maxLoan != null && isFinite(_cm.maxLoan)) metrics.push({label:'Max Supportable Loan', value:lpaFmt(Math.round(_cm.maxLoan))+' ('+_cm.binding+'-bound)', color:_cm.maxLoan>=d.loanAmount?'lpa-m-good':'lpa-m-bad'});
+  if (_cm.breakEvenOcc != null) metrics.push({label:'Break-even Occupancy', value:_cm.breakEvenOcc<=1?(_cm.breakEvenOcc*100).toFixed(0)+'%':'>100% (cannot cover)', color:_cm.breakEvenOcc<=0.85?'lpa-m-good':_cm.breakEvenOcc<=0.95?'lpa-m-warn':'lpa-m-bad'});
+  if (_cm.stress.ltvV20 != null) metrics.push({label:'Stress: Value -20% → LTV', value:(_cm.stress.ltvV20*100).toFixed(0)+'%', color:_cm.stress.ltvV20<=0.75?'lpa-m-good':_cm.stress.ltvV20<=0.90?'lpa-m-warn':'lpa-m-bad'});
+  if (_cm.stress.dscrRateUp != null) metrics.push({label:'Stress: Rate +200bps → DSCR', value:_cm.stress.dscrRateUp.toFixed(2)+'x', color:_cm.stress.dscrRateUp>=1.15?'lpa-m-good':_cm.stress.dscrRateUp>=1.0?'lpa-m-warn':'lpa-m-bad'});
+  if (_cm.stress.dscrOcc90 != null) metrics.push({label:'Stress: Occupancy -10% → DSCR', value:_cm.stress.dscrOcc90.toFixed(2)+'x', color:_cm.stress.dscrOcc90>=1.15?'lpa-m-good':_cm.stress.dscrOcc90>=1.0?'lpa-m-warn':'lpa-m-bad'});
+
   // Add AVM rationale note
   if (appraisal.note) rationale.push('Valuation model: ' + appraisal.note);
 
@@ -3647,7 +3718,7 @@ function lpaComputeDecision(d, gl) {
 
   var _narr = lpaBuildNarrative({d:d, verdict:verdict, riskScore:riskScore, appraisal:appraisal, liqScore:liqScore, fireSaleVal:fireSaleVal, exitStr:_exitStr, sp:_sp});
 
-  return {verdict:verdict, metrics:metrics, rationale:rationale, conditions:conditions, capitalPath:capitalPath, riskScore:riskScore, fireSaleValue:fireSaleVal, appraisal:appraisal, liquidityScore:liqScore, lowConfidence:_lowConf, narrativeHtml:_narr.html, narrativeSections:_narr.sections, narrativeSources:_narr.sources};
+  return {verdict:verdict, metrics:metrics, rationale:rationale, conditions:conditions, capitalPath:capitalPath, riskScore:riskScore, fireSaleValue:fireSaleVal, appraisal:appraisal, liquidityScore:liqScore, lowConfidence:_lowConf, creditMetrics:_cm, narrativeHtml:_narr.html, narrativeSections:_narr.sections, narrativeSources:_narr.sources};
 }
 
 /* ── PDF ── */

@@ -2145,8 +2145,33 @@ function renderResult(a, d) {
   } else if (sv && !sv.available) {
     svHtml = `<div class="card" style="margin-bottom:16px"><div class="card-header"><div class="card-title">Sourced Valuation</div></div><div class="card-body"><p style="font-size:13px;color:var(--text-3)">No live property data was available for this address, so the figures in this report are derived from your entered numbers and are not an independently sourced valuation. Confirm with a licensed appraisal.</p></div></div>`;
   }
+  const cm = ipaCreditMetrics(d, d.sourcedValuation);
+  const cmCell = (label,val,color)=>`<div style="padding:10px 12px;background:rgba(255,255,255,0.03);border:1px solid var(--border);border-radius:8px"><div style="font-size:10px;color:var(--text-4);text-transform:uppercase;letter-spacing:.04em">${label}</div><div style="font-family:'DM Mono',monospace;font-size:16px;font-weight:700;color:${color||'var(--text)'};margin-top:2px">${val}</div></div>`;
+  let cmCells = '';
+  if (cm.debtYield!=null) cmCells += cmCell('Debt Yield',(cm.debtYield*100).toFixed(1)+'%',cm.debtYield>=0.10?'var(--green)':cm.debtYield>=0.08?'var(--amber)':'var(--red)');
+  if (cm.dscr!=null) cmCells += cmCell('DSCR (as sized)',cm.dscr.toFixed(2)+'x',cm.dscr>=1.25?'var(--green)':cm.dscr>=1.10?'var(--amber)':'var(--red)');
+  if (cm.ltv!=null) cmCells += cmCell('LTV',(cm.ltv*100).toFixed(1)+'%',cm.ltv<=0.65?'var(--green)':cm.ltv<=0.75?'var(--amber)':'var(--red)');
+  if (cm.ltc!=null) cmCells += cmCell('Loan-to-Cost',(cm.ltc*100).toFixed(1)+'%',cm.ltc<=0.80?'var(--green)':cm.ltc<=0.90?'var(--amber)':'var(--red)');
+  if (cm.maxLoan!=null && isFinite(cm.maxLoan)) cmCells += cmCell('Max Supportable Loan',ipaFmt(Math.round(cm.maxLoan))+' ('+cm.binding+')',cm.maxLoan>=cm.loan?'var(--green)':'var(--red)');
+  if (cm.breakEvenOcc!=null) cmCells += cmCell('Break-even Occupancy',cm.breakEvenOcc<=1?(cm.breakEvenOcc*100).toFixed(0)+'%':'>100%',cm.breakEvenOcc<=0.85?'var(--green)':cm.breakEvenOcc<=0.95?'var(--amber)':'var(--red)');
+  const cmSr = (label,val,color)=>`<tr><td style="padding:5px 8px;color:var(--text-3)">${label}</td><td style="padding:5px 8px;text-align:right;font-family:'DM Mono',monospace;color:${color}">${val}</td></tr>`;
+  let stressRows = '';
+  if (cm.stress.ltvV10!=null) stressRows += cmSr('Value -10% → LTV',(cm.stress.ltvV10*100).toFixed(0)+'%',cm.stress.ltvV10<=0.75?'var(--green)':cm.stress.ltvV10<=0.90?'var(--amber)':'var(--red)');
+  if (cm.stress.ltvV20!=null) stressRows += cmSr('Value -20% → LTV',(cm.stress.ltvV20*100).toFixed(0)+'%',cm.stress.ltvV20<=0.75?'var(--green)':cm.stress.ltvV20<=0.90?'var(--amber)':'var(--red)');
+  if (cm.stress.dscrRateUp!=null) stressRows += cmSr('Rate +200bps → DSCR',cm.stress.dscrRateUp.toFixed(2)+'x',cm.stress.dscrRateUp>=1.15?'var(--green)':cm.stress.dscrRateUp>=1.0?'var(--amber)':'var(--red)');
+  if (cm.stress.dscrOcc90!=null) stressRows += cmSr('Occupancy -10% → DSCR',cm.stress.dscrOcc90.toFixed(2)+'x',cm.stress.dscrOcc90>=1.15?'var(--green)':cm.stress.dscrOcc90>=1.0?'var(--amber)':'var(--red)');
+  const cmHtml = (cmCells || stressRows) ? `
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-header"><div class="card-title">Credit Metrics &amp; Stress Test</div></div>
+      <div class="card-body">
+        ${cmCells?`<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px">${cmCells}</div>`:''}
+        ${stressRows?`<table style="width:100%;border-collapse:collapse;margin-top:12px;font-size:12px"><thead><tr style="color:var(--text-4);text-align:left"><th style="padding:5px 8px">Downside Scenario</th><th style="padding:5px 8px;text-align:right">Result</th></tr></thead><tbody>${stressRows}</tbody></table>`:''}
+        <div style="font-size:11px;color:var(--text-4);margin-top:8px">${cm.hasIncome?'DSCR and debt yield use stabilized NOI; ':''}max supportable loan is the binding limit across LTV, LTC${cm.hasIncome?', debt yield and DSCR':''}. Interest-only debt service unless a DSCR or amortizing loan.</div>
+      </div>
+    </div>` : '';
   document.getElementById('result-content').innerHTML = `
     ${svHtml}
+    ${cmHtml}
     <div class="card" style="margin-bottom:16px">
       <div class="card-header"><div class="card-title">Deal Intelligence Report</div><div style="display:flex;align-items:center;gap:10px"><span id="deal-code-badge" style="display:none;font-family:'DM Mono',monospace;font-size:11px;background:var(--teal-dim);color:var(--teal);border:1px solid var(--teal-border);padding:3px 10px;border-radius:4px"></span><span class="verdict-badge ${vc}">● ${a.dealScore.toUpperCase()}</span></div></div>
       <div class="card-body">
@@ -3301,6 +3326,59 @@ function ipaReconcileValue(md, d) {
   if (!reasons.length) reasons.push('comparables are tight, like-condition, and the value range is narrow');
 
   return { value: value, method: method, medianPpsf: medianP ? Math.round(medianP) : null, cv: cv, rangeWidth: rangeWidth, confidence: conf, reasons: reasons, compCount: comps.length, excludedNew: excludedNew.length, salesVal: salesVal };
+}
+
+function ipaAnnualDS(loan, rate, amortizing) {
+  if (!(loan > 0) || !(rate > 0)) return 0;
+  if (!amortizing) return loan * rate;
+  var i = rate / 12, n = 360, f = i * Math.pow(1 + i, n) / (Math.pow(1 + i, n) - 1);
+  return loan * f * 12;
+}
+function ipaLoanFromDS(annualDS, rate, amortizing) {
+  if (!(annualDS > 0) || !(rate > 0)) return 0;
+  if (!amortizing) return annualDS / rate;
+  var i = rate / 12, n = 360, f = i * Math.pow(1 + i, n) / (Math.pow(1 + i, n) - 1);
+  return (annualDS / 12) / f;
+}
+// Investor credit metrics: DSCR, debt yield, LTC, max supportable loan (binding constraint),
+// break-even occupancy, and downside stress. Uses the sourced value when available.
+function ipaCreditMetrics(dd, sv) {
+  dd = dd || {};
+  var isComm = dd.market === 'Commercial';
+  var V = (sv && sv.available ? sv.value : 0) || dd.arv || dd.asIsValue || dd.purchasePrice || 0;
+  var L = dd.loanAmount || 0;
+  var cost = (dd.purchasePrice || 0) + (dd.rehabBudget || 0);
+  if (!cost) cost = dd.arv || V;
+  var amortizing = isComm ? false : (dd.dealType === 'Rental');
+  var noi = 0, gpr = 0, opex = 0;
+  if (isComm) { noi = dd.noi || ((dd.grossIncome || 0) - (dd.expenses || 0)); gpr = dd.grossIncome || 0; opex = dd.expenses || 0; }
+  else if ((dd.monthlyRent || 0) > 0) { gpr = dd.monthlyRent * 12; opex = gpr * 0.35; noi = gpr * 0.95 - opex; }
+  var hasIncome = noi > 0;
+  var ds = 0, r = 0;
+  if ((dd.monthlyPayment || 0) > 0) { ds = dd.monthlyPayment * 12; r = L > 0 ? ds / L : 0; }
+  else { r = dd.rate ? (dd.rate > 1 ? dd.rate / 100 : dd.rate) : 0.11; ds = ipaAnnualDS(L, r, amortizing); }
+  if (!r) r = 0.11;
+  var dscr = (hasIncome && ds > 0) ? noi / ds : null;
+  var debtYield = (hasIncome && L > 0) ? noi / L : null;
+  var ltv = V > 0 ? L / V : null;
+  var ltc = cost > 0 ? L / cost : null;
+  var breakEvenOcc = gpr > 0 ? (ds + opex) / gpr : null;
+  var maxLTV = isComm ? 0.70 : (dd.dealType === 'Fix & Flip' || dd.dealType === 'New Construction' ? 0.75 : dd.dealType === 'Rental' ? 0.75 : 0.70);
+  var maxLTC = 0.85;
+  var byLTV = V > 0 ? maxLTV * V : Infinity;
+  var byLTC = cost > 0 ? maxLTC * cost : Infinity;
+  var byDY = hasIncome ? noi / 0.09 : Infinity;
+  var byDSCR = hasIncome ? ipaLoanFromDS(noi / 1.25, r, amortizing) : Infinity;
+  var sizes = [{ k: 'LTV', v: byLTV }, { k: 'LTC', v: byLTC }, { k: 'debt yield', v: byDY }, { k: 'DSCR', v: byDSCR }].filter(function (x) { return isFinite(x.v) && x.v > 0; });
+  var maxLoan = sizes.length ? Math.min.apply(null, sizes.map(function (x) { return x.v; })) : null;
+  var binding = maxLoan != null ? (sizes.filter(function (x) { return x.v === maxLoan; })[0] || {}).k : null;
+  var stress = {
+    ltvV10: V > 0 ? L / (V * 0.9) : null,
+    ltvV20: V > 0 ? L / (V * 0.8) : null,
+    dscrRateUp: hasIncome ? noi / ipaAnnualDS(L, r + 0.02, amortizing) : null,
+    dscrOcc90: (gpr > 0 && ds > 0) ? (gpr * 0.90 - opex) / ds : null
+  };
+  return { isComm: isComm, value: V, loan: L, cost: cost, noi: noi, hasIncome: hasIncome, ds: ds, rate: r, dscr: dscr, debtYield: debtYield, ltv: ltv, ltc: ltc, breakEvenOcc: breakEvenOcc, maxLoan: maxLoan, binding: binding, maxLTV: maxLTV, maxLTC: maxLTC, stress: stress, amortizing: amortizing };
 }
 
 function ipaComputeDecision(d) {
