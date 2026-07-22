@@ -578,6 +578,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <span onclick="showChangePassword('investor')" style="font-size:10px;color:var(--text-4);cursor:pointer;font-family:'DM Mono',monospace;letter-spacing:.04em;margin-left:8px" title="Change password">🔑</span>
         <button onclick="logout()" style="background:none;border:none;cursor:pointer;font-size:11px;color:rgba(255,255,255,0.35);font-family:'DM Mono',monospace;letter-spacing:.06em">SIGN OUT</button>
       </div>
+      <div style="margin-top:8px">
+        <span onclick="openBillingPortal()" style="font-size:10px;color:rgba(255,255,255,0.4);cursor:pointer;font-family:'DM Mono',monospace;letter-spacing:.04em;text-decoration:underline" title="Opens the secure Stripe billing portal to update payment or cancel your subscription">Manage / cancel subscription</span>
+      </div>
     </div>
   </aside>
 
@@ -1229,9 +1232,18 @@ function updateSidebarUser(investor) {
 // ─── STRIPE PAYWALL ──────────────────────────────────────────────────────────
 const STRIPE_FN = 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-stripe-v2';
 
+// Underlytix platform admins are never gated by the analysis paywall.
+const PLATFORM_ADMIN_EMAILS = ['hpierre00@gmail.com'];
+function isPlatformAdmin() {
+  const s = getSession();
+  const e = ((s && s.investor && s.investor.email) || '').toLowerCase();
+  return PLATFORM_ADMIN_EMAILS.indexOf(e) >= 0;
+}
+
 async function checkAccess() {
   const session = getSession();
   if (!session?.token) return { canAnalyze: false, plan: 'free', remaining: 0 };
+  if (isPlatformAdmin()) return { canAnalyze: true, plan: 'pro', remaining: -1, used: 0, limit: 0, admin: true };
   try {
     const res = await fetch(STRIPE_FN, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
