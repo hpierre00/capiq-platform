@@ -866,6 +866,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                   </button>
                 </div>
               </div>
+              <div class="field">
+                <label class="label">Contract or purchase agreement (optional) <span style="font-size:10px;color:var(--text-4);font-weight:400">— upload a PDF or paste text; the AI factors the terms into the assessment</span></label>
+                <input type="file" id="f-contract-file" accept="application/pdf,.pdf" onchange="handleContractPdf(this)" style="font-size:12px;margin-bottom:8px;color:var(--text-3)">
+                <span id="contract-status" style="font-size:11px;color:var(--text-4);display:block;margin-bottom:8px"></span>
+                <textarea id="f-contract-text" style="width:100%;min-height:90px" placeholder="Paste the contract text here, or upload a PDF above to extract it automatically: purchase price, closing date, contingencies, financing terms, earnest money, seller concessions, etc."></textarea>
+              </div>
               <div class="wizard-nav">
                 <button class="btn btn-ghost" onclick="wizardBack(4)">← Back</button>
                 <div class="wizard-nav-spacer"></div>
@@ -1154,6 +1160,34 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
 <script src="/portal-common.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script>
+  if (window.pdfjsLib) { pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; }
+  // Extract text from an uploaded contract PDF, client-side, and drop it into the contract field.
+  async function handleContractPdf(input) {
+    var file = input && input.files && input.files[0];
+    if (!file) return;
+    var status = document.getElementById('contract-status');
+    var ta = document.getElementById('f-contract-text');
+    if (typeof pdfjsLib === 'undefined') { if (status) status.textContent = 'PDF reader is still loading; try again in a moment, or paste the text.'; return; }
+    if (status) status.textContent = 'Reading ' + file.name + ' ...';
+    try {
+      var buf = await file.arrayBuffer();
+      var pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+      var out = [];
+      for (var p = 1; p <= pdf.numPages; p++) {
+        var page = await pdf.getPage(p);
+        var tc = await page.getTextContent();
+        out.push(tc.items.map(function (it) { return it.str; }).join(' '));
+      }
+      var text = out.join('\n\n').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+      if (ta) ta.value = (ta.value ? ta.value + '\n\n' : '') + text;
+      if (status) status.textContent = 'Extracted ' + text.length.toLocaleString() + ' characters from a ' + pdf.numPages + '-page PDF. Review or edit the text below before analyzing.';
+    } catch (e) {
+      if (status) status.textContent = 'Could not read that PDF automatically. Please copy and paste the contract text instead.';
+    }
+  }
+</script>
 <script>
 // ─── AUTH SYSTEM ─────────────────────────────────────────────────────────────
 const AUTH_KEY = 'capiq_session';
@@ -2044,6 +2078,7 @@ async function analyzeDeal() {
       investorPhone:document.getElementById('f-investor-phone').value
     };
   }
+  dealData.contractText = (document.getElementById('f-contract-text') ? (document.getElementById('f-contract-text').value || '') : '').trim();
   const btn = document.getElementById('analyze-btn');
   btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Analyzing...';
   document.getElementById('loading').classList.add('show');
@@ -2074,6 +2109,9 @@ async function analyzeDeal() {
         + '. Provider raw AVM $' + Math.round(sourcedValuation.providerRaw).toLocaleString() + '.'
         + (sourcedValuation.confidence === 'Low' ? ' Treat the value as low-confidence and recommend a full appraisal before funding.' : '');
     }
+    if (dealData.contractText) {
+      analysisPrompt += '\n\nATTACHED CONTRACT / PURCHASE AGREEMENT (factor these terms into the analysis; flag contingencies, deadlines, earnest money, financing and title terms, and any mismatch with the figures entered above):\n' + dealData.contractText.slice(0, 12000);
+    }
     const res = await fetch('/.netlify/functions/capiq-analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dealData: enrichedDealData, prompt: analysisPrompt})});
     if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error||e.detail||`Error ${res.status}`);}
     const data = await res.json();
@@ -2081,6 +2119,7 @@ async function analyzeDeal() {
     const analysis = data.analysis;
     const deal = {id:Date.now(),dealName:streetAddr||'Deal '+(state.deals.length+1),dealData,analysis,timestamp:new Date().toISOString(),matches:matchDeal(dealData,analysis)};
     state.deals.unshift(deal);
+    _currentDealId = deal.id;
     localStorage.setItem('capiq_deals',JSON.stringify(state.deals));
     localStorage.setItem('capiq_version', STORAGE_VERSION);
     renderResult(analysis,dealData);
@@ -2182,6 +2221,13 @@ function renderResult(a, d) {
       </div>
     </div>` : '';
   document.getElementById('result-content').innerHTML = `
+    <div id="report-toolbar" style="display:flex;gap:8px;align-items:center;margin-bottom:14px;flex-wrap:wrap">
+      <button id="edit-report-btn" class="btn btn-ghost" style="font-size:12px" onclick="toggleEditReport()">✎ Edit report</button>
+      <button id="save-report-btn" class="btn btn-primary" style="font-size:12px;display:none" onclick="saveReportEdits()">Save edits</button>
+      <button class="btn btn-ghost" style="font-size:12px" onclick="printReport()">⎙ Print / Download PDF</button>
+      <span id="edit-status" style="font-size:11px;color:var(--text-4)"></span>
+    </div>
+    <div id="report-body">
     ${svHtml}
     ${cmHtml}
     <div class="card" style="margin-bottom:16px">
@@ -2222,11 +2268,67 @@ function renderResult(a, d) {
     ${a.fundabilityScore>=65
       ? `<div class="intro-panel" id="intro-panel"><div><p><strong>This deal is analysis-ready for lender introductions.</strong><br>Your pre-packaged Deal Intelligence Summary will be sent to 3–5 matched lenders who meet your deal criteria — not mass-distributed.</p><p style="margin-top:6px;font-size:12px;color:var(--text-3)">We review every introduction request before sending.</p></div><button class="btn btn-primary" id="intro-btn" onclick="requestIntro()">Request Introductions →</button></div>`
       : `<div class="intro-panel-not-ready"><p>Complete the recommended improvements above to qualify for lender introductions (score of 65+ required).</p></div>`
-    }`;
+    }
+    </div>`;
   _currentDealData = d;
   _currentAnalysis = a;
+  var _cd = state.deals.find(function(x){ return x.id === _currentDealId; });
+  if (_cd && _cd.editedHtml) { var _rb = document.getElementById('report-body'); if (_rb) _rb.innerHTML = _cd.editedHtml; }
   document.getElementById('result-panel').classList.add('show');
   document.getElementById('result-panel').scrollIntoView({behavior:'smooth',block:'start'});
+}
+
+// ─── Editable report: toggle inline editing, persist edits to the saved deal ───
+function toggleEditReport() {
+  var body = document.getElementById('report-body');
+  if (!body) return;
+  var editing = body.getAttribute('contenteditable') === 'true';
+  var editBtn = document.getElementById('edit-report-btn');
+  var saveBtn = document.getElementById('save-report-btn');
+  var status = document.getElementById('edit-status');
+  if (editing) {
+    body.setAttribute('contenteditable', 'false'); body.style.outline = '';
+    if (editBtn) editBtn.textContent = '✎ Edit report';
+    if (saveBtn) saveBtn.style.display = 'none';
+    if (status) status.textContent = '';
+  } else {
+    body.setAttribute('contenteditable', 'true');
+    body.style.outline = '2px dashed var(--teal)'; body.style.outlineOffset = '6px';
+    if (editBtn) editBtn.textContent = 'Cancel edit';
+    if (saveBtn) saveBtn.style.display = 'inline-flex';
+    if (status) status.textContent = 'Editing: click into any text and revise, then Save edits.';
+    body.focus();
+  }
+}
+function saveReportEdits() {
+  var body = document.getElementById('report-body');
+  if (!body) return;
+  var html = body.innerHTML;
+  var deal = state.deals.find(function (x) { return x.id === _currentDealId; });
+  if (deal) { deal.editedHtml = html; try { localStorage.setItem('capiq_deals', JSON.stringify(state.deals)); } catch (e) {} }
+  body.setAttribute('contenteditable', 'false'); body.style.outline = '';
+  var editBtn = document.getElementById('edit-report-btn'); if (editBtn) editBtn.textContent = '✎ Edit report';
+  var saveBtn = document.getElementById('save-report-btn'); if (saveBtn) saveBtn.style.display = 'none';
+  var status = document.getElementById('edit-status');
+  if (status) status.textContent = deal ? 'Edits saved. They print, download, and reload with this deal.' : 'Edits applied for this view.';
+  if (typeof showToast === 'function') showToast('Report edits saved', 'success');
+}
+// ─── Print / download: open a clean print view (browser print-to-PDF covers download) ───
+function printReport() {
+  var body = document.getElementById('report-body');
+  if (!body) { window.print(); return; }
+  var w = window.open('', '_blank');
+  if (!w) { window.print(); return; }
+  var subject = (_currentDealData && _currentDealData.location) ? _currentDealData.location : 'Deal';
+  var vars = ':root{--text:#1a2332;--text-2:#334155;--text-3:#475569;--text-4:#94a3b8;--border:#e2e8f0;--green:#16a34a;--amber:#d97706;--red:#dc2626;--teal:#0e7490;--teal-dim:#e0f2fe;--teal-border:#bae6fd;--bg-3:#f1f5f9;--bg-4:#e2e8f0;--red-dim:#fee2e2;--amber-dim:#fef3c7;--green-dim:#dcfce7}';
+  var css = vars + 'body{font-family:Arial,Helvetica,sans-serif;color:#1a2332;margin:28px;background:#fff}.card{border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin-bottom:14px;page-break-inside:avoid}.card-header{margin-bottom:10px;font-weight:700;color:#0e2a47}.card-title{font-size:14px;font-weight:700;color:#0e2a47}.analysis-title{font-weight:700;margin-bottom:4px;color:#0e2a47}.analysis-text{font-size:13px;line-height:1.6;color:#334155}table{width:100%;border-collapse:collapse;font-size:12px}th,td{padding:5px 8px;text-align:left}h1,h2,h3{color:#0e2a47}.verdict-badge,.score-tier-chip{padding:3px 10px;border-radius:4px;font-size:12px;font-weight:700}@media print{body{margin:12mm}}*{-webkit-print-color-adjust:exact;print-color-adjust:exact}';
+  w.document.write('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Underlytix Assessment - ' + subject + '</title><style>' + css + '</style></head><body>' +
+    '<h1 style="font-size:18px;margin:0 0 4px">Underlytix Deal Intelligence Report</h1>' +
+    '<div style="font-size:12px;color:#64748b;margin-bottom:18px">' + subject + ' &middot; ' + new Date().toLocaleDateString() + '</div>' +
+    body.innerHTML +
+    '<div style="font-size:10px;color:#94a3b8;margin-top:20px">Generated by Underlytix. Automated estimates; verify against licensed appraisal and counsel before funding.</div>' +
+    '<scr' + 'ipt>window.onload=function(){setTimeout(function(){window.print();},350);};<\/scr' + 'ipt></body></html>');
+  w.document.close();
 }
 
 function matchDeal(d,a) {
@@ -2320,6 +2422,9 @@ function viewDeal(id) {
   document.getElementById('f-monthly-rent').value=d.monthlyRent||'';
   document.getElementById('f-credit-score').value=d.creditScore||'';
   document.getElementById('f-notes').value=d.notes||'';
+  if(document.getElementById('f-contract-text')) document.getElementById('f-contract-text').value=d.contractText||'';
+  if(document.getElementById('contract-status')) document.getElementById('contract-status').textContent = d.contractText ? 'Contract text loaded from the saved assessment.' : '';
+  _currentDealId = deal.id;
   document.querySelectorAll('#exp-pills .pill').forEach(p=>{if(p.getAttribute('onclick')?.includes(d.investorExperience)) p.classList.add('selected');});
   document.getElementById('f-experience').value=d.investorExperience||'';
   document.querySelectorAll('#deal-type-pills .pill').forEach(p=>{if(p.getAttribute('onclick')?.includes(d.dealType)) p.classList.add('selected');});
@@ -2346,6 +2451,10 @@ function clearForm() {
   document.querySelectorAll('.pill').forEach(p=>p.classList.remove('selected'));
   document.getElementById('result-panel').classList.remove('show');
   document.getElementById('form-error').style.display='none';
+  if(document.getElementById('f-contract-text')) document.getElementById('f-contract-text').value='';
+  if(document.getElementById('f-contract-file')) document.getElementById('f-contract-file').value='';
+  if(document.getElementById('contract-status')) document.getElementById('contract-status').textContent='';
+  _currentDealId = null;
   wizardGoTo(1);
 }
 
@@ -2888,7 +2997,7 @@ async function fetchListing() {
 }
 
 // ─── LENDER INTRO REQUEST ─────────────────────────────────────────────────────
-var _currentDealData = null, _currentAnalysis = null;
+var _currentDealData = null, _currentAnalysis = null, _currentDealId = null;
 
 async function requestIntro() {
   const btn = document.getElementById('intro-btn');
