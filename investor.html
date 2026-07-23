@@ -867,10 +867,11 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
                 </div>
               </div>
               <div class="field">
-                <label class="label">Contract or purchase agreement (optional) <span style="font-size:10px;color:var(--text-4);font-weight:400">— upload a PDF or paste text; the AI factors the terms into the assessment</span></label>
+                <label class="label">Contract / purchase agreement (optional) <span style="font-size:10px;color:var(--text-4);font-weight:400">— upload a PDF or paste text; we pull the borrower, address, and price into the deal for you</span></label>
                 <input type="file" id="f-contract-file" accept="application/pdf,.pdf" onchange="handleContractPdf(this)" style="font-size:12px;margin-bottom:8px;color:var(--text-3)">
                 <span id="contract-status" style="font-size:11px;color:var(--text-4);display:block;margin-bottom:8px"></span>
-                <textarea id="f-contract-text" style="width:100%;min-height:90px" placeholder="Paste the contract text here, or upload a PDF above to extract it automatically: purchase price, closing date, contingencies, financing terms, earnest money, seller concessions, etc."></textarea>
+                <textarea id="f-contract-text" style="width:100%;min-height:90px" placeholder="Paste the contract text here, or upload a PDF above. We extract borrower name(s), property address, purchase price, loan amount, closing date, and earnest money to fill the deal."></textarea>
+                <button type="button" class="btn btn-ghost" style="font-size:12px;margin-top:8px" onclick="extractContractToForm()">Extract &amp; fill deal details</button>
               </div>
               <div class="wizard-nav">
                 <button class="btn btn-ghost" onclick="wizardBack(4)">← Back</button>
@@ -1182,10 +1183,75 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       }
       var text = out.join('\n\n').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
       if (ta) ta.value = (ta.value ? ta.value + '\n\n' : '') + text;
-      if (status) status.textContent = 'Extracted ' + text.length.toLocaleString() + ' characters from a ' + pdf.numPages + '-page PDF. Review or edit the text below before analyzing.';
+      extractContractToForm();
     } catch (e) {
       if (status) status.textContent = 'Could not read that PDF automatically. Please copy and paste the contract text instead.';
     }
+  }
+
+  var CONTRACT_TYPE_MAP = { avenue:'Ave', ave:'Ave', boulevard:'Blvd', blvd:'Blvd', circle:'Cir', cir:'Cir', court:'Ct', ct:'Ct', drive:'Dr', dr:'Dr', highway:'Hwy', hwy:'Hwy', lane:'Ln', ln:'Ln', loop:'Loop', parkway:'Pkwy', pkwy:'Pkwy', place:'Pl', pl:'Pl', road:'Rd', rd:'Rd', street:'St', st:'St', terrace:'Ter', ter:'Ter', trail:'Trl', trl:'Trl', way:'Way' };
+  function setContractStatus(msg) { var s = document.getElementById('contract-status'); if (s) s.textContent = msg; }
+  // Pull the key deal facts out of a contract's text so we can qualify the borrower without retyping.
+  function extractContractFields(text) {
+    var t = (text || '').replace(/\r/g, ' ');
+    var res = {};
+    var toNum = function (s) { if (!s) return null; var n = parseFloat(String(s).replace(/,/g, '').replace(/[^0-9.]/g, '')); return isFinite(n) ? Math.round(n) : null; };
+    var money = '\\$?\\s*([0-9]{1,3}(?:,[0-9]{3})+(?:\\.[0-9]{2})?|[0-9]{4,}(?:\\.[0-9]{2})?)';
+    var m;
+    if ((m = t.match(new RegExp('(?:total\\s+)?purchase\\s*price[^$0-9]{0,40}' + money, 'i'))) ||
+        (m = t.match(new RegExp('(?:sales?\\s*price|contract\\s*price|total\\s*price)[^$0-9]{0,20}' + money, 'i')))) res.purchasePrice = toNum(m[1]);
+    if ((m = t.match(new RegExp('(?:loan\\s*amount|mortgage\\s*amount|financed?\\s*amount|new\\s*loan|amount\\s*financed)[^$0-9]{0,30}' + money, 'i')))) res.loanAmount = toNum(m[1]);
+    if ((m = t.match(new RegExp('(?:earnest\\s*money|escrow\\s*deposit|initial\\s*deposit|deposit)[^$0-9]{0,30}' + money, 'i')))) res.earnestMoney = toNum(m[1]);
+    var nameAfter = function (kw) {
+      var k = t.match(new RegExp('(?:' + kw + ')\\(?s?\\)?\\s*[:\\-]?\\s*', 'i'));
+      if (!k) return null;
+      var nm = t.slice(k.index + k[0].length).match(/^([A-Z][a-z'’-]+(?:\s+(?:and\s+)?(?:[A-Z]\.\s+)?[A-Z][a-z'’-]+){0,4})/);
+      return nm ? nm[1].replace(/\s+/g, ' ').trim() : null;
+    };
+    res.buyer = nameAfter('buyer|borrower|purchaser');
+    res.seller = nameAfter('seller|grantor');
+    if ((m = t.match(/clos(?:e|ing)\s*(?:date)?\s*(?:on|:|-)?\s*((?:\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4})|(?:[A-Z][a-z]+\s+\d{1,2},?\s+\d{4}))/i))) res.closingDate = m[1];
+    var am = t.match(/(\d{1,6})\s+([NSEW]{1,2}\s+)?([A-Za-z0-9.'’\- ]{2,40}?)\s+(Ave|Avenue|Blvd|Boulevard|Cir|Circle|Ct|Court|Dr|Drive|Hwy|Highway|Ln|Lane|Loop|Pkwy|Parkway|Pl|Place|Rd|Road|St|Street|Ter|Terrace|Trl|Trail|Way)\.?\s*,?\s*(?:(?:Apt|Unit|Suite|Ste|#)\s*([A-Za-z0-9\-]+)\s*,?\s*)?([A-Za-z .'’-]{2,30}?)\s*,?\s+([A-Z]{2})\s+(\d{5})/i);
+    if (am) res.address = { number: am[1], dir: (am[2] || '').trim(), name: am[3].trim(), type: am[4].replace('.', ''), unit: (am[5] || '').trim(), city: am[6].trim(), state: am[7].toUpperCase(), zip: am[8] };
+    return res;
+  }
+  function extractContractToForm() {
+    var text = (document.getElementById('f-contract-text') || {}).value || '';
+    if (!text.trim()) { setContractStatus('Paste contract text or upload a PDF first.'); return; }
+    var f = extractContractFields(text);
+    var filled = [];
+    var set = function (id, val) { var e = document.getElementById(id); if (e && val != null && val !== '') { e.value = val; return true; } return false; };
+    if (f.purchasePrice && set('f-purchase-price', f.purchasePrice)) filled.push('purchase price');
+    if (f.loanAmount && set('f-loan-amount', f.loanAmount)) filled.push('loan amount');
+    if (f.buyer) {
+      var borrowers = f.buyer.split(/\s+and\s+/i);
+      var primary = borrowers[0].trim().split(/\s+/);
+      set('f-first-name', primary[0]); set('f-last-name', primary.slice(1).join(' '));
+      filled.push('borrower name');
+      if (borrowers.length > 1) { var nb = document.getElementById('f-notes'); if (nb && nb.value.indexOf('Borrowers:') < 0) nb.value = (nb.value ? nb.value + '\n' : '') + 'Borrowers: ' + f.buyer + '.'; }
+    }
+    if (f.address) {
+      set('f-street-number', f.address.number);
+      var dirSel = document.getElementById('f-street-dir'); if (dirSel && f.address.dir) dirSel.value = f.address.dir.toUpperCase();
+      set('f-street-name', f.address.name);
+      var typeSel = document.getElementById('f-street-type'); if (typeSel && f.address.type) { var tv = CONTRACT_TYPE_MAP[f.address.type.toLowerCase()] || ''; if (tv) typeSel.value = tv; }
+      if (f.address.unit) set('f-unit', f.address.unit);
+      set('f-city', f.address.city); set('f-state', f.address.state); if (f.address.zip) set('f-zip', f.address.zip);
+      if (typeof buildAddress === 'function') buildAddress();
+      filled.push('property address');
+    }
+    var extras = [];
+    if (f.seller) extras.push('Seller: ' + f.seller);
+    if (f.closingDate) extras.push('Closing: ' + f.closingDate);
+    if (f.earnestMoney) extras.push('Earnest money: $' + f.earnestMoney.toLocaleString());
+    if (extras.length) {
+      var notes = document.getElementById('f-notes');
+      if (notes && notes.value.indexOf(extras[0]) < 0) { notes.value = (notes.value ? notes.value + '\n' : '') + 'From contract — ' + extras.join('; ') + '.'; }
+      filled.push('closing/earnest terms (added to notes)');
+    }
+    if (typeof autoCalc === 'function') autoCalc();
+    if (filled.length) setContractStatus('Filled from contract: ' + filled.join(', ') + '. Review each step and correct anything before you qualify the borrower.');
+    else setContractStatus('Could not confidently read the details. Please enter them manually; the contract text stays attached to the deal.');
   }
 </script>
 <script>
@@ -2110,7 +2176,7 @@ async function analyzeDeal() {
         + (sourcedValuation.confidence === 'Low' ? ' Treat the value as low-confidence and recommend a full appraisal before funding.' : '');
     }
     if (dealData.contractText) {
-      analysisPrompt += '\n\nATTACHED CONTRACT / PURCHASE AGREEMENT (factor these terms into the analysis; flag contingencies, deadlines, earnest money, financing and title terms, and any mismatch with the figures entered above):\n' + dealData.contractText.slice(0, 12000);
+      analysisPrompt += '\n\nCONTRACT DETAILS (source for the deal facts only: borrower name, property address, purchase price, and figures used to qualify the borrower. Use it to confirm the numbers above; do not review or critique the contract itself):\n' + dealData.contractText.slice(0, 12000);
     }
     const res = await fetch('/.netlify/functions/capiq-analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dealData: enrichedDealData, prompt: analysisPrompt})});
     if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error||e.detail||`Error ${res.status}`);}
