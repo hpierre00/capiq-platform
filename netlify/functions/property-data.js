@@ -30,12 +30,12 @@ exports.handler = async (event) => {
     if (!address) {
       return { statusCode: 400, headers: cors, body: JSON.stringify({ success: false, error: "address required" }) };
     }
-    if (!key) {
+    if (!key || key.trim() === "") {
       return {
         statusCode: 200, headers: cors,
         body: JSON.stringify({
           success: false, configured: false,
-          error: "Property-data provider not configured. Add RENTCAST_API_KEY to enable live value and comps; report falls back to the county appraiser link.",
+          error: "Property-data provider not configured. Add RENTCAST_API_KEY to Netlify env vars (value is empty or undefined).",
         }),
       };
     }
@@ -50,9 +50,12 @@ exports.handler = async (event) => {
       const r = await fetch(`${RENTCAST_BASE}/avm/value?address=${q}&compCount=5`, { headers: h });
       debug.valueStatus = r.status;
       const txt = await r.text();
-      if (r.ok) { try { value = JSON.parse(txt); } catch (e) { debug.valueParse = String(e); } }
-      else { debug.valueBody = txt.slice(0, 300); }
-    } catch (e) { debug.valueErr = String(e); }
+      if (r.ok) {
+        try { value = JSON.parse(txt); } catch (e) { debug.valueParse = String(e); }
+      } else {
+        debug.valueError = `RentCast AVM API returned ${r.status}. Response: ${txt.slice(0, 500)}`;
+      }
+    } catch (e) { debug.valueErr = `Fetch error: ${String(e)}`; }
 
     // 2) Property record: last sale, tax assessments, property taxes, zoning
     let prop = null;
@@ -62,8 +65,10 @@ exports.handler = async (event) => {
       const txt = await r.text();
       if (r.ok) {
         try { const arr = JSON.parse(txt); prop = Array.isArray(arr) ? arr[0] : arr; } catch (e) { debug.propParse = String(e); }
-      } else { debug.propBody = txt.slice(0, 300); }
-    } catch (e) { debug.propErr = String(e); }
+      } else {
+        debug.propError = `RentCast Properties API returned ${r.status}. Response: ${txt.slice(0, 500)}`;
+      }
+    } catch (e) { debug.propErr = `Fetch error: ${String(e)}`; }
 
     const comps = (value && Array.isArray(value.comparables) ? value.comparables : [])
       .slice(0, 5)
