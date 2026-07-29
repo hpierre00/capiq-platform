@@ -2030,7 +2030,9 @@ async function ipaSourcedValuation(dealData) {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: addr })
     });
     var pd = await resp.json();
-    if (!pd || !pd.success || !pd.value) return { available: false, reason: (pd && pd.error) || 'no data' };
+    if (!pd || !pd.success) return { available: false, reason: (pd && pd.error) || 'no data' };
+    // Allow reconciliation even if dataFound=false (no RentCast data); ipaReconcileValue will handle fallbacks
+    if (!pd.dataFound && !pd.value) return { available: false, reason: 'property not found in data provider', fallback: true };
     var dt = dealData.dealType || '';
     var adapter = {
       isComm: dealData.market === 'Commercial',

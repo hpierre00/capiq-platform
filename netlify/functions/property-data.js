@@ -40,6 +40,27 @@ exports.handler = async (event) => {
       };
     }
 
+    // Quick diagnostic: test if API key works with a known-good address
+    const testAddr = "1600 Pennsylvania Avenue NW, Washington, DC 20500";
+    let keyIsValid = false;
+    try {
+      const testR = await fetch(`${RENTCAST_BASE}/avm/value?address=${encodeURIComponent(testAddr)}&compCount=1`, {
+        headers: { "X-Api-Key": key, "Accept": "application/json" }
+      });
+      keyIsValid = testR.ok || testR.status === 404; // 404 is ok (address not found), but 401 means bad key
+      if (testR.status === 401) {
+        return {
+          statusCode: 200, headers: cors,
+          body: JSON.stringify({
+            success: false, configured: false,
+            error: "RENTCAST_API_KEY is invalid or expired. Check Netlify env vars. Status: 401 Unauthorized from RentCast.",
+          }),
+        };
+      }
+    } catch (e) {
+      // Timeout or network error; proceed anyway
+    }
+
     const h = { "X-Api-Key": key, "Accept": "application/json" };
     const q = encodeURIComponent(address);
 
@@ -111,10 +132,16 @@ exports.handler = async (event) => {
       }
     }
 
+    // Determine if we got usable data back
+    const hasAnyData = value || prop;
+
     return {
       statusCode: 200, headers: cors,
       body: JSON.stringify({
-        success: true, configured: true, source: "RentCast",
+        success: true,
+        configured: true,
+        source: "RentCast",
+        dataFound: hasAnyData,
         value: value ? (value.price != null ? value.price : null) : null,
         valueLow: value ? (value.priceRangeLow != null ? value.priceRangeLow : null) : null,
         valueHigh: value ? (value.priceRangeHigh != null ? value.priceRangeHigh : null) : null,
@@ -130,6 +157,7 @@ exports.handler = async (event) => {
         subjectBaths: subjectBaths,
         subjectYearBuilt: subjectYearBuilt,
         debug: debug,
+        fallbackNote: !hasAnyData ? "RentCast returned no data for this address. You can still proceed with manual property entry." : null,
       }),
     };
   } catch (e) {
