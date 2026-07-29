@@ -218,7 +218,7 @@ async function main() {
 
     // 2. Generate content via Claude
     const message = await client.messages.create({
-      model: 'claude-opus-4-6',
+      model: 'claude-opus-5',
       max_tokens: 600,
       messages: [{ role: 'user', content: promptFn(pillar, dateStr, brand) }],
     });

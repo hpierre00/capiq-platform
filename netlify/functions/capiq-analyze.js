@@ -40,6 +40,13 @@ export default async (req) => {
           headers: { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' },
           body: JSON.stringify({ model: 'claude-haiku-4-5-20251001', max_tokens: 200, messages: [{ role: 'user', content: listingPrompt }] }),
         });
+        if (!lRes.ok) {
+          var errTxt = await lRes.text();
+          return new Response(JSON.stringify({
+            success: false,
+            error: 'Address lookup service error (' + lRes.status + '). ' + errTxt.slice(0, 300)
+          }), { status: 200, headers: cors });
+        }
         var lData = await lRes.json();
         var raw = ((lData.content||[]).find(b=>b.type==='text')||{}).text || '';
         var cleaned = raw.trim().replace(/```[\w]*/g,'').replace(/```/g,'').trim();
@@ -71,12 +78,15 @@ Return exactly this JSON:
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify({ model: "claude-sonnet-4-20250514", max_tokens: 2000, messages: [{ role: "user", content: prompt }] }),
+      body: JSON.stringify({ model: "claude-sonnet-5", max_tokens: 2000, messages: [{ role: "user", content: prompt }] }),
     });
 
     if (!res.ok) {
       const err = await res.text();
-      return new Response(JSON.stringify({ error: "Anthropic error", detail: err }), { status: 502, headers: cors });
+      return new Response(JSON.stringify({
+        error: "Analysis service error (" + res.status + ")",
+        detail: err.slice(0, 500),
+      }), { status: 200, headers: cors });
     }
 
     const data = await res.json();
