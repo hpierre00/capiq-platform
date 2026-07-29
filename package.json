@@ -2,6 +2,9 @@
   "name": "underlytix",
   "version": "1.0.0",
   "private": true,
+  "scripts": {
+    "check": "node scripts/check-functions.mjs"
+  },
   "dependencies": {
     "stripe": "^14.0.0"
   }

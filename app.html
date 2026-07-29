@@ -2030,7 +2030,9 @@ async function ipaSourcedValuation(dealData) {
       method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ address: addr })
     });
     var pd = await resp.json();
-    if (!pd || !pd.success || !pd.value) return { available: false, reason: (pd && pd.error) || 'no data' };
+    if (!pd || !pd.success) return { available: false, reason: (pd && pd.error) || 'no data' };
+    // Allow reconciliation even if dataFound=false (no RentCast data); ipaReconcileValue will handle fallbacks
+    if (!pd.dataFound && !pd.value) return { available: false, reason: 'property not found in data provider', fallback: true };
     var dt = dealData.dealType || '';
     var adapter = {
       isComm: dealData.market === 'Commercial',
@@ -3897,6 +3899,14 @@ async function ipaRenderDecision(result) {
       result.rationale.map(function(r){ return '<div class="ipa-rat-item">• ' + r + '</div>'; }).join('') + '</div>'
     : '';
 
+  var verboseHtml = ipaDeal.verbose && result.rationale.length
+    ? '<div style="margin-top:16px;padding:14px 16px;background:var(--bg-2);border-radius:8px;border-left:4px solid ' + color + '">' +
+      '<div style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--text-4);margin-bottom:10px">Detailed Reasoning</div>' +
+      '<div style="font-size:12px;color:var(--text-2);line-height:1.7">' +
+      result.rationale.map(function(r){ return '<div style="margin-bottom:6px">• ' + r + '</div>'; }).join('') +
+      '</div></div>'
+    : '';
+
   var cardHtml =
     '<div class="ipa-decision" id="ipa-decision-card">' +
     '<div class="ipa-verdict" style="background:' + color + '18;border:2px solid ' + color + ';color:' + color + '">' +
@@ -3904,8 +3914,9 @@ async function ipaRenderDecision(result) {
     '<span class="ipa-verdict-score">Deal Score: ' + ds + ' / 100</span></div>' +
     '<div class="ipa-verdict-sub">' + sub + '</div>' +
     '<div class="ipa-metrics">' + metricsHtml + '</div>' +
-    flagsHtml + rationaleHtml +
+    flagsHtml + rationaleHtml + verboseHtml +
     '<div class="ipa-actions">' +
+    '<button class="ipa-btn" onclick="ipaToggleVerbose()">📋 ' + (ipaDeal.verbose ? 'Hide' : 'Show') + ' Verbose Output</button>' +
     '<button class="ipa-btn" onclick="ipaDownloadPDF()">⬇ Download Full PDF Report</button>' +
     '<button class="ipa-btn ipa-btn-ghost" onclick="ipaReset()">New Assessment</button>' +
     '</div></div>';
@@ -4086,6 +4097,15 @@ function ipaDownloadPDF() {
   w.document.close();
 }
 
+// ── Verbose mode toggle ───────────────────────────────────────────────────
+function ipaToggleVerbose() {
+  ipaDeal.verbose = !ipaDeal.verbose;
+  var result = ipaComputeDecision(ipaDeal);
+  var card = document.getElementById('ipa-decision-card');
+  if (card) card.remove();
+  ipaRenderDecision(result);
+}
+
 // ── Save to history ────────────────────────────────────────────────────────
 function ipaSaveDeal(d, result) {
   try {
@@ -4140,7 +4160,7 @@ function ipaGateRefer() {
 }
 function ipaReset() {
   ipaState = IPA_ST.GREET;
-  ipaDeal  = {};
+  ipaDeal  = { verbose: false };
   var chat = ipaChatEl();
   if (chat) chat.innerHTML = '';
   var panel = document.getElementById('ipa-panel');
