@@ -1,5 +1,5 @@
 // Build marker: bump on every deploy so we can confirm which code is live.
-const BUILD = "2026-07-29-selftest";
+const BUILD = "2026-07-30-analysis-diag";
 const MODEL_FAST = "claude-haiku-4-5-20251001";
 const MODEL_MAIN = "claude-sonnet-5";
 
@@ -9,6 +9,9 @@ export default async (req) => {
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
     "Content-Type": "application/json",
+    // Without this the CDN caches GET responses, so the diagnostics below return
+    // stale results and read as "still broken" after a fix has already landed.
+    "Cache-Control": "no-store, max-age=0",
   };
 
   if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: cors });
@@ -33,6 +36,52 @@ export default async (req) => {
 
     if (!key) {
       info.selftest = { error: "ANTHROPIC_API_KEY is not set; cannot test models." };
+      return new Response(JSON.stringify(info, null, 2), { status: 200, headers: cors });
+    }
+
+    // ?selftest=analysis — run the real analysis shape end to end and report whether
+    // the output parses. Answers "is it truncating or is it malformed?" definitively,
+    // without needing the UI or devtools.
+    if (wantsSelftest === "analysis") {
+      const samplePrompt = `You are an expert real estate underwriter for Underlytix. Analyze this deal and return ONLY valid JSON, no markdown.
+
+Deal: Fix & Flip | SFR | FL | 5221 Hawkes Bluff Ave, Davie FL 33331
+Loan: $450000 | Purchase: $600000 | ARV: $850000
+As-Is Value: $600000 | Rehab: $120000 | Rent: $0/mo
+LTV: 75% | DSCR: 0 | Credit: 720 | Exp: 10-20 Deals
+Notes: None
+
+Return this exact JSON with all string fields filled with detailed analysis (2-4 sentences each):
+{"fundabilityScore":0,"dealScore":"Pass","humanReviewRequired":false,"executiveSummary":"","strengthsAndRisks":"","lenderMatchingProfile":"","structuringRecommendations":"","marketContext":"","scoreBreakdown":"","nextSteps":""}`;
+
+      const out = {};
+      for (const maxTokens of [2000, 8000]) {
+        try {
+          const r = await fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
+            body: JSON.stringify({ model: MODEL_MAIN, max_tokens: maxTokens, messages: [{ role: "user", content: samplePrompt }] }),
+          });
+          if (!r.ok) { out["max_tokens_" + maxTokens] = { status: r.status, body: (await r.text()).slice(0, 300) }; continue; }
+          const j = await r.json();
+          const text = (j.content || []).filter(b => b.type === "text").map(b => b.text).join("");
+          const clean = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+          let parses = false;
+          try { JSON.parse(clean); parses = true; } catch (e) { /* reported below */ }
+          out["max_tokens_" + maxTokens] = {
+            stop_reason: j.stop_reason,
+            output_tokens: j.usage && j.usage.output_tokens,
+            chars: clean.length,
+            parses,
+            endsWithBrace: clean.slice(-1) === "}",
+            head: clean.slice(0, 120),
+            tail: clean.slice(-120),
+          };
+        } catch (e) {
+          out["max_tokens_" + maxTokens] = { error: String((e && e.message) || e) };
+        }
+      }
+      info.analysisSelftest = out;
       return new Response(JSON.stringify(info, null, 2), { status: 200, headers: cors });
     }
     info.selftest = {};
@@ -126,7 +175,10 @@ Return exactly this JSON:
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
-      body: JSON.stringify({ model: MODEL_MAIN, max_tokens: 2000, messages: [{ role: "user", content: prompt }] }),
+      // 2000 was too tight: the prompt asks for 7 narrative fields at 2-4 sentences
+      // each, so the response was truncated mid-object and the JSON never closed.
+      // Output tokens are billed as generated, so a higher ceiling costs nothing extra.
+      body: JSON.stringify({ model: MODEL_MAIN, max_tokens: 8000, messages: [{ role: "user", content: prompt }] }),
     });
 
     if (!res.ok) {
@@ -149,10 +201,22 @@ Return exactly this JSON:
       if (m) { try { analysis = JSON.parse(m[0]); } catch (e2) { analysis = null; } }
     }
     if (!analysis) {
+      // Include the shape of the failure, not just that it failed. stop_reason
+      // "max_tokens" means truncation; anything else means malformed output.
+      const truncated = data.stop_reason === "max_tokens";
       return new Response(JSON.stringify({
         build: BUILD,
-        error: "The analysis model returned a response that could not be read as JSON.",
-        detail: cleaned.slice(0, 400),
+        error: truncated
+          ? "The analysis was cut off before it finished (hit the output limit). Try again; if it repeats, the token ceiling needs raising."
+          : "The analysis model returned a response that could not be read as JSON.",
+        diagnostics: {
+          stop_reason: data.stop_reason,
+          output_tokens: data.usage && data.usage.output_tokens,
+          chars: cleaned.length,
+          endsWithBrace: cleaned.slice(-1) === "}",
+        },
+        detail: cleaned.slice(0, 300),
+        tail: cleaned.slice(-200),
       }), { status: 200, headers: cors });
     }
 
