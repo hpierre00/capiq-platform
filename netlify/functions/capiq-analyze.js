@@ -1,5 +1,5 @@
 // Build marker: bump on every deploy so we can confirm which code is live.
-const BUILD = "2026-07-31-model-compare";
+const BUILD = "2026-07-31-model-timing-solo";
 const MODEL_FAST = "claude-haiku-4-5-20251001";
 const MODEL_MAIN = "claude-sonnet-5";
 
@@ -116,79 +116,52 @@ NOTES: Seller is motivated, needs to close within 30 days due to relocation for 
 
 Return this exact JSON. Each string field must be ONE concise sentence, 25 words or fewer -- be direct, no hedging, no restating the numbers above. Your entire response, all fields combined, must total under 200 words. No markdown, no commentary outside the JSON:
 {"fundabilityScore":0,"dealScore":"Pass","humanReviewRequired":false,"executiveSummary":"","strengthsAndRisks":"","lenderMatchingProfile":"","structuringRecommendations":"","marketContext":"","scoreBreakdown":"","nextSteps":""}`;
+      // &model=fast runs MODEL_FAST instead of MODEL_MAIN, same prompt, same ceiling.
+      // Added after ?selftest=compare (below) turned out useless: running both models
+      // concurrently in one invocation via Promise.all *also* timed out three times in
+      // a row, meaning two concurrent outbound Anthropic calls from a single Netlify
+      // function don't get real wall-clock parallelism here -- so comparing solo
+      // numbers from two separate invocations is the only way to get real data.
+      const useModel = new URL(req.url).searchParams.get("model") === "fast" ? MODEL_FAST : MODEL_MAIN;
       const startedAt = Date.now();
       try {
         const r = await fetch("https://api.anthropic.com/v1/messages", {
           method: "POST",
           headers: { "Content-Type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
-          body: JSON.stringify({ model: MODEL_MAIN, max_tokens: 2500, messages: [{ role: "user", content: samplePrompt }] }),
+          body: JSON.stringify({ model: useModel, max_tokens: 2500, messages: [{ role: "user", content: samplePrompt }] }),
         });
         const duration_ms = Date.now() - startedAt;
         if (!r.ok) {
-          info.timingSelftest = { duration_ms, status: r.status, body: (await r.text()).slice(0, 300) };
+          info.timingSelftest = { model: useModel, duration_ms, status: r.status, body: (await r.text()).slice(0, 300) };
         } else {
           const j = await r.json();
           const text = (j.content || []).filter(b => b.type === "text").map(b => b.text).join("");
           const clean = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-          let parses = false;
-          try { JSON.parse(clean); parses = true; } catch (e) { /* reported below */ }
+          let analysis = null;
+          try { analysis = JSON.parse(clean); } catch (e) { /* leave null */ }
           info.timingSelftest = {
-            duration_ms, status: r.status, stop_reason: j.stop_reason,
-            output_tokens: j.usage && j.usage.output_tokens, chars: clean.length, parses,
+            model: useModel, duration_ms, status: r.status, stop_reason: j.stop_reason,
+            output_tokens: j.usage && j.usage.output_tokens, chars: clean.length, parses: !!analysis,
+            analysis, raw: analysis ? undefined : clean.slice(0, 500),
           };
         }
       } catch (e) {
-        info.timingSelftest = { duration_ms: Date.now() - startedAt, error: String((e && e.message) || e) };
+        info.timingSelftest = { model: useModel, duration_ms: Date.now() - startedAt, error: String((e && e.message) || e) };
       }
       return new Response(JSON.stringify(info, null, 2), { status: 200, headers: cors });
     }
 
-    // ?selftest=compare — MODEL_MAIN and MODEL_FAST on the identical realistic
-    // prompt, run in parallel (not sequential -- two ~9s calls back to back would
-    // time out this diagnostic itself) so this stays under the function limit
-    // regardless of which model is slower. Returns full parsed output for both so
-    // quality can actually be read, not just timing/token counts.
-    if (wantsSelftest === "compare") {
-      const samplePrompt = `You are an expert real estate underwriter for Underlytix. Analyze this deal and return ONLY valid JSON, no markdown.
-
-DEAL: Fix & Flip | SFR | FL | 5221 Hawkes Bluff Ave, Davie FL 33331
-LOAN: $450000 | PURCHASE: $600000 | ARV: $850000 | AS-IS: $600000
-REHAB: $120000 | RENT: $0/mo | PAYMENT: $3200/mo
-LTV: 75% | DSCR: N/A | CREDIT: 720 | EXP: 10-20 Deals
-NOTES: Seller is motivated, needs to close within 30 days due to relocation for a new job. Property has an older roof (approx 15 years) and the HVAC was replaced in 2023. Borrower has two other active fix-and-flip projects in the same county and is coordinating contractors across all three. Considering either a full gut renovation or a lighter cosmetic rehab depending on comps that come back over the next two weeks; wants the analysis to account for both scenarios and note which is more likely to hit the stated ARV.
-
-Return this exact JSON. Each string field must be ONE concise sentence, 25 words or fewer -- be direct, no hedging, no restating the numbers above. Your entire response, all fields combined, must total under 200 words. No markdown, no commentary outside the JSON:
-{"fundabilityScore":0,"dealScore":"Pass","humanReviewRequired":false,"executiveSummary":"","strengthsAndRisks":"","lenderMatchingProfile":"","structuringRecommendations":"","marketContext":"","scoreBreakdown":"","nextSteps":""}`;
-
-      const runOne = async (model) => {
-        const startedAt = Date.now();
-        try {
-          const r = await fetch("https://api.anthropic.com/v1/messages", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
-            body: JSON.stringify({ model, max_tokens: 2500, messages: [{ role: "user", content: samplePrompt }] }),
-          });
-          const duration_ms = Date.now() - startedAt;
-          if (!r.ok) return { duration_ms, status: r.status, body: (await r.text()).slice(0, 300) };
-          const j = await r.json();
-          const text = (j.content || []).filter(b => b.type === "text").map(b => b.text).join("");
-          const clean = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
-          let analysis = null;
-          try { analysis = JSON.parse(clean); } catch (e) { /* leave null, raw below */ }
-          return {
-            duration_ms, status: r.status, stop_reason: j.stop_reason,
-            output_tokens: j.usage && j.usage.output_tokens, parses: !!analysis,
-            analysis, raw: analysis ? undefined : clean.slice(0, 500),
-          };
-        } catch (e) {
-          return { duration_ms: Date.now() - startedAt, error: String((e && e.message) || e) };
-        }
-      };
-
-      const [mainResult, fastResult] = await Promise.all([runOne(MODEL_MAIN), runOne(MODEL_FAST)]);
-      info.compareSelftest = { main: { model: MODEL_MAIN, ...mainResult }, fast: { model: MODEL_FAST, ...fastResult } };
-      return new Response(JSON.stringify(info, null, 2), { status: 200, headers: cors });
-    }
+    // ?selftest=compare used to run MODEL_MAIN and MODEL_FAST concurrently via
+    // Promise.all in one invocation, to get a side-by-side timing/quality read in a
+    // single call. Removed: it timed out three times in a row in production testing
+    // here, meaning two concurrent outbound Anthropic calls from one Netlify function
+    // don't get real wall-clock parallelism on this runtime -- Promise.all doesn't
+    // buy headroom against a per-invocation timeout the way it would for two
+    // independent, unrelated background tasks (compare context.waitUntil() usage
+    // elsewhere in this file, which is a different situation: those run AFTER the
+    // response is already sent). Use ?selftest=timing and ?selftest=timing&model=fast
+    // as two separate calls instead -- slower to run by hand, but each one actually
+    // completes and reports real numbers instead of both racing the same 10s clock.
 
     info.selftest = {};
     for (const [label, model] of [["fast", MODEL_FAST], ["main", MODEL_MAIN]]) {
