@@ -91,7 +91,7 @@ async function runChecks() {
     checkEndpoint({ name: 'Lender Portal (HTML)', url: `${SITE_URL}/lender.html`, expectStatus: 200 }),
 
     // 4. Investor portal page loads
-    checkEndpoint({ name: 'Investor Portal (HTML)', url: `${SITE_URL}/investor.html`, expectStatus: 200 }),
+    checkEndpoint({ name: 'Investor Portal (HTML)', url: `${SITE_URL}/app`, expectStatus: 200 }),
 
     // 5. realtor-prequal function responds (401 = up, just unauthorized)
     checkEndpoint({

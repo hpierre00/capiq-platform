@@ -2334,7 +2334,12 @@ function renderResult(a, d) {
       </div>
     </div>
     ${a.fundabilityScore>=65
-      ? `<div class="intro-panel" id="intro-panel"><div><p><strong>This deal is analysis-ready for lender introductions.</strong><br>Your pre-packaged Deal Intelligence Summary will be sent to 3–5 matched lenders who meet your deal criteria — not mass-distributed.</p><p style="margin-top:6px;font-size:12px;color:var(--text-3)">We review every introduction request before sending.</p></div><button class="btn btn-primary" id="intro-btn" onclick="requestIntro()">Request Introductions →</button></div>`
+      ? (matches.length>0
+          ? `<div class="intro-panel" id="intro-panel"><div><p><strong>This deal is analysis-ready for lender introductions.</strong><br>Your pre-packaged Deal Intelligence Summary will be sent to ${matches.length} matched lender${matches.length===1?'':'s'} in our network who meet your deal criteria — not mass-distributed.</p><p style="margin-top:6px;font-size:12px;color:var(--text-3)">We review every introduction request before sending.</p></div><button class="btn btn-primary" id="intro-btn" onclick="requestIntro()">Request Introductions →</button></div>`
+          // No lender in our current network clears this deal's hard criteria (credit, LTV, loan size,
+          // state, or product type). The old copy promised "3-5 matched lenders" here regardless, which
+          // was false in this exact case — do not restore that without gating on matches.length again.
+          : `<div class="intro-panel" id="intro-panel"><div><p><strong>No lender in our current network matches this deal's criteria yet.</strong><br>Your fundability score qualifies, but the loan amount, credit profile, LTV, state, or product type falls outside every partner lender's stated criteria today. Request an introduction and our team will manually review for a fit as we add lending partners.</p><p style="margin-top:6px;font-size:12px;color:var(--text-3)">We review every introduction request before sending.</p></div><button class="btn btn-primary" id="intro-btn" onclick="requestIntro()">Request Manual Review →</button></div>`)
       : `<div class="intro-panel-not-ready"><p>Complete the recommended improvements above to qualify for lender introductions (score of 65+ required).</p></div>`
     }
     </div>`;

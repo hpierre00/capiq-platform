@@ -1,3 +1,11 @@
+# Syntax-check every Netlify function before publishing. A parse error in a function
+# (e.g. `var raw` in one branch and `const raw` in another) does not fail the build on
+# its own — it ships and returns a text/plain 502 at runtime with no usable message.
+# This makes that failure loud at deploy time instead of silent in production.
+[build]
+  command = "npm run check"
+  publish = "."
+
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
@@ -7,6 +15,21 @@
 
 [functions."site-monitor"]
   schedule = "0 * * * *"
+
+# ── Investor app routing ──────────────────────────────────────────────────────
+# app.html is the single source for the investor app. investor.html was a byte-for-byte
+# duplicate; edits landed in one copy while the other was served, so it was deleted.
+# This 301 keeps old bookmarks and the admin quick-link working.
+[[redirects]]
+  from = "/investor.html"
+  to = "/app"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/app"
+  to = "/app.html"
+  status = 200
 
 [[redirects]]
   from = "/checkout"

@@ -1,9 +1,18 @@
 // Build marker: bump on every deploy so we can confirm which code is live.
-const BUILD = "2026-07-30-analysis-diag";
+const BUILD = "2026-07-30-waituntil";
 const MODEL_FAST = "claude-haiku-4-5-20251001";
 const MODEL_MAIN = "claude-sonnet-5";
 
-export default async (req) => {
+// `context` (second param) is required for context.waitUntil() below. The prior
+// version of this fix awaited the deal-save/email/Notion tasks directly before
+// returning, which was correct for durability but added their combined latency
+// (three real network calls, one of them multiple round trips to Supabase) on
+// top of the Anthropic call that had already run — enough to trip Netlify's
+// function timeout and return a 504 to the client on a deal that had, in fact,
+// already been fully analyzed. waitUntil sends the response the moment the
+// analysis is ready and keeps the invocation alive in the background only for
+// the side-effect writes, which is what it's for.
+export default async (req, context) => {
   const cors = {
     "Access-Control-Allow-Origin": "*",
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
@@ -220,39 +229,58 @@ Return exactly this JSON:
       }), { status: 200, headers: cors });
     }
 
-    // Fire analysis_complete email in background (non-blocking)
-    if (d.investorEmail && d.dealCode) {
-      const baseUrl = Netlify.env.get("SITE_URL") || "https://underlytix.com";
-      fetch(`${baseUrl}/.netlify/functions/resend-email`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type: "analysis_complete",
-          to: d.investorEmail,
-          name: d.investorName || "",
-          data: {
-            fundabilityScore: analysis.fundabilityScore,
-            scoreBand: analysis.dealScore,
-            executiveSummary: analysis.executiveSummary,
-            dealCode: d.dealCode,
-          },
-        }),
-      }).catch(() => {}); // fire and forget
-    }
-
-    // Fire Notion sync in background (non-blocking)
+    // Email, Notion sync, and the Supabase save are built as promises here and
+    // handed to context.waitUntil() below rather than awaited inline.
+    //
+    // History, in order:
+    // 1. Originally unawaited fire-and-forget with no `context` param at all, so
+    //    nothing guaranteed they ran to completion once the Response was sent. This
+    //    was silent and total: a direct query against Supabase showed zero
+    //    deal_submissions rows from any real app-driven analysis (across many
+    //    submissions made while debugging this exact function), while rows inserted
+    //    directly via seed data were unaffected.
+    // 2. Fixed by awaiting them directly before returning. That guaranteed
+    //    completion but added their combined latency (three real network calls,
+    //    Supabase alone being two round trips) on top of the Anthropic call that
+    //    had already run — long enough to trip Netlify's function timeout and
+    //    return a 504 on a deal that had, in fact, already been fully analyzed.
+    // 3. Current: `context` was added as the function's second parameter (see the
+    //    signature above) so context.waitUntil() is available. The response goes
+    //    out the moment the analysis is ready; Netlify keeps the invocation alive
+    //    in the background only for these three writes.
+    //
+    // Each task already swallows its own errors internally, so a failed side
+    // effect can never surface as a failed analysis response.
     const baseUrl = Netlify.env.get("SITE_URL") || "https://underlytix.com";
-    fetch(`${baseUrl}/.netlify/functions/notion-sync`, {
+
+    const emailTask = (d.investorEmail && d.dealCode)
+      ? fetch(`${baseUrl}/.netlify/functions/resend-email`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type: "analysis_complete",
+            to: d.investorEmail,
+            name: d.investorName || "",
+            data: {
+              fundabilityScore: analysis.fundabilityScore,
+              scoreBand: analysis.dealScore,
+              executiveSummary: analysis.executiveSummary,
+              dealCode: d.dealCode,
+            },
+          }),
+        }).catch(() => {})
+      : Promise.resolve();
+
+    const notionTask = fetch(`${baseUrl}/.netlify/functions/notion-sync`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ dealData: d, analysis }),
     }).catch(() => {});
 
-    // Save deal to Supabase + create lender_matches (non-blocking)
+    // Save deal to Supabase + create lender_matches
     const SVC_KEY = Netlify.env.get("SUPABASE_SERVICE_KEY");
     const SUPABASE_URL = "https://mxyepucitjzleaziizkr.supabase.co";
-    if (SVC_KEY) {
-      (async () => {
+    const supabaseTask = SVC_KEY ? (async () => {
         try {
           const qmDealTypes = ['conventional','fha','va','usda','jumbo'];
           const dealCategory = qmDealTypes.includes((d.dealType||'').toLowerCase()) ? 'qm' : 'non_qm';
@@ -276,16 +304,32 @@ Return exactly this JSON:
           const [savedDeal] = await dealInsert.json();
           if (!savedDeal?.id) return;
 
-          // Find matching lenders based on qm_category and basic criteria
+          // Find matching lenders based on qm_category and basic criteria.
+          //
+          // lender_matches.lender_id must be lender_users.lender_profile_id, NOT
+          // lender_users.id. capiq-lender-portal-v4's get_deals action (the query that
+          // backs the lender dashboard) filters lender_matches by the JWT's
+          // lender_profile_id — a column it reads directly off the lender_users row at
+          // login (`u.lender_profile_id`, distinct from `u.id`; login also embeds a
+          // separate lender_profiles table via `.select('*,lender_profiles(*)')`, which
+          // only works if lender_profile_id is a real FK to a different table).
+          // This function was previously writing lender_users.id here instead, so every
+          // match ever inserted was keyed under a value the read path never filters on —
+          // deals could match, insert successfully, and still never appear on any lender's
+          // pipeline. Confirmed by reading both sides of this path; not confirmed against
+          // live table data (no DB access from this environment when this was written).
           const lendersRes = await fetch(
-            `${SUPABASE_URL}/rest/v1/lender_users?select=id,qm_category&or=(qm_category.eq.${dealCategory},qm_category.eq.both)&limit=50`,
+            `${SUPABASE_URL}/rest/v1/lender_users?select=id,lender_profile_id,qm_category&or=(qm_category.eq.${dealCategory},qm_category.eq.both)&limit=50`,
             { headers: { apikey: SVC_KEY, Authorization: `Bearer ${SVC_KEY}` } }
           );
           const lenders = lendersRes.ok ? await lendersRes.json() : [];
+          // Drop any lender_user not yet linked to a profile — inserting a match keyed
+          // to a null/missing profile id would be just as invisible as the original bug.
+          const routable = lenders.filter(l => l.lender_profile_id);
 
-          if (lenders.length) {
-            const matchRows = lenders.map(l => ({
-              deal_id: savedDeal.id, lender_id: l.id,
+          if (routable.length) {
+            const matchRows = routable.map(l => ({
+              deal_id: savedDeal.id, lender_id: l.lender_profile_id,
               match_status: 'pending', interest_level: 'pending',
               match_score: analysis.fundabilityScore || 0,
               deal_score_val: analysis.fundabilityScore || 0,
@@ -298,7 +342,15 @@ Return exactly this JSON:
             }).catch(() => {});
           }
         } catch(e) { console.warn('deal save error:', e.message); }
-      })();
+      })() : Promise.resolve();
+
+    // Registered, not awaited: the client gets the analysis result now; Netlify
+    // keeps this invocation alive in the background until the writes finish (or
+    // the function's execution-time limit is hit, whichever comes first). Each
+    // task already swallows its own errors, so a failed side effect can't surface
+    // here — there is deliberately nothing to catch.
+    if (context && typeof context.waitUntil === "function") {
+      context.waitUntil(Promise.allSettled([emailTask, notionTask, supabaseTask]));
     }
 
     return new Response(JSON.stringify({ success: true, analysis }), { status: 200, headers: cors });

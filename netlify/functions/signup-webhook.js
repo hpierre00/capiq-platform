@@ -2,7 +2,7 @@
  * Netlify Function: signup-webhook
  *
  * Routes new signups to the correct Make.com scenario webhook.
- * Called by investor.html (and optionally realtor.html) on successful signup.
+ * Called by app.html (the investor app, served at /app) and optionally realtor.html on successful signup.
  *
  * POST body: { userType, email, name, plan }
  * Returns:   { ok: true } or { error }
