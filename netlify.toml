@@ -9,10 +9,6 @@
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
-  # Config alone does not raise the sync timeout on Pro -- Netlify has to activate it
-  # on their end per-site (open a support ticket with the site URL/ID and ask for the
-  # 26s bump). This line is a no-op until that happens, but is a prerequisite for it.
-  timeout = 26
 
 [functions."check-trial-expiry"]
   schedule = "0 10 * * *"
