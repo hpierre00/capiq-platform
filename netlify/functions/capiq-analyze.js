@@ -1,5 +1,5 @@
 // Build marker: bump on every deploy so we can confirm which code is live.
-const BUILD = "2026-07-31-fast-analysis";
+const BUILD = "2026-07-31-real-prompt-fix";
 const MODEL_FAST = "claude-haiku-4-5-20251001";
 const MODEL_MAIN = "claude-sonnet-5";
 
@@ -100,15 +100,21 @@ Return this exact JSON with all string fields filled with detailed analysis (2-4
     // useless for answering the specific question "does the single production call
     // fit inside Netlify's function timeout?" This does exactly that, once.
     if (wantsSelftest === "timing") {
+      // "Notes: None" was the best case, not a realistic one -- it's the least likely
+      // to make the model ramble, so it never would have caught the truncation a real
+      // user hit on a deal with an actual notes field. This mirrors app.html's
+      // buildPrompt() shape (that's the prompt real traffic sends, not the default
+      // below) plus a verbose, realistic notes field, to actually exercise the
+      // condition that broke in production instead of the easiest possible input.
       const samplePrompt = `You are an expert real estate underwriter for Underlytix. Analyze this deal and return ONLY valid JSON, no markdown.
 
-Deal: Fix & Flip | SFR | FL | 5221 Hawkes Bluff Ave, Davie FL 33331
-Loan: $450000 | Purchase: $600000 | ARV: $850000
-As-Is Value: $600000 | Rehab: $120000 | Rent: $0/mo
-LTV: 75% | DSCR: 0 | Credit: 720 | Exp: 10-20 Deals
-Notes: None
+DEAL: Fix & Flip | SFR | FL | 5221 Hawkes Bluff Ave, Davie FL 33331
+LOAN: $450000 | PURCHASE: $600000 | ARV: $850000 | AS-IS: $600000
+REHAB: $120000 | RENT: $0/mo | PAYMENT: $3200/mo
+LTV: 75% | DSCR: N/A | CREDIT: 720 | EXP: 10-20 Deals
+NOTES: Seller is motivated, needs to close within 30 days due to relocation for a new job. Property has an older roof (approx 15 years) and the HVAC was replaced in 2023. Borrower has two other active fix-and-flip projects in the same county and is coordinating contractors across all three. Considering either a full gut renovation or a lighter cosmetic rehab depending on comps that come back over the next two weeks; wants the analysis to account for both scenarios and note which is more likely to hit the stated ARV.
 
-Return exactly this JSON. Each string field must be ONE concise sentence, 25 words or fewer. No markdown, no extra commentary outside the JSON:
+Return this exact JSON. Each string field must be ONE concise sentence, 25 words or fewer -- be direct, no hedging, no restating the numbers above. Your entire response, all fields combined, must total under 200 words. No markdown, no commentary outside the JSON:
 {"fundabilityScore":0,"dealScore":"Pass","humanReviewRequired":false,"executiveSummary":"","strengthsAndRisks":"","lenderMatchingProfile":"","structuringRecommendations":"","marketContext":"","scoreBreakdown":"","nextSteps":""}`;
       const startedAt = Date.now();
       try {
@@ -222,8 +228,13 @@ As-Is Value: $${d.asIsValue} | Rehab: $${d.rehabBudget} | Rent: $${d.monthlyRent
 LTV: ${d.ltv}% | DSCR: ${d.dscr} | Credit: ${d.creditScore} | Exp: ${d.investorExperience}
 Notes: ${d.notes || "None"}
 
-Return exactly this JSON. Each string field must be ONE concise sentence, 25 words or fewer — be direct, no hedging, no restating the numbers above. No markdown, no commentary outside the JSON:
+Return exactly this JSON. Each string field must be ONE concise sentence, 25 words or fewer — be direct, no hedging, no restating the numbers above. Your entire response, all fields combined, must total under 200 words. No markdown, no commentary outside the JSON:
 {"fundabilityScore":0,"dealScore":"Pass","humanReviewRequired":false,"executiveSummary":"","strengthsAndRisks":"","lenderMatchingProfile":"","structuringRecommendations":"","marketContext":"","scoreBreakdown":"","nextSteps":""}`;
+    // NOTE: this default prompt only fires when the request omits `prompt` entirely.
+    // app.html always sends an explicit `prompt` (buildPrompt()/buildCommercialPrompt()),
+    // which overrides this — so for real traffic through the investor app, THIS prompt
+    // is dead code. It's kept in sync with app.html's version anyway, for any other
+    // caller that hits this endpoint without building its own prompt.
 
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",

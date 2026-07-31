@@ -2005,6 +2005,16 @@ function autoCalc() {
 }
 
 function buildPrompt(d) {
+  // Every string field must stay to ONE short sentence. This function's output goes
+  // straight into the `prompt` field the browser sends to capiq-analyze.js, which
+  // OVERRIDES that function's own default prompt (body.prompt || defaultPrompt) --
+  // so the server-side prompt in capiq-analyze.js is dead code for real traffic;
+  // THIS is the prompt real users actually hit. It previously asked for "2-4
+  // sentences each," the same loose instruction that caused truncation at
+  // max_tokens=2000 and, after raising the ceiling, ran past Netlify's function
+  // timeout at max_tokens=8000. Server-side max_tokens is now 2500 as a backstop,
+  // but the real fix has to be here: keep real output small enough that neither
+  // ceiling nor timeout is a live risk, not just raise/lower a number.
   return `You are an expert real estate underwriter for Underlytix. Analyze this deal and return ONLY valid JSON, no markdown.
 
 DEAL: ${d.dealType} | ${d.propertyType} | ${d.state} | ${d.location}
@@ -2013,7 +2023,7 @@ REHAB: $${d.rehabBudget||0} | RENT: $${d.monthlyRent||0}/mo | PAYMENT: $${d.mont
 LTV: ${d.ltv}% | DSCR: ${d.dscr||'N/A'} | CREDIT: ${d.creditScore} | EXP: ${d.investorExperience}
 NOTES: ${d.notes||'None'}
 
-Return this exact JSON with all string fields filled with detailed analysis (2-4 sentences each):
+Return this exact JSON. Each string field must be ONE concise sentence, 25 words or fewer -- be direct, no hedging, no restating the numbers above. Your entire response, all fields combined, must total under 200 words. No markdown, no commentary outside the JSON:
 {"fundabilityScore":0,"dealScore":"Pass","humanReviewRequired":false,"executiveSummary":"","strengthsAndRisks":"","lenderMatchingProfile":"","structuringRecommendations":"","marketContext":"","scoreBreakdown":"","nextSteps":""}`;
 }
 
@@ -2180,6 +2190,11 @@ async function analyzeDeal() {
     if (dealData.contractText) {
       analysisPrompt += '\n\nCONTRACT DETAILS (source for the deal facts only: borrower name, property address, purchase price, and figures used to qualify the borrower. Use it to confirm the numbers above; do not review or critique the contract itself):\n' + dealData.contractText.slice(0, 12000);
     }
+    // Restated last, after any sourced-valuation and contract-text additions above,
+    // since those can run to thousands of characters and a brevity instruction
+    // stated only once near the top is easy to lose under that much appended
+    // context. This has caused truncated/unparseable responses in production.
+    analysisPrompt += '\n\nReminder: every field is ONE sentence, 25 words max. Total response under 200 words. Return ONLY the JSON object.';
     const res = await fetch('/.netlify/functions/capiq-analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dealData: enrichedDealData, prompt: analysisPrompt})});
     if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error||e.detail||`Error ${res.status}`);}
     const data = await res.json();
@@ -3141,7 +3156,7 @@ CAP RATE: ${d.capRate}% | OCCUPANCY: ${d.occupancy}% | UNITS/SF: ${d.units||'N/A
 LTV: ${d.ltv}% | INTEREST RATE: ${d.rate}% | CREDIT: ${d.creditScore} | EXP: ${d.investorExperience}
 NOTES: ${d.notes||'None'}
 
-Underwrite this as a commercial deal under $10M. Assess NOI stability, cap rate vs market, debt service coverage, sponsor experience, and exit strategy. Return this exact JSON with all string fields filled with detailed analysis (2-4 sentences each):
+Underwrite this as a commercial deal under $10M. Assess NOI stability, cap rate vs market, debt service coverage, sponsor experience, and exit strategy. Return this exact JSON. Each string field must be ONE concise sentence, 25 words or fewer -- be direct, no hedging. Your entire response, all fields combined, must total under 200 words. No markdown, no commentary outside the JSON:
 {"fundabilityScore":0,"dealScore":"Pass","humanReviewRequired":false,"executiveSummary":"","strengthsAndRisks":"","lenderMatchingProfile":"","structuringRecommendations":"","marketContext":"","scoreBreakdown":"","nextSteps":""}`;
 }
 
