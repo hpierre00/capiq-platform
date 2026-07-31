@@ -1,5 +1,5 @@
 // Build marker: bump on every deploy so we can confirm which code is live.
-const BUILD = "2026-07-30-waituntil";
+const BUILD = "2026-07-31-fast-analysis";
 const MODEL_FAST = "claude-haiku-4-5-20251001";
 const MODEL_MAIN = "claude-sonnet-5";
 
@@ -93,6 +93,50 @@ Return this exact JSON with all string fields filled with detailed analysis (2-4
       info.analysisSelftest = out;
       return new Response(JSON.stringify(info, null, 2), { status: 200, headers: cors });
     }
+
+    // ?selftest=timing — ONE real analysis call at the production max_tokens ceiling,
+    // timed server-side. selftest=analysis (above) runs two sequential calls (2000
+    // and 8000 max_tokens) and is itself slow enough to time out, which makes it
+    // useless for answering the specific question "does the single production call
+    // fit inside Netlify's function timeout?" This does exactly that, once.
+    if (wantsSelftest === "timing") {
+      const samplePrompt = `You are an expert real estate underwriter for Underlytix. Analyze this deal and return ONLY valid JSON, no markdown.
+
+Deal: Fix & Flip | SFR | FL | 5221 Hawkes Bluff Ave, Davie FL 33331
+Loan: $450000 | Purchase: $600000 | ARV: $850000
+As-Is Value: $600000 | Rehab: $120000 | Rent: $0/mo
+LTV: 75% | DSCR: 0 | Credit: 720 | Exp: 10-20 Deals
+Notes: None
+
+Return exactly this JSON. Each string field must be ONE concise sentence, 25 words or fewer. No markdown, no extra commentary outside the JSON:
+{"fundabilityScore":0,"dealScore":"Pass","humanReviewRequired":false,"executiveSummary":"","strengthsAndRisks":"","lenderMatchingProfile":"","structuringRecommendations":"","marketContext":"","scoreBreakdown":"","nextSteps":""}`;
+      const startedAt = Date.now();
+      try {
+        const r = await fetch("https://api.anthropic.com/v1/messages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
+          body: JSON.stringify({ model: MODEL_MAIN, max_tokens: 2500, messages: [{ role: "user", content: samplePrompt }] }),
+        });
+        const duration_ms = Date.now() - startedAt;
+        if (!r.ok) {
+          info.timingSelftest = { duration_ms, status: r.status, body: (await r.text()).slice(0, 300) };
+        } else {
+          const j = await r.json();
+          const text = (j.content || []).filter(b => b.type === "text").map(b => b.text).join("");
+          const clean = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+          let parses = false;
+          try { JSON.parse(clean); parses = true; } catch (e) { /* reported below */ }
+          info.timingSelftest = {
+            duration_ms, status: r.status, stop_reason: j.stop_reason,
+            output_tokens: j.usage && j.usage.output_tokens, chars: clean.length, parses,
+          };
+        }
+      } catch (e) {
+        info.timingSelftest = { duration_ms: Date.now() - startedAt, error: String((e && e.message) || e) };
+      }
+      return new Response(JSON.stringify(info, null, 2), { status: 200, headers: cors });
+    }
+
     info.selftest = {};
     for (const [label, model] of [["fast", MODEL_FAST], ["main", MODEL_MAIN]]) {
       try {
@@ -178,16 +222,28 @@ As-Is Value: $${d.asIsValue} | Rehab: $${d.rehabBudget} | Rent: $${d.monthlyRent
 LTV: ${d.ltv}% | DSCR: ${d.dscr} | Credit: ${d.creditScore} | Exp: ${d.investorExperience}
 Notes: ${d.notes || "None"}
 
-Return exactly this JSON:
+Return exactly this JSON. Each string field must be ONE concise sentence, 25 words or fewer — be direct, no hedging, no restating the numbers above. No markdown, no commentary outside the JSON:
 {"fundabilityScore":0,"dealScore":"Pass","humanReviewRequired":false,"executiveSummary":"","strengthsAndRisks":"","lenderMatchingProfile":"","structuringRecommendations":"","marketContext":"","scoreBreakdown":"","nextSteps":""}`;
 
     const res = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-api-key": apiKey, "anthropic-version": "2023-06-01" },
-      // 2000 was too tight: the prompt asks for 7 narrative fields at 2-4 sentences
-      // each, so the response was truncated mid-object and the JSON never closed.
-      // Output tokens are billed as generated, so a higher ceiling costs nothing extra.
-      body: JSON.stringify({ model: MODEL_MAIN, max_tokens: 8000, messages: [{ role: "user", content: prompt }] }),
+      // History on this ceiling, because it's been wrong in both directions:
+      //   2000, loose prompt ("2-4 sentences each")  -> real output ran past 2000
+      //   tokens on verbose deals, truncated mid-object, JSON never closed.
+      //   8000, same loose prompt -> stopped truncating, but this fetch is the ONLY
+      //   awaited call on the response's critical path (side effects are on
+      //   context.waitUntil(), see below), and a full ~4000-6000 token generation at
+      //   this ceiling routinely ran past Netlify's function timeout (10s on this
+      //   plan; 26s requires a support-activated flag, not just a config value) --
+      //   the client saw a 504 for a deal that, server-side, actually finished.
+      // Fix is the prompt above (hard word cap per field) plus this lower ceiling:
+      // a 25-word-per-field cap keeps real output in the ~400-700 token range, well
+      // under 2500, so generation finishes in a few seconds instead of 20-30+.
+      // Verify with GET /.netlify/functions/capiq-analyze?selftest=timing — it
+      // reports duration_ms, stop_reason and output_tokens for one real call at
+      // this exact ceiling before trusting this comment.
+      body: JSON.stringify({ model: MODEL_MAIN, max_tokens: 2500, messages: [{ role: "user", content: prompt }] }),
     });
 
     if (!res.ok) {
