@@ -1,5 +1,5 @@
 // Build marker: bump on every deploy so we can confirm which code is live.
-const BUILD = "2026-07-31-real-prompt-fix";
+const BUILD = "2026-07-31-model-compare";
 const MODEL_FAST = "claude-haiku-4-5-20251001";
 const MODEL_MAIN = "claude-sonnet-5";
 
@@ -140,6 +140,53 @@ Return this exact JSON. Each string field must be ONE concise sentence, 25 words
       } catch (e) {
         info.timingSelftest = { duration_ms: Date.now() - startedAt, error: String((e && e.message) || e) };
       }
+      return new Response(JSON.stringify(info, null, 2), { status: 200, headers: cors });
+    }
+
+    // ?selftest=compare — MODEL_MAIN and MODEL_FAST on the identical realistic
+    // prompt, run in parallel (not sequential -- two ~9s calls back to back would
+    // time out this diagnostic itself) so this stays under the function limit
+    // regardless of which model is slower. Returns full parsed output for both so
+    // quality can actually be read, not just timing/token counts.
+    if (wantsSelftest === "compare") {
+      const samplePrompt = `You are an expert real estate underwriter for Underlytix. Analyze this deal and return ONLY valid JSON, no markdown.
+
+DEAL: Fix & Flip | SFR | FL | 5221 Hawkes Bluff Ave, Davie FL 33331
+LOAN: $450000 | PURCHASE: $600000 | ARV: $850000 | AS-IS: $600000
+REHAB: $120000 | RENT: $0/mo | PAYMENT: $3200/mo
+LTV: 75% | DSCR: N/A | CREDIT: 720 | EXP: 10-20 Deals
+NOTES: Seller is motivated, needs to close within 30 days due to relocation for a new job. Property has an older roof (approx 15 years) and the HVAC was replaced in 2023. Borrower has two other active fix-and-flip projects in the same county and is coordinating contractors across all three. Considering either a full gut renovation or a lighter cosmetic rehab depending on comps that come back over the next two weeks; wants the analysis to account for both scenarios and note which is more likely to hit the stated ARV.
+
+Return this exact JSON. Each string field must be ONE concise sentence, 25 words or fewer -- be direct, no hedging, no restating the numbers above. Your entire response, all fields combined, must total under 200 words. No markdown, no commentary outside the JSON:
+{"fundabilityScore":0,"dealScore":"Pass","humanReviewRequired":false,"executiveSummary":"","strengthsAndRisks":"","lenderMatchingProfile":"","structuringRecommendations":"","marketContext":"","scoreBreakdown":"","nextSteps":""}`;
+
+      const runOne = async (model) => {
+        const startedAt = Date.now();
+        try {
+          const r = await fetch("https://api.anthropic.com/v1/messages", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "x-api-key": key, "anthropic-version": "2023-06-01" },
+            body: JSON.stringify({ model, max_tokens: 2500, messages: [{ role: "user", content: samplePrompt }] }),
+          });
+          const duration_ms = Date.now() - startedAt;
+          if (!r.ok) return { duration_ms, status: r.status, body: (await r.text()).slice(0, 300) };
+          const j = await r.json();
+          const text = (j.content || []).filter(b => b.type === "text").map(b => b.text).join("");
+          const clean = text.replace(/```json\n?/g, "").replace(/```\n?/g, "").trim();
+          let analysis = null;
+          try { analysis = JSON.parse(clean); } catch (e) { /* leave null, raw below */ }
+          return {
+            duration_ms, status: r.status, stop_reason: j.stop_reason,
+            output_tokens: j.usage && j.usage.output_tokens, parses: !!analysis,
+            analysis, raw: analysis ? undefined : clean.slice(0, 500),
+          };
+        } catch (e) {
+          return { duration_ms: Date.now() - startedAt, error: String((e && e.message) || e) };
+        }
+      };
+
+      const [mainResult, fastResult] = await Promise.all([runOne(MODEL_MAIN), runOne(MODEL_FAST)]);
+      info.compareSelftest = { main: { model: MODEL_MAIN, ...mainResult }, fast: { model: MODEL_FAST, ...fastResult } };
       return new Response(JSON.stringify(info, null, 2), { status: 200, headers: cors });
     }
 
