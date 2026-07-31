@@ -1,7 +1,12 @@
 // Build marker: bump on every deploy so we can confirm which code is live.
-const BUILD = "2026-07-31-model-timing-solo";
+const BUILD = "2026-07-31-model-timing-4way";
 const MODEL_FAST = "claude-haiku-4-5-20251001";
 const MODEL_MAIN = "claude-sonnet-5";
+// Diagnostic-only, for ?selftest=timing&model=opus|fable -- not used in the production
+// analysis path (that's always MODEL_MAIN), only here to compare timing/quality before
+// deciding on a fix for the 10s-timeout-vs-response-quality tradeoff documented above.
+const MODEL_OPUS = "claude-opus-5";
+const MODEL_FABLE = "claude-fable-5";
 
 // `context` (second param) is required for context.waitUntil() below. The prior
 // version of this fix awaited the deal-save/email/Notion tasks directly before
@@ -122,7 +127,11 @@ Return this exact JSON. Each string field must be ONE concise sentence, 25 words
       // a row, meaning two concurrent outbound Anthropic calls from a single Netlify
       // function don't get real wall-clock parallelism here -- so comparing solo
       // numbers from two separate invocations is the only way to get real data.
-      const useModel = new URL(req.url).searchParams.get("model") === "fast" ? MODEL_FAST : MODEL_MAIN;
+      const modelParam = new URL(req.url).searchParams.get("model");
+      const useModel = modelParam === "fast" ? MODEL_FAST
+        : modelParam === "opus" ? MODEL_OPUS
+        : modelParam === "fable" ? MODEL_FABLE
+        : MODEL_MAIN;
       const startedAt = Date.now();
       try {
         const r = await fetch("https://api.anthropic.com/v1/messages", {
