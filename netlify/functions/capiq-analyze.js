@@ -1,24 +1,25 @@
 // Build marker: bump on every deploy so we can confirm which code is live.
-const BUILD = "2026-07-31-30s-timeout";
+const BUILD = "2026-08-01-revert-sonnet";
 const MODEL_FAST = "claude-haiku-4-5-20251001";
-// Switched from claude-sonnet-5 to claude-opus-5 after a 4-way ?selftest=timing
-// comparison (fast/main/opus/fable, identical realistic prompt): Opus matched
-// Sonnet's judgment quality (both correctly flagged humanReviewRequired on an
-// ambiguous test deal; Haiku missed it twice) while running faster (8.2s vs 8.9s)
-// and using fewer output tokens (455 vs 733) to say more -- specifically flagged a
-// liquidity risk and recommended a completion guaranty that Sonnet's response
-// didn't include. Cost difference vs Sonnet is about $0.005/analysis, immaterial at
-// any real volume. This is one test deal, not a full eval -- worth re-checking
-// against a handful of real submissions, not just trusting this holds everywhere.
-// UPDATE: the actual fix landed too. Netlify support activated a 30s function
-// timeout for this site (their platform max -- their words: "our infrastructure
-// cuts off the connection at 30 seconds") via functions."capiq-analyze".timeout=30
-// in netlify.toml, better than the 26s originally requested. At 30s, even Sonnet's
-// worst observed run (9.2s) has 3x headroom, so the model choice here is back to
-// being a pure quality decision, not a timeout-survival one. Kept on Opus since it
-// tested as equal-or-better quality anyway, not because Sonnet needed replacing.
-const MODEL_MAIN = "claude-opus-5";
-// Diagnostic-only, for ?selftest=timing&model=opus|fable.
+// REVERTED from claude-opus-5 back to claude-sonnet-5. Sequence: switched to Opus
+// after a 4-way ?selftest=timing comparison looked favorable (8.2s, matched Sonnet's
+// judgment quality). Netlify then activated the 30s timeout we'd requested. On
+// verifying the 30s-timeout deploy with fresh ?selftest=timing calls, Opus failed
+// (empty response, no body -- consistent with exceeding even the 30s ceiling) on
+// FOUR consecutive real calls (?model=opus twice, default MODEL_MAIN twice), while
+// ?model=fast (Haiku) succeeded cleanly in 4.66s in between them. That rules out a
+// general endpoint/infra problem -- this is Opus specifically, and it's currently
+// unusable on this endpoint regardless of the extra timeout headroom. Since
+// MODEL_MAIN is what real production traffic hits, this was a live outage for every
+// analysis submitted while Opus was set. Reverting to Sonnet, which is the
+// previously-verified-reliable choice (8.9s worst observed run, well inside the new
+// 30s budget). Not re-attempting Opus without first getting a real explanation for
+// the hang (rate limit? account-level access issue? capacity?) -- swapping the
+// production model back and forth on unconfirmed benchmarks is how this kind of
+// outage happens in the first place.
+const MODEL_MAIN = "claude-sonnet-5";
+// Diagnostic-only, for ?selftest=timing&model=opus|fable. Currently known-broken;
+// see note above -- kept only so the next investigation doesn't have to re-add it.
 const MODEL_OPUS = "claude-opus-5";
 const MODEL_FABLE = "claude-fable-5";
 
