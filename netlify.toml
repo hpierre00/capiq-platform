@@ -16,13 +16,17 @@
 [functions."site-monitor"]
   schedule = "0 * * * *"
 
-# Inert until Netlify support activates the Pro-plan 26s bump for this site (support
-# ticket filed). A previous attempt set `timeout = 26` globally under [functions]
-# above and Netlify's own build agent rejected it as a config parsing error; scoping
-# it to the one function that actually needs it, using the same per-function block
-# pattern already proven to work for `schedule` above, is the fix.
+# Netlify support activated this account for 30s (their platform max, and better
+# than the 26s originally requested -- their words: "our infrastructure cuts off
+# the connection at 30 seconds, so that is the practical max"). Set explicitly
+# rather than left to their account-level default so it's visible in source and
+# doesn't silently drift if that default ever changes. A previous attempt set
+# `timeout = 26` globally under [functions] above and Netlify's own build agent
+# rejected it as a config parsing error; scoping it to the one function that
+# actually needs it, using the same per-function block pattern already proven to
+# work for `schedule` above, is what fixed that.
 [functions."capiq-analyze"]
-  timeout = 26
+  timeout = 30
 
 # ── Investor app routing ──────────────────────────────────────────────────────
 # app.html is the single source for the investor app. investor.html was a byte-for-byte

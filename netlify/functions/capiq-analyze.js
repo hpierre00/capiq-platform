@@ -1,5 +1,5 @@
 // Build marker: bump on every deploy so we can confirm which code is live.
-const BUILD = "2026-07-31-opus-main";
+const BUILD = "2026-07-31-30s-timeout";
 const MODEL_FAST = "claude-haiku-4-5-20251001";
 // Switched from claude-sonnet-5 to claude-opus-5 after a 4-way ?selftest=timing
 // comparison (fast/main/opus/fable, identical realistic prompt): Opus matched
@@ -10,10 +10,13 @@ const MODEL_FAST = "claude-haiku-4-5-20251001";
 // didn't include. Cost difference vs Sonnet is about $0.005/analysis, immaterial at
 // any real volume. This is one test deal, not a full eval -- worth re-checking
 // against a handful of real submissions, not just trusting this holds everywhere.
-// Does NOT fix the underlying timeout risk: Opus is still only ~18% under
-// Netlify's 10s sync limit (Sonnet was ~11%), not a safe margin. The real fix is
-// still the support-requested 26s timeout (functions.timeout=26 for capiq-analyze
-// in netlify.toml, inert until Netlify activates it) or an async/polling redesign.
+// UPDATE: the actual fix landed too. Netlify support activated a 30s function
+// timeout for this site (their platform max -- their words: "our infrastructure
+// cuts off the connection at 30 seconds") via functions."capiq-analyze".timeout=30
+// in netlify.toml, better than the 26s originally requested. At 30s, even Sonnet's
+// worst observed run (9.2s) has 3x headroom, so the model choice here is back to
+// being a pure quality decision, not a timeout-survival one. Kept on Opus since it
+// tested as equal-or-better quality anyway, not because Sonnet needed replacing.
 const MODEL_MAIN = "claude-opus-5";
 // Diagnostic-only, for ?selftest=timing&model=opus|fable.
 const MODEL_OPUS = "claude-opus-5";
