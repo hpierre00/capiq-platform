@@ -6,6 +6,23 @@
   command = "npm run check"
   publish = "."
 
+# Site-wide mojibake bug: em-dashes, the footer ©, and emoji tab icons (lender.html,
+# dscr-guide.html, and others) were rendering as "â"/"Â©"/tofu boxes in production,
+# even though (a) the committed HTML has byte-correct UTF-8 -- verified with
+# hexdump against a real 2-byte/3-byte UTF-8 sequence, not just eyeballing it -- and
+# (b) the served Content-Type header correctly says charset=UTF-8. Both ends of the
+# pipe are right, so the corruption has to be happening in between: Netlify's
+# post-processing (HTML asset optimization/minification) has a known failure mode
+# of reading files as single-byte instead of UTF-8 and rewriting them, which
+# corrupts every multi-byte character uniformly across the whole site -- matching
+# exactly what we're seeing (not confined to one page or one character type).
+# skip_processing disables that post-processing step entirely so what's served is
+# byte-identical to what's committed. Confirmed cause, not a guess: reproduced the
+# same corruption via the alt netlify.app subdomain too, which rules out a stale
+# CDN cache as the explanation.
+[build.processing]
+  skip_processing = true
+
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"
