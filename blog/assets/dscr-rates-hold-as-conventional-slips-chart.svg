@@ -1,0 +1,39 @@
+<svg viewBox="0 0 700 420" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,Segoe UI,Roboto,sans-serif">
+  <rect x="0" y="0" width="700" height="420" fill="#f8fafc"/>
+  <text x="350" y="30" text-anchor="middle" font-size="16" font-weight="700" fill="#0f2240">Investor Financing Rate Ranges, Week of August 7, 2026</text>
+  <g stroke="#0f172a" stroke-opacity="0.15" stroke-dasharray="4,4">
+    <line x1="80" y1="380.0" x2="650" y2="380.0"/>
+    <line x1="80" y1="327.7" x2="650" y2="327.7"/>
+    <line x1="80" y1="275.4" x2="650" y2="275.4"/>
+    <line x1="80" y1="223.1" x2="650" y2="223.1"/>
+    <line x1="80" y1="170.8" x2="650" y2="170.8"/>
+    <line x1="80" y1="118.5" x2="650" y2="118.5"/>
+    <line x1="80" y1="66.2" x2="650" y2="66.2"/>
+  </g>
+  <g font-size="11" fill="#334155" text-anchor="end">
+    <text x="72" y="384">5.5%</text>
+    <text x="72" y="331.7">6.5%</text>
+    <text x="72" y="279.4">7.5%</text>
+    <text x="72" y="227.1">8.5%</text>
+    <text x="72" y="174.8">9.5%</text>
+    <text x="72" y="122.5">10.5%</text>
+    <text x="72" y="70.2">11.5%</text>
+  </g>
+  <line x1="80" y1="380" x2="80" y2="40" stroke="#0f172a" stroke-opacity="0.4"/>
+  <line x1="80" y1="380" x2="650" y2="380" stroke="#0f172a" stroke-opacity="0.4"/>
+  <rect x="110" y="314.6" width="140" height="8.9" fill="#0e7490" stroke="#0f2240" stroke-width="1"/>
+  <text x="180" y="309" text-anchor="middle" font-size="12" font-weight="700" fill="#0f172a">6.75%</text>
+  <text x="180" y="335" text-anchor="middle" font-size="12" font-weight="700" fill="#0f172a">6.58%</text>
+  <text x="180" y="402" text-anchor="middle" font-size="12" fill="#0f172a">Conventional</text>
+  <text x="180" y="416" text-anchor="middle" font-size="12" fill="#0f172a">30-Yr Fixed</text>
+  <rect x="290" y="249.2" width="140" height="91.5" fill="#0f2240" stroke="#0f2240" stroke-width="1"/>
+  <text x="360" y="244" text-anchor="middle" font-size="12" font-weight="700" fill="#0f172a">8.00%</text>
+  <text x="360" y="353" text-anchor="middle" font-size="12" font-weight="700" fill="#0f172a">6.25%</text>
+  <text x="360" y="402" text-anchor="middle" font-size="12" fill="#0f172a">DSCR Loans</text>
+  <rect x="470" y="92.3" width="140" height="170.0" fill="#0e7490" stroke="#0f2240" stroke-width="1"/>
+  <text x="540" y="87" text-anchor="middle" font-size="12" font-weight="700" fill="#0f172a">11.00%</text>
+  <text x="540" y="275" text-anchor="middle" font-size="12" font-weight="700" fill="#0f172a">7.75%</text>
+  <text x="540" y="402" text-anchor="middle" font-size="12" fill="#0f172a">Private/Bridge</text>
+  <text x="540" y="416" text-anchor="middle" font-size="12" fill="#0f172a">Loans</text>
+  <text x="30" y="210" text-anchor="middle" font-size="12" fill="#334155" transform="rotate(-90 30 210)">Interest Rate (%)</text>
+</svg>
