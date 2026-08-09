@@ -9,7 +9,16 @@ const cors = {
   'Content-Type': 'application/json',
 };
 const SALT = 'capiq-lender-salt-2026';
-const JWT_SECRET = 'capiq-lender-jwt-2026';
+
+let _hmacKey = null;
+async function hmacKey() {
+  if (_hmacKey) return _hmacKey;
+  const root = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const rk = await crypto.subtle.importKey('raw', new TextEncoder().encode(root), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const derived = await crypto.subtle.sign('HMAC', rk, new TextEncoder().encode('capiq-lender-legacy-token-v1'));
+  _hmacKey = await crypto.subtle.importKey('raw', derived, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']);
+  return _hmacKey;
+}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 200, headers: cors });
@@ -25,13 +34,13 @@ serve(async (req) => {
       await sb.from('lender_users').update({ last_login: new Date().toISOString() }).eq('id', u.id);
       return res({
         success: true,
-        token: gt(u.id, u.email, u.lender_profile_id, u.role, u.qm_category || 'non_qm'),
+        token: await gt(u.id, u.email, u.lender_profile_id, u.role, u.qm_category || 'non_qm'),
         user: { id: u.id, email: u.email, name: u.full_name, role: u.role, qm_category: u.qm_category || 'non_qm', lender: u.lender_profiles },
       });
     }
 
     if (action === 'verify') {
-      const p = vt(token);
+      const p = await vt(token);
       if (!p) return new Response(JSON.stringify({ valid: false }), { status: 200, headers: cors });
       const { data: u } = await sb.from('lender_users').select('*,lender_profiles(*)').eq('id', p.id).maybeSingle();
       if (!u) return new Response(JSON.stringify({ valid: false }), { status: 200, headers: cors });
@@ -39,7 +48,7 @@ serve(async (req) => {
     }
 
     if (action === 'get_deals') {
-      const p = vt(token);
+      const p = await vt(token);
       if (!p) return res({ error: 'Unauthorized' }, 401);
       // Get current lender's qm_category to filter deals
       const { data: lenderRow } = await sb.from('lender_users').select('qm_category').eq('id', p.id).maybeSingle();
@@ -70,7 +79,7 @@ serve(async (req) => {
     }
 
     if (action === 'update_match') {
-      const p = vt(token);
+      const p = await vt(token);
       if (!p) return res({ error: 'Unauthorized' }, 401);
       await sb.from('lender_matches').update({ interest_level: b.status, lender_notes: b.notes || null, reviewed_at: new Date().toISOString(), reviewed_by: p.id }).eq('id', b.matchId);
       return res({ success: true });
@@ -87,7 +96,7 @@ serve(async (req) => {
     }
 
     if (action === 'change_password') {
-      const p = vt(token);
+      const p = await vt(token);
       if (!p) return res({ error: 'Invalid session.' }, 401);
       if (!currentPassword || !newPassword || newPassword.length < 8) return res({ error: 'All fields required. Min 8 characters.' }, 400);
       const { data: u } = await sb.from('lender_users').select('*').eq('id', p.id).maybeSingle();
@@ -98,7 +107,7 @@ serve(async (req) => {
     }
 
     if (action === 'create_checkout') {
-      const p = vt(token);
+      const p = await vt(token);
       if (!p) return res({ error: 'Unauthorized' }, 401);
       return res({ success: false, error: 'Upgrade not yet available online. Contact support@underlytix.com to activate full deal access.' });
     }
@@ -115,19 +124,19 @@ async function hp(pw) {
   return Array.from(new Uint8Array(h)).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-function gt(id, email, lid, role, qmc) {
+async function gt(id, email, lid, role, qmc) {
   const p = { id, email, lender_profile_id: lid, role, qm_category: qmc, exp: Date.now() + 7 * 24 * 60 * 60 * 1000 };
   const d = btoa(JSON.stringify(p));
-  return d + '.' + hm(d);
+  return d + '.' + await hm(d);
 }
 
-function vt(t) {
+async function vt(t) {
   try {
     if (!t) return null;
     const parts = t.split('.');
     const d = parts[0];
     const s = parts[1];
-    if (hm(d) !== s) return null;
+    if (await hm(d) !== s) return null;
     const p = JSON.parse(atob(d));
     return p.exp < Date.now() ? null : p;
   } catch (_e) {
@@ -135,14 +144,10 @@ function vt(t) {
   }
 }
 
-function hm(d) {
-  const c = d + '|' + JWT_SECRET;
-  let h = 0;
-  for (let i = 0; i < c.length; i++) {
-    h = ((h << 5) - h) + c.charCodeAt(i);
-    h |= 0;
-  }
-  return Math.abs(h).toString(36) + c.length.toString(36);
+async function hm(d) {
+  const key = await hmacKey();
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(d));
+  return Array.from(new Uint8Array(sig)).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 function res(data, s) {
