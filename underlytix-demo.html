@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=1280">
+<title>Underlytix, Intelligence for Real Estate Lenders</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&family=Cormorant+Garamond:ital,wght@1,300;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #07080F;
+    --surface:  #0D0F1A;
+    --border:   rgba(255,255,255,0.06);
+    --blue:     #4A6CF7;
+    --teal:     #00D4B8;
+    --gold:     #E8C84A;
+    --red:      #FF4D6A;
+    --text:     #E8EAF0;
+    --muted:    #636880;
+    --glow-b:   rgba(74,108,247,0.18);
+    --glow-t:   rgba(0,212,184,0.15);
+  }
+
+  html, body {
+    width: 1280px; height: 720px;
+    overflow: hidden;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', 'Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',monospace;
+  }
+
+  /* ── Canvas bg ── */
+  #particles { position: absolute; inset: 0; z-index: 0; }
+
+  /* ── Scene system ── */
+  .stage { position: relative; width: 1280px; height: 720px; overflow: hidden; }
+
+  .scene {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity 0.6s ease;
+    z-index: 1;
+  }
+  .scene.active { opacity: 1; pointer-events: auto; }
+  .scene.fade-out { opacity: 0; transition: opacity 0.5s ease; }
+
+  /* ── Animated grid lines ── */
+  .grid-overlay {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(74,108,247,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(74,108,247,0.03) 1px, transparent 1px);
+    background-size: 64px 64px;
+    z-index: 0;
+  }
+
+  /* ── Progress bar ── */
+  #progress-bar {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 3px; background: rgba(255,255,255,0.04);
+    z-index: 100;
+  }
+  #progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--blue), var(--teal));
+    width: 0%;
+    transition: width 0.1s linear;
+    box-shadow: 0 0 8px var(--blue);
+  }
+
+  /* ── Scene dots ── */
+  #scene-dots {
+    position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 8px; z-index: 100;
+  }
+  .dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--muted); transition: all 0.3s ease; cursor: pointer;
+  }
+  .dot.active { background: var(--teal); transform: scale(1.4); }
+
+  /* ══════════════════════════════
+     SCENE 1: BRAND INTRO
+  ══════════════════════════════ */
+  #scene-1 .content {
+    text-align: center; position: relative; z-index: 2;
+  }
+
+  .brand-wordmark {
+    font-family: 'Syne', 'Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',sans-serif;
+    font-weight: 800; font-size: 92px; letter-spacing: -3px;
+    line-height: 1;
+    background: linear-gradient(135deg, #E8EAF0 0%, #4A6CF7 50%, #00D4B8 100%);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    opacity: 0; transform: translateY(20px);
+    animation: none;
+  }
+  .scene.active .brand-wordmark {
+    animation: revealUp 0.9s cubic-bezier(0.22,1,0.36,1) 0.2s forwards;
+  }
+
+  .brand-tagline {
+    font-family: 'Cormorant Garamond', 'Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',serif;
+    font-style: italic; font-size: 22px; font-weight: 300;
+    color: var(--muted); letter-spacing: 0.02em; margin-top: 12px;
+    opacity: 0;
+  }
+  .scene.active .brand-tagline {
+    animation: revealUp 0.8s ease 0.7s forwards;
+  }
+
+  .brand-divider {
+    width: 0; height: 1px; margin: 32px auto;
+    background: linear-gradient(90deg, transparent, var(--teal), transparent);
+    opacity: 0;
+  }
+  .scene.active .brand-divider {
+    animation: expandLine 0.8s ease 1s forwards;
+  }
+
+  .brand-pills {
+    display: flex; gap: 12px; justify-content: center; margin-top: 4px;
+    opacity: 0;
+  }
+  .scene.active .brand-pills {
+    animation: revealUp 0.7s ease 1.4s forwards;
+  }
+  .pill {
+    padding: 6px 16px; border-radius: 100px;
+    font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; font-weight: 500;
+    border: 1px solid;
+  }
+  .pill-blue  { border-color: var(--blue);  color: var(--blue);  background: rgba(74,108,247,0.08); }
+  .pill-teal  { border-color: var(--teal);  color: var(--teal);  background: rgba(0,212,184,0.08); }
+  .pill-gold  { border-color: var(--gold);  color: var(--gold);  background: rgba(232,200,74,0.08); }
+
+  /* Orbit rings */
+  .orbit-ring {
+    position: absolute; border-radius: 50%;
+    border: 1px solid; opacity: 0;
+    top: 50%; left: 50%; transform: translate(-50%,-50%);
+  }
+  .scene.active .orbit-ring { animation: orbitPulse 4s ease infinite; }
+  .orbit-1 { width: 340px; height: 340px; border-color: rgba(74,108,247,0.12); animation-delay: 0.1s !important; }
+  .orbit-2 { width: 520px; height: 520px; border-color: rgba(0,212,184,0.08); animation-delay: 0.6s !important; }
+  .orbit-3 { width: 700px; height: 700px; border-color: rgba(74,108,247,0.05); animation-delay: 1.1s !important; }
+
+  /* ══════════════════════════════
+     SCENE 2: THE PROBLEM
+  ══════════════════════════════ */
+  #scene-2 .content {
+    text-align: center; max-width: 900px; z-index: 2; position: relative;
+  }
+  .scene-label {
+    font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--teal); margin-bottom: 20px;
+    opacity: 0;
+  }
+  .scene.active .scene-label { animation: revealUp 0.6s ease 0.1s forwards; }
+
+  .headline {
+    font-family: 'Syne', 'Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',sans-serif; font-weight: 700;
+    line-height: 1.12;
+    opacity: 0;
+  }
+  .scene.active .headline { animation: revealUp 0.7s ease 0.3s forwards; }
+
+  .headline-lg { font-size: 58px; }
+  .headline-md { font-size: 46px; }
+  .headline-sm { font-size: 36px; }
+
+  .accent-blue { color: var(--blue); }
+  .accent-teal { color: var(--teal); }
+  .accent-gold { color: var(--gold); }
+  .accent-red  { color: var(--red); }
+
+  .sub-copy {
+    font-size: 16px; line-height: 1.7; color: var(--muted);
+    margin-top: 20px; opacity: 0;
+  }
+  .scene.active .sub-copy { animation: revealUp 0.7s ease 0.6s forwards; }
+
+  .pain-grid {
+    display: grid; grid-template-columns: repeat(3,1fr); gap: 16px;
+    margin-top: 40px; opacity: 0;
+  }
+  .scene.active .pain-grid { animation: revealUp 0.7s ease 0.8s forwards; }
+
+  .pain-card {
+    padding: 20px; border-radius: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+    text-align: left;
+  }
+  .pain-icon { font-size: 22px; margin-bottom: 10px; }
+  .pain-title { font-size: 12px; font-weight: 500; color: var(--text); margin-bottom: 6px; }
+  .pain-desc  { font-size: 11px; color: var(--muted); line-height: 1.5; }
+
+  /* ══════════════════════════════
+     SCENE 3: DASHBOARD OVERVIEW
+  ══════════════════════════════ */
+  #scene-3 .content {
+    width: 100%; padding: 40px 60px; z-index: 2; position: relative;
+  }
+  .dash-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 28px; opacity: 0;
+  }
+  .scene.active .dash-header { animation: revealUp 0.6s ease 0.1s forwards; }
+
+  .dash-title {
+    font-family: 'Syne', 'Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',sans-serif; font-weight: 700; font-size: 28px;
+  }
+  .dash-meta { font-size: 11px; color: var(--muted); }
+
+  .kpi-row {
+    display: grid; grid-template-columns: repeat(4,1fr); gap: 14px;
+    margin-bottom: 22px; opacity: 0;
+  }
+  .scene.active .kpi-row { animation: revealUp 0.6s ease 0.3s forwards; }
+
+  .kpi {
+    padding: 18px 20px; border-radius: 8px;
+    background: var(--surface); border: 1px solid var(--border);
+  }
+  .kpi-label { font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+  .kpi-value { font-family: 'Syne', 'Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',sans-serif; font-weight: 700; font-size: 28px; }
+  .kpi-delta { font-size: 11px; margin-top: 4px; }
+  .delta-up   { color: var(--teal); }
+  .delta-down { color: var(--red); }
+
+  .dash-body {
+    display: grid; grid-template-columns: 1.6fr 1fr; gap: 14px;
+    opacity: 0;
+  }
+  .scene.active .dash-body { animation: revealUp 0.6s ease 0.55s forwards; }
+
+  .dash-panel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 8px; padding: 20px; overflow: hidden;
+  }
+  .panel-title {
+    font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 16px;
+  }
+
+  /* Sparkline chart */
+  .sparkline-wrap { position: relative; height: 80px; }
+  .sparkline-line {
+    position: absolute; bottom: 0; left: 0; right: 0; top: 0;
+    display: flex; align-items: flex-end; gap: 6px;
+  }
+  .spark-bar {
+    flex: 1; border-radius: 3px 3px 0 0;
+    background: linear-gradient(to top, var(--blue), rgba(74,108,247,0.4));
+    animation: growBar 0.8s ease var(--d, 0s) both;
+  }
+  @keyframes growBar {
+    from { transform: scaleY(0); transform-origin: bottom; }
+    to   { transform: scaleY(1); transform-origin: bottom; }
+  }
+
+  /* Deal table */
+  .deal-table { width: 100%; border-collapse: collapse; }
+  .deal-table th {
+    font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--muted); text-align: left; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .deal-table td {
+    font-size: 11px; padding: 8px 0; border-bottom: 1px solid var(--border);
+    vertical-align: middle;
+  }
+  .deal-table tr:last-child td { border-bottom: none; }
+  .score-badge {
+    display: inline-block; padding: 3px 8px; border-radius: 4px;
+    font-size: 10px; font-weight: 500;
+  }
+  .score-hi  { background: rgba(0,212,184,0.12); color: var(--teal); }
+  .score-mid { background: rgba(232,200,74,0.12); color: var(--gold); }
+  .score-lo  { background: rgba(255,77,106,0.12); color: var(--red); }
+
+  /* ══════════════════════════════
+     SCENE 4: LENDER INTELLIGENCE
+  ══════════════════════════════ */
+  #scene-4 .content {
+    width: 100%; padding: 40px 60px; z-index: 2; position: relative;
+  }
+  .lender-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 28px;
+    opacity: 0;
+  }
+  .scene.active .lender-grid { animation: revealUp 0.7s ease 0.4s forwards; }
+
+  .lender-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 22px;
+    position: relative; overflow: hidden;
+  }
+  .lender-card::before {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: linear-gradient(90deg, var(--blue), var(--teal));
+  }
+  .lender-name { font-family: 'Syne', 'Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',sans-serif; font-weight: 700; font-size: 15px; margin-bottom: 14px; }
+  .lender-meta { display: flex; gap: 16px; margin-bottom: 14px; }
+  .lender-stat { }
+  .ls-label { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  .ls-value { font-size: 16px; font-weight: 500; margin-top: 2px; }
+  .activity-bar {
+    height: 3px; border-radius: 2px;
+    background: linear-gradient(90deg, var(--teal), rgba(0,212,184,0.2));
+    margin-bottom: 10px;
+  }
+  .lender-tag {
+    display: inline-block; padding: 3px 8px; border-radius: 4px;
+    font-size: 9px; letter-spacing: 0.08em; text-transform: uppercase; margin-right: 6px;
+    background: rgba(74,108,247,0.1); color: var(--blue); border: 1px solid rgba(74,108,247,0.2);
+  }
+
+  .signal-panel {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 22px; margin-top: 24px; opacity: 0;
+  }
+  .scene.active .signal-panel { animation: revealUp 0.7s ease 0.7s forwards; }
+  .signal-row {
+    display: flex; align-items: center; gap: 12px; padding: 10px 0;
+    border-bottom: 1px solid var(--border); font-size: 12px;
+  }
+  .signal-row:last-child { border-bottom: none; }
+  .signal-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .dot-hi  { background: var(--teal); box-shadow: 0 0 6px var(--teal); }
+  .dot-mid { background: var(--gold); }
+  .dot-lo  { background: var(--muted); }
+  .signal-text { flex: 1; }
+  .signal-time { color: var(--muted); font-size: 10px; }
+
+  /* ══════════════════════════════
+     SCENE 5: AI DEAL SCORING
+  ══════════════════════════════ */
+  #scene-5 .content {
+    width: 100%; padding: 40px 60px; z-index: 2; position: relative;
+  }
+  .deal-layout {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 28px;
+    opacity: 0;
+  }
+  .scene.active .deal-layout { animation: revealUp 0.7s ease 0.4s forwards; }
+
+  .deal-card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 28px;
+  }
+  .deal-name { font-family: 'Syne', 'Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',sans-serif; font-weight: 700; font-size: 18px; margin-bottom: 4px; }
+  .deal-location { color: var(--muted); font-size: 12px; margin-bottom: 22px; }
+
+  .metric-row {
+    display: flex; justify-content: space-between; margin-bottom: 12px;
+    font-size: 12px;
+  }
+  .metric-label { color: var(--muted); }
+  .metric-val { font-weight: 500; }
+
+  .score-ring-wrap {
+    display: flex; flex-direction: column; align-items: center;
+    justify-content: center; height: 100%;
+  }
+  .score-ring {
+    width: 180px; height: 180px; position: relative;
+    margin-bottom: 20px;
+  }
+  .score-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .score-ring circle {
+    fill: none; stroke-width: 8;
+    stroke-linecap: round;
+  }
+  .ring-track { stroke: rgba(255,255,255,0.05); }
+  .ring-fill  {
+    stroke: url(#ring-grad);
+    stroke-dasharray: 502;
+    stroke-dashoffset: 502;
+    transition: stroke-dashoffset 1.5s cubic-bezier(0.22,1,0.36,1) 0.6s;
+  }
+  .scene.active .ring-fill { stroke-dashoffset: 65; /* 87/100 */ }
+
+  .score-center {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    text-align: center;
+  }
+  .score-number {
+    font-family: 'Syne', 'Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',sans-serif; font-weight: 800; font-size: 48px;
+    background: linear-gradient(135deg, var(--teal), var(--blue));
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .score-label { font-size: 10px; letter-spacing: 0.1em; color: var(--muted); }
+
+  .ai-factors { width: 100%; }
+  .factor-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .factor-label { font-size: 11px; color: var(--muted); width: 100px; flex-shrink: 0; }
+  .factor-track { flex: 1; height: 4px; background: rgba(255,255,255,0.06); border-radius: 2px; overflow: hidden; }
+  .factor-fill  { height: 100%; border-radius: 2px; width: 0%; transition: width 1s ease var(--fd, 0.4s); }
+  .scene.active .factor-fill { width: var(--fw, 70%); }
+  .ff-teal  { background: var(--teal); }
+  .ff-blue  { background: var(--blue); }
+  .ff-gold  { background: var(--gold); }
+  .factor-val { font-size: 10px; font-weight: 500; width: 28px; text-align: right; }
+
+  /* ══════════════════════════════
+     SCENE 6: MARKET COMPS
+  ══════════════════════════════ */
+  #scene-6 .content {
+    width: 100%; padding: 40px 60px; z-index: 2; position: relative;
+  }
+  .comps-grid {
+    display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; margin-top: 28px;
+    opacity: 0;
+  }
+  .scene.active .comps-grid { animation: revealUp 0.7s ease 0.4s forwards; }
+
+  .comp-table-wrap {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 22px;
+  }
+  .comp-table { width: 100%; border-collapse: collapse; }
+  .comp-table th {
+    font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--muted); text-align: left; padding-bottom: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+  .comp-table td {
+    font-size: 11px; padding: 9px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
+    vertical-align: middle;
+  }
+  .comp-table tr:last-child td { border-bottom: none; }
+  .subject-row td { color: var(--teal); font-weight: 500; }
+
+  .stats-stack { display: flex; flex-direction: column; gap: 14px; }
+  .stat-block {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 10px; padding: 18px 22px;
+  }
+  .stat-block-label {
+    font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 8px;
+  }
+  .stat-block-val {
+    font-family: 'Syne', 'Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',sans-serif; font-weight: 700; font-size: 26px;
+  }
+  .stat-block-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+
+  .range-bar {
+    position: relative; height: 6px; border-radius: 3px;
+    background: rgba(255,255,255,0.06); margin-top: 12px;
+  }
+  .range-fill {
+    position: absolute; height: 100%; border-radius: 3px;
+    background: linear-gradient(90deg, var(--blue), var(--teal));
+    width: 0%; transition: width 1s ease 0.5s;
+  }
+  .scene.active .range-fill { width: var(--rw, 60%); }
+  .range-marker {
+    position: absolute; top: -3px; width: 3px; height: 12px;
+    background: var(--gold); border-radius: 2px;
+    left: var(--rm, 60%); transform: translateX(-50%);
+  }
+  .range-labels {
+    display: flex; justify-content: space-between;
+    font-size: 9px; color: var(--muted); margin-top: 6px;
+  }
+
+  /* ══════════════════════════════
+     SCENE 7: CTA
+  ══════════════════════════════ */
+  #scene-7 .content {
+    text-align: center; position: relative; z-index: 2; max-width: 800px;
+  }
+
+  .cta-eyebrow {
+    font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase;
+    color: var(--teal); margin-bottom: 24px; opacity: 0;
+  }
+  .scene.active .cta-eyebrow { animation: revealUp 0.6s ease 0.1s forwards; }
+
+  .cta-headline {
+    font-family: 'Syne', 'Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',sans-serif; font-weight: 800;
+    font-size: 64px; line-height: 1.08; letter-spacing: -2px; opacity: 0;
+  }
+  .scene.active .cta-headline { animation: revealUp 0.8s cubic-bezier(0.22,1,0.36,1) 0.3s forwards; }
+
+  .cta-sub {
+    font-family: 'Cormorant Garamond', 'Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',serif; font-style: italic;
+    font-size: 20px; color: var(--muted); margin-top: 16px; opacity: 0;
+  }
+  .scene.active .cta-sub { animation: revealUp 0.7s ease 0.7s forwards; }
+
+  .cta-badges {
+    display: flex; gap: 20px; justify-content: center; margin-top: 36px; opacity: 0;
+  }
+  .scene.active .cta-badges { animation: revealUp 0.7s ease 1s forwards; }
+
+  .cta-badge {
+    display: flex; align-items: center; gap: 10px; padding: 14px 24px;
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px;
+  }
+  .cta-badge-icon { font-size: 20px; }
+  .cta-badge-text { }
+  .cbt-label { font-size: 11px; color: var(--muted); }
+  .cbt-val   { font-family: 'Syne', 'Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',sans-serif; font-weight: 700; font-size: 15px; }
+
+  .cta-url {
+    margin-top: 36px; font-size: 13px; letter-spacing: 0.08em;
+    color: var(--blue); opacity: 0;
+  }
+  .scene.active .cta-url { animation: revealUp 0.6s ease 1.3s forwards; }
+
+  /* Glow backdrop */
+  .glow-backdrop {
+    position: absolute; top: 50%; left: 50%;
+    width: 500px; height: 500px;
+    transform: translate(-50%,-50%);
+    background: radial-gradient(ellipse, rgba(74,108,247,0.12) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  /* ── Keyframes ── */
+  @keyframes revealUp {
+    from { opacity: 0; transform: translateY(18px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes expandLine {
+    from { width: 0; opacity: 0; }
+    to   { width: 280px; opacity: 1; }
+  }
+  @keyframes orbitPulse {
+    0%   { opacity: 0; transform: translate(-50%,-50%) scale(0.94); }
+    30%  { opacity: 1; }
+    70%  { opacity: 1; }
+    100% { opacity: 0; transform: translate(-50%,-50%) scale(1.04); }
+  }
+
+  /* ── Mute button ── */
+  #mute-btn {
+    position: absolute; top: 18px; right: 22px; z-index: 200;
+    width: 38px; height: 38px; border-radius: 50%;
+    background: var(--surface); border: 1px solid var(--border);
+    color: var(--muted); font-size: 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s ease;
+  }
+  #mute-btn:hover { border-color: var(--teal); color: var(--teal); }
+  #mute-btn.muted { opacity: 0.4; }
+
+  /* ── Scanline effect ── */
+  .scanline {
+    position: absolute; inset: 0; pointer-events: none; z-index: 50;
+    background: repeating-linear-gradient(
+      to bottom,
+      transparent 0px,
+      transparent 2px,
+      rgba(0,0,0,0.015) 2px,
+      rgba(0,0,0,0.015) 4px
+    );
+  }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <canvas id="particles"></canvas>
+  <div class="grid-overlay"></div>
+  <div class="scanline"></div>
+
+  <!-- ═══ SCENE 1: BRAND INTRO ═══ -->
+  <section class="scene active" id="scene-1">
+    <div class="orbit-ring orbit-1"></div>
+    <div class="orbit-ring orbit-2"></div>
+    <div class="orbit-ring orbit-3"></div>
+    <div class="glow-backdrop"></div>
+    <div class="content">
+      <div class="brand-wordmark">Underlytix</div>
+      <div class="brand-tagline">Intelligence for the professionals who move capital</div>
+      <div class="brand-divider"></div>
+      <div class="brand-pills">
+        <span class="pill pill-blue">Lender Intelligence</span>
+        <span class="pill pill-teal">AI Deal Scoring</span>
+        <span class="pill pill-gold">Market Comps</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ SCENE 2: THE PROBLEM ═══ -->
+  <section class="scene" id="scene-2">
+    <div class="content">
+      <div class="scene-label">The Problem</div>
+      <div class="headline headline-lg">
+        You're underwriting<br>
+        <span class="accent-red">blind.</span>
+      </div>
+      <div class="sub-copy">
+        Lender activity is fragmented across dozens of sources.<br>
+        By the time you've assembled the picture, the deal has moved.
+      </div>
+      <div class="pain-grid">
+        <div class="pain-card">
+          <div class="pain-icon">⏱</div>
+          <div class="pain-title">Days lost to research</div>
+          <div class="pain-desc">Tracking lender appetite across CMBS, bridge, and agency manually takes 3-5 days per deal cycle.</div>
+        </div>
+        <div class="pain-card">
+          <div class="pain-icon">📊</div>
+          <div class="pain-title">Stale comp data</div>
+          <div class="pain-desc">Cap rate comps from MLS and county records lag 60-90 days. You're pricing risk with yesterday's numbers.</div>
+        </div>
+        <div class="pain-card">
+          <div class="pain-icon">🎯</div>
+          <div class="pain-title">Missed lender fit</div>
+          <div class="pain-desc">Every lender has a live appetite. Without signals, you're sending the wrong deal to the wrong desk.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ SCENE 3: DASHBOARD OVERVIEW ═══ -->
+  <section class="scene" id="scene-3">
+    <div class="content">
+      <div class="dash-header">
+        <div>
+          <div class="dash-title">Deal Pipeline</div>
+          <div class="dash-meta">Miami-Dade MSA &nbsp;·&nbsp; Q3 2025 &nbsp;·&nbsp; Last updated 4 min ago</div>
+        </div>
+        <div class="pill pill-teal">Live Intelligence</div>
+      </div>
+
+      <div class="kpi-row">
+        <div class="kpi">
+          <div class="kpi-label">Active Deals</div>
+          <div class="kpi-value" style="color:var(--teal)">14</div>
+          <div class="kpi-delta delta-up">↑ 3 this week</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Avg AI Score</div>
+          <div class="kpi-value" style="color:var(--blue)">81</div>
+          <div class="kpi-delta delta-up">↑ 4 pts MoM</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Lenders Tracked</div>
+          <div class="kpi-value" style="color:var(--gold)">47</div>
+          <div class="kpi-delta delta-up">↑ 6 new signals</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Avg Market Cap Rate</div>
+          <div class="kpi-value">6.1%</div>
+          <div class="kpi-delta delta-down">↓ 0.2 pts QoQ</div>
+        </div>
+      </div>
+
+      <div class="dash-body">
+        <div class="dash-panel">
+          <div class="panel-title">Deal Volume, 90 Days</div>
+          <div class="sparkline-wrap">
+            <div class="sparkline-line">
+              <div class="spark-bar" style="height:35%;--d:0.1s"></div>
+              <div class="spark-bar" style="height:50%;--d:0.15s"></div>
+              <div class="spark-bar" style="height:42%;--d:0.2s"></div>
+              <div class="spark-bar" style="height:60%;--d:0.25s"></div>
+              <div class="spark-bar" style="height:55%;--d:0.3s"></div>
+              <div class="spark-bar" style="height:70%;--d:0.35s"></div>
+              <div class="spark-bar" style="height:65%;--d:0.4s"></div>
+              <div class="spark-bar" style="height:80%;--d:0.45s"></div>
+              <div class="spark-bar" style="height:74%;--d:0.5s"></div>
+              <div class="spark-bar" style="height:90%;--d:0.55s"></div>
+              <div class="spark-bar" style="height:85%;--d:0.6s"></div>
+              <div class="spark-bar" style="height:100%;--d:0.65s;background:linear-gradient(to top,var(--teal),rgba(0,212,184,0.4))"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dash-panel">
+          <div class="panel-title">Top Active Deals</div>
+          <table class="deal-table">
+            <thead>
+              <tr>
+                <th>Property</th>
+                <th>Type</th>
+                <th>Score</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Meridian Plaza</td>
+                <td style="color:var(--muted)">Mixed-Use</td>
+                <td><span class="score-badge score-hi">87</span></td>
+              </tr>
+              <tr>
+                <td>Brickell Arms</td>
+                <td style="color:var(--muted)">Multifamily</td>
+                <td><span class="score-badge score-hi">82</span></td>
+              </tr>
+              <tr>
+                <td>Wynwood Exchange</td>
+                <td style="color:var(--muted)">Office</td>
+                <td><span class="score-badge score-mid">71</span></td>
+              </tr>
+              <tr>
+                <td>Coral Gate Retail</td>
+                <td style="color:var(--muted)">Retail</td>
+                <td><span class="score-badge score-lo">58</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ SCENE 4: LENDER INTELLIGENCE ═══ -->
+  <section class="scene" id="scene-4">
+    <div class="content">
+      <div class="scene-label">Lender Intelligence</div>
+      <div class="headline headline-sm" style="opacity:0">
+        Know who's <span class="accent-teal">active</span> before you pick up the phone.
+      </div>
+
+      <div class="lender-grid">
+        <div class="lender-card">
+          <div class="lender-name">Arbor Realty Trust</div>
+          <div class="lender-meta">
+            <div class="lender-stat"><div class="ls-label">YTD Closings</div><div class="ls-value" style="color:var(--teal)">$2.4B</div></div>
+            <div class="lender-stat"><div class="ls-label">Avg LTV</div><div class="ls-value">68%</div></div>
+            <div class="lender-stat"><div class="ls-label">Min DSCR</div><div class="ls-value">1.25x</div></div>
+          </div>
+          <div class="activity-bar" style="width:88%"></div>
+          <span class="lender-tag">Multifamily</span>
+          <span class="lender-tag">Mixed-Use</span>
+          <span class="lender-tag">SE Focus</span>
+        </div>
+        <div class="lender-card">
+          <div class="lender-name">Mesa West Capital</div>
+          <div class="lender-meta">
+            <div class="lender-stat"><div class="ls-label">YTD Closings</div><div class="ls-value" style="color:var(--teal)">$940M</div></div>
+            <div class="lender-stat"><div class="ls-label">Avg LTV</div><div class="ls-value">72%</div></div>
+            <div class="lender-stat"><div class="ls-label">Min DSCR</div><div class="ls-value">1.20x</div></div>
+          </div>
+          <div class="activity-bar" style="width:65%"></div>
+          <span class="lender-tag">Bridge</span>
+          <span class="lender-tag">Transitional</span>
+        </div>
+        <div class="lender-card">
+          <div class="lender-name">Starwood Capital Group</div>
+          <div class="lender-meta">
+            <div class="lender-stat"><div class="ls-label">YTD Closings</div><div class="ls-value" style="color:var(--teal)">$3.1B</div></div>
+            <div class="lender-stat"><div class="ls-label">Avg LTV</div><div class="ls-value">65%</div></div>
+            <div class="lender-stat"><div class="ls-label">Min DSCR</div><div class="ls-value">1.30x</div></div>
+          </div>
+          <div class="activity-bar" style="width:92%"></div>
+          <span class="lender-tag">CRE Debt</span>
+          <span class="lender-tag">Preferred Equity</span>
+          <span class="lender-tag">Office</span>
+        </div>
+        <div class="lender-card">
+          <div class="lender-name">Morgan Stanley RE Finance</div>
+          <div class="lender-meta">
+            <div class="lender-stat"><div class="ls-label">YTD Closings</div><div class="ls-value" style="color:var(--gold)">$5.2B</div></div>
+            <div class="lender-stat"><div class="ls-label">Avg LTV</div><div class="ls-value">60%</div></div>
+            <div class="lender-stat"><div class="ls-label">Min DSCR</div><div class="ls-value">1.40x</div></div>
+          </div>
+          <div class="activity-bar" style="width:55%"></div>
+          <span class="lender-tag">CMBS</span>
+          <span class="lender-tag">Stabilized</span>
+        </div>
+      </div>
+
+      <div class="signal-panel">
+        <div class="panel-title" style="margin-bottom:8px">Live Signals</div>
+        <div class="signal-row">
+          <div class="signal-dot dot-hi"></div>
+          <div class="signal-text">Arbor closed $48M multifamily in Brickell, expanding Miami appetite</div>
+          <div class="signal-time">2h ago</div>
+        </div>
+        <div class="signal-row">
+          <div class="signal-dot dot-mid"></div>
+          <div class="signal-text">Mesa West issued new term sheet for mixed-use bridge, LTV ceiling raised to 74%</div>
+          <div class="signal-time">6h ago</div>
+        </div>
+        <div class="signal-row">
+          <div class="signal-dot dot-lo"></div>
+          <div class="signal-text">Morgan Stanley pausing office originations, SE market review underway</div>
+          <div class="signal-time">1d ago</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ SCENE 5: AI DEAL SCORING ═══ -->
+  <section class="scene" id="scene-5">
+    <div class="content">
+      <div class="scene-label">AI Underwriting</div>
+      <div class="headline headline-sm" style="opacity:0">
+        Every deal scored in <span class="accent-blue">seconds</span>, not days.
+      </div>
+
+      <div class="deal-layout">
+        <div class="deal-card">
+          <div class="deal-name">Meridian Plaza Mixed-Use</div>
+          <div class="deal-location">1420 Brickell Ave · Miami, FL &nbsp;·&nbsp; $14.5M</div>
+          <div class="metric-row">
+            <span class="metric-label">Cap Rate</span>
+            <span class="metric-val accent-teal">6.2%</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">LTV</span>
+            <span class="metric-val">65%</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">NOI</span>
+            <span class="metric-val">$892,000</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">DSCR</span>
+            <span class="metric-val accent-teal">1.42x</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Loan Amount</span>
+            <span class="metric-val">$9.4M</span>
+          </div>
+          <div class="metric-row">
+            <span class="metric-label">Property Type</span>
+            <span class="metric-val">Mixed-Use (Retail + Office)</span>
+          </div>
+          <div style="margin-top:22px">
+            <div class="factor-row">
+              <div class="factor-label">Location</div>
+              <div class="factor-track"><div class="factor-fill ff-teal" style="--fw:92%;--fd:0.5s"></div></div>
+              <div class="factor-val accent-teal">92</div>
+            </div>
+            <div class="factor-row">
+              <div class="factor-label">Cash Flow</div>
+              <div class="factor-track"><div class="factor-fill ff-teal" style="--fw:86%;--fd:0.65s"></div></div>
+              <div class="factor-val accent-teal">86</div>
+            </div>
+            <div class="factor-row">
+              <div class="factor-label">Lender Fit</div>
+              <div class="factor-track"><div class="factor-fill ff-blue" style="--fw:84%;--fd:0.8s"></div></div>
+              <div class="factor-val" style="color:var(--blue)">84</div>
+            </div>
+            <div class="factor-row">
+              <div class="factor-label">Market Risk</div>
+              <div class="factor-track"><div class="factor-fill ff-gold" style="--fw:78%;--fd:0.95s"></div></div>
+              <div class="factor-val" style="color:var(--gold)">78</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="deal-card">
+          <div class="score-ring-wrap">
+            <div class="score-ring">
+              <svg viewBox="0 0 180 180">
+                <defs>
+                  <linearGradient id="ring-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color="#4A6CF7"/>
+                    <stop offset="100%" stop-color="#00D4B8"/>
+                  </linearGradient>
+                </defs>
+                <circle class="ring-track" cx="90" cy="90" r="80"/>
+                <circle class="ring-fill"  cx="90" cy="90" r="80"/>
+              </svg>
+              <div class="score-center">
+                <div class="score-number">87</div>
+                <div class="score-label">AI SCORE</div>
+              </div>
+            </div>
+            <div style="text-align:center;margin-bottom:20px">
+              <div style="font-family:'Syne','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',sans-serif;font-weight:700;font-size:18px;color:var(--teal)">Strong Buy Signal</div>
+              <div style="font-size:12px;color:var(--muted);margin-top:6px;max-width:220px;margin-left:auto;margin-right:auto">
+                Meets criteria for 6 of 7 tracked active lenders
+              </div>
+            </div>
+            <div style="background:rgba(0,212,184,0.07);border:1px solid rgba(0,212,184,0.2);border-radius:8px;padding:14px 18px;width:240px">
+              <div style="font-size:10px;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:8px">Best Lender Match</div>
+              <div style="font-family:'Syne','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',sans-serif;font-size:15px;font-weight:700;color:var(--teal)">Arbor Realty Trust</div>
+              <div style="font-size:11px;color:var(--muted);margin-top:4px">96% profile match · Active in market</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ SCENE 6: MARKET COMPS ═══ -->
+  <section class="scene" id="scene-6">
+    <div class="content">
+      <div class="scene-label">Market Intelligence</div>
+      <div class="headline headline-sm" style="opacity:0">
+        Real-time comps. <span class="accent-gold">Real</span> pricing confidence.
+      </div>
+
+      <div class="comps-grid">
+        <div class="comp-table-wrap">
+          <div class="panel-title">Comparable Sales, Brickell / Downtown Miami</div>
+          <table class="comp-table">
+            <thead>
+              <tr>
+                <th>Property</th>
+                <th>Sale Price</th>
+                <th>Cap Rate</th>
+                <th>$/SF</th>
+                <th>Closed</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="subject-row">
+                <td>▶ Meridian Plaza (Subject)</td>
+                <td>$14.5M</td>
+                <td>6.2%</td>
+                <td>$412</td>
+                <td>, </td>
+              </tr>
+              <tr>
+                <td>Brickell Bay Tower</td>
+                <td>$16.2M</td>
+                <td>5.9%</td>
+                <td>$398</td>
+                <td>Jun '25</td>
+              </tr>
+              <tr>
+                <td>Flagler Station</td>
+                <td>$11.8M</td>
+                <td>6.5%</td>
+                <td>$374</td>
+                <td>May '25</td>
+              </tr>
+              <tr>
+                <td>MetroCenter South</td>
+                <td>$19.4M</td>
+                <td>5.7%</td>
+                <td>$441</td>
+                <td>Apr '25</td>
+              </tr>
+              <tr>
+                <td>Coral Gables Plaza</td>
+                <td>$9.2M</td>
+                <td>6.8%</td>
+                <td>$351</td>
+                <td>Mar '25</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="stats-stack">
+          <div class="stat-block">
+            <div class="stat-block-label">Market Avg Cap Rate</div>
+            <div class="stat-block-val" style="color:var(--blue)">6.1%</div>
+            <div class="stat-block-sub">Subject at 6.2%, in-line with market</div>
+            <div class="range-bar">
+              <div class="range-fill" style="--rw:85%"></div>
+              <div class="range-marker" style="--rm:58%"></div>
+            </div>
+            <div class="range-labels">
+              <span>5.5% (low)</span>
+              <span style="color:var(--gold)">6.2% ▲</span>
+              <span>7.2% (high)</span>
+            </div>
+          </div>
+          <div class="stat-block">
+            <div class="stat-block-label">Price Per SF, Submarket</div>
+            <div class="stat-block-val" style="color:var(--teal)">$391</div>
+            <div class="stat-block-sub">Subject at $412, 5.4% premium to median</div>
+            <div class="range-bar">
+              <div class="range-fill" style="--rw:75%"></div>
+              <div class="range-marker" style="--rm:65%"></div>
+            </div>
+            <div class="range-labels">
+              <span>$320</span>
+              <span style="color:var(--gold)">$412 ▲</span>
+              <span>$470</span>
+            </div>
+          </div>
+          <div class="stat-block">
+            <div class="stat-block-label">Days to Close, Comparable</div>
+            <div class="stat-block-val">38 <span style="font-size:16px;font-weight:400;color:var(--muted)">avg days</span></div>
+            <div class="stat-block-sub">Active lenders in market: 6 tracking this subtype</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ SCENE 7: CTA ═══ -->
+  <section class="scene" id="scene-7">
+    <div class="glow-backdrop" style="background:radial-gradient(ellipse,rgba(0,212,184,0.1) 0%,transparent 70%)"></div>
+    <div class="orbit-ring orbit-1" style="border-color:rgba(0,212,184,0.08)"></div>
+    <div class="orbit-ring orbit-2" style="border-color:rgba(74,108,247,0.05)"></div>
+    <div class="content">
+      <div class="cta-eyebrow">Stop guessing. Start closing.</div>
+      <div class="cta-headline">
+        Move faster<br>than the <span style="color:var(--teal)">market.</span>
+      </div>
+      <div class="cta-sub">
+        Underlytix gives lenders and realtors the intelligence layer<br>
+        every deal deserves, from first look to term sheet.
+      </div>
+      <div class="cta-badges">
+        <div class="cta-badge">
+          <div class="cta-badge-icon">⚡</div>
+          <div class="cta-badge-text">
+            <div class="cbt-label">Underwriting time</div>
+            <div class="cbt-val">3 days → 4 hours</div>
+          </div>
+        </div>
+        <div class="cta-badge">
+          <div class="cta-badge-icon">🎯</div>
+          <div class="cta-badge-text">
+            <div class="cbt-label">Lender match rate</div>
+            <div class="cbt-val">91% accuracy</div>
+          </div>
+        </div>
+        <div class="cta-badge">
+          <div class="cta-badge-icon">📡</div>
+          <div class="cta-badge-text">
+            <div class="cbt-label">Lenders tracked</div>
+            <div class="cbt-val">200+ active</div>
+          </div>
+        </div>
+      </div>
+      <div class="cta-url">underlytix.com &nbsp;·&nbsp; Built for the professionals who move capital</div>
+    </div>
+  </section>
+
+  <!-- Narration toggle -->
+  <button id="mute-btn" title="Toggle narration">🎙️</button>
+  <!-- NotebookLM podcast audio, scenes 1-5 -->
+  <audio id="podcast-audio" preload="auto" style="display:none">
+    <source src="underlytix-podcast.m4a" type="audio/mp4">
+    <source src="underlytix-podcast.mp3" type="audio/mpeg">
+  </audio>
+
+  <!-- Progress + Navigation -->
+  <div id="progress-bar"><div id="progress-fill"></div></div>
+  <div id="scene-dots">
+    <div class="dot active" onclick="goTo(0)"></div>
+    <div class="dot" onclick="goTo(1)"></div>
+    <div class="dot" onclick="goTo(2)"></div>
+    <div class="dot" onclick="goTo(3)"></div>
+    <div class="dot" onclick="goTo(4)"></div>
+    <div class="dot" onclick="goTo(5)"></div>
+    <div class="dot" onclick="goTo(6)"></div>
+  </div>
+</div>
+
+<script>
+// ── Particle canvas ──
+(function() {
+  const canvas = document.getElementById('particles');
+  const ctx = canvas.getContext('2d');
+  canvas.width = 1280; canvas.height = 720;
+
+  const COLORS = ['rgba(74,108,247,0.35)','rgba(0,212,184,0.28)','rgba(232,200,74,0.2)'];
+  const pts = Array.from({length: 55}, () => ({
+    x: Math.random()*1280, y: Math.random()*720,
+    vx: (Math.random()-0.5)*0.22, vy: (Math.random()-0.5)*0.22,
+    r: Math.random()*1.4+0.4,
+    c: COLORS[Math.floor(Math.random()*COLORS.length)]
+  }));
+
+  function drawParticles() {
+    ctx.clearRect(0,0,1280,720);
+    // Lines
+    for (let i=0;i<pts.length;i++) for (let j=i+1;j<pts.length;j++) {
+      const dx=pts[i].x-pts[j].x, dy=pts[i].y-pts[j].y;
+      const dist=Math.sqrt(dx*dx+dy*dy);
+      if (dist<100) {
+        ctx.strokeStyle=`rgba(74,108,247,${0.06*(1-dist/100)})`;
+        ctx.lineWidth=0.5;
+        ctx.beginPath(); ctx.moveTo(pts[i].x,pts[i].y); ctx.lineTo(pts[j].x,pts[j].y); ctx.stroke();
+      }
+    }
+    // Dots
+    pts.forEach(p => {
+      ctx.fillStyle=p.c;
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2); ctx.fill();
+      p.x+=p.vx; p.y+=p.vy;
+      if (p.x<0||p.x>1280) p.vx*=-1;
+      if (p.y<0||p.y>720) p.vy*=-1;
+    });
+    requestAnimationFrame(drawParticles);
+  }
+  drawParticles();
+})();
+
+// ── Scene durations (ms) ──
+// Scenes 1-5 (idx 0-4): podcast audio plays, longer durations so viewers absorb visuals
+// Scenes 6-7 (idx 5-6): Web Speech API narration, extend if speech is still running
+const DURATIONS = [14000, 20000, 22000, 24000, 22000, 5000, 6000];
+const scenes = document.querySelectorAll('.scene');
+const dots   = document.querySelectorAll('.dot');
+const fill   = document.getElementById('progress-fill');
+
+let current = 0;
+let startTime = null;
+let raf;
+let scenePct = 0;
+
+// Fix: re-trigger animations by removing/adding class
+function activateScene(idx) {
+  scenes.forEach((s,i) => {
+    if (i === idx) {
+      s.classList.add('active');
+      s.classList.remove('fade-out');
+      // Force reflow to restart CSS animations
+      void s.offsetWidth;
+    } else {
+      s.classList.remove('active');
+    }
+  });
+  dots.forEach((d,i) => d.classList.toggle('active', i===idx));
+}
+
+function goTo(idx) {
+  cancelAnimationFrame(raf);
+  current = idx;
+  activateScene(current);
+  startTime = null;
+  tick();
+}
+
+// Handle the headline in scenes that has opacity:0 inline (scene 4,5,6)
+function revealInlineHeadlines() {
+  const scene = scenes[current];
+  const h = scene.querySelector('.headline[style*="opacity:0"]');
+  if (h) {
+    h.style.animation = 'revealUp 0.7s ease 0.3s forwards';
+  }
+}
+
+function tick(ts) {
+  if (!startTime) { startTime = ts || performance.now(); revealInlineHeadlines(); }
+  const elapsed = (ts||performance.now()) - startTime;
+  const dur = DURATIONS[current];
+  scenePct = Math.min(elapsed / dur, 1);
+
+  // Overall progress: account for scenes before current
+  const totalDur = DURATIONS.reduce((a,b)=>a+b,0);
+  const pastDur  = DURATIONS.slice(0,current).reduce((a,b)=>a+b,0);
+  const overallPct = (pastDur + elapsed) / totalDur;
+  fill.style.width = Math.min(overallPct*100,100)+'%';
+
+  if (scenePct >= 1) {
+    // Hold at 100% if narration is still speaking
+    const stillSpeaking = window.narrEnabled && !window.narrMuted
+      && typeof speechSynthesis !== 'undefined' && speechSynthesis.speaking;
+    if (stillSpeaking) {
+      fill.style.width = '100%';
+      window._holdForSpeech = true;
+      raf = requestAnimationFrame(tick);
+      return;
+    }
+    window._holdForSpeech = false;
+    if (current < scenes.length - 1) {
+      current++;
+      activateScene(current);
+      startTime = null;
+    } else {
+      // Loop
+      current = 0;
+      activateScene(0);
+      fill.style.width = '0%';
+      startTime = null;
+    }
+  }
+  raf = requestAnimationFrame(tick);
+}
+
+raf = requestAnimationFrame(tick);
+
+// Called by narration engine when speech ends while timer was already holding
+window._holdForSpeech = false;
+window.triggerSceneAdvance = function() {
+  window._holdForSpeech = false;
+  cancelAnimationFrame(raf);
+  if (current < scenes.length - 1) {
+    current++;
+    activateScene(current);
+  } else {
+    current = 0;
+    activateScene(0);
+    fill.style.width = '0%';
+  }
+  startTime = null;
+  raf = requestAnimationFrame(tick);
+};
+
+// Keyboard nav
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') goTo(Math.min(current+1, scenes.length-1));
+  if (e.key === 'ArrowLeft')  goTo(Math.max(current-1, 0));
+});
+</script>
+
+<script>
+// ══════════════════════════════════════════════════
+//  UNDERLYTIX VOICE NARRATION, Web Speech API
+//  Natural voiceover script, one line per scene.
+//  Scenes wait for the narrator to finish before
+//  advancing, no cutoffs.
+// ══════════════════════════════════════════════════
+
+const NARRATION = [
+
+  // Scene 1, Brand Intro (~8s)
+  // Calm, confident opener. Let the name land.
+  `Underlytix. The real estate intelligence platform built for lenders and realtors who can't afford to move slow.`,
+
+  // Scene 2, The Problem (~13s)
+  // Conversational. Build the pain, then pivot.
+  `Right now, underwriting a commercial deal means days of manual research, cap rate data that's 90 days stale, and sending the right opportunity to a lender who stopped writing that paper six months ago. There's a better way.`,
+
+  // Scene 3, Dashboard Overview (~12s)
+  // Read the screen naturally. Short, punchy phrases.
+  `This is your pipeline, live. Fourteen active deals. An average AI score of 81. Forty-seven lenders tracked. And your market cap rate, updated in real time, automatically.`,
+
+  // Scene 4, Lender Intelligence (~14s)
+  // Story-driven. Specific names build credibility.
+  `Before you make a single call, Underlytix tells you who's actively writing deals in your market right now. Arbor Realty Trust just closed 48 million in Brickell and is actively expanding. Mesa West raised their LTV ceiling this morning. These aren't rumors, they're live signals.`,
+
+  // Scene 5, AI Deal Scoring (~13s)
+  // The hero moment. Let the score breathe.
+  `Meridian Plaza Mixed-Use. Fourteen and a half million dollars. The AI scores it 87 out of 100, strong location, solid cash flow, clean debt service coverage. And Arbor Realty Trust comes up as a 96 percent profile match. They're open for business right now.`,
+
+  // Scene 6, Market Comps (~12s)
+  // Analytical but warm. Data that tells a story.
+  `Pull comparable sales for any submarket, instantly. Brickell is sitting at a 6.1 percent market cap rate. Meridian Plaza at 6.2 is priced right in line. Price per square foot, days to close, active lender count, all pulled from live recorded transactions.`,
+
+  // Scene 7, CTA (~13s)
+  // Land each stat cleanly. Close with authority.
+  `Three days of underwriting, down to four hours. Ninety-one percent lender match accuracy. Over two hundred active lenders tracked nationwide. That's Underlytix. The intelligence layer every deal deserves. Visit underlytix dot com.`,
+
+];
+
+// ── Global state (window-scoped so tick() can read them) ──
+window.narrEnabled = false;
+window.narrMuted   = false;
+
+// ── Voice selection, prefer a clear, neutral voice ──
+function getBestVoice() {
+  const voices = speechSynthesis.getVoices();
+  const preferred = [
+    'Google US English', 'Samantha', 'Alex',
+    'Microsoft David Desktop', 'Microsoft Zira Desktop',
+    'Karen', 'Moira', 'Daniel',
+  ];
+  for (const name of preferred) {
+    const v = voices.find(v => v.name === name);
+    if (v) return v;
+  }
+  return voices.find(v => v.lang && v.lang.startsWith('en')) || voices[0] || null;
+}
+
+// ── Core speak function ──────────────────────────────
+function speakScene(idx) {
+  // Scenes 1-5 (idx 0-4) use podcast audio, skip Web Speech for those
+  if (idx < 5) return;
+  if (!window.narrEnabled || window.narrMuted) return;
+  if (!('speechSynthesis' in window)) return;
+
+  speechSynthesis.cancel();
+
+  const text = NARRATION[idx];
+  if (!text) return;
+
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate   = 0.90;   // natural narrator pace, unhurried
+  u.pitch  = 0.98;
+  u.volume = 1.0;
+
+  const voice = getBestVoice();
+  if (voice) u.voice = voice;
+
+  // When this scene's narration ends:
+  // if the visual timer already ran out (holdForSpeech = true),
+  // advance to the next scene now.
+  u.onend = () => {
+    if (window._holdForSpeech) {
+      setTimeout(() => {
+        if (typeof window.triggerSceneAdvance === 'function') {
+          window.triggerSceneAdvance();
+        }
+      }, 650); // brief natural pause between narration end and scene change
+    }
+  };
+
+  speechSynthesis.speak(u);
+}
+
+// ══════════════════════════════════════════════════
+//  PODCAST AUDIO, NotebookLM AI narration
+//  Plays during scenes 1-5 (idx 0-4).
+//  Web Speech API handles scenes 6-7 (idx 5-6).
+// ══════════════════════════════════════════════════
+
+const podcastEl    = document.getElementById('podcast-audio');
+const narrBtn      = document.getElementById('mute-btn');
+window.podcastMuted = false;
+window.narrEnabled  = false;   // Web Speech (scenes 6-7)
+window.narrMuted    = false;
+
+// ── Fade helpers ─────────────────────────────────
+function fadePodcastIn(dur = 800) {
+  podcastEl.volume = 0;
+  const steps = dur / 50;
+  let n = 0;
+  const iv = setInterval(() => {
+    n++;
+    podcastEl.volume = Math.min(1, n / steps);
+    if (n >= steps) clearInterval(iv);
+  }, 50);
+}
+
+function fadePodcastOut(dur = 1500, cb) {
+  const start = podcastEl.volume;
+  const steps = dur / 50;
+  let n = 0;
+  const iv = setInterval(() => {
+    n++;
+    podcastEl.volume = Math.max(0, start * (1 - n / steps));
+    if (n >= steps) {
+      podcastEl.pause();
+      clearInterval(iv);
+      if (cb) cb();
+    }
+  }, 50);
+}
+
+// ── Start podcast (called on scene 0) ────────────
+function startPodcast() {
+  if (window.podcastMuted) return;
+  if (!podcastEl.src && !podcastEl.querySelector('source')) return;
+  // If src isn't a real mp3 yet, bail silently
+  if (podcastEl.networkState === 3) return; // NETWORK_NO_SOURCE
+  podcastEl.currentTime = 0;
+  podcastEl.volume = 0;
+  podcastEl.play().catch(() => {});
+  fadePodcastIn(1000);
+}
+
+// ── Mute button, controls whichever is active ───
+narrBtn.addEventListener('click', () => {
+  if (current < 5) {
+    // Podcast scenes 1-5
+    window.podcastMuted = !window.podcastMuted;
+    if (window.podcastMuted) {
+      podcastEl.pause();
+      narrBtn.textContent = '🔇';
+      narrBtn.classList.add('muted');
+    } else {
+      podcastEl.play().catch(() => {});
+      narrBtn.textContent = '🎙️';
+      narrBtn.classList.remove('muted');
+    }
+  } else {
+    // Web Speech scenes 6-7
+    if (!window.narrEnabled) {
+      window.narrEnabled = true;
+      window.narrMuted   = false;
+      narrBtn.textContent = '🔈';
+      narrBtn.classList.remove('muted');
+      const go = () => speakScene(current);
+      speechSynthesis.getVoices().length === 0
+        ? speechSynthesis.addEventListener('voiceschanged', go, { once: true })
+        : go();
+    } else {
+      window.narrMuted = !window.narrMuted;
+      if (window.narrMuted) {
+        speechSynthesis.cancel();
+        narrBtn.textContent = '🔇';
+        narrBtn.classList.add('muted');
+      } else {
+        narrBtn.textContent = '🔈';
+        narrBtn.classList.remove('muted');
+        speakScene(current);
+      }
+    }
+  }
+});
+
+// ── Hook activateScene ────────────────────────────
+const _origActivate = activateScene;
+window.activateScene = function(idx) {
+  _origActivate(idx);
+
+  if (idx === 0) {
+    // Scene 1, start podcast audio
+    startPodcast();
+    narrBtn.textContent = '🎙️';
+    narrBtn.title = 'Toggle podcast narration';
+  } else if (idx === 5) {
+    // Scene 6, fade podcast, switch to Web Speech
+    fadePodcastOut(1500, () => {
+      window.narrEnabled = true;
+      window.narrMuted   = false;
+      narrBtn.textContent = '🔈';
+      narrBtn.title = 'Toggle narration';
+      setTimeout(() => speakScene(5), 400);
+    });
+  } else if (idx > 5) {
+    setTimeout(() => speakScene(idx), 280);
+  }
+  // idx 1-4: podcast keeps playing, no action needed
+};
+
+// ── Hook goTo (manual navigation) ────────────────
+const _origGoTo = goTo;
+window.goTo = function(idx) {
+  speechSynthesis.cancel();
+  if (idx < 5) {
+    // Going back into podcast territory
+    if (!window.podcastMuted) {
+      podcastEl.play().catch(() => {});
+    }
+    narrBtn.textContent = window.podcastMuted ? '🔇' : '🎙️';
+  }
+  _origGoTo(idx);
+  if (idx >= 5) setTimeout(() => speakScene(idx), 280);
+};
+
+// ── Pause on tab hide ─────────────────────────────
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    speechSynthesis.cancel();
+    podcastEl.pause();
+  } else if (current < 5 && !window.podcastMuted) {
+    podcastEl.play().catch(() => {});
+  }
+});
+</script>
+</body>
+</html>

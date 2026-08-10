@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap">
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;font-family:'Inter',sans-serif;font-size:14px;background:#f8fafc;color:#0f172a}
+html,body{height:100%;font-family:'Inter','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',sans-serif;font-size:14px;background:#f8fafc;color:#0f172a}
 
 /* ── Nav ── */
 .nav{background:#0f172a;padding:0 32px;height:56px;display:flex;align-items:center;justify-content:space-between}
@@ -142,7 +142,7 @@ html,body{height:100%;font-family:'Inter',sans-serif;font-size:14px;background:#
 <div id="login-screen">
   <div class="login-card">
     <div class="lc-logo">Underlytix <em>Admin</em></div>
-    <div class="lc-sub">Restricted access — authorized personnel only</div>
+    <div class="lc-sub">Restricted access, authorized personnel only</div>
     <form onsubmit="doLogin(event)">
       <div class="field">
         <label>Email</label>
@@ -211,8 +211,8 @@ html,body{height:100%;font-family:'Inter',sans-serif;font-size:14px;background:#
         <button class="btn-grant" id="g-btn" onclick="grantAccess()">Send Invite →</button>
         <div id="g-result" class="result"></div>
         <div id="g-link-box" class="manual-link">
-          <p>📋 Email not sent — share this setup link manually:</p>
-          <code id="g-link-code" onclick="copyLink(this)" title="Click to copy">—</code>
+          <p>📋 Email not sent, share this setup link manually:</p>
+          <code id="g-link-code" onclick="copyLink(this)" title="Click to copy">, </code>
         </div>
       </div>
 
@@ -239,7 +239,7 @@ html,body{height:100%;font-family:'Inter',sans-serif;font-size:14px;background:#
             </div>
             <div class="ql-arr">→</div>
           </a>
-          <a href="/app" target="_blank" class="quick-link">
+          <a href="/investor.html" target="_blank" class="quick-link">
             <div class="ql-icon">📈</div>
             <div class="ql-info">
               <div class="ql-name">Investor Portal</div>
@@ -275,7 +275,7 @@ html,body{height:100%;font-family:'Inter',sans-serif;font-size:14px;background:#
             <div class="ql-icon">🗺️</div>
             <div class="ql-info">
               <div class="ql-name">Strategy Map</div>
-              <div class="ql-desc">Product roadmap — Now / Next / Later</div>
+              <div class="ql-desc">Product roadmap, Now / Next / Later</div>
             </div>
             <div class="ql-arr">→</div>
           </a>
@@ -351,7 +351,7 @@ let allUsers   = [];
       return;
     }
 
-    // Token invalid/expired — try refresh
+    // Token invalid/expired, try refresh
     if (!refreshToken) { sessionStorage.removeItem('_admin_sess'); return; }
     const refreshRes = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
       method:  'POST',
@@ -404,7 +404,7 @@ async function doLogin(ev) {
     }));
     showDashboard();
   } catch(err) {
-    showLoginErr('Network error — check your connection and try again.');
+    showLoginErr('Network error, check your connection and try again.');
   } finally {
     btn.disabled    = false;
     btn.textContent = 'Sign In';
@@ -499,8 +499,8 @@ async function grantAccess() {
                        :                            '14-day trial';
 
     resultEl.textContent = data.userExists
-      ? `✓ ${email} upgraded to ${planLabel} — Portals: ${portalLabels}.${data.emailSent ? ' Notification sent.' : ''}`
-      : `✓ Invite sent to ${email} — ${planLabel} — Portals: ${portalLabels}.${data.emailSent ? '' : ' Copy the link below.'}`;
+      ? `✓ ${email} upgraded to ${planLabel}, Portals: ${portalLabels}.${data.emailSent ? ' Notification sent.' : ''}`
+      : `✓ Invite sent to ${email}, ${planLabel}, Portals: ${portalLabels}.${data.emailSent ? '' : ' Copy the link below.'}`;
     resultEl.className = 'result ok';
 
     if (data.setupLink) {
@@ -511,7 +511,7 @@ async function grantAccess() {
     // Refresh user list if it was loaded
     if (allUsers.length) loadUsers();
   } catch(err) {
-    resultEl.textContent = 'Network error — please try again.';
+    resultEl.textContent = 'Network error, please try again.';
     resultEl.className   = 'result err';
   } finally {
     btn.disabled    = false;
@@ -578,9 +578,9 @@ function renderUsers(users) {
   tbody.innerHTML = users.map(u => {
     const plan    = u.plan || 'pending';
     const chip    = `<span class="plan-chip plan-${plan}">${plan}</span>`;
-    const trial   = u.trial_ends_at ? new Date(u.trial_ends_at).toLocaleDateString() : '—';
-    const joined  = u.created_at   ? new Date(u.created_at).toLocaleDateString()    : '—';
-    const prequals = u.prequals_this_month ?? '—';
+    const trial   = u.trial_ends_at ? new Date(u.trial_ends_at).toLocaleDateString() : ', ';
+    const joined  = u.created_at   ? new Date(u.created_at).toLocaleDateString()    : ', ';
+    const prequals = u.prequals_this_month ?? ', ';
 
     const canSuspend   = plan !== 'suspended'  && plan !== 'terminated';
     const canTerminate = plan !== 'terminated';
@@ -616,7 +616,7 @@ async function manageUser(email, action) {
       showMuResult('Error: ' + (data.error || res.status), 'err');
       return;
     }
-    showMuResult(`✓ ${email} — ${label}d successfully.`, 'ok');
+    showMuResult(`✓ ${email}, ${label}d successfully.`, 'ok');
     loadUsers(); // refresh list
   } catch(e) {
     showMuResult('Network error.', 'err');

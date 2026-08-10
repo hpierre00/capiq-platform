@@ -8,11 +8,11 @@ new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
 j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
 })(window,document,'script','dataLayer','GTM-KPMLXZJ4');</script>
-<title>Underlytix API Documentation — Deal Analysis & Lender Matching API | Underlytix</title>
+<title>Underlytix API Documentation, Deal Analysis & Lender Matching API | Underlytix</title>
 <meta name="description" content="Underlytix API documentation for developers. Endpoints for deal analysis, capital readiness scoring, lender matching, and risk analysis. Build AI-powered real estate tools on the Underlytix platform." />
 <meta name="robots" content="index, follow" />
 <link rel="canonical" href="https://underlytix.com/developers" />
-<meta property="og:title" content="Underlytix API Documentation — Deal Analysis & Lender Matching API | Underlytix" />
+<meta property="og:title" content="Underlytix API Documentation, Deal Analysis & Lender Matching API | Underlytix" />
 <meta property="og:description" content="Underlytix API documentation for developers. Endpoints for deal analysis, capital readiness scoring, lender matching, and risk analysis. Build AI-powered real estate tools on the Underlytix platform." />
 <meta property="og:url" content="https://underlytix.com/developers" />
 <meta property="og:type" content="website" />
@@ -23,14 +23,14 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <style>
 :root{--navy:#0f2240;--navy-2:#1a3355;--navy-3:#0d1d35;--teal:#0e7490;--teal-light:#0891b2;--teal-dim:rgba(14,116,144,0.08);--teal-border:rgba(14,116,144,0.2);--bg:#f8fafc;--bg-2:#ffffff;--bg-3:#f1f5f9;--border:#e2e8f0;--text:#0f172a;--text-2:#334155;--text-3:#64748b;--text-4:#94a3b8;--green:#059669;--green-dim:rgba(5,150,105,0.08);--shadow:0 4px 12px rgba(15,34,64,0.08);--shadow-lg:0 20px 40px rgba(15,34,64,0.12);--r:8px}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.6}
+body{font-family:'Inter',system-ui,'Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.6}
 a{color:inherit;text-decoration:none}
 nav{position:sticky;top:0;z-index:100;background:rgba(248,250,252,0.95);backdrop-filter:blur(12px);padding:0 32px;height:60px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
 .nav-logo{display:flex;align-items:center;gap:10px}
 .nav-logo-mark{width:34px;height:34px;background:var(--navy);border-radius:8px;display:flex;align-items:center;justify-content:center}
 .nav-logo-mark svg{width:17px;height:17px}
 .nav-logo-text{font-size:17px;font-weight:700;color:var(--text);letter-spacing:-.4px}
-.nav-logo-sub{font-family:'DM Mono',monospace;font-size:8px;color:var(--text-4);letter-spacing:.12em;text-transform:uppercase;margin-top:1px}
+.nav-logo-sub{font-family:'DM Mono','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',monospace;font-size:8px;color:var(--text-4);letter-spacing:.12em;text-transform:uppercase;margin-top:1px}
 .nav-links{display:flex;gap:28px}
 .nav-links a{font-size:13px;font-weight:500;color:var(--text-3);transition:color .15s}
 .nav-links a:hover{color:var(--text)}
@@ -65,17 +65,17 @@ h2{font-size:clamp(22px,4vw,36px);font-weight:800;color:var(--text);letter-spaci
 .tag-live{background:var(--green-dim);color:var(--green)}
 .tag-soon{background:#fef3c7;color:#b45309}
 .tag-future{background:var(--teal-dim);color:var(--teal)}
-.code-block{background:var(--navy);border-radius:12px;padding:24px 28px;font-family:'DM Mono',monospace;font-size:13px;color:#e2e8f0;overflow-x:auto;line-height:1.7}
+.code-block{background:var(--navy);border-radius:12px;padding:24px 28px;font-family:'DM Mono','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',monospace;font-size:13px;color:#e2e8f0;overflow-x:auto;line-height:1.7}
 .code-comment{color:#64748b}
 .code-key{color:#67e8f9}
 .code-str{color:#86efac}
 .code-num{color:#fbbf24}
 .endpoint-list{display:flex;flex-direction:column;gap:12px}
 .endpoint{display:flex;align-items:flex-start;gap:16px;background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:18px 20px}
-.method{font-family:'DM Mono',monospace;font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;flex-shrink:0;margin-top:2px}
+.method{font-family:'DM Mono','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',monospace;font-size:11px;font-weight:700;padding:4px 10px;border-radius:6px;flex-shrink:0;margin-top:2px}
 .method-post{background:#dcfce7;color:#166534}
 .method-get{background:#dbeafe;color:#1e40af}
-.endpoint-path{font-family:'DM Mono',monospace;font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
+.endpoint-path{font-family:'DM Mono','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',monospace;font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px}
 .endpoint-desc{font-size:13px;color:var(--text-3)}
 .cta-section{background:var(--navy);text-align:center;padding:80px 24px}
 .cta-section h2{color:white}
@@ -98,7 +98,7 @@ footer{background:var(--navy-3);border-top:1px solid rgba(255,255,255,0.06);padd
 <script type="application/ld+json">{
   "@context":"https://schema.org",
   "@graph":[
-    {"@type":"WebPage","name":"Underlytix API Documentation","url":"https://underlytix.com/developers","description":"API documentation for the Underlytix Capital Intelligence platform — deal analysis, capital readiness scoring, lender matching, and risk analysis endpoints."},
+    {"@type":"WebPage","name":"Underlytix API Documentation","url":"https://underlytix.com/developers","description":"API documentation for the Underlytix Capital Intelligence platform, deal analysis, capital readiness scoring, lender matching, and risk analysis endpoints."},
     {"@type":"FAQPage","mainEntity":[
       {"@type":"Question","name":"How do I get an Underlytix API key?","acceptedAnswer":{"@type":"Answer","text":"API access is currently in early access. Email api@underlytix.com with your use case to request an API key. Developers building real estate tools, AI agents, or platforms that need deal analysis and lender matching are prioritized."}},
       {"@type":"Question","name":"What can I build with the Underlytix API?","acceptedAnswer":{"@type":"Answer","text":"You can build AI assistants that analyze real estate deals, investor portals with built-in fundability scoring, lender intake tools with automatic deal pre-screening, realtor client qualification workflows, and ChatGPT or Claude integrations for deal intelligence."}},
@@ -106,7 +106,7 @@ footer{background:var(--navy-3);border-top:1px solid rgba(255,255,255,0.06);padd
     ]}
   ]
 }</script>
-<script type="text/javascript">(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","CLARITY_ID");</script>
+<script type="text/javascript">(function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","wymi2q72od");</script>
 </head>
 <body>
 <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-KPMLXZJ4" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
@@ -128,7 +128,7 @@ footer{background:var(--navy-3);border-top:1px solid rgba(255,255,255,0.06);padd
   <div class="container">
     <div class="hero-badge">Developers</div>
     <h1 class="hero-h1">Underlytix API</h1>
-    <p class="hero-sub">Build real estate intelligence into any application. Deal analysis, capital readiness scoring, lender matching, and risk analysis — all as programmable API endpoints.</p>
+    <p class="hero-sub">Build real estate intelligence into any application. Deal analysis, capital readiness scoring, lender matching, and risk analysis, all as programmable API endpoints.</p>
     <div class="hero-cta">
       <a href="mailto:api@underlytix.com?subject=API Access Request" class="btn-teal">Request API Key</a>
       <a href="/integrations" class="btn-outline-white">View Integrations</a>
@@ -165,7 +165,7 @@ curl -X GET https://api.underlytix.com/v1/ping   -H <span class="code-str">"Auth
       <div>
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
           <span class="method method-post">POST</span>
-          <code style="font-size:15px;font-weight:700;font-family:'DM Mono',monospace">/v1/deal-analysis</code>
+          <code style="font-size:15px;font-weight:700;font-family:'DM Mono','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',monospace">/v1/deal-analysis</code>
         </div>
         <p style="font-size:14px;color:var(--text-3);margin-bottom:16px">Analyzes a real estate deal and returns DSCR, LTV, cash-on-cash return, NOI projection, Capital Readiness Score, fundability verdict, and lender type match.</p>
         <div class="code-block"><span class="code-comment">// Request body</span>
@@ -195,9 +195,9 @@ curl -X GET https://api.underlytix.com/v1/ping   -H <span class="code-str">"Auth
       <div>
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
           <span class="method method-post">POST</span>
-          <code style="font-size:15px;font-weight:700;font-family:'DM Mono',monospace">/v1/capital-readiness-score</code>
+          <code style="font-size:15px;font-weight:700;font-family:'DM Mono','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',monospace">/v1/capital-readiness-score</code>
         </div>
-        <p style="font-size:14px;color:var(--text-3);margin-bottom:16px">Returns a single 0–100 Capital Readiness Score for a deal, with weighted component breakdown.</p>
+        <p style="font-size:14px;color:var(--text-3);margin-bottom:16px">Returns a single 0-100 Capital Readiness Score for a deal, with weighted component breakdown.</p>
         <div class="code-block"><span class="code-comment">// Response</span>
 {
   <span class="code-key">"score"</span>: <span class="code-num">84</span>,
@@ -214,7 +214,7 @@ curl -X GET https://api.underlytix.com/v1/ping   -H <span class="code-str">"Auth
       <div>
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
           <span class="method method-post">POST</span>
-          <code style="font-size:15px;font-weight:700;font-family:'DM Mono',monospace">/v1/lender-match</code>
+          <code style="font-size:15px;font-weight:700;font-family:'DM Mono','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',monospace">/v1/lender-match</code>
         </div>
         <p style="font-size:14px;color:var(--text-3);margin-bottom:16px">Matches a deal profile to appropriate lender types and products, ranked by fit score.</p>
         <div class="code-block"><span class="code-comment">// Response</span>
@@ -233,7 +233,7 @@ curl -X GET https://api.underlytix.com/v1/ping   -H <span class="code-str">"Auth
       <div>
         <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px">
           <span class="method method-post">POST</span>
-          <code style="font-size:15px;font-weight:700;font-family:'DM Mono',monospace">/v1/risk-analysis</code>
+          <code style="font-size:15px;font-weight:700;font-family:'DM Mono','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',monospace">/v1/risk-analysis</code>
         </div>
         <p style="font-size:14px;color:var(--text-3);margin-bottom:16px">Returns identified risk factors for a deal with severity ratings and suggested remediations.</p>
         <div class="code-block"><span class="code-comment">// Response (deal with DSCR issue)</span>
@@ -260,8 +260,8 @@ curl -X GET https://api.underlytix.com/v1/ping   -H <span class="code-str">"Auth
     <h2>Use cases for the API</h2>
     <div class="grid-3">
       <div class="card"><div class="card-icon" style="background:var(--teal-dim)">🤖</div><h3>AI Assistants</h3><p>Build ChatGPT, Claude, or Gemini integrations that can answer "can this deal get funded?" with a real Capital Readiness Score backed by Underlytix.</p></div>
-      <div class="card"><div class="card-icon" style="background:var(--green-dim)">🏘️</div><h3>Investor Portals</h3><p>Embed deal scoring natively in your own investor portal or real estate marketplace — every listing shows a fundability score automatically.</p></div>
-      <div class="card"><div class="card-icon" style="background:#fef3c7">🏦</div><h3>Lender Intake Tools</h3><p>Pre-screen incoming loan applications before they reach your underwriting team — score deals automatically at submission.</p></div>
+      <div class="card"><div class="card-icon" style="background:var(--green-dim)">🏘️</div><h3>Investor Portals</h3><p>Embed deal scoring natively in your own investor portal or real estate marketplace, every listing shows a fundability score automatically.</p></div>
+      <div class="card"><div class="card-icon" style="background:#fef3c7">🏦</div><h3>Lender Intake Tools</h3><p>Pre-screen incoming loan applications before they reach your underwriting team, score deals automatically at submission.</p></div>
     </div>
   </div>
 </section>

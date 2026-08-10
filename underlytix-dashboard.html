@@ -3,13 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Underlytix — Daily Operations Dashboard</title>
+<title>Underlytix, Daily Operations Dashboard</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
 <style>
   :root { color-scheme: light; }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',sans-serif;
     background: #f4f6fa;
     color: #1a1d23;
     font-size: 13px;
@@ -150,12 +150,12 @@
 
 <div class="header">
   <div class="header-left">
-    <h1>Underlytix — Daily Operations Dashboard</h1>
+    <h1>Underlytix, Daily Operations Dashboard</h1>
     <div class="subtitle" id="reportDate">Loading…</div>
   </div>
   <div class="header-right">
     <div class="live-badge"><div class="live-dot"></div> LIVE</div>
-    <div class="last-updated" id="lastUpdated">—</div>
+    <div class="last-updated" id="lastUpdated">, </div>
     <button class="refresh-btn" onclick="loadAll()">↺ Refresh</button>
   </div>
 </div>
@@ -171,17 +171,17 @@
   </div>
 
   <div class="kpi-grid">
-    <div class="kpi-card"><div class="kpi-label">Signups</div><div class="kpi-value" id="kpiSignups"><span class="spinner"></span></div><div class="kpi-delta" id="kpiSignupsDelta">—</div></div>
-    <div class="kpi-card"><div class="kpi-label">MRR</div><div class="kpi-value green" id="kpiMRR"><span class="spinner"></span></div><div class="kpi-delta" id="kpiMRRDelta">—</div></div>
-    <div class="kpi-card"><div class="kpi-label">Total Users</div><div class="kpi-value blue" id="kpiTotal"><span class="spinner"></span></div><div class="kpi-delta delta-flat" id="kpiTotalDelta">—</div></div>
-    <div class="kpi-card"><div class="kpi-label">Deals Filed</div><div class="kpi-value orange" id="kpiDeals"><span class="spinner"></span></div><div class="kpi-delta" id="kpiDealsDelta">—</div></div>
-    <div class="kpi-card"><div class="kpi-label">Pre-Quals</div><div class="kpi-value purple" id="kpiPrequals"><span class="spinner"></span></div><div class="kpi-delta" id="kpiPrequalsDelta">—</div></div>
-    <div class="kpi-card"><div class="kpi-label">Active Subs</div><div class="kpi-value" id="kpiSubs"><span class="spinner"></span></div><div class="kpi-delta" id="kpiSubsDelta">—</div></div>
+    <div class="kpi-card"><div class="kpi-label">Signups</div><div class="kpi-value" id="kpiSignups"><span class="spinner"></span></div><div class="kpi-delta" id="kpiSignupsDelta">, </div></div>
+    <div class="kpi-card"><div class="kpi-label">MRR</div><div class="kpi-value green" id="kpiMRR"><span class="spinner"></span></div><div class="kpi-delta" id="kpiMRRDelta">, </div></div>
+    <div class="kpi-card"><div class="kpi-label">Total Users</div><div class="kpi-value blue" id="kpiTotal"><span class="spinner"></span></div><div class="kpi-delta delta-flat" id="kpiTotalDelta">, </div></div>
+    <div class="kpi-card"><div class="kpi-label">Deals Filed</div><div class="kpi-value orange" id="kpiDeals"><span class="spinner"></span></div><div class="kpi-delta" id="kpiDealsDelta">, </div></div>
+    <div class="kpi-card"><div class="kpi-label">Pre-Quals</div><div class="kpi-value purple" id="kpiPrequals"><span class="spinner"></span></div><div class="kpi-delta" id="kpiPrequalsDelta">, </div></div>
+    <div class="kpi-card"><div class="kpi-label">Active Subs</div><div class="kpi-value" id="kpiSubs"><span class="spinner"></span></div><div class="kpi-delta" id="kpiSubsDelta">, </div></div>
   </div>
 
   <div class="row row-2">
     <div class="card">
-      <div class="card-title">📈 Signup Activity — Last 30 Days</div>
+      <div class="card-title">📈 Signup Activity, Last 30 Days</div>
       <div class="chart-wrap"><canvas id="signupChart"></canvas></div>
     </div>
     <div class="card">
@@ -445,12 +445,12 @@ function renderRevTable() {
     <tr>
       <td>${r.period}</td>
       <td class="${r.rev===0?'rev-zero':'rev-amount'}">$${r.rev.toLocaleString(undefined,{minimumFractionDigits:0})}</td>
-      <td class="${r.subs===0?'rev-zero':''}">${r.subs===0?'—':r.subs+' active'}</td>
+      <td class="${r.subs===0?'rev-zero':''}">${r.subs===0?', ':r.subs+' active'}</td>
     </tr>
   `).join('') + (subs.length===0?`
     <tr><td colspan="3" style="padding-top:10px">
       <div style="background:#fffbeb;border-radius:6px;padding:8px;font-size:11px;color:#92400e">
-        ⚡ No paid subs yet — you're in launch phase.
+        ⚡ No paid subs yet, you're in launch phase.
       </div></td></tr>`:'');
 }
 
@@ -475,8 +475,8 @@ function renderOps() {
 function renderScenarios() {
   const scenarios = appData.scenarios||[];
   const meta = {
-    5253789:{icon:'✉️', desc:'Daily 10 AM EDT — Days 2,5,9,13,14,21'},
-    5253794:{icon:'📬', desc:'Daily — cold contact outreach'},
+    5253789:{icon:'✉️', desc:'Daily 10 AM EDT, Days 2,5,9,13,14,21'},
+    5253794:{icon:'📬', desc:'Daily, cold contact outreach'},
     5253824:{icon:'🏠', desc:'Webhook → realtor onboarding'},
     5253830:{icon:'💼', desc:'Webhook → investor onboarding'},
   };
@@ -501,7 +501,7 @@ function renderPageEngagement() {
     {name:'App',      pct:6,  note:'Auth & dashboard'},
   ];
   document.getElementById('pageList').innerHTML = `
-    <div style="font-size:11px;color:#6b7280;margin-bottom:10px">Estimated from user activity — connect Clarity for real session data</div>
+    <div style="font-size:11px;color:#6b7280;margin-bottom:10px">Estimated from user activity, connect Clarity for real session data</div>
     ${pages.map(p=>`
       <div class="page-item">
         <div class="page-name">${p.name}</div>
@@ -511,7 +511,7 @@ function renderPageEngagement() {
       <div style="font-size:10px;color:#9ca3af;margin:-4px 0 6px 88px">${p.note}</div>
     `).join('')}
     <div style="margin-top:8px;padding:8px;background:#eff6ff;border-radius:7px;font-size:11px;color:#2563eb">
-      💡 You have Clarity installed — link it at clarity.microsoft.com to activate heatmaps & recordings.
+      💡 You have Clarity installed, link it at clarity.microsoft.com to activate heatmaps & recordings.
     </div>`;
 }
 
@@ -533,7 +533,7 @@ function renderActivity() {
 }
 
 function formatRelative(ts) {
-  if (!ts) return '—';
+  if (!ts) return ', ';
   const days = Math.floor((Date.now()-new Date(ts).getTime())/86400000);
   if (days===0) return 'Today';
   if (days===1) return 'Yesterday';
@@ -544,21 +544,22 @@ function formatRelative(ts) {
 function renderInsights() {
   const d = appData.supabase||{};
   const subs = appData.subscriptions||[];
-  const coldCount = 95; // updated after bulk import
+  const coldCount = 118; // 93 original + 25 added 2026-06-22 via Apollo
 
   document.getElementById('goodInsights').innerHTML = [
     '<strong>Platform fully operational.</strong> All services live: Netlify, Supabase, Stripe, Make.com automation.',
     '<strong>Multi-user type coverage.</strong> Realtors, investors, and lenders each have dedicated portals and onboarding sequences.',
     `<strong>${d.deals||0} deals + ${d.prequals||0} pre-quals.</strong> Users are engaging with core features, not just signing up.`,
-    '<strong>Email automation active.</strong> 4 scenarios running — drip sequence, cold outreach, realtor + investor signup. All green.',
-    `<strong>Cold outreach list at ${coldCount} contacts.</strong> 57 original + 38 new (investors, realtors, title, associations, mortgage). Emails sent daily at 10:30 AM.`,
-    '<strong>Investor table discrepancy resolved.</strong> 4 investors vs 2 auth users explained — 2 are unmatched test accounts (typo + deleted auth). No real data issue.',
-    '<strong>Stripe webhook live.</strong> Payment events sync subscription status to Supabase automatically — subscriptions now unlock access on payment.',
+    '<strong>Email automation active.</strong> 4 scenarios running, drip sequence, cold outreach, realtor + investor signup. All green.',
+    `<strong>Cold outreach list at ${coldCount} contacts.</strong> FL realtors, brokers, investors, lenders, title companies, and associations. Emails sent daily at 10:30 AM.`,
+    '<strong>Microsoft Clarity live.</strong> Tracking ID wymi2q72od deployed across all 19 pages. Visit <a href="https://clarity.microsoft.com" target="_blank">clarity.microsoft.com</a> to activate heatmaps and session recordings.',
+    '<strong>Investor table discrepancy resolved.</strong> 4 investors vs 2 auth users explained, 2 are unmatched test accounts (typo + deleted auth). No real data issue.',
+    '<strong>Stripe webhook live.</strong> Payment events sync subscription status to Supabase automatically, subscriptions now unlock access on payment.',
   ].map(t=>`<div class="insight-item good"><div class="insight-icon">✅</div><div class="insight-text">${t}</div></div>`).join('');
 
   document.getElementById('oppInsights').innerHTML = [
-    {t:'<strong>No paid subscribers yet.</strong> You have 2 trial users — direct personal outreach now is the fastest path to first revenue. No automation replaces a personal email.', type:'warn'},
-    {t:'<strong>Link Microsoft Clarity.</strong> Tag is installed on all pages. Go to <a href="https://clarity.microsoft.com" target="_blank">clarity.microsoft.com</a> → your project → activate to unlock heatmaps, session recordings, and scroll depth.', type:'info'},
+    {t:'<strong>No paid subscribers yet.</strong> You have 2 trial users, direct personal outreach now is the fastest path to first revenue. No automation replaces a personal email.', type:'warn'},
+    {t:'<strong>Register Stripe webhook.</strong> The handler at <code>/.netlify/functions/stripe-webhook</code> is deployed but not yet registered in the Stripe Dashboard for <code>acct_1TQUoT...</code>. Go to <a href="https://dashboard.stripe.com/webhooks" target="_blank">dashboard.stripe.com/webhooks</a> → Add endpoint → paste the URL → select the 5 subscription/invoice events.', type:'warn'},
   ].map(i=>`<div class="insight-item ${i.type}"><div class="insight-icon">${i.type==='warn'?'⚠️':'💡'}</div><div class="insight-text">${i.t}</div></div>`).join('');
 }
 

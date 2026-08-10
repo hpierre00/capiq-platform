@@ -262,7 +262,7 @@ If you don't have enough information yet, set "ready": false and omit the other 
           "anthropic-version": "2023-06-01",
         },
         body: JSON.stringify({
-          model: "claude-sonnet-5",
+          model: "claude-sonnet-4-6",
           max_tokens: 1500,
           system: systemPrompt,
           messages: messages || [],
