@@ -150,7 +150,7 @@ YOUR ROLE:
         "content-type": "application/json",
       },
       body: JSON.stringify({
-        model: "claude-opus-5",
+        model: "claude-opus-4-6",
         max_tokens: 1024,
         system: SYSTEM,
         messages: messages.slice(-10), // last 10 turns max

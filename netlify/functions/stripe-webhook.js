@@ -1,197 +1,214 @@
-// Stripe webhook receiver - forwards events to Supabase to update investor plans
-export default async (req) => {
-  const cors = { 'Content-Type': 'application/json' };
-  if (req.method !== 'POST') return new Response(JSON.stringify({ error: 'Method not allowed' }), { status: 405, headers: cors });
+/**
+ * Netlify Function: stripe-webhook
+ *
+ * Listens for Stripe subscription events and syncs access status to Supabase.
+ * Register this endpoint in Stripe Dashboard → Developers → Webhooks.
+ *
+ * Endpoint URL: https://underlytix.com/.netlify/functions/stripe-webhook
+ *
+ * Events to enable in Stripe:
+ *   - customer.subscription.created
+ *   - customer.subscription.updated
+ *   - customer.subscription.deleted
+ *   - invoice.payment_succeeded
+ *   - invoice.payment_failed
+ *
+ * Required env vars:
+ *   STRIPE_SECRET_KEY         — Stripe secret key
+ *   STRIPE_WEBHOOK_SECRET     — Webhook signing secret (from Stripe Dashboard)
+ *   SUPABASE_URL              — Supabase project URL
+ *   SUPABASE_SERVICE_KEY      — Supabase service role key
+ */
+
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+const SUPABASE_URL        = process.env.SUPABASE_URL || 'https://mxyepucitjzleaziizkr.supabase.co';
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY;
+const WEBHOOK_SECRET      = process.env.STRIPE_WEBHOOK_SECRET;
+
+// Price IDs → user role mapping
+const PRICE_ROLE_MAP = {
+  [process.env.LENDER_PRICE_ID       || 'price_1TdOFDBdTWAzjDqGJ1YpeviL']: 'lender',
+  [process.env.LENDER_QM_PRICE_ID    || 'price_1TdOFEBdTWAzjDqG9e6ynNun']: 'lender',
+};
+
+// ── Supabase helpers ──────────────────────────────────────────────────────────
+
+async function supabaseGet(path) {
+  const res = await fetch(`${SUPABASE_URL}${path}`, {
+    headers: {
+      apikey: SUPABASE_SERVICE_KEY,
+      Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+    },
+  });
+  if (!res.ok) throw new Error(`Supabase GET ${path} → ${res.status}`);
+  return res.json();
+}
+
+async function supabasePatch(path, body) {
+  const res = await fetch(`${SUPABASE_URL}${path}`, {
+    method: 'PATCH',
+    headers: {
+      apikey: SUPABASE_SERVICE_KEY,
+      Authorization: `Bearer ${SUPABASE_SERVICE_KEY}`,
+      'Content-Type': 'application/json',
+      Prefer: 'return=representation',
+    },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const text = await res.text();
+    throw new Error(`Supabase PATCH ${path} → ${res.status}: ${text}`);
+  }
+  return res.json();
+}
+
+// ── Find user by email via Supabase Admin API ─────────────────────────────────
+
+async function getUserByEmail(email) {
+  const data = await supabaseGet(`/auth/v1/admin/users?email=${encodeURIComponent(email)}`);
+  return data?.users?.[0] || null;
+}
+
+// ── Determine role from subscription ──────────────────────────────────────────
+
+function getRoleFromSubscription(subscription) {
+  for (const item of subscription.items?.data || []) {
+    const priceId = item.price?.id;
+    if (PRICE_ROLE_MAP[priceId]) return PRICE_ROLE_MAP[priceId];
+  }
+  // Default to 'realtor' for any unrecognized paid subscription
+  return 'realtor';
+}
+
+// ── Update user metadata in Supabase ─────────────────────────────────────────
+
+async function updateUserSubscription(userId, updates) {
+  return supabasePatch(`/auth/v1/admin/users/${userId}`, {
+    user_metadata: updates,
+  });
+}
+
+// ── Handle each event type ────────────────────────────────────────────────────
+
+async function handleSubscriptionCreatedOrUpdated(subscription) {
+  const customerId = subscription.customer;
+  const customer   = await stripe.customers.retrieve(customerId);
+  const email      = customer.email;
+
+  if (!email) {
+    console.log('[stripe-webhook] No email on customer', customerId);
+    return;
+  }
+
+  const user = await getUserByEmail(email);
+  if (!user) {
+    console.log('[stripe-webhook] No Supabase user for email', email);
+    return;
+  }
+
+  const role   = getRoleFromSubscription(subscription);
+  const status = subscription.status; // active, trialing, past_due, canceled, etc.
+  const isPaid = ['active', 'trialing'].includes(status);
+
+  await updateUserSubscription(user.id, {
+    subscription_status:    status,
+    subscription_id:        subscription.id,
+    subscription_role:      role,
+    subscription_paid:      isPaid,
+    stripe_customer_id:     customerId,
+    subscription_updated_at: new Date().toISOString(),
+  });
+
+  console.log(`[stripe-webhook] Updated user ${email} → role:${role} status:${status}`);
+}
+
+async function handleSubscriptionDeleted(subscription) {
+  const customerId = subscription.customer;
+  const customer   = await stripe.customers.retrieve(customerId);
+  const email      = customer.email;
+
+  if (!email) return;
+
+  const user = await getUserByEmail(email);
+  if (!user) return;
+
+  await updateUserSubscription(user.id, {
+    subscription_status:     'canceled',
+    subscription_paid:       false,
+    subscription_updated_at: new Date().toISOString(),
+  });
+
+  console.log(`[stripe-webhook] Canceled subscription for ${email}`);
+}
+
+async function handlePaymentFailed(invoice) {
+  const customerId = invoice.customer;
+  const customer   = await stripe.customers.retrieve(customerId);
+  const email      = customer.email;
+
+  if (!email) return;
+
+  const user = await getUserByEmail(email);
+  if (!user) return;
+
+  await updateUserSubscription(user.id, {
+    subscription_status:     'past_due',
+    subscription_paid:       false,
+    subscription_updated_at: new Date().toISOString(),
+  });
+
+  console.log(`[stripe-webhook] Payment failed for ${email}`);
+}
+
+// ── Main handler ──────────────────────────────────────────────────────────────
+
+exports.handler = async (event) => {
+  if (event.httpMethod !== 'POST') {
+    return { statusCode: 405, body: 'Method not allowed' };
+  }
+
+  // Verify Stripe signature
+  let stripeEvent;
+  try {
+    stripeEvent = stripe.webhooks.constructEvent(
+      event.body,
+      event.headers['stripe-signature'],
+      WEBHOOK_SECRET
+    );
+  } catch (err) {
+    console.error('[stripe-webhook] Signature verification failed:', err.message);
+    return { statusCode: 400, body: `Webhook Error: ${err.message}` };
+  }
+
+  console.log(`[stripe-webhook] Received: ${stripeEvent.type}`);
 
   try {
-    const body = await req.text();
-    const WEBHOOK_SECRET = Netlify.env.get('STRIPE_WEBHOOK_SECRET') || '';
-    
-    // Verify Stripe signature if secret is configured
-    if (WEBHOOK_SECRET) {
-      const sig = req.headers.get('stripe-signature');
-      if (!sig) return new Response(JSON.stringify({ error: 'Missing signature' }), { status: 400, headers: cors });
-      
-      // Stripe signature verification
-      const parts = sig.split(',').reduce((acc, part) => {
-        const [k, v] = part.split('=');
-        acc[k] = v;
-        return acc;
-      }, {});
-      const timestamp = parts.t;
-      const sigHash = parts.v1;
-      const payload = `${timestamp}.${body}`;
-      
-      // HMAC-SHA256 verification
-      const encoder = new TextEncoder();
-      const keyData = encoder.encode(WEBHOOK_SECRET);
-      const msgData = encoder.encode(payload);
-      const cryptoKey = await crypto.subtle.importKey('raw', keyData, { name: 'HMAC', hash: 'SHA-256' }, false, ['verify']);
-      const sigBytes = new Uint8Array(sigHash.match(/.{2}/g).map(b => parseInt(b, 16)));
-      const valid = await crypto.subtle.verify('HMAC', cryptoKey, sigBytes, msgData);
-      
-      if (!valid) return new Response(JSON.stringify({ error: 'Invalid signature' }), { status: 400, headers: cors });
-      
-      // Check timestamp not older than 5 minutes
-      const age = Math.floor(Date.now() / 1000) - parseInt(timestamp);
-      if (age > 300) return new Response(JSON.stringify({ error: 'Webhook timestamp too old' }), { status: 400, headers: cors });
+    switch (stripeEvent.type) {
+      case 'customer.subscription.created':
+      case 'customer.subscription.updated':
+        await handleSubscriptionCreatedOrUpdated(stripeEvent.data.object);
+        break;
+
+      case 'customer.subscription.deleted':
+        await handleSubscriptionDeleted(stripeEvent.data.object);
+        break;
+
+      case 'invoice.payment_succeeded':
+        // Subscription updated event covers this, but log it
+        console.log('[stripe-webhook] Payment succeeded for invoice', stripeEvent.data.object.id);
+        break;
+
+      case 'invoice.payment_failed':
+        await handlePaymentFailed(stripeEvent.data.object);
+        break;
+
+      default:
+        console.log(`[stripe-webhook] Unhandled event: ${stripeEvent.type}`);
     }
-    
-    const event = JSON.parse(body);
-    const type = event.type;
-    const obj = event.data?.object || {};
-
-    const SUPABASE_URL = 'https://mxyepucitjzleaziizkr.supabase.co';
-    const SUPABASE_KEY = Netlify.env.get('SUPABASE_SERVICE_KEY') || '';
-
-    if (!SUPABASE_KEY) {
-      console.warn('SUPABASE_SERVICE_KEY not set');
-      return new Response(JSON.stringify({ received: true }), { status: 200, headers: cors });
-    }
-
-    const headers = {
-      'Content-Type': 'application/json',
-      'apikey': SUPABASE_KEY,
-      'Authorization': `Bearer ${SUPABASE_KEY}`,
-      'Prefer': 'return=minimal',
-    };
-
-    // Extract investor ID from metadata
-    const meta = obj.metadata || {};
-    const investorId = meta.investor_id || obj.client_reference_id;
-    const customerId = obj.customer;
-
-    if ((type === 'checkout.session.completed' || type === 'invoice.payment_succeeded') && (investorId || customerId)) {
-      let targetId = investorId;
-
-      // If we only have customer ID, look up investor
-      if (!targetId && customerId) {
-        const lookupRes = await fetch(`${SUPABASE_URL}/rest/v1/investors?stripe_customer_id=eq.${customerId}&select=id`, { headers });
-        const investors = await lookupRes.json();
-        if (investors.length > 0) targetId = investors[0].id;
-      }
-
-      if (targetId) {
-        await fetch(`${SUPABASE_URL}/rest/v1/investors?id=eq.${targetId}`, {
-          method: 'PATCH', headers,
-          body: JSON.stringify({
-            plan: 'pro',
-            stripe_customer_id: customerId,
-            stripe_subscription_id: obj.subscription || obj.id,
-            updated_at: new Date().toISOString(),
-          }),
-        });
-
-        // Upsert subscription record
-        await fetch(`${SUPABASE_URL}/rest/v1/subscriptions`, {
-          method: 'POST',
-          headers: { ...headers, 'Prefer': 'resolution=merge-duplicates' },
-          body: JSON.stringify({
-            stripe_subscription_id: obj.subscription || obj.id,
-            stripe_customer_id: customerId,
-            user_type: 'investor',
-            user_id: targetId,
-            plan: 'pro',
-            status: 'active',
-            current_period_start: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          }),
-        });
-        console.log(`Upgraded investor ${targetId} to pro`);
-      }
-    }
-
-    if ((type === 'customer.subscription.deleted' || type === 'customer.subscription.paused') && customerId) {
-      const lookupRes = await fetch(`${SUPABASE_URL}/rest/v1/investors?stripe_customer_id=eq.${customerId}&select=id`, { headers });
-      const investors = await lookupRes.json();
-      if (investors.length > 0) {
-        const targetId = investors[0].id;
-        await fetch(`${SUPABASE_URL}/rest/v1/investors?id=eq.${targetId}`, {
-          method: 'PATCH', headers,
-          body: JSON.stringify({ plan: 'starter', updated_at: new Date().toISOString() }),
-        });
-        console.log(`Downgraded investor ${targetId} to starter`);
-      }
-    }
-
-    // Handle lender subscription events
-    const lenderUserId = meta.lender_user_id;
-    if ((type === 'checkout.session.completed' || type === 'invoice.payment_succeeded') && lenderUserId) {
-      // Upgrade lender plan in Supabase
-      const lenderLookup = await fetch(`${SUPABASE_URL}/rest/v1/lender_users?id=eq.${lenderUserId}&select=id,email,full_name,lender_profiles(lender_name)`, { headers });
-      const lenderRows = await lenderLookup.json();
-      if (lenderRows.length > 0) {
-        await fetch(`${SUPABASE_URL}/rest/v1/lender_users?id=eq.${lenderUserId}`, {
-          method: 'PATCH', headers,
-          body: JSON.stringify({ plan: 'active', stripe_customer_id: customerId, stripe_subscription_id: obj.subscription || obj.id }),
-        });
-        const lenderRow = lenderRows[0];
-        // Fire Notion CRM sync — mark as Closed Won
-        const baseUrl = 'https://underlytix.com';
-        fetch(`${baseUrl}/.netlify/functions/notion-lender-sync`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            event: 'lender_closed',
-            lender: { email: lenderRow.email, name: lenderRow.full_name, companyName: lenderRow.lender_profiles?.lender_name, planAmount: 297 }
-          }),
-        }).catch(() => {});
-        console.log(`Upgraded lender ${lenderUserId} to active`);
-      }
-    }
-
-    // Handle realtor subscription events
-    const realtorId = meta.realtor_id;
-    if ((type === 'checkout.session.completed' || type === 'invoice.payment_succeeded') && realtorId) {
-      await fetch(`${SUPABASE_URL}/rest/v1/realtor_users?id=eq.${realtorId}`, {
-        method: 'PATCH', headers,
-        body: JSON.stringify({ plan: 'active', stripe_customer_id: customerId }),
-      });
-      // Fire upgrade confirmation email
-      const rLookup = await fetch(`${SUPABASE_URL}/rest/v1/realtor_users?id=eq.${realtorId}&select=email,full_name`, { headers });
-      const rRows = await rLookup.json();
-      if (rRows.length > 0) {
-        const RESEND_KEY = process.env.RESEND_API_KEY || '';
-        if (RESEND_KEY) {
-          fetch('https://api.resend.com/emails', {
-            method: 'POST', headers: { 'Authorization': `Bearer ${RESEND_KEY}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              from: 'Underlytix <noreply@underlytix.com>', to: [rRows[0].email],
-              subject: 'Underlytix Realtor Pro — Activated',
-              html: `<div style="font-family:Inter,sans-serif;max-width:600px;margin:0 auto;padding:40px"><div style="font-size:20px;font-weight:800;color:#0a1628;margin-bottom:24px">UNDERLYTIX</div><h1 style="font-size:22px;color:#0a1628">You're on Realtor Pro, ${rRows[0].full_name || 'there'}.</h1><p style="color:#374151;font-size:15px;line-height:1.6">Unlimited client prequalifications are now active. Available Friday at midnight, Saturday at 8pm, all day Sunday — always.</p><a href="https://underlytix.com" style="display:inline-block;background:#00bfa5;color:#fff;font-weight:600;padding:14px 28px;border-radius:8px;text-decoration:none;margin:16px 0">Open Realtor Portal →</a></div>`,
-            }),
-          }).catch(() => {});
-        }
-        console.log(`Upgraded realtor ${realtorId} to active`);
-      }
-    }
-
-    // Handle realtor subscription cancellation
-    if (type === 'customer.subscription.deleted' && customerId) {
-      const rLookup = await fetch(`${SUPABASE_URL}/rest/v1/realtor_users?stripe_customer_id=eq.${customerId}&select=id`, { headers });
-      const rRows = await rLookup.json();
-      if (rRows.length > 0) {
-        await fetch(`${SUPABASE_URL}/rest/v1/realtor_users?id=eq.${rRows[0].id}`, {
-          method: 'PATCH', headers, body: JSON.stringify({ plan: 'cancelled' }),
-        });
-      }
-    }
-
-    // Handle lender subscription cancellation
-    if ((type === 'customer.subscription.deleted') && customerId) {
-      const lenderLookup = await fetch(`${SUPABASE_URL}/rest/v1/lender_users?stripe_customer_id=eq.${customerId}&select=id`, { headers });
-      const lenderRows = await lenderLookup.json();
-      if (lenderRows.length > 0) {
-        await fetch(`${SUPABASE_URL}/rest/v1/lender_users?id=eq.${lenderRows[0].id}`, {
-          method: 'PATCH', headers,
-          body: JSON.stringify({ plan: 'cancelled' }),
-        });
-        console.log(`Cancelled lender ${lenderRows[0].id}`);
-      }
-    }
-
-    return new Response(JSON.stringify({ received: true }), { status: 200, headers: cors });
   } catch (err) {
-    console.error('Webhook error:', err.message);
-    return new Response(JSON.stringify({ received: true }), { status: 200, headers: cors }); // Always 200 to Stripe
+    console.error('[stripe-webhook] Handler error:', err.message);
+    return { statusCode: 500, body: 'Internal error processing webhook' };
   }
+
+  return { statusCode: 200, body: JSON.stringify({ received: true }) };
 };
