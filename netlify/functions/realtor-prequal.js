@@ -267,32 +267,21 @@ If you don't have enough information yet, set "ready": false and omit the other 
           max_tokens: 1500,
           system: systemPrompt,
           messages: messages || [],
+          stream: true,
         }),
       });
 
-      if (!response.ok) {
-        const err = await response.text();
-        throw new Error(`Anthropic error: ${err}`);
+      if (!response.ok || !response.body) {
+        const err = await response.text().catch(() => "");
+        return new Response(JSON.stringify({ success: false, error: `Anthropic error: ${err}` }), { status: 200, headers: cors });
       }
 
-      const data = await response.json();
-      const text = (data.content || []).filter(b => b.type === "text").map(b => b.text).join("");
-
-      // Extract structured result if present
-      let prequal = null;
-      const match = text.match(/<PREQUAL_RESULT>([\s\S]*?)<\/PREQUAL_RESULT>/);
-      if (match) {
-        try { prequal = JSON.parse(match[1].trim()); } catch (e) { /* ignore */ }
-      }
-
-      // Clean message (remove the JSON block from display)
-      const cleanText = text.replace(/<PREQUAL_RESULT>[\s\S]*?<\/PREQUAL_RESULT>/g, "").trim();
-
-      return new Response(JSON.stringify({
-        success: true,
-        message: cleanText,
-        prequal: prequal?.ready ? prequal : null,
-      }), { status: 200, headers: cors });
+      // Stream the model's tokens straight through to the client for instant rendering.
+      // The client accumulates text, extracts the <PREQUAL_RESULT> block, and speaks sentences as they arrive.
+      return new Response(response.body, {
+        status: 200,
+        headers: { ...cors, "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-cache" },
+      });
     }
 
     // ── SAVE: persist completed prequal to Supabase ──────────────────────────

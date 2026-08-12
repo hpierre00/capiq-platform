@@ -542,6 +542,57 @@ function appendChatMessage(role, text) {
   el.scrollTop = el.scrollHeight;
 }
 
+function renderPrequalBanner(p) {
+  const resultColors = { likely_qualifies: '#00bfa5', borderline: '#f59e0b', unlikely: '#ef4444', needs_review: '#6b7280' };
+  const resultLabels = { likely_qualifies: '✓ Strong Alignment', borderline: '⚠ Needs Review', unlikely: '✗ Low Compatibility', needs_review: '? Needs Review' };
+  const banner = document.getElementById('prequal-result-banner');
+  if (!banner) return;
+  banner.style.display = 'block';
+  banner.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="font-size:13px;font-weight:700;color:${resultColors[p.result]||'var(--teal)'};margin-bottom:6px">${resultLabels[p.result]||p.result}</div><div style="font-size:12px;color:var(--text-3);margin-bottom:4px">${p.loanType?.toUpperCase()||', '} · Max Loan $${p.maxLoanAmount?.toLocaleString()||', '} · Back-end DTI ${p.backEndDTI||', '}% · Front-end DTI ${p.frontEndDTI||', '}%</div>${p.monthlyPITIA?`<div style="font-size:11px;color:var(--text-4);margin-bottom:4px">P&amp;I $${p.monthlyPI?.toLocaleString()||', '} + Taxes $${p.monthlyTaxes?.toLocaleString()||', '} + Insurance $${p.monthlyInsurance?.toLocaleString()||', '} + HOA $${p.monthlyHOA?.toLocaleString()||'0'} = <strong style="color:var(--text-2)">PITIA $${p.monthlyPITIA?.toLocaleString()}/mo</strong></div>`:''} ${p.riskFlags?.length?`<div style="font-size:11px;color:var(--red);margin-top:2px">⚠ ${p.riskFlags.join(' · ')}</div>`:''}<div style="font-size:10px;color:var(--text-4);margin-top:6px;font-style:italic">Not a commitment to lend. Subject to full lender underwriting and approval.</div></div><div style="font-size:10px;color:var(--text-4);text-align:right;line-height:1.4">Based on<br>provided data</div></div>`;
+  const _af = document.getElementById('prequal-action-footer');
+  if (_af) _af.style.display = 'flex';
+}
+
+// Sequential TTS queue: speak each streamed sentence in order so voice starts on the first line.
+let _ttsQueue = [], _ttsPlaying = false;
+function queueSpeak(sentence) {
+  if (!voiceModeEnabled || !sentence || !sentence.trim()) return;
+  _ttsQueue.push(sentence.trim());
+  if (!_ttsPlaying) playNextTts();
+}
+async function playNextTts() {
+  if (!voiceModeEnabled) { _ttsQueue = []; _ttsPlaying = false; return; }
+  if (!_ttsQueue.length) { _ttsPlaying = false; return; }
+  _ttsPlaying = true;
+  const sentence = _ttsQueue.shift();
+  try {
+    const res = await fetch('/.netlify/functions/realtor-tts', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ text: sentence.slice(0, 500) })
+    });
+    if (res.ok) {
+      const buf = await res.arrayBuffer();
+      if (buf.byteLength > 50 && voiceAudioCtx) {
+        if (voiceAudioCtx.state === 'suspended') await voiceAudioCtx.resume();
+        const ab = await voiceAudioCtx.decodeAudioData(buf);
+        const src = voiceAudioCtx.createBufferSource();
+        src.buffer = ab; src.connect(voiceAudioCtx.destination);
+        src.onended = () => { currentAudio = null; playNextTts(); };
+        currentAudio = src; src.start(0);
+        return;
+      }
+    }
+  } catch (e) { /* fall through to browser speech */ }
+  try {
+    if (window.speechSynthesis) {
+      const u = new SpeechSynthesisUtterance(sentence);
+      u.onend = () => playNextTts(); u.onerror = () => playNextTts();
+      window.speechSynthesis.speak(u);
+      return;
+    }
+  } catch (e) {}
+  playNextTts();
+}
+
 let _prequalSending = false;
 async function sendPrequal() {
   if (_prequalSending) return;
@@ -566,27 +617,59 @@ async function sendPrequal() {
       method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify({ action: 'chat', messages: prequaMessages })
     });
-    const data = await res.json();
-    document.getElementById('typing-indicator')?.remove();
-    if (data.success) {
-      const msg = (data.message && data.message.trim()) ? data.message : 'I have what I need. One moment while I finish the numbers, or add any missing detail (income, taxes, insurance, HOA) and I will complete the assessment.';
-      prequaMessages.push({ role: 'assistant', content: msg });
-      appendChatMessage('assistant', msg);
-      speakText(msg.replace(/<[^>]*>/g, ''));
-      if (data.prequal?.ready || data.prequal?.result) {
-        currentPrequal = data.prequal;
-        const resultColors = { likely_qualifies: '#00bfa5', borderline: '#f59e0b', unlikely: '#ef4444', needs_review: '#6b7280' };
-        const resultLabels = { likely_qualifies: '✓ Strong Alignment', borderline: '⚠ Needs Review', unlikely: '✗ Low Compatibility', needs_review: '? Needs Review' };
-        const banner = document.getElementById('prequal-result-banner');
-        banner.style.display = 'block';
-        banner.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="font-size:13px;font-weight:700;color:${resultColors[data.prequal.result]||'var(--teal)'};margin-bottom:6px">${resultLabels[data.prequal.result]||data.prequal.result}</div><div style="font-size:12px;color:var(--text-3);margin-bottom:4px">${data.prequal.loanType?.toUpperCase()||', '} · Max Loan $${data.prequal.maxLoanAmount?.toLocaleString()||', '} · Back-end DTI ${data.prequal.backEndDTI||', '}% · Front-end DTI ${data.prequal.frontEndDTI||', '}%</div>${data.prequal.monthlyPITIA?`<div style="font-size:11px;color:var(--text-4);margin-bottom:4px">P&amp;I $${data.prequal.monthlyPI?.toLocaleString()||', '} + Taxes $${data.prequal.monthlyTaxes?.toLocaleString()||', '} + Insurance $${data.prequal.monthlyInsurance?.toLocaleString()||', '} + HOA $${data.prequal.monthlyHOA?.toLocaleString()||'0'} = <strong style="color:var(--text-2)">PITIA $${data.prequal.monthlyPITIA?.toLocaleString()}/mo</strong></div>`:''} ${data.prequal.riskFlags?.length?`<div style="font-size:11px;color:var(--red);margin-top:2px">⚠ ${data.prequal.riskFlags.join(' · ')}</div>`:''}<div style="font-size:10px;color:var(--text-4);margin-top:6px;font-style:italic">Not a commitment to lend. Subject to full lender underwriting and approval.</div></div><div style="font-size:10px;color:var(--text-4);text-align:right;line-height:1.4">Based on<br>provided data</div></div>`;
-      const _af = document.getElementById('prequal-action-footer');
-      if (_af) _af.style.display = 'flex';
-      }
-    } else {
+    const ct = res.headers.get('content-type') || '';
+    if (!res.ok || ct.indexOf('event-stream') === -1) {
       document.getElementById('typing-indicator')?.remove();
-      appendChatMessage('assistant', 'Sorry, something went wrong. Please try again.');
+      let em = 'Sorry, something went wrong. Please try again.';
+      try { const j = await res.json(); if (j && j.error) em = j.error; } catch (e) {}
+      appendChatMessage('assistant', em);
+      return;
     }
+    // Stream tokens: render as they arrive and speak each sentence as it completes.
+    document.getElementById('typing-indicator')?.remove();
+    const bubble = document.createElement('div');
+    bubble.style.cssText = 'background:var(--bg-3);border-radius:12px;padding:14px 16px;font-size:14px;color:var(--text-2);max-width:90%;line-height:1.6;align-self:flex-start';
+    typingEl.appendChild(bubble);
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let sseBuf = '', full = '', voicedLen = 0, voiceBuf = '';
+    const flushVoice = (finalize) => {
+      if (!voiceModeEnabled) return;
+      let idx;
+      while ((idx = voiceBuf.search(/[.!?](\s|$)/)) !== -1) {
+        const s = voiceBuf.slice(0, idx + 1); voiceBuf = voiceBuf.slice(idx + 1);
+        const clean = s.replace(/[#*_`>~]/g, '').trim(); if (clean) queueSpeak(clean);
+      }
+      if (finalize && voiceBuf.trim()) { const clean = voiceBuf.replace(/[#*_`>~]/g, '').trim(); if (clean) queueSpeak(clean); voiceBuf = ''; }
+    };
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      sseBuf += decoder.decode(value, { stream: true });
+      let nl;
+      while ((nl = sseBuf.indexOf('\n')) !== -1) {
+        const line = sseBuf.slice(0, nl); sseBuf = sseBuf.slice(nl + 1);
+        if (line.indexOf('data:') !== 0) continue;
+        const payload = line.slice(5).trim();
+        if (!payload || payload === '[DONE]') continue;
+        let ev; try { ev = JSON.parse(payload); } catch (e) { continue; }
+        if (ev.type === 'content_block_delta' && ev.delta && ev.delta.type === 'text_delta') {
+          full += ev.delta.text;
+          const display = full.split('<PREQUAL_RESULT>')[0];
+          bubble.innerHTML = window.marked ? marked.parse(display) : display.replace(/\n/g, '<br>');
+          typingEl.scrollTop = typingEl.scrollHeight;
+          if (display.length > voicedLen) { voiceBuf += display.slice(voicedLen); voicedLen = display.length; flushVoice(false); }
+        }
+      }
+    }
+    flushVoice(true);
+    const cleanText = full.replace(/<PREQUAL_RESULT>[\s\S]*?<\/PREQUAL_RESULT>/g, '').trim() || 'One more detail and I can finish the assessment.';
+    bubble.innerHTML = window.marked ? marked.parse(cleanText) : cleanText.replace(/\n/g, '<br>');
+    prequaMessages.push({ role: 'assistant', content: cleanText });
+    let prequal = null;
+    const mm = full.match(/<PREQUAL_RESULT>([\s\S]*?)<\/PREQUAL_RESULT>/);
+    if (mm) { try { prequal = JSON.parse(mm[1].trim()); } catch (e) {} }
+    if (prequal && (prequal.ready || prequal.result)) { currentPrequal = prequal; renderPrequalBanner(prequal); }
   } catch(e) {
     document.getElementById('typing-indicator')?.remove();
     appendChatMessage('assistant', 'That took too long or the connection dropped. Please tap Send again to retry.');
