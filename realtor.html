@@ -542,6 +542,33 @@ function appendChatMessage(role, text) {
   el.scrollTop = el.scrollHeight;
 }
 
+// Robustly pull the structured result out of the streamed text, whether or not the model
+// wrapped it in <PREQUAL_RESULT> tags, and return the message with that JSON removed.
+function parsePrequalStream(full) {
+  let prequal = null, jsonStart = -1, jsonEnd = -1;
+  const tag = full.match(/<PREQUAL_RESULT>([\s\S]*?)<\/PREQUAL_RESULT>/);
+  if (tag) {
+    try { prequal = JSON.parse(tag[1].trim()); } catch (e) {}
+    jsonStart = full.indexOf('<PREQUAL_RESULT>');
+    const ce = full.indexOf('</PREQUAL_RESULT>');
+    jsonEnd = ce >= 0 ? ce + '</PREQUAL_RESULT>'.length : full.length;
+  }
+  if (!prequal) {
+    const opens = [];
+    for (let i = 0; i < full.length; i++) if (full[i] === '{') opens.push(i);
+    for (let s = opens.length - 1; s >= 0 && !prequal; s--) {
+      const st = opens[s]; let d = 0;
+      for (let j = st; j < full.length; j++) {
+        if (full[j] === '{') d++;
+        else if (full[j] === '}') { d--; if (d === 0) { const cand = full.slice(st, j + 1); if (/"result"|"ready"|"loanType"/.test(cand)) { try { prequal = JSON.parse(cand); jsonStart = st; jsonEnd = j + 1; } catch (e) {} } break; } }
+      }
+    }
+  }
+  let cleanText = (jsonStart >= 0) ? (full.slice(0, jsonStart) + (jsonEnd >= 0 ? full.slice(jsonEnd) : '')) : full;
+  cleanText = cleanText.replace(/<\/?PREQUAL_RESULT>/g, '').trim();
+  return { cleanText: cleanText, prequal: prequal };
+}
+
 function renderPrequalBanner(p) {
   const resultColors = { likely_qualifies: '#00bfa5', borderline: '#f59e0b', unlikely: '#ef4444', needs_review: '#6b7280' };
   const resultLabels = { likely_qualifies: '✓ Strong Alignment', borderline: '⚠ Needs Review', unlikely: '✗ Low Compatibility', needs_review: '? Needs Review' };
@@ -554,7 +581,7 @@ function renderPrequalBanner(p) {
 }
 
 // Sequential TTS queue: speak each streamed sentence in order so voice starts on the first line.
-let _ttsQueue = [], _ttsPlaying = false;
+let _ttsQueue = [], _ttsPlaying = false, _streamDone = false;
 function queueSpeak(sentence) {
   if (!voiceModeEnabled || !sentence || !sentence.trim()) return;
   _ttsQueue.push(sentence.trim());
@@ -562,7 +589,7 @@ function queueSpeak(sentence) {
 }
 async function playNextTts() {
   if (!voiceModeEnabled) { _ttsQueue = []; _ttsPlaying = false; return; }
-  if (!_ttsQueue.length) { _ttsPlaying = false; return; }
+  if (!_ttsQueue.length) { _ttsPlaying = false; if (_streamDone) autoRestartMic(); return; }
   _ttsPlaying = true;
   const sentence = _ttsQueue.shift();
   try {
@@ -630,6 +657,7 @@ async function sendPrequal() {
     const bubble = document.createElement('div');
     bubble.style.cssText = 'background:var(--bg-3);border-radius:12px;padding:14px 16px;font-size:14px;color:var(--text-2);max-width:90%;line-height:1.6;align-self:flex-start';
     typingEl.appendChild(bubble);
+    _streamDone = false;
     const reader = res.body.getReader();
     const decoder = new TextDecoder();
     let sseBuf = '', full = '', voicedLen = 0, voiceBuf = '';
@@ -655,7 +683,7 @@ async function sendPrequal() {
         let ev; try { ev = JSON.parse(payload); } catch (e) { continue; }
         if (ev.type === 'content_block_delta' && ev.delta && ev.delta.type === 'text_delta') {
           full += ev.delta.text;
-          const display = full.split('<PREQUAL_RESULT>')[0];
+          const display = full.split(/<PREQUAL_RESULT>|\{\s*"(?:ready|loanType|result)"/)[0];
           bubble.innerHTML = window.marked ? marked.parse(display) : display.replace(/\n/g, '<br>');
           typingEl.scrollTop = typingEl.scrollHeight;
           if (display.length > voicedLen) { voiceBuf += display.slice(voicedLen); voicedLen = display.length; flushVoice(false); }
@@ -663,13 +691,13 @@ async function sendPrequal() {
       }
     }
     flushVoice(true);
-    const cleanText = full.replace(/<PREQUAL_RESULT>[\s\S]*?<\/PREQUAL_RESULT>/g, '').trim() || 'One more detail and I can finish the assessment.';
+    _streamDone = true;
+    if (voiceModeEnabled && !_ttsPlaying) autoRestartMic();
+    const parsed = parsePrequalStream(full);
+    const cleanText = parsed.cleanText || 'One more detail and I can finish the assessment.';
     bubble.innerHTML = window.marked ? marked.parse(cleanText) : cleanText.replace(/\n/g, '<br>');
     prequaMessages.push({ role: 'assistant', content: cleanText });
-    let prequal = null;
-    const mm = full.match(/<PREQUAL_RESULT>([\s\S]*?)<\/PREQUAL_RESULT>/);
-    if (mm) { try { prequal = JSON.parse(mm[1].trim()); } catch (e) {} }
-    if (prequal && (prequal.ready || prequal.result)) { currentPrequal = prequal; renderPrequalBanner(prequal); }
+    if (parsed.prequal && (parsed.prequal.ready || parsed.prequal.result)) { currentPrequal = parsed.prequal; renderPrequalBanner(parsed.prequal); }
   } catch(e) {
     document.getElementById('typing-indicator')?.remove();
     appendChatMessage('assistant', 'That took too long or the connection dropped. Please tap Send again to retry.');
@@ -1203,9 +1231,8 @@ function autoRestartMic() {
   isRecording = false;
   setTimeout(() => {
     if (!voiceModeEnabled) return;
-    showToast('🎤 Your turn, speak now', 'success');
     startVoiceInput();
-  }, 800);
+  }, 200);
 }
 
 // Direct-start: always opens a fresh recognition session (no toggle state)
@@ -1294,7 +1321,9 @@ function enableVoiceMode() {
   btn.style.background = 'rgba(14,116,144,0.3)';
   btn.style.borderColor = 'rgba(14,116,144,0.5)';
   btn.style.color = '#67e8f9';
-  showToast('Voice AI enabled, AI will speak responses aloud.', 'success');
+  showToast('Voice on. Mic is live, just speak.', 'success');
+  // Hands-free: turning voice on starts the mic, no separate click needed.
+  setTimeout(() => { if (voiceModeEnabled && !isRecording) startVoiceInput(); }, 300);
 }
 
 function toggleVoiceMode() {
@@ -1324,33 +1353,37 @@ function toggleVoiceMode() {
 
 function cleanForSpeech(text) {
   return text
-    .replace(/\*\*(.*?)\*\*/g, '$1')      // strip **bold**
-    .replace(/\*(.*?)\*/g, '$1')           // strip *italic*
-    .replace(/---+/g, '.')                 // --- → pause
-    .replace(/--/g, ',')                   // -- → pause
-    .replace(/#{1,6}\s/g, '')              // strip markdown headers
-    .replace(/^\s*[-•]\s+/gm, '')          // strip bullet points
-    .replace(/^\s*\d+\.\s+/gm, '')         // strip numbered lists
-    .replace(/\$(\d+(?:,\d{3})*(?:\.\d+)?)/g, (_, n) => {
-      const num = parseFloat(n.replace(/,/g, ''));
-      if (num >= 1000000) return (num / 1000000).toFixed(num % 1000000 === 0 ? 0 : 1) + ' million dollars';
-      if (num >= 1000) return Math.round(num / 1000) + ' thousand dollars';
-      return Math.round(num) + ' dollars';
-    })
-    .replace(/(\d+(?:\.\d+)?)%/g, '$1 percent')
+    .replace(/\|/g, ', ')                       // table pipes → pauses
+    .replace(/\*\*(.*?)\*\*/g, '$1')             // strip **bold**
+    .replace(/\*(.*?)\*/g, '$1')                 // strip *italic*
+    .replace(/`+/g, '')                          // strip code ticks
+    .replace(/#{1,6}\s/g, '')                    // strip markdown headers
+    .replace(/^\s*[-•]\s+/gm, '')                // strip bullet points
+    .replace(/^\s*\d+\.\s+/gm, '')               // strip numbered lists
+    .replace(/---+/g, '. ')                      // --- → pause
+    .replace(/\bP&I\b/g, 'principal and interest') // before generic & handling
+    .replace(/\bPITIA\b/g, 'total monthly payment') // say it plainly, not letter-by-letter
+    .replace(/\bPITI\b/g, 'total monthly payment')
+    .replace(/&/g, ' and ')
     .replace(/\bDTI\b/g, 'debt-to-income ratio')
-    .replace(/\bLTV\b/g, 'loan-to-value ratio')
+    .replace(/\bLTV\b/g, 'loan-to-value')
     .replace(/\bDSCR\b/g, 'debt service coverage ratio')
     .replace(/\bARV\b/g, 'after-repair value')
-    .replace(/\bPITIA\b/g, 'P-I-T-I-A')
-    .replace(/\bFHA\b/g, 'F-H-A')
-    .replace(/\bVA\b/g, 'V-A loan')
-    .replace(/\bHOA\b/g, 'H-O-A')
-    .replace(/\bPMI\b/g, 'P-M-I')
-    .replace(/\bARM\b/g, 'adjustable rate mortgage')
-    .replace(/\bFICO\b/g, 'FICO score')
-    .replace(/\bMLS\b/g, 'M-L-S')
-    .replace(/\bAPR\b/g, 'A-P-R')
+    .replace(/\bFHA\b/g, 'F H A')
+    .replace(/\bVA\b/g, 'V A')
+    .replace(/\bHOA\b/g, 'H O A')
+    .replace(/\bPMI\b/g, 'P M I')
+    .replace(/\bARM\b/g, 'adjustable-rate mortgage')
+    .replace(/\bMLS\b/g, 'M L S')
+    .replace(/\bAPR\b/g, 'A P R')
+    .replace(/\$\s?(\d+(?:,\d{3})*(?:\.\d+)?)/g, '$1 dollars') // exact amount, no rounding
+    .replace(/(\d+(?:\.\d+)?)\s?%/g, '$1 percent')
+    .replace(/\/mo\b/gi, ' per month')
+    .replace(/\/yr\b/gi, ' per year')
+    .replace(/\s*=\s*/g, ' which comes to ')     // "=" spoken naturally
+    .replace(/\s*\+\s*/g, ' plus ')              // "+" between amounts
+    .replace(/\$+/g, '')                          // remove any stray dollar signs
+    .replace(/\s{2,}/g, ' ')
     .trim();
 }
 
