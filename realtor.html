@@ -542,10 +542,13 @@ function appendChatMessage(role, text) {
   el.scrollTop = el.scrollHeight;
 }
 
+let _prequalSending = false;
 async function sendPrequal() {
+  if (_prequalSending) return;
   const input = document.getElementById('prequal-input');
   const text = input.value.trim();
   if (!text) return;
+  _prequalSending = true;
   input.value = '';
   appendChatMessage('user', text);
   prequaMessages.push({ role: 'user', content: text });
@@ -566,9 +569,10 @@ async function sendPrequal() {
     const data = await res.json();
     document.getElementById('typing-indicator')?.remove();
     if (data.success) {
-      prequaMessages.push({ role: 'assistant', content: data.message });
-      appendChatMessage('assistant', data.message);
-      speakText(data.message.replace(/<[^>]*>/g, ''));
+      const msg = (data.message && data.message.trim()) ? data.message : 'I have what I need. One moment while I finish the numbers, or add any missing detail (income, taxes, insurance, HOA) and I will complete the assessment.';
+      prequaMessages.push({ role: 'assistant', content: msg });
+      appendChatMessage('assistant', msg);
+      speakText(msg.replace(/<[^>]*>/g, ''));
       if (data.prequal?.ready || data.prequal?.result) {
         currentPrequal = data.prequal;
         const resultColors = { likely_qualifies: '#00bfa5', borderline: '#f59e0b', unlikely: '#ef4444', needs_review: '#6b7280' };
@@ -585,8 +589,8 @@ async function sendPrequal() {
     }
   } catch(e) {
     document.getElementById('typing-indicator')?.remove();
-    appendChatMessage('assistant', 'Connection error. Please try again.');
-  } finally { btn.disabled = false; btn.textContent = 'Send'; }
+    appendChatMessage('assistant', 'That took too long or the connection dropped. Please tap Send again to retry.');
+  } finally { _prequalSending = false; btn.disabled = false; btn.textContent = 'Send'; }
 }
 
 let _prequal_saved = false;

@@ -163,6 +163,7 @@ CONVERSATION STYLE:
 - When you have all PITIA components, calculate and show the full breakdown:
   P&I: $X | Taxes: $X/mo | Insurance: $X/mo | HOA: $X/mo | TOTAL PITIA: $X
 - State the result plainly: "Based on what you've shared, your client likely qualifies for a [loan type] up to $[amount]"
+- COMPLETE PROMPTLY: as soon as you have the purchase price (or loan amount / down payment), the client's income, and the three PITIA inputs (property taxes, homeowners insurance, and HOA dues with their frequency), do every unit conversion yourself inline and produce the FINAL assessment with the <PREQUAL_RESULT> block in that SAME response. Do not send another turn just to confirm a conversion you can compute. If one figure is missing, estimate it, state your assumption, and still finish.
 - ALWAYS include this disclaimer verbatim at the end of every final result:
   "⚠️ This prequalification is based solely on the information provided and is not a commitment to lend. All loan approvals are subject to full lender underwriting, credit review, income verification, appraisal, and final lender decision."
 - Flag risks honestly: high DTI, low credit, unusual employment, flood zone insurance, high HOA, etc.
@@ -262,7 +263,7 @@ If you don't have enough information yet, set "ready": false and omit the other 
           "anthropic-version": "2023-06-01",
         },
         body: JSON.stringify({
-          model: "claude-sonnet-4-6",
+          model: "claude-haiku-4-5-20251001",
           max_tokens: 1500,
           system: systemPrompt,
           messages: messages || [],
