@@ -1,5 +1,5 @@
 // Build marker: bump on every deploy so we can confirm which code is live.
-const BUILD = "2026-08-01-revert-sonnet";
+const BUILD = "2026-08-05-client-prompt-cap-fix";
 const MODEL_FAST = "claude-haiku-4-5-20251001";
 // REVERTED from claude-opus-5 back to claude-sonnet-5. Sequence: switched to Opus
 // after a 4-way ?selftest=timing comparison looked favorable (8.2s, matched Sonnet's
@@ -292,13 +292,26 @@ Return exactly this JSON. Each string field must be ONE concise sentence, 25 wor
       //   this ceiling routinely ran past Netlify's function timeout (10s on this
       //   plan; 26s requires a support-activated flag, not just a config value) --
       //   the client saw a 504 for a deal that, server-side, actually finished.
-      // Fix is the prompt above (hard word cap per field) plus this lower ceiling:
-      // a 25-word-per-field cap keeps real output in the ~400-700 token range, well
-      // under 2500, so generation finishes in a few seconds instead of 20-30+.
-      // Verify with GET /.netlify/functions/capiq-analyze?selftest=timing — it
+      // A prior fix pass added the word-cap prompt above and dropped this to 2500,
+      // but the word cap only ever landed in THIS file's default prompt, which is
+      // dead code for real traffic (see the comment above `prompt`) -- app.html's
+      // buildPrompt()/buildCommercialPrompt() kept shipping the old uncapped "2-4
+      // sentences each" instruction the whole time, so real submissions (this
+      // endpoint always receives an explicit `prompt` from the client, which
+      // overrides the default here) were still hitting the loose prompt and could
+      // still truncate at 2500, especially with the up-to-12,000-char contract-text
+      // block app.html appends as extra context. Fixed for real this time in
+      // app.html itself (both prompt builders, plus a closing reminder appended
+      // after the contract text so the cap survives that much extra material).
+      // Bumping this ceiling to 3500 on top of that fix as a cheap safety margin --
+      // it costs nothing when the capped prompt behaves (ceiling, not a target;
+      // typical output is still ~400-700 tokens) and gives slack for the rare
+      // overshoot, now that the 30s Netlify timeout (see netlify.toml) means a
+      // higher ceiling no longer risks a 504 the way it did under the old 10s cap.
+      // Verify with GET /.netlify/functions/capiq-analyze?selftest=timing -- it
       // reports duration_ms, stop_reason and output_tokens for one real call at
       // this exact ceiling before trusting this comment.
-      body: JSON.stringify({ model: MODEL_MAIN, max_tokens: 2500, messages: [{ role: "user", content: prompt }] }),
+      body: JSON.stringify({ model: MODEL_MAIN, max_tokens: 3500, messages: [{ role: "user", content: prompt }] }),
     });
 
     if (!res.ok) {

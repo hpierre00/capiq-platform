@@ -2013,7 +2013,7 @@ REHAB: $${d.rehabBudget||0} | RENT: $${d.monthlyRent||0}/mo | PAYMENT: $${d.mont
 LTV: ${d.ltv}% | DSCR: ${d.dscr||'N/A'} | CREDIT: ${d.creditScore} | EXP: ${d.investorExperience}
 NOTES: ${d.notes||'None'}
 
-Return this exact JSON with all string fields filled with detailed analysis (2-4 sentences each):
+Return this exact JSON. Each string field must be ONE concise sentence, 25 words or fewer -- be direct, no hedging, no restating the numbers above. Your entire response, all fields combined, must total under 200 words. No markdown, no commentary outside the JSON:
 {"fundabilityScore":0,"dealScore":"Pass","humanReviewRequired":false,"executiveSummary":"","strengthsAndRisks":"","lenderMatchingProfile":"","structuringRecommendations":"","marketContext":"","scoreBreakdown":"","nextSteps":""}`;
 }
 
@@ -2178,6 +2178,12 @@ async function analyzeDeal() {
     if (dealData.contractText) {
       analysisPrompt += '\n\nCONTRACT DETAILS (source for the deal facts only: borrower name, property address, purchase price, and figures used to qualify the borrower. Use it to confirm the numbers above; do not review or critique the contract itself):\n' + dealData.contractText.slice(0, 12000);
     }
+    // Restated last, after the sourced valuation and (up to 12,000 chars of) contract
+    // text above -- both of those additions give the model a lot more material to
+    // reference, and a length cap stated only at the top of the prompt is easy for
+    // it to lose track of by the time it's generating the response. Repeating it as
+    // the final instruction keeps it live regardless of how much context precedes it.
+    analysisPrompt += '\n\nReminder: every field is ONE sentence, 25 words max. Total response under 200 words. Return ONLY the JSON object.';
     const res = await fetch('/.netlify/functions/capiq-analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dealData: enrichedDealData, prompt: analysisPrompt})});
     if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error||e.detail||`Error ${res.status}`);}
     const data = await res.json();
@@ -3134,7 +3140,7 @@ CAP RATE: ${d.capRate}% | OCCUPANCY: ${d.occupancy}% | UNITS/SF: ${d.units||'N/A
 LTV: ${d.ltv}% | INTEREST RATE: ${d.rate}% | CREDIT: ${d.creditScore} | EXP: ${d.investorExperience}
 NOTES: ${d.notes||'None'}
 
-Underwrite this as a commercial deal under $10M. Assess NOI stability, cap rate vs market, debt service coverage, sponsor experience, and exit strategy. Return this exact JSON with all string fields filled with detailed analysis (2-4 sentences each):
+Underwrite this as a commercial deal under $10M. Assess NOI stability, cap rate vs market, debt service coverage, sponsor experience, and exit strategy. Return this exact JSON. Each string field must be ONE concise sentence, 25 words or fewer -- be direct, no hedging, no restating the numbers above. Your entire response, all fields combined, must total under 200 words. No markdown, no commentary outside the JSON:
 {"fundabilityScore":0,"dealScore":"Pass","humanReviewRequired":false,"executiveSummary":"","strengthsAndRisks":"","lenderMatchingProfile":"","structuringRecommendations":"","marketContext":"","scoreBreakdown":"","nextSteps":""}`;
 }
 
