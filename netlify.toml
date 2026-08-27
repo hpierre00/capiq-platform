@@ -55,6 +55,18 @@
   status = 301
   force = true
 
+# investor.html mirrors app.html's content (by design, see its own canonical tag)
+# but was also listed in sitemap.xml as a page to index -- sitemap said "index me",
+# canonical said "index /app instead", and GSC excluded it as a contradiction.
+# Force-redirecting the pretty URL here (investor.html on disk is otherwise
+# unreachable now that both /investor and /investor.html point to /app) resolves
+# the contradiction instead of trying to out-SEO it.
+[[redirects]]
+  from = "/investor"
+  to = "/app"
+  status = 301
+  force = true
+
 [[redirects]]
   from = "/app"
   to = "/app.html"
