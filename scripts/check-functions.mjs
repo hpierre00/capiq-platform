@@ -103,9 +103,11 @@ for (const file of htmlFiles) {
 // ── CHECK 4: portal pages must lead with marketing when logged out ────────────
 //   /realtor and /lender are single-file SPAs whose default (no-JS, logged-out)
 //   render is what a crawler and a first-time visitor see. That state must be a
-//   marketing page — one <h1>, a marketing nav, no login form and no portal
-//   chrome up front. The credential form and "Sign Out"/billing controls belong
-//   in views that are display:none until JS auth. Regressed for 5+ audit weeks.
+//   marketing page — one <h1>, a marketing nav, no login form, and no portal
+//   chrome. The weekly SEO audit extracts body text WITHOUT running CSS or JS, so
+//   "display:none" is not enough: the portal chrome must not be in the static
+//   markup at all. The credential form lives in a display:none view; the portal
+//   topbar controls are injected by JS on auth. Regressed for 5+ audit weeks.
 const portalPages = [
   { file: "realtor.html", prefix: "rs" },
   { file: "lender.html", prefix: "lender" },
@@ -115,7 +117,14 @@ for (const { file, prefix } of portalPages) {
   const html = readFileSync(join(root, file), "utf8");
   const fail = (m) => problems.push(`${file}: ${m}`);
 
-  const h1Count = (html.match(/<h1[\s>]/g) || []).length;
+  // Markup a non-JS crawler actually sees: drop <script>/<template> bodies and
+  // HTML comments (text extraction ignores all three).
+  const staticHtml = html
+    .replace(/<script[\s\S]*?<\/script>/gi, "")
+    .replace(/<template[\s\S]*?<\/template>/gi, "")
+    .replace(/<!--[\s\S]*?-->/g, "");
+
+  const h1Count = (staticHtml.match(/<h1[\s>]/g) || []).length;
   if (h1Count !== 1) fail(`expected exactly one <h1>, found ${h1Count}`);
 
   if (/demo123|DEMO:\s*portal@/.test(html)) {
@@ -124,11 +133,11 @@ for (const { file, prefix } of portalPages) {
 
   const marketingTopbar = `id="${prefix}-topbar-marketing"`;
   const signinView = `id="${prefix}-signin-view"`;
-  if (!html.includes(marketingTopbar)) fail(`missing logged-out marketing topbar (${marketingTopbar})`);
-  if (!html.includes(signinView)) fail(`missing dedicated sign-in view (${signinView})`);
+  if (!staticHtml.includes(marketingTopbar)) fail(`missing logged-out marketing topbar (${marketingTopbar})`);
+  if (!staticHtml.includes(signinView)) fail(`missing dedicated sign-in view (${signinView})`);
 
   // The sign-in view container must be hidden by default.
-  const signinTag = new RegExp(`<div[^>]*${signinView}[^>]*>`).exec(html)?.[0] || "";
+  const signinTag = new RegExp(`<div[^>]*${signinView}[^>]*>`).exec(staticHtml)?.[0] || "";
   if (signinTag && !/display\s*:\s*none/.test(signinTag)) {
     fail("sign-in view is not display:none by default");
   }
@@ -136,16 +145,19 @@ for (const { file, prefix } of portalPages) {
   // No password field may appear before the sign-in view starts — that would put
   // it in the default-visible marketing view. login-view precedes signin-view in
   // source order, so the earliest password input must sit at or after signin-view.
-  const firstPw = html.indexOf('type="password"');
-  const signinAt = html.indexOf(signinView);
+  const firstPw = staticHtml.indexOf('type="password"');
+  const signinAt = staticHtml.indexOf(signinView);
   if (firstPw !== -1 && signinAt !== -1 && firstPw < signinAt) {
     fail("a password input renders in the default-visible view (should be inside the sign-in view)");
   }
 
-  // "Sign Out" / billing controls must be inline-hidden wherever they appear.
-  for (const m of html.matchAll(/<[^>]*>\s*(Sign Out|Manage \/ Cancel[^<]*)</g)) {
-    const tag = html.slice(html.lastIndexOf("<", m.index), m.index + m[0].length);
-    if (!/display\s*:\s*none/.test(tag)) fail(`"${m[1].trim()}" control is not hidden by default`);
+  // Portal chrome text must not be in the static markup at all — the audit reads
+  // body text with no CSS, so hidden nodes still count. These strings may only
+  // appear inside <script> (JS-injected on auth), which staticHtml has removed.
+  for (const phrase of ["Sign Out", "Manage / Cancel", "REALTOR PORTAL", "LENDER PORTAL"]) {
+    if (staticHtml.includes(phrase)) {
+      fail(`portal chrome "${phrase}" is in the static HTML — inject it via JS on auth instead`);
+    }
   }
 }
 

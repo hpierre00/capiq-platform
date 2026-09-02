@@ -151,7 +151,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>
       <div>
         <div style="font-size:15px;font-weight:800;color:white;letter-spacing:-0.3px">UNDERLYTIX</div>
-        <div id="rs-topbar-sublabel" style="display:none;font-size:10px;color:rgba(255,255,255,0.4);font-family:'DM Mono','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',monospace;letter-spacing:.06em">REALTOR PORTAL</div>
       </div>
     </a>
     <!-- Logged-out marketing nav -->
@@ -161,12 +160,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       <span onclick="showSigninView()" style="font-size:13px;color:rgba(255,255,255,0.7);cursor:pointer">Sign In</span>
       <button onclick="showSignupView()" class="btn btn-primary" style="font-size:13px">Get Started Free</button>
     </div>
-    <!-- Logged-in portal controls -->
-    <div id="rs-topbar-portal" style="display:none;gap:10px;align-items:center">
-      <span id="rs-user-badge" style="font-size:12px;color:rgba(255,255,255,0.6)"></span>
-      <button id="rs-billing-btn" onclick="realtorCheckout()" style="display:none" class="btn btn-primary" title="Manage payment or cancel your subscription in the secure Stripe billing portal">Manage / Cancel Billing</button>
-      <button id="rs-logout-btn" onclick="realtorLogout()" style="display:none" class="btn btn-ghost">Sign Out</button>
-    </div>
+    <!-- Logged-in portal controls: injected by buildRealtorPortalTopbar() on auth so
+         the portal chrome text ("PORTAL", "Sign Out", billing) is never in the
+         static HTML a crawler or social scraper reads. -->
+    <div id="rs-topbar-portal" style="display:none;gap:10px;align-items:center"></div>
   </div>
 
   <!-- LOGGED-OUT MARKETING VIEW (default) -->
@@ -438,15 +435,29 @@ async function realtorSignup() {
   finally { btn.disabled = false; btn.textContent = 'Start Free Trial'; }
 }
 
+// Build the logged-in topbar controls the first time the visitor authenticates.
+// Kept out of the static HTML so "REALTOR PORTAL" / "Sign Out" / billing text is
+// never served to a crawler or social scraper that does not run JS.
+function buildRealtorPortalTopbar() {
+  const bar = document.getElementById('rs-topbar-portal');
+  if (bar.dataset.built) return;
+  bar.innerHTML =
+    '<span style="font-size:10px;color:rgba(255,255,255,0.4);font-family:\'DM Mono\',\'Segoe UI Emoji\',\'Segoe UI Symbol\',\'Noto Color Emoji\',monospace;letter-spacing:.06em;margin-right:6px">REALTOR PORTAL</span>' +
+    '<span id="rs-user-badge" style="font-size:12px;color:rgba(255,255,255,0.6)"></span>' +
+    '<button id="rs-billing-btn" onclick="realtorCheckout()" style="display:none" class="btn btn-primary" title="Manage payment or cancel your subscription in the secure Stripe billing portal">Manage / Cancel Billing</button>' +
+    '<button id="rs-logout-btn" onclick="realtorLogout()" style="display:none" class="btn btn-ghost">Sign Out</button>';
+  bar.dataset.built = '1';
+}
+
 function onRealtorAuth(token, realtor, refreshToken) {
   setRealtorSession(token, realtor, refreshToken);
 
   const admin = isAdminUser(realtor.email);
   const plan  = realtor.plan || 'trial';
 
+  buildRealtorPortalTopbar();
   document.getElementById('rs-topbar-marketing').style.display = 'none';
   document.getElementById('rs-topbar-portal').style.display = 'flex';
-  document.getElementById('rs-topbar-sublabel').style.display = 'block';
   document.getElementById('rs-user-badge').style.display = 'inline';
   document.getElementById('rs-user-badge').textContent = realtor.name || realtor.email;
   document.getElementById('rs-logout-btn').style.display = 'block';
@@ -528,10 +539,6 @@ function realtorLogout() {
   clearRealtorSession();
   document.getElementById('rs-topbar-portal').style.display = 'none';
   document.getElementById('rs-topbar-marketing').style.display = 'flex';
-  document.getElementById('rs-topbar-sublabel').style.display = 'none';
-  document.getElementById('rs-user-badge').style.display = 'none';
-  document.getElementById('rs-logout-btn').style.display = 'none';
-  document.getElementById('rs-billing-btn').style.display = 'none';
   showLoginView();
   showToast('Signed out', 'success');
 }
