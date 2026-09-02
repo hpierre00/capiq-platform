@@ -18,7 +18,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta name="author" content="Underlytix LLC" />
 
 <!-- OPEN GRAPH -->
-<meta property="og:title" content="Underlytix Lender Portal, Deal Assessment AI" />
+<meta property="og:title" content="AI Deal Assessment for Lenders | Underlytix" />
 <meta property="og:description" content="Automated deal scoring against your lending guidelines. DSCR analysis, pipeline management, and capital readiness scoring in one portal." />
 <meta property="og:image" content="https://underlytix.com/og-image.png" />
 <meta property="og:url" content="https://underlytix.com/lender" />
@@ -285,34 +285,49 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>
       <div>
         <div style="font-size:15px;font-weight:800;color:white;letter-spacing:-0.3px">UNDERLYTIX</div>
-        <div style="font-size:10px;color:rgba(255,255,255,0.4);font-family:'DM Mono','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',monospace;letter-spacing:.06em">LENDER PORTAL</div>
+        <div id="lender-topbar-sublabel" style="display:none;font-size:10px;color:rgba(255,255,255,0.4);font-family:'DM Mono','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',monospace;letter-spacing:.06em">LENDER PORTAL</div>
       </div>
     </a>
-    <div style="display:flex;gap:10px;align-items:center">
+    <!-- Logged-out marketing nav -->
+    <div id="lender-topbar-marketing" style="display:flex;gap:18px;align-items:center">
+      <a href="/#how" style="font-size:13px;color:rgba(255,255,255,0.7);text-decoration:none">How It Works</a>
+      <a href="/#pricing" style="font-size:13px;color:rgba(255,255,255,0.7);text-decoration:none">Pricing</a>
+      <span onclick="showLenderSigninView()" style="font-size:13px;color:rgba(255,255,255,0.7);cursor:pointer">Sign In</span>
+      <button onclick="showLenderSignupView()" class="btn btn-primary" style="font-size:13px">Get Started Free</button>
+    </div>
+    <!-- Logged-in portal controls -->
+    <div id="lender-topbar-portal" style="display:none;gap:10px;align-items:center">
       <span id="lender-user-badge" style="display:none;font-family:'DM Mono','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',monospace;font-size:11px;color:rgba(255,255,255,0.6)"></span>
       <button id="lender-billing-btn" onclick="lenderManageBilling()" style="display:none;font-size:12px" class="btn btn-ghost" title="Manage payment or cancel your subscription in the secure Stripe billing portal">Manage / Cancel Plan</button>
       <button id="lender-changepw-btn" onclick="showLenderChangePassword()" style="display:none;padding:6px 10px" class="btn btn-ghost" title="Change Password">🔑</button>
       <button id="lender-logout-btn" onclick="lenderLogout()" style="display:none" class="btn btn-ghost">Sign Out</button>
       <span class="chip chip-green">● LIVE</span>
-      <a href="/app" style="font-size:11px;color:rgba(255,255,255,0.3);text-decoration:none;font-family:'DM Mono','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',monospace">Investor Portal →</a>
     </div>
   </div>
 
-  <!-- LOGIN VIEW -->
+  <!-- LOGGED-OUT MARKETING VIEW (default) -->
   <div id="lender-login-view" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:56px 24px 40px">
-    <div style="max-width:640px;text-align:center;margin-bottom:40px">
+    <div style="max-width:640px;text-align:center">
       <h1 style="font-family:'Inter','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',sans-serif;font-size:clamp(28px,4vw,40px);font-weight:800;line-height:1.15;letter-spacing:-.5px;color:var(--text);margin-bottom:16px">
         Score borrower deals against <span style="color:var(--teal)">your own guidelines</span>
       </h1>
       <p style="font-size:16px;color:var(--text-3);line-height:1.6;max-width:520px;margin:0 auto 24px">
         Automated DSCR analysis, capital readiness scoring, and deal pipeline management, built for lenders who want signal before underwriting.
       </p>
-      <div style="display:flex;gap:24px;justify-content:center;flex-wrap:wrap">
+      <div style="display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin-bottom:32px">
         <div style="font-size:13px;color:var(--text-2)"><span style="color:var(--teal);font-weight:700">✓</span> Automated DSCR scoring</div>
         <div style="font-size:13px;color:var(--text-2)"><span style="color:var(--teal);font-weight:700">✓</span> Deal pipeline management</div>
         <div style="font-size:13px;color:var(--text-2)"><span style="color:var(--teal);font-weight:700">✓</span> 14-day free trial, $297/mo after</div>
       </div>
+      <button class="btn btn-primary" onclick="showLenderSignupView()" style="font-size:15px;padding:12px 28px">Start 14-day free trial →</button>
+      <div style="margin-top:16px;font-size:13px;color:var(--text-4)">
+        Already have an account? <span onclick="showLenderSigninView()" style="color:var(--teal);cursor:pointer;font-weight:600">Sign in</span>
+      </div>
     </div>
+  </div>
+
+  <!-- SIGN-IN VIEW -->
+  <div id="lender-signin-view" style="display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;padding:56px 24px 40px">
     <div style="width:100%;max-width:420px">
       <div class="card">
         <div style="background:var(--navy);padding:28px 32px;text-align:center;border-radius:10px 10px 0 0">
@@ -333,13 +348,6 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             </div>
           </div>
           <button class="btn btn-primary" id="lender-login-btn" onclick="lenderLogin()" style="width:100%;justify-content:center">Sign In to Lender Portal</button>
-          <div style="margin-top:12px;text-align:center;display:flex;justify-content:center;gap:16px">
-            <a href="/app" style="font-size:11px;color:var(--text-4);text-decoration:none">Investor Portal →</a>
-            <a href="/admin" style="font-size:11px;color:var(--text-4);text-decoration:none">Admin Portal →</a>
-          </div>
-          <div style="margin-top:16px;padding:12px;background:var(--bg-3);border-radius:6px;font-size:11px;color:var(--text-4);text-align:center;font-family:'DM Mono','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',monospace">
-            DEMO: portal@coastalcapital.com / demo123<br>portal@summitbridge.com / demo123<br>portal@flexlend.com / demo123
-          </div>
           <div style="margin-top:16px;text-align:center">
             <span style="font-size:12px;color:var(--text-4)">New lender? </span>
             <span onclick="showLenderSignupView()" style="font-size:12px;color:var(--teal);cursor:pointer;font-weight:600">Start your 14-day free trial →</span>
@@ -349,6 +357,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
               style="font-size:13px;color:var(--teal);cursor:pointer;font-weight:600">
               Don't have access? Request it →
             </span>
+          </div>
+          <div style="margin-top:14px;text-align:center">
+            <span onclick="showLenderLoginView()" style="font-size:11px;color:var(--text-4);cursor:pointer">← Back</span>
           </div>
         </div>
       </div>
@@ -412,7 +423,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             </div>
             <button class="btn btn-primary" id="ls-btn" onclick="lenderSignup()" style="width:100%;justify-content:center">Start 14-Day Free Trial</button>
             <p style="font-size:11px;color:var(--text-4);margin:12px 0 0;text-align:center">
-              Already have an account? <span onclick="showLenderLoginView()" style="color:var(--teal);cursor:pointer">Sign in →</span>
+              Already have an account? <span onclick="showLenderSigninView()" style="color:var(--teal);cursor:pointer">Sign in →</span>
             </p>
             <p style="font-size:11px;color:var(--text-4);margin:8px 0 0;text-align:center">
               By signing up you agree to our <a href="/terms" target="_blank" style="color:var(--teal)">Terms</a> and <a href="/privacy" target="_blank" style="color:var(--teal)">Privacy Policy</a>.
@@ -670,25 +681,44 @@ function clearLenderSession() {
   localStorage.removeItem(LENDER_SESSION_KEY);
 }
 
-function showLenderLoginView() {
-  document.getElementById('lender-login-view').style.display = 'flex';
+function _lenderHideAllViews() {
+  document.getElementById('lender-login-view').style.display = 'none';
+  document.getElementById('lender-signin-view').style.display = 'none';
   document.getElementById('lender-signup-view').style.display = 'none';
   document.getElementById('lender-dashboard-view').style.display = 'none';
+}
+
+// Restore the logged-out topbar (marketing nav shown, portal controls hidden).
+function _lenderShowMarketingTopbar() {
+  document.getElementById('lender-topbar-marketing').style.display = 'flex';
+  document.getElementById('lender-topbar-portal').style.display = 'none';
+  document.getElementById('lender-topbar-sublabel').style.display = 'none';
   document.getElementById('lender-user-badge').style.display = 'none';
   document.getElementById('lender-logout-btn').style.display = 'none';
   document.getElementById('lender-billing-btn').style.display = 'none';
   document.getElementById('lender-changepw-btn').style.display = 'none';
 }
 
+function showLenderLoginView() {
+  _lenderHideAllViews();
+  document.getElementById('lender-login-view').style.display = 'flex';
+  _lenderShowMarketingTopbar();
+}
+
+function showLenderSigninView() {
+  _lenderHideAllViews();
+  document.getElementById('lender-signin-view').style.display = 'flex';
+  _lenderShowMarketingTopbar();
+}
+
 function showLenderSignupView() {
-  document.getElementById('lender-login-view').style.display = 'none';
+  _lenderHideAllViews();
   document.getElementById('lender-signup-view').style.display = 'flex';
-  document.getElementById('lender-dashboard-view').style.display = 'none';
+  _lenderShowMarketingTopbar();
 }
 
 function showLenderDashboardView() {
-  document.getElementById('lender-login-view').style.display = 'none';
-  document.getElementById('lender-signup-view').style.display = 'none';
+  _lenderHideAllViews();
   document.getElementById('lender-dashboard-view').style.display = 'block';
   if (typeof lpaRenderSidebar === 'function') lpaRenderSidebar();
 }
@@ -715,6 +745,9 @@ async function lenderLogin() {
 async function onLenderAuth(token, user, refreshToken) {
   setLenderSession(token, user, refreshToken);
   showLenderDashboardView();
+  document.getElementById('lender-topbar-marketing').style.display = 'none';
+  document.getElementById('lender-topbar-portal').style.display = 'flex';
+  document.getElementById('lender-topbar-sublabel').style.display = 'block';
   const badge = document.getElementById('lender-user-badge');
   badge.style.display = 'inline';
   badge.textContent = (user.name || user.email) + ' · ' + (user.lender?.lender_name || '');
@@ -875,7 +908,7 @@ async function lenderSignup() {
     if (data.success) {
       showToast('Account created! Sign in to get started.', 'success');
       document.getElementById('lender-email').value = email;
-      showLenderLoginView();
+      showLenderSigninView();
     } else { errEl.textContent = data.error || 'Signup failed.'; errEl.style.display = 'block'; }
   } catch { errEl.textContent = 'Connection error.'; errEl.style.display = 'block'; }
   finally { btn.disabled = false; btn.textContent = 'Start 14-Day Free Trial'; }

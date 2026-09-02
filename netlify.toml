@@ -55,15 +55,14 @@
   status = 301
   force = true
 
-# investor.html mirrors app.html's content (by design, see its own canonical tag)
-# but was also listed in sitemap.xml as a page to index -- sitemap said "index me",
-# canonical said "index /app instead", and GSC excluded it as a contradiction.
-# Force-redirecting the pretty URL here (investor.html on disk is otherwise
-# unreachable now that both /investor and /investor.html point to /app) resolves
-# the contradiction instead of trying to out-SEO it.
+# /investor was a legacy pretty URL for the investor app (investor.html, now deleted).
+# It is sent to the investor marketing page rather than the gated app: a logged-out
+# visitor or crawler following an old /investor link should land on a real pitch
+# (/for-investors), not app.html's noindex loading shell. /investor.html keeps
+# pointing at /app for admin quick-links and old app bookmarks.
 [[redirects]]
   from = "/investor"
-  to = "/app"
+  to = "/for-investors"
   status = 301
   force = true
 

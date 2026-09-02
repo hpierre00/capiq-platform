@@ -20,7 +20,7 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <meta name="author" content="Underlytix LLC" />
 
 <!-- OPEN GRAPH -->
-<meta property="og:title" content="Underlytix Realtor Portal, Client Prequalification" />
+<meta property="og:title" content="AI Client Prequalification for Realtors | Underlytix" />
 <meta property="og:description" content="Run a full client prequalification in 60 seconds. Capital Readiness Score, PITIA calculation, and lender matching, free 14-day trial." />
 <meta property="og:image" content="https://underlytix.com/og-image-realtor.png" />
 <meta property="og:url" content="https://underlytix.com/realtor" />
@@ -151,32 +151,47 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
       </div>
       <div>
         <div style="font-size:15px;font-weight:800;color:white;letter-spacing:-0.3px">UNDERLYTIX</div>
-        <div style="font-size:10px;color:rgba(255,255,255,0.4);font-family:'DM Mono','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',monospace;letter-spacing:.06em">REALTOR PORTAL</div>
+        <div id="rs-topbar-sublabel" style="display:none;font-size:10px;color:rgba(255,255,255,0.4);font-family:'DM Mono','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',monospace;letter-spacing:.06em">REALTOR PORTAL</div>
       </div>
     </a>
-    <div style="display:flex;gap:10px;align-items:center">
-      <span id="rs-user-badge" style="display:none;font-size:12px;color:rgba(255,255,255,0.6)"></span>
+    <!-- Logged-out marketing nav -->
+    <div id="rs-topbar-marketing" style="display:flex;gap:18px;align-items:center">
+      <a href="/#how" style="font-size:13px;color:rgba(255,255,255,0.7);text-decoration:none">How It Works</a>
+      <a href="/#pricing" style="font-size:13px;color:rgba(255,255,255,0.7);text-decoration:none">Pricing</a>
+      <span onclick="showSigninView()" style="font-size:13px;color:rgba(255,255,255,0.7);cursor:pointer">Sign In</span>
+      <button onclick="showSignupView()" class="btn btn-primary" style="font-size:13px">Get Started Free</button>
+    </div>
+    <!-- Logged-in portal controls -->
+    <div id="rs-topbar-portal" style="display:none;gap:10px;align-items:center">
+      <span id="rs-user-badge" style="font-size:12px;color:rgba(255,255,255,0.6)"></span>
       <button id="rs-billing-btn" onclick="realtorCheckout()" style="display:none" class="btn btn-primary" title="Manage payment or cancel your subscription in the secure Stripe billing portal">Manage / Cancel Billing</button>
       <button id="rs-logout-btn" onclick="realtorLogout()" style="display:none" class="btn btn-ghost">Sign Out</button>
-      <a href="/app" style="font-size:11px;color:rgba(255,255,255,0.3);text-decoration:none;font-family:'DM Mono','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',monospace">Investor Portal →</a>
     </div>
   </div>
 
-  <!-- LOGIN VIEW -->
+  <!-- LOGGED-OUT MARKETING VIEW (default) -->
   <div id="rs-login-view" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:56px 24px 40px">
-    <div style="max-width:640px;text-align:center;margin-bottom:40px">
+    <div style="max-width:640px;text-align:center">
       <h1 style="font-family:'Inter','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',sans-serif;font-size:clamp(28px,4vw,40px);font-weight:800;line-height:1.15;letter-spacing:-.5px;color:var(--text);margin-bottom:16px">
         Prequalify any client in <span style="color:var(--teal)">60 seconds</span>
       </h1>
       <p style="font-size:16px;color:var(--text-3);line-height:1.6;max-width:520px;margin:0 auto 24px">
         Full PITIA and DTI analysis across conventional, FHA, VA, DSCR, and more, so you know a client qualifies before you ever schedule a showing.
       </p>
-      <div style="display:flex;gap:24px;justify-content:center;flex-wrap:wrap">
+      <div style="display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin-bottom:32px">
         <div style="font-size:13px;color:var(--text-2)"><span style="color:var(--teal);font-weight:700">✓</span> Capital Readiness Score</div>
         <div style="font-size:13px;color:var(--text-2)"><span style="color:var(--teal);font-weight:700">✓</span> Automatic lender matching</div>
         <div style="font-size:13px;color:var(--text-2)"><span style="color:var(--teal);font-weight:700">✓</span> 14-day free trial, $49/mo after</div>
       </div>
+      <button class="btn btn-primary" onclick="showSignupView()" style="font-size:15px;padding:12px 28px">Start 14-day free trial →</button>
+      <div style="margin-top:16px;font-size:13px;color:var(--text-4)">
+        Already have an account? <span onclick="showSigninView()" style="color:var(--teal);cursor:pointer;font-weight:600">Sign in</span>
+      </div>
     </div>
+  </div>
+
+  <!-- SIGN-IN VIEW -->
+  <div id="rs-signin-view" style="display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;padding:56px 24px 40px">
     <div style="width:100%;max-width:420px">
       <div class="card">
         <div style="background:var(--navy);padding:32px;border-radius:10px 10px 0 0;text-align:center">
@@ -202,9 +217,8 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
             <span style="font-size:12px;color:var(--text-4)">New here? </span>
             <span onclick="showSignupView()" style="font-size:12px;color:var(--teal);cursor:pointer;font-weight:600">Start free 14-day trial →</span>
           </div>
-          <div style="margin-top:10px;text-align:center;display:flex;justify-content:center;gap:16px">
-            <a href="/app" style="font-size:11px;color:var(--text-4);text-decoration:none">Investor Portal →</a>
-            <a href="/lender" style="font-size:11px;color:var(--text-4);text-decoration:none">Lender Portal →</a>
+          <div style="margin-top:10px;text-align:center">
+            <span onclick="showLoginView()" style="font-size:11px;color:var(--text-4);cursor:pointer">← Back</span>
           </div>
         </div>
       </div>
@@ -233,7 +247,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
           <div class="field" style="margin-top:12px;margin-bottom:20px"><label class="label">Password</label><input id="rs-password" type="password" placeholder="Min 8 characters"></div>
           <button class="btn btn-primary" id="rs-signup-btn" onclick="realtorSignup()" style="width:100%;justify-content:center">Start Free Trial</button>
           <div style="text-align:center;margin-top:14px">
-            <span style="cursor:pointer;color:var(--teal);font-size:12px" onclick="showLoginView()">← Back to sign in</span>
+            <span style="cursor:pointer;color:var(--teal);font-size:12px" onclick="showSigninView()">← Back to sign in</span>
           </div>
           <div style="text-align:center;margin-top:8px;font-size:11px;color:var(--text-4)">By signing up you agree to our <a href="/terms" target="_blank" style="color:var(--teal)">Terms</a> and <a href="/privacy" target="_blank" style="color:var(--teal)">Privacy Policy</a>.</div>
         </div>
@@ -347,19 +361,26 @@ function clearRealtorSession() {
   localStorage.removeItem('capiq_realtor_session');
 }
 
-function showLoginView() {
-  document.getElementById('rs-login-view').style.display = 'flex';
+function _rsHideAllViews() {
+  document.getElementById('rs-login-view').style.display = 'none';
+  document.getElementById('rs-signin-view').style.display = 'none';
   document.getElementById('rs-signup-view').style.display = 'none';
   document.getElementById('rs-dashboard-view').style.display = 'none';
+}
+function showLoginView() {
+  _rsHideAllViews();
+  document.getElementById('rs-login-view').style.display = 'flex';
+}
+function showSigninView() {
+  _rsHideAllViews();
+  document.getElementById('rs-signin-view').style.display = 'flex';
 }
 function showSignupView() {
-  document.getElementById('rs-login-view').style.display = 'none';
+  _rsHideAllViews();
   document.getElementById('rs-signup-view').style.display = 'flex';
-  document.getElementById('rs-dashboard-view').style.display = 'none';
 }
 function showDashboardView() {
-  document.getElementById('rs-login-view').style.display = 'none';
-  document.getElementById('rs-signup-view').style.display = 'none';
+  _rsHideAllViews();
   document.getElementById('rs-dashboard-view').style.display = 'block';
 }
 
@@ -423,6 +444,9 @@ function onRealtorAuth(token, realtor, refreshToken) {
   const admin = isAdminUser(realtor.email);
   const plan  = realtor.plan || 'trial';
 
+  document.getElementById('rs-topbar-marketing').style.display = 'none';
+  document.getElementById('rs-topbar-portal').style.display = 'flex';
+  document.getElementById('rs-topbar-sublabel').style.display = 'block';
   document.getElementById('rs-user-badge').style.display = 'inline';
   document.getElementById('rs-user-badge').textContent = realtor.name || realtor.email;
   document.getElementById('rs-logout-btn').style.display = 'block';
@@ -502,6 +526,9 @@ function showWelcomeModal(realtor) {
 
 function realtorLogout() {
   clearRealtorSession();
+  document.getElementById('rs-topbar-portal').style.display = 'none';
+  document.getElementById('rs-topbar-marketing').style.display = 'flex';
+  document.getElementById('rs-topbar-sublabel').style.display = 'none';
   document.getElementById('rs-user-badge').style.display = 'none';
   document.getElementById('rs-logout-btn').style.display = 'none';
   document.getElementById('rs-billing-btn').style.display = 'none';
@@ -1192,7 +1219,7 @@ async function doActivateAccount() {
         // Auto-login failed, pre-fill the login form
         const loginEmail = document.getElementById('rs-login-email');
         if (loginEmail) loginEmail.value = email;
-        showLoginView();
+        showSigninView();
         showToast('Account created! Sign in with your new password.', 'success');
       }
     } else {

@@ -100,6 +100,55 @@ for (const file of htmlFiles) {
   }
 }
 
+// ── CHECK 4: portal pages must lead with marketing when logged out ────────────
+//   /realtor and /lender are single-file SPAs whose default (no-JS, logged-out)
+//   render is what a crawler and a first-time visitor see. That state must be a
+//   marketing page — one <h1>, a marketing nav, no login form and no portal
+//   chrome up front. The credential form and "Sign Out"/billing controls belong
+//   in views that are display:none until JS auth. Regressed for 5+ audit weeks.
+const portalPages = [
+  { file: "realtor.html", prefix: "rs" },
+  { file: "lender.html", prefix: "lender" },
+];
+
+for (const { file, prefix } of portalPages) {
+  const html = readFileSync(join(root, file), "utf8");
+  const fail = (m) => problems.push(`${file}: ${m}`);
+
+  const h1Count = (html.match(/<h1[\s>]/g) || []).length;
+  if (h1Count !== 1) fail(`expected exactly one <h1>, found ${h1Count}`);
+
+  if (/demo123|DEMO:\s*portal@/.test(html)) {
+    fail("demo credentials present in page source — must not ship to anonymous visitors");
+  }
+
+  const marketingTopbar = `id="${prefix}-topbar-marketing"`;
+  const signinView = `id="${prefix}-signin-view"`;
+  if (!html.includes(marketingTopbar)) fail(`missing logged-out marketing topbar (${marketingTopbar})`);
+  if (!html.includes(signinView)) fail(`missing dedicated sign-in view (${signinView})`);
+
+  // The sign-in view container must be hidden by default.
+  const signinTag = new RegExp(`<div[^>]*${signinView}[^>]*>`).exec(html)?.[0] || "";
+  if (signinTag && !/display\s*:\s*none/.test(signinTag)) {
+    fail("sign-in view is not display:none by default");
+  }
+
+  // No password field may appear before the sign-in view starts — that would put
+  // it in the default-visible marketing view. login-view precedes signin-view in
+  // source order, so the earliest password input must sit at or after signin-view.
+  const firstPw = html.indexOf('type="password"');
+  const signinAt = html.indexOf(signinView);
+  if (firstPw !== -1 && signinAt !== -1 && firstPw < signinAt) {
+    fail("a password input renders in the default-visible view (should be inside the sign-in view)");
+  }
+
+  // "Sign Out" / billing controls must be inline-hidden wherever they appear.
+  for (const m of html.matchAll(/<[^>]*>\s*(Sign Out|Manage \/ Cancel[^<]*)</g)) {
+    const tag = html.slice(html.lastIndexOf("<", m.index), m.index + m[0].length);
+    if (!/display\s*:\s*none/.test(tag)) fail(`"${m[1].trim()}" control is not hidden by default`);
+  }
+}
+
 // ── Report ────────────────────────────────────────────────────────────────────
 if (problems.length) {
   console.error(`\nPre-deploy check failed (${problems.length} issue(s)):\n`);
