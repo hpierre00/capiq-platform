@@ -22,6 +22,9 @@
   <url><loc>https://underlytix.com/underlytix-vs-underwriting</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://underlytix.com/underlytix-vs-loan-officer</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
 
+  <!-- Market Context -->
+  <url><loc>https://underlytix.com/dscr-qualification-tightening-2026</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+
   <!-- Legal -->
   <url><loc>https://underlytix.com/terms</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
   <url><loc>https://underlytix.com/privacy</loc><changefreq>yearly</changefreq><priority>0.3</priority></url>
