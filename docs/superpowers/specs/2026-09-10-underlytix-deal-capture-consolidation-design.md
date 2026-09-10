@@ -8,6 +8,48 @@
 
 ---
 
+## 0. Execution-time corrections (2026-09-10)
+
+The original §1 background was written from the **repo** copies of the edge
+functions. During execution, the **deployed** functions were checked directly
+and three premises turned out wrong. This section overrides §1–§4 where noted;
+the rest of the design stands.
+
+1. **The forgeable lender token is already fixed in production.** Deployed
+   `capiq-lender-portal-v4` (v4, updated ~2026-08) already uses real
+   HMAC-SHA256 (key from `SUPABASE_SERVICE_ROLE_KEY`, domain
+   `'capiq-lender-legacy-token-v1'`) and PBKDF2-210k with login auto-upgrade.
+   Verified live: a forged old-format token returns `{valid:false}`. **The
+   repo copy was stale** — hardened directly on the deployed function weeks
+   ago, never committed back (same pattern as §8's "~30 unversioned
+   functions"). → **§1.2 is obsolete.** Workstream 1 becomes: (a) commit the
+   repo copy so it matches prod (done, `d1ff0ef`), (b) redeploy that
+   repo-synced copy for one marginal improvement — constant-time signature
+   compare in `vt()` instead of `!==`. Key derivation + domain string are
+   identical to the deployed version, so **redeploy causes zero session
+   disruption** — §3.3's "4 lenders re-login" already happened weeks ago.
+
+2. **`SUPABASE_SERVICE_KEY` is set in Netlify.** `capiq-analyze?selftest=env`
+   → `"SUPABASE_SERVICE_KEY": true`. → **§1.1 root-cause "Path A never runs"
+   and §4.7 step 2 are obsolete.** Path A's `supabaseTask` executes on every
+   real analysis today.
+
+3. **Path A's real failure is the CHECK constraints, live now.** With the key
+   set, Path A's `deal_submissions` insert runs and fails `23514` on
+   `deal_type: d.dealType` (`"Fix & Flip"` ∉ enum), swallowed by
+   `if (!dealInsert.ok) return;`. It has not *visibly* failed only because
+   real deal submissions are near-zero. → confirms §4.2/§4.3 (the mappers)
+   are load-bearing, not defensive; the "never executed" reasoning from the
+   spec review was wrong about the mechanism, not the fix.
+
+4. **`capiq-analyze.js` deployed matches the repo** (BUILD
+   `2026-08-05-client-prompt-cap-fix`). §4.7 step 1 pre-flight: satisfied.
+
+Net effect on scope: Workstream 1 shrinks to a repo-sync commit + an
+equivalent redeploy. Workstream 2 is unchanged and still required.
+
+---
+
 ## 1. Background
 
 Two P0 problems in the CapIQ / Underlytix platform, plus the discovery that

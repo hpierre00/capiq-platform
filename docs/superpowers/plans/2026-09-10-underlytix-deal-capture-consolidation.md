@@ -8,7 +8,7 @@
 
 **Tech Stack:** Deno + WebCrypto (edge function), Node 24 ESM + `node:test` (Netlify function + helper tests), PostgREST (raw `fetch` from the Netlify function), Supabase MCP (`apply_migration`, `deploy_edge_function`, `execute_sql`), git → `push_site.bat` → Netlify auto-deploy for `.js`/`.html`.
 
-**Spec:** `docs/superpowers/specs/2026-09-10-underlytix-deal-capture-consolidation-design.md` — read it alongside this plan; every task argues from it.
+**Spec:** `docs/superpowers/specs/2026-09-10-underlytix-deal-capture-consolidation-design.md` — read it alongside this plan; every task argues from it. **Read spec §0 first** — execution-time checks against production falsified three §1 premises: the lender token was already HMAC-hardened in prod (repo was stale), `SUPABASE_SERVICE_KEY` is already set, and Path A's live failure mode is the CHECK constraints. Phase 1 is now a repo-sync + equivalent redeploy; Phase 2 is unchanged.
 
 ## Global Constraints
 
@@ -238,7 +238,15 @@ Claude-Session: https://claude.ai/code/session_013gtwKXcTRykXJxmRxLRxsR"
 
 ---
 
-### Task 2: Deploy `capiq-lender-portal-v4` and smoke-verify
+### Task 2: Redeploy `capiq-lender-portal-v4` (repo-synced) and smoke-verify
+
+> **Reframed at execution (spec §0):** the deployed v4 was **already hardened**
+> (HMAC-SHA256 + PBKDF2) — the repo copy was stale. Task 1 synced the repo and
+> added a constant-time signature compare in `vt()`. Key derivation + domain
+> string (`'capiq-lender-legacy-token-v1'`) are identical to deployed, so this
+> redeploy is **equivalent + one hardening nicety**, causes **zero session
+> disruption**, and the forged-token check below is a **regression guard**, not
+> validation of a new fix. User approved the redeploy (execution option 2).
 
 **Files:** none (deploy + verification only)
 
@@ -246,15 +254,13 @@ Claude-Session: https://claude.ai/code/session_013gtwKXcTRykXJxmRxLRxsR"
 - Consumes: Task 1's committed `index.ts`, `scripts/forge-old-lender-token.mjs`.
 - Produces: a deployed edge function version; a known-good test lender credential for Phase 2 smoke.
 
-- [ ] **Step 1: Capture the current deployed version for rollback**
+- [ ] **Step 1: Capture the current deployed version + its file list for rollback**
 
-Use Supabase MCP `list_edge_functions` (project `mxyepucitjzleaziizkr`); record `capiq-lender-portal-v4`'s current `version` number. This is the rollback target.
+Supabase MCP `get_edge_function` (project `mxyepucitjzleaziizkr`, slug `capiq-lender-portal-v4`): record the current `version` number (rollback target) and its `files` array (must mirror `deno.json` on redeploy).
 
 - [ ] **Step 2: Deploy**
 
-Use Supabase MCP `deploy_edge_function`: project `mxyepucitjzleaziizkr`, slug `capiq-lender-portal-v4`, `verify_jwt: false`, files = the full contents of `supabase/functions/capiq-lender-portal-v4/index.ts` (as `index.ts`) plus its existing `deno.json` if the current deployment has one (check `get_edge_function` first and mirror its `files` list).
-
-**This step requires explicit user approval before running.**
+Supabase MCP `deploy_edge_function`: project `mxyepucitjzleaziizkr`, name `capiq-lender-portal-v4`, `entrypoint_path: "index.ts"`, `verify_jwt: false`, `files` = `[{name:"index.ts", content:<full repo index.ts>}, {name:"deno.json", content:<the deno.json from Step 1, unchanged>}]`.
 
 - [ ] **Step 3: Seed a known test-lender password (legacy format, to also test auto-upgrade)**
 
@@ -287,7 +293,7 @@ Expected: `prefix` = `pbkdf2$1`.
 `POST` same URL, body `{"action":"verify","token":"<token from Step 4>"}`
 Expected: `200`, `{ valid: true, user: {...} }`.
 
-- [ ] **Step 6: Smoke — a forged old-format token is REJECTED**
+- [ ] **Step 6: Smoke — a forged old-format token is REJECTED (regression guard)**
 
 Get a real `lender_profile_id`:
 ```sql
@@ -295,7 +301,7 @@ select lender_profile_id from lender_users where email = 'portal@coastalcapital.
 ```
 Run: `node scripts/forge-old-lender-token.mjs <that-id>`
 `POST` the function, body `{"action":"verify","token":"<forged token>"}`
-Expected: `200`, `{ valid: false }`. **If this returns `valid:true`, STOP — the fix failed, roll back to the Step 1 version.**
+Expected: `200`, `{ valid: false }`. (Already true on the pre-redeploy version — this confirms the redeploy didn't regress it.) **If `valid:true`, STOP and roll back to the Step 1 version.**
 
 - [ ] **Step 7: Smoke — get_deals still works with a real token**
 
@@ -924,9 +930,9 @@ Claude-Session: https://claude.ai/code/session_013gtwKXcTRykXJxmRxLRxsR"
 
 ---
 
-### Task 7: Set the Netlify env var, deploy Phase 2, run the full smoke
+### Task 7: Deploy Phase 2 and run the full smoke
 
-**Files:** none (env + deploy + verification).
+**Files:** none (deploy + verification).
 
 **Interfaces:**
 - Consumes: Tasks 3–6 commits, Task 4 migration, Task 2's test lender credential.
@@ -934,15 +940,13 @@ Claude-Session: https://claude.ai/code/session_013gtwKXcTRykXJxmRxLRxsR"
 
 - [ ] **Step 1: Confirm Phase 1 is deployed**
 
-Supabase MCP `list_edge_functions` — `capiq-lender-portal-v4` version is the Task 2 deploy (not the Step-1 rollback target). If not, STOP — Phase 1 must be live first (Global Constraints / spec §1.3).
+Supabase MCP `list_edge_functions` — `capiq-lender-portal-v4` version is the Task 2 redeploy (not the Step-1 rollback target). If not, STOP — Phase 1 must be live first (spec §5).
 
-- [ ] **Step 2: Set `SUPABASE_SERVICE_KEY` in Netlify**
+- [ ] **Step 2: Confirm `SUPABASE_SERVICE_KEY` is set in Netlify**
 
-Confirm current state first — GET the project's env vars (Netlify MCP `netlify-project-services-*` or the dashboard) or hit `https://underlytix.com/.netlify/functions/capiq-analyze?selftest=env` (the function already reports `SUPABASE_SERVICE_KEY: <bool>` in its selftest — check `capiq-analyze.js` L59–60 for the exact query string).
+`curl -s https://underlytix.com/.netlify/functions/capiq-analyze?selftest=env` → expect `"env": { ..., "SUPABASE_SERVICE_KEY": true }`.
 
-If unset: set `SUPABASE_SERVICE_KEY` on site `f7733dc6-b916-4bed-9ffc-da3a467142ad` to the project's `service_role` key (Supabase dashboard → Project Settings → API → `service_role`, or MCP `get_publishable_keys` is anon-only — the service key must come from the dashboard / user). **This value is a secret; do not echo it into logs or commits.**
-
-**This step requires user action or explicit approval** (the service-role key is not available to this session by default).
+**Already verified true at execution time (spec §0).** This step is now a confirmation, not an action. If it ever reads `false`, the service-role key must be set on site `f7733dc6-b916-4bed-9ffc-da3a467142ad` from the Supabase dashboard (Project Settings → API → `service_role`) — a secret, never logged or committed — and that requires user action.
 
 - [ ] **Step 3: Merge the branch / deploy**
 
