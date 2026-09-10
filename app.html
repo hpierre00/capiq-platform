@@ -2287,7 +2287,7 @@ async function analyzeDeal() {
     if (dealData.contractText) {
       analysisPrompt += '\n\nCONTRACT DETAILS (source for the deal facts only: borrower name, property address, purchase price, and figures used to qualify the borrower. Use it to confirm the numbers above; do not review or critique the contract itself):\n' + dealData.contractText.slice(0, 12000);
     }
-    const res = await fetch('/.netlify/functions/capiq-analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dealData: enrichedDealData, prompt: analysisPrompt})});
+    const res = await fetch('/.netlify/functions/capiq-analyze',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dealData: enrichedDealData, prompt: analysisPrompt, token: getSession()?.token || null})});
     if(!res.ok){const e=await res.json().catch(()=>({}));throw new Error(e.error||e.detail||`Error ${res.status}`);}
     const data = await res.json();
     if(!data.success) throw new Error(data.error||'Analysis failed');
@@ -2307,7 +2307,6 @@ async function analyzeDeal() {
     }).then(r => r.json()).then(r => {
       if(r.success) console.log('Synced to Notion:', r.notionUrl);
     }).catch(e => console.warn('Notion sync error:', e.message));
-    const supabaseMatches = deal.matches || [];
     const session = getSession();
     if (session?.token) {
       fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-auth-v3', {
@@ -2315,16 +2314,12 @@ async function analyzeDeal() {
         body: JSON.stringify({ action: 'increment_usage', token: session.token })
       }).catch(() => {});
     }
-    fetch('https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-save-deal', {
-      method: 'POST', headers: {'Content-Type':'application/json'},
-      body: JSON.stringify({ dealData, analysis, lenderMatches: supabaseMatches })
-    }).then(r => r.json()).then(r => {
-      if(r.success) {
-        console.log('Synced to Supabase:', r.dealCode);
-        const dcEl = document.getElementById('deal-code-badge');
-        if(dcEl) { dcEl.textContent = r.dealCode; dcEl.style.display = 'inline-flex'; }
-      }
-    }).catch(e => console.warn('Supabase sync error:', e.message));
+    // Deal persistence now happens server-side inside capiq-analyze (deferred
+    // waitUntil). The badge shows the client-generated code for reference only;
+    // the DB row's deal_code is assigned by the column default and is not
+    // looked up here.
+    const dcEl = document.getElementById('deal-code-badge');
+    if (dcEl) { dcEl.textContent = enrichedDealData.dealCode; dcEl.style.display = 'inline-flex'; }
   } catch(err) {
     showToast('Analysis failed: '+err.message,'error');
     document.getElementById('result-content').innerHTML=`<div class="card"><div class="card-body"><p style="color:var(--red);font-size:13px;font-weight:500">Error: ${err.message}</p></div></div>`;
