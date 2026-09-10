@@ -15,7 +15,17 @@ export function clamp(n, lo, hi) {
   return Math.max(lo, Math.min(hi, n));
 }
 
-export function mapDealType(t) {
+const isCommercial = (market) => String(market || '').toLowerCase() === 'commercial';
+
+// app.html has two pill sets. Residential (#deal-type-pills): Purchase, Fix & Flip,
+// Rental, Cash-Out, Bridge, New Construction. Commercial (#deal-type-pills-comm):
+// Acquisition, Refinance, Bridge, Construction, Cash-Out. `market` disambiguates
+// the values shared between the two.
+export function mapDealType(t, market) {
+  if (isCommercial(market)) {
+    const cm = { 'Construction': 'construction', 'Bridge': 'bridge', 'Cash-Out': 'cash_out' };
+    return cm[t] || 'commercial'; // Acquisition / Refinance / unknown -> commercial
+  }
   const m = {
     'Purchase': 'fix_flip', 'Fix & Flip': 'fix_flip', 'Rental': 'rental',
     'Cash-Out': 'cash_out', 'Bridge': 'bridge', 'New Construction': 'construction',
@@ -23,7 +33,14 @@ export function mapDealType(t) {
   return m[t] || 'fix_flip';
 }
 
-export function mapAssetType(t) {
+// Residential (#prop-type-pills): SFR, Condo, 2-4 Unit, Multifamily 5+.
+// Commercial (#prop-type-pills-comm): Multifamily 5+, Office, Retail, Industrial,
+// Mixed Use, Self Storage.
+export function mapAssetType(t, market) {
+  if (isCommercial(market)) {
+    const cm = { 'Multifamily 5+': 'multifamily', 'Mixed Use': 'mixed_use' };
+    return cm[t] || 'commercial'; // Office / Retail / Industrial / Self Storage / unknown -> commercial
+  }
   const m = {
     'SFR': 'sfr', 'Condo': 'sfr', '2-4 Unit': '2_4_unit',
     'Multifamily 5+': 'multifamily', 'Commercial': 'commercial', 'Land': 'land',
@@ -48,7 +65,14 @@ export function mapExperienceCount(e) {
   return 25;
 }
 
-export function mapExitStrategy(t) {
+export function mapExitStrategy(t, market) {
+  if (isCommercial(market)) {
+    const cm = {
+      'Acquisition': 'hold', 'Refinance': 'refinance', 'Construction': 'sell',
+      'Bridge': 'refinance', 'Cash-Out': 'refinance',
+    };
+    return cm[t] || 'hold';
+  }
   const m = {
     'Fix & Flip': 'flip', 'Rental': 'hold', 'Cash-Out': 'refinance',
     'Bridge': 'refinance', 'New Construction': 'sell', 'Purchase': 'hold',

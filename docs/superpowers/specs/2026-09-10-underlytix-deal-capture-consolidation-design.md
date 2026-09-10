@@ -48,6 +48,22 @@ the rest of the design stands.
 Net effect on scope: Workstream 1 shrinks to a repo-sync commit + an
 equivalent redeploy. Workstream 2 is unchanged and still required.
 
+5. **Mapper coverage — commercial branch.** `app.html` has a second pill set
+   for commercial deals (`#deal-type-pills-comm`: Acquisition, Refinance,
+   Bridge, Construction, Cash-Out; `#prop-type-pills-comm`: Multifamily 5+,
+   Office, Retail, Industrial, Mixed Use, Self Storage). `capiq-save-deal`'s
+   original mappers (and the first port of them) covered only the residential
+   vocabulary, so a commercial deal fell to the `fix_flip` / `sfr` defaults —
+   valid enum values, so no `23514`, but wrong data and wrong lender routing.
+   Fix: `mapDealType` / `mapAssetType` / `mapExitStrategy` now take a second
+   `market` arg (from `dealData.market`) and map the commercial pill values
+   to `commercial` / `mixed_use` / `multifamily` / `bridge` / `construction`
+   / `cash_out` as appropriate. `deal_submissions.asset_type` and
+   `deal_type` CHECK enums both include `commercial` (and `mixed_use`) — the
+   schema was built for this; the mapper just wasn't. Covered by
+   `deal-mappers.test.mjs`. **The §7 smoke must include one commercial
+   (Office/Retail) deal** — a residential-only pass would ship this clean.
+
 ---
 
 ## 1. Background

@@ -18,7 +18,7 @@ test('clamp bounds', () => {
   assert.equal(clamp(42, 0, 100), 42);
 });
 
-test('mapDealType maps known form values and stays in enum', () => {
+test('mapDealType residential values and stays in enum', () => {
   assert.equal(mapDealType('Fix & Flip'), 'fix_flip');
   assert.equal(mapDealType('New Construction'), 'construction');
   assert.equal(mapDealType('Rental'), 'rental');
@@ -29,7 +29,20 @@ test('mapDealType maps known form values and stays in enum', () => {
   }
 });
 
-test('mapAssetType maps known form values and stays in enum', () => {
+test('mapDealType commercial pill values (Acquisition/Refinance/Bridge/Construction/Cash-Out)', () => {
+  assert.equal(mapDealType('Acquisition', 'Commercial'), 'commercial');
+  assert.equal(mapDealType('Refinance', 'Commercial'), 'commercial');
+  assert.equal(mapDealType('Bridge', 'Commercial'), 'bridge');
+  assert.equal(mapDealType('Construction', 'Commercial'), 'construction');
+  assert.equal(mapDealType('Cash-Out', 'Commercial'), 'cash_out');
+  for (const v of ['Acquisition', 'Refinance', 'Bridge', 'Construction', 'Cash-Out', '', undefined]) {
+    assert.ok(DEAL_TYPE_ENUM.includes(mapDealType(v, 'Commercial')), `${v} -> ${mapDealType(v, 'Commercial')}`);
+  }
+  // market casing-insensitive
+  assert.equal(mapDealType('Acquisition', 'commercial'), 'commercial');
+});
+
+test('mapAssetType residential values and stays in enum', () => {
   assert.equal(mapAssetType('SFR'), 'sfr');
   assert.equal(mapAssetType('Condo'), 'sfr');
   assert.equal(mapAssetType('2-4 Unit'), '2_4_unit');
@@ -38,6 +51,18 @@ test('mapAssetType maps known form values and stays in enum', () => {
   assert.equal(mapAssetType('Land'), 'land');
   for (const v of ['', 'weird', undefined]) {
     assert.ok(ASSET_TYPE_ENUM.includes(mapAssetType(v)));
+  }
+});
+
+test('mapAssetType commercial pill values (Office/Retail/Industrial/Mixed Use/Self Storage/Multifamily)', () => {
+  assert.equal(mapAssetType('Office', 'Commercial'), 'commercial');
+  assert.equal(mapAssetType('Retail', 'Commercial'), 'commercial');
+  assert.equal(mapAssetType('Industrial', 'Commercial'), 'commercial');
+  assert.equal(mapAssetType('Self Storage', 'Commercial'), 'commercial');
+  assert.equal(mapAssetType('Mixed Use', 'Commercial'), 'mixed_use');
+  assert.equal(mapAssetType('Multifamily 5+', 'Commercial'), 'multifamily');
+  for (const v of ['Office', 'Retail', 'Industrial', 'Mixed Use', 'Self Storage', 'Multifamily 5+', '', undefined]) {
+    assert.ok(ASSET_TYPE_ENUM.includes(mapAssetType(v, 'Commercial')), `${v} -> ${mapAssetType(v, 'Commercial')}`);
   }
 });
 
@@ -61,6 +86,11 @@ test('mapExitStrategy default and known', () => {
   assert.equal(mapExitStrategy('Rental'), 'hold');
   assert.equal(mapExitStrategy('Cash-Out'), 'refinance');
   assert.equal(mapExitStrategy(undefined), 'hold');
+  // commercial branch
+  assert.equal(mapExitStrategy('Refinance', 'Commercial'), 'refinance');
+  assert.equal(mapExitStrategy('Construction', 'Commercial'), 'sell');
+  assert.equal(mapExitStrategy('Acquisition', 'Commercial'), 'hold');
+  assert.equal(mapExitStrategy(undefined, 'Commercial'), 'hold');
 });
 
 test('deriveDealCategory reads the RAW form value', () => {
