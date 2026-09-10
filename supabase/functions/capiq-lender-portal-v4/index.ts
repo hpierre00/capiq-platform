@@ -8,8 +8,8 @@ const cors = {
   'Access-Control-Allow-Headers': 'Content-Type',
   'Content-Type': 'application/json',
 };
-const SALT = 'capiq-lender-salt-2026';
-const JWT_SECRET = 'capiq-lender-jwt-2026';
+const SALT = 'capiq-lender-salt-2026'; // legacy SHA-256 salt — verify-only fallback for un-upgraded hashes
+const PBKDF2_ITERATIONS = 210000;
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { status: 200, headers: cors });
@@ -19,19 +19,21 @@ serve(async (req) => {
     const { action, token, newPassword, currentPassword } = b;
 
     if (action === 'login') {
-      const hash = await hp(b.password);
       const { data: u } = await sb.from('lender_users').select('*,lender_profiles(*)').eq('email', b.email).maybeSingle();
-      if (!u || u.password_hash !== hash) return res({ error: 'Invalid credentials.' }, 401);
+      if (!u || !(await verifyHash(b.password, u.password_hash))) return res({ error: 'Invalid credentials.' }, 401);
+      if (!u.password_hash?.startsWith('pbkdf2$')) {
+        await sb.from('lender_users').update({ password_hash: await newHash(b.password) }).eq('id', u.id);
+      }
       await sb.from('lender_users').update({ last_login: new Date().toISOString() }).eq('id', u.id);
       return res({
         success: true,
-        token: gt(u.id, u.email, u.lender_profile_id, u.role, u.qm_category || 'non_qm'),
+        token: await gt(u.id, u.email, u.lender_profile_id, u.role, u.qm_category || 'non_qm'),
         user: { id: u.id, email: u.email, name: u.full_name, role: u.role, qm_category: u.qm_category || 'non_qm', lender: u.lender_profiles },
       });
     }
 
     if (action === 'verify') {
-      const p = vt(token);
+      const p = await vt(token);
       if (!p) return new Response(JSON.stringify({ valid: false }), { status: 200, headers: cors });
       const { data: u } = await sb.from('lender_users').select('*,lender_profiles(*)').eq('id', p.id).maybeSingle();
       if (!u) return new Response(JSON.stringify({ valid: false }), { status: 200, headers: cors });
@@ -39,7 +41,7 @@ serve(async (req) => {
     }
 
     if (action === 'get_deals') {
-      const p = vt(token);
+      const p = await vt(token);
       if (!p) return res({ error: 'Unauthorized' }, 401);
       // Get current lender's qm_category to filter deals
       const { data: lenderRow } = await sb.from('lender_users').select('qm_category').eq('id', p.id).maybeSingle();
@@ -70,7 +72,7 @@ serve(async (req) => {
     }
 
     if (action === 'update_match') {
-      const p = vt(token);
+      const p = await vt(token);
       if (!p) return res({ error: 'Unauthorized' }, 401);
       await sb.from('lender_matches').update({ interest_level: b.status, lender_notes: b.notes || null, reviewed_at: new Date().toISOString(), reviewed_by: p.id }).eq('id', b.matchId);
       return res({ success: true });
@@ -82,23 +84,23 @@ serve(async (req) => {
       const { data: u } = await sb.from('lender_users').select('*').eq('email', resetEmail || '').maybeSingle();
       if (!u || u.reset_token !== resetToken) return res({ error: 'Invalid or expired reset link.' }, 400);
       if (u.reset_token_expires && new Date(u.reset_token_expires) < new Date()) return res({ error: 'Reset link has expired. Please request a new one.' }, 400);
-      await sb.from('lender_users').update({ password_hash: await hp(np), reset_token: null, reset_token_expires: null }).eq('id', u.id);
+      await sb.from('lender_users').update({ password_hash: await newHash(np), reset_token: null, reset_token_expires: null }).eq('id', u.id);
       return res({ success: true });
     }
 
     if (action === 'change_password') {
-      const p = vt(token);
+      const p = await vt(token);
       if (!p) return res({ error: 'Invalid session.' }, 401);
       if (!currentPassword || !newPassword || newPassword.length < 8) return res({ error: 'All fields required. Min 8 characters.' }, 400);
       const { data: u } = await sb.from('lender_users').select('*').eq('id', p.id).maybeSingle();
       if (!u) return res({ error: 'Account not found.' }, 404);
-      if (u.password_hash !== await hp(currentPassword)) return res({ error: 'Current password is incorrect.' }, 401);
-      await sb.from('lender_users').update({ password_hash: await hp(newPassword) }).eq('id', p.id);
+      if (!(await verifyHash(currentPassword, u.password_hash))) return res({ error: 'Current password is incorrect.' }, 401);
+      await sb.from('lender_users').update({ password_hash: await newHash(newPassword) }).eq('id', p.id);
       return res({ success: true });
     }
 
     if (action === 'create_checkout') {
-      const p = vt(token);
+      const p = await vt(token);
       if (!p) return res({ error: 'Unauthorized' }, 401);
       return res({ success: false, error: 'Upgrade not yet available online. Contact support@underlytix.com to activate full deal access.' });
     }
@@ -109,40 +111,77 @@ serve(async (req) => {
   }
 });
 
-async function hp(pw) {
+// ── Password hashing ─────────────────────────────────────────────────────────
+async function legacyHash(pw) {
   const d = new TextEncoder().encode(pw + SALT);
   const h = await crypto.subtle.digest('SHA-256', d);
   return Array.from(new Uint8Array(h)).map((b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-function gt(id, email, lid, role, qmc) {
-  const p = { id, email, lender_profile_id: lid, role, qm_category: qmc, exp: Date.now() + 7 * 24 * 60 * 60 * 1000 };
-  const d = btoa(JSON.stringify(p));
-  return d + '.' + hm(d);
+async function newHash(pw) {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const km = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits']);
+  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: PBKDF2_ITERATIONS, hash: 'SHA-256' }, km, 256);
+  return 'pbkdf2$' + PBKDF2_ITERATIONS + '$' + btoa(String.fromCharCode(...salt)) + '$' + btoa(String.fromCharCode(...new Uint8Array(bits)));
 }
 
-function vt(t) {
+async function verifyHash(pw, stored) {
+  if (!stored) return false;
+  if (stored.startsWith('pbkdf2$')) {
+    const parts = stored.split('$');
+    if (parts.length !== 4) return false;
+    const iter = parseInt(parts[1], 10);
+    const salt = Uint8Array.from(atob(parts[2]), (c) => c.charCodeAt(0));
+    const km = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits']);
+    const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: iter, hash: 'SHA-256' }, km, 256);
+    const got = btoa(String.fromCharCode(...new Uint8Array(bits)));
+    const exp = parts[3];
+    if (got.length !== exp.length) return false;
+    let diff = 0;
+    for (let i = 0; i < got.length; i++) diff |= got.charCodeAt(i) ^ exp.charCodeAt(i);
+    return diff === 0;
+  }
+  return stored === await legacyHash(pw);
+}
+
+// ── Session token: HMAC-SHA256, key derived from the service-role key ─────────
+let _hmacKey = null;
+async function hmacKey() {
+  if (_hmacKey) return _hmacKey;
+  const root = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
+  const rk = await crypto.subtle.importKey('raw', new TextEncoder().encode(root), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const derived = await crypto.subtle.sign('HMAC', rk, new TextEncoder().encode('capiq-lender-legacy-token-v1'));
+  _hmacKey = await crypto.subtle.importKey('raw', derived, { name: 'HMAC', hash: 'SHA-256' }, false, ['sign', 'verify']);
+  return _hmacKey;
+}
+
+async function hmSign(d) {
+  const key = await hmacKey();
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(d));
+  return Array.from(new Uint8Array(sig)).map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function gt(id, email, lid, role, qmc) {
+  const p = { id, email, lender_profile_id: lid, role, qm_category: qmc, exp: Date.now() + 7 * 24 * 60 * 60 * 1000 };
+  const d = btoa(JSON.stringify(p));
+  return d + '.' + await hmSign(d);
+}
+
+async function vt(t) {
   try {
     if (!t) return null;
-    const parts = t.split('.');
-    const d = parts[0];
-    const s = parts[1];
-    if (hm(d) !== s) return null;
+    const [d, s] = t.split('.');
+    if (!d || !s) return null;
+    const expected = await hmSign(d);
+    if (expected.length !== s.length) return null;
+    let diff = 0;
+    for (let i = 0; i < s.length; i++) diff |= expected.charCodeAt(i) ^ s.charCodeAt(i);
+    if (diff !== 0) return null;
     const p = JSON.parse(atob(d));
     return p.exp < Date.now() ? null : p;
   } catch (_e) {
     return null;
   }
-}
-
-function hm(d) {
-  const c = d + '|' + JWT_SECRET;
-  let h = 0;
-  for (let i = 0; i < c.length; i++) {
-    h = ((h << 5) - h) + c.charCodeAt(i);
-    h |= 0;
-  }
-  return Math.abs(h).toString(36) + c.length.toString(36);
 }
 
 function res(data, s) {
