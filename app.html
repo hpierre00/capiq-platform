@@ -1527,12 +1527,20 @@ function wizardNext(currentStep) {
     if (propType === 'Condo' && !document.getElementById('f-unit').value.trim()) { showErr('Unit number is required for Condo properties.'); document.getElementById('f-unit').focus(); return; }
     buildAddress();
   } else if (currentStep === 3) {
-    if (!document.getElementById('f-loan-amount').value) { showErr('Loan amount is required.'); document.getElementById('f-loan-amount').focus(); return; }
-    if (!document.getElementById('f-arv').value) { showErr('ARV is required.'); document.getElementById('f-arv').focus(); return; }
-    if (!document.getElementById('f-credit-score').value) { showErr('Credit score is required.'); document.getElementById('f-credit-score').focus(); return; }
-    const dealType = document.getElementById('f-deal-type').value;
-    if ((dealType === 'Fix & Flip' || dealType === 'New Construction') && !document.getElementById('f-rehab-budget').value) { showErr('Rehab Budget is required for Fix & Flip / New Construction.'); return; }
-    if (dealType === 'Rental' && !document.getElementById('f-monthly-rent').value) { showErr('Monthly Rent is required for Rental / DSCR deals.'); return; }
+    const market = (document.getElementById('f-market') || {}).value || 'Residential';
+    if (market === 'Commercial') {
+      // Commercial deals use the fc-* fields; mirror the isComm branch in the submit handler.
+      if (!document.getElementById('fc-loan-amount').value) { showErr('Loan amount is required.'); document.getElementById('fc-loan-amount').focus(); return; }
+      if (!document.getElementById('fc-gross-income').value) { showErr('Gross annual income is required.'); document.getElementById('fc-gross-income').focus(); return; }
+      if (!document.getElementById('fc-credit-score').value) { showErr('Credit score is required.'); document.getElementById('fc-credit-score').focus(); return; }
+    } else {
+      if (!document.getElementById('f-loan-amount').value) { showErr('Loan amount is required.'); document.getElementById('f-loan-amount').focus(); return; }
+      if (!document.getElementById('f-arv').value) { showErr('ARV is required.'); document.getElementById('f-arv').focus(); return; }
+      if (!document.getElementById('f-credit-score').value) { showErr('Credit score is required.'); document.getElementById('f-credit-score').focus(); return; }
+      const dealType = document.getElementById('f-deal-type').value;
+      if ((dealType === 'Fix & Flip' || dealType === 'New Construction') && !document.getElementById('f-rehab-budget').value) { showErr('Rehab Budget is required for Fix & Flip / New Construction.'); return; }
+      if (dealType === 'Rental' && !document.getElementById('f-monthly-rent').value) { showErr('Monthly Rent is required for Rental / DSCR deals.'); return; }
+    }
   }
   wizardGoTo(currentStep + 1);
 }
