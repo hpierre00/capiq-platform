@@ -48,6 +48,36 @@ the rest of the design stands.
 Net effect on scope: Workstream 1 shrinks to a repo-sync commit + an
 equivalent redeploy. Workstream 2 is unchanged and still required.
 
+4b. **`context.waitUntil()` shares the 30s budget — persistence moved to a
+   background function.** Post-deploy testing showed the consolidated
+   `supabaseTask` inside `capiq-analyze`'s `waitUntil()` **does not run to
+   completion in production**: a logged-in submission created the `borrowers`
+   row then stopped — no `deal_submissions`, and no `deal_save_failed` event
+   (the `catch` never ran → the container was frozen, not an exception).
+   Reproduced: a verbose commercial deal made `capiq-analyze` itself return an
+   "Inactivity Timeout" HTML page at ~31s. Root cause: the Claude call
+   (15–29s) and the six sequential PostgREST writes share **one 30s Netlify
+   function budget**, and `waitUntil` work counts against the same wall clock.
+   The earlier `waitUntil` refactor fixed the *client 504*, not the budget.
+   → **Fix:** `netlify/functions/capiq-save-deal-background.js` — a Netlify
+   **background function** (`config.background: true` + `-background` suffix;
+   confirmed against Netlify docs that background functions use the identical
+   v2 `export default async (req, context)` signature). It 202s immediately
+   and has its own 15-minute budget. `capiq-analyze` fires it fire-and-forget
+   the same way it fires `resend-email` / `notion-sync` (with an
+   `x-internal-key: <SUPABASE_SERVICE_KEY>` header so it is not openly
+   invocable), passing `{ dealData, analysis, token }`. A failed invoke never
+   touches the analysis response. §4.2's write logic is unchanged — it just
+   lives in the background function now, where its `stage`-tracked `catch`
+   actually has time to run. This is "Path B done right": a dedicated
+   post-analysis writer with its own budget, but with the consolidated
+   correct logic. `capiq-analyze.js` no longer imports `deal-mappers.mjs` or
+   touches Supabase directly.
+
+   Separately noted (pre-existing, out of scope): a sufficiently verbose
+   analysis prompt can push the Claude call past 30s on its own, timing out
+   `capiq-analyze` before it responds. Not introduced here.
+
 5. **Mapper coverage — commercial branch.** `app.html` has a second pill set
    for commercial deals (`#deal-type-pills-comm`: Acquisition, Refinance,
    Bridge, Construction, Cash-Out; `#prop-type-pills-comm`: Multifamily 5+,
@@ -63,6 +93,14 @@ equivalent redeploy. Workstream 2 is unchanged and still required.
    schema was built for this; the mapper just wasn't. Covered by
    `deal-mappers.test.mjs`. **The §7 smoke must include one commercial
    (Office/Retail) deal** — a residential-only pass would ship this clean.
+
+6. **`wizardNext()` step-3 validator was residential-only.** Unrelated client
+   bug found in the same commercial test: step 3 checked `f-loan-amount` /
+   `f-arv` / `f-credit-score` unconditionally, but a Commercial deal's visible
+   fields are `fc-loan-amount` / `fc-gross-income` / `fc-credit-score` — so a
+   commercial deal dead-ended at step 3. Fixed to branch on `f-market` and
+   mirror the submit handler's `isComm` validation. Runtime-verifiable only —
+   confirm live after deploy.
 
 ---
 
