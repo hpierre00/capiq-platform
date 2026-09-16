@@ -23,15 +23,21 @@
   <url><loc>https://underlytix.com/underlytix-vs-loan-officer</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
 
   <!-- Financing-Type / Geo Landing Pages -->
-  <url><loc>https://underlytix.com/fix-and-flip-financing-broward.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://underlytix.com/fix-and-flip-financing-miami-dade.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://underlytix.com/fix-and-flip-financing-palm-beach.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://underlytix.com/dscr-rental-loans-broward.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://underlytix.com/dscr-rental-loans-miami-dade.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://underlytix.com/dscr-rental-loans-palm-beach.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://underlytix.com/hard-money-lender-fort-lauderdale.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://underlytix.com/hard-money-lender-miami.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://underlytix.com/hard-money-lender-west-palm-beach.html</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <!-- 2026-09-16: switched from .html to extensionless URLs to match each page's own <link rel="canonical"> tag.
+       Bing's Live URL test confirmed the .html form is refused with "URL is not indexable as the page is an
+       alternate version of the similar page which you have specified as canonical" — the sitemap was pointing
+       search engines at a URL every one of these pages tells them NOT to index. The extensionless form tested
+       "URL can be indexed by Bing" (green) on live re-check. Netlify serves both paths for the same file, so no
+       redirect/file change was needed, only this sitemap correction. -->
+  <url><loc>https://underlytix.com/fix-and-flip-financing-broward</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://underlytix.com/fix-and-flip-financing-miami-dade</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://underlytix.com/fix-and-flip-financing-palm-beach</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://underlytix.com/dscr-rental-loans-broward</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://underlytix.com/dscr-rental-loans-miami-dade</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://underlytix.com/dscr-rental-loans-palm-beach</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://underlytix.com/hard-money-lender-fort-lauderdale</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://underlytix.com/hard-money-lender-miami</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://underlytix.com/hard-money-lender-west-palm-beach</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
 
   <!-- Market Context -->
   <url><loc>https://underlytix.com/dscr-qualification-tightening-2026</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
