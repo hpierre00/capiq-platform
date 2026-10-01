@@ -105,6 +105,8 @@ input,select,textarea{background:var(--bg-2);border:1px solid var(--border-dark)
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal);box-shadow:0 0 0 3px rgba(14,116,144,0.1)}
 input::placeholder,textarea::placeholder{color:var(--text-4)}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 20px;border-radius:6px;font-family:'Inter','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',sans-serif;font-size:13px;font-weight:600;cursor:pointer;border:none;transition:all .15s}
+.lm-cta{display:none!important}
+body.lm-on .lm-cta{display:inline-flex!important}
 .btn-primary{background:var(--teal);color:white;box-shadow:0 1px 2px rgba(14,116,144,0.3)}
 .btn-primary:hover{background:var(--teal-light)}
 .btn-primary:disabled{opacity:.5;cursor:not-allowed}
@@ -312,7 +314,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <div id="prequal-result-banner" style="display:none;flex-shrink:0;padding:14px 20px;background:linear-gradient(135deg,rgba(0,191,165,0.1),rgba(0,191,165,0.05));border-top:1px solid rgba(0,191,165,0.2)"></div>
     <div id="prequal-action-footer" style="display:none;padding:12px 20px;border-top:1px solid var(--border);background:var(--bg-2);flex-shrink:0;display:flex;gap:10px;align-items:center">
       <button onclick="showSaveClientModal()" class="btn btn-ghost" style="font-size:13px;padding:9px 20px">💾 Save Client</button>
-      <button onclick="showLenderMatchModal()" class="btn btn-primary" style="font-size:13px;padding:9px 22px">🔗 Find Matching Lenders</button>
+      <button onclick="showLenderMatchModal()" class="btn btn-primary lm-cta" style="font-size:13px;padding:9px 22px">🔗 Find Matching Lenders</button>
     </div>
     <div style="padding:16px 20px;border-top:1px solid var(--border);flex-shrink:0">
       <div style="display:flex;gap:10px">
@@ -333,6 +335,9 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 <script>
 const REALTOR_AUTH_FN   = 'https://mxyepucitjzleaziizkr.supabase.co/functions/v1/capiq-realtor-auth-v5';
 const REALTOR_PREQUAL_FN = '/.netlify/functions/realtor-prequal';
+// Lender matching is hidden unless the server reports it enabled. Fails closed on any error.
+fetch(REALTOR_PREQUAL_FN, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({action:'match_status'})})
+  .then(r => r.json()).then(d => { if (d && d.enabled === true) document.body.classList.add('lm-on'); }).catch(() => {});
 const ADMIN_INVITE_FN   = '/.netlify/functions/admin-invite';
 const ADMIN_ACTIVATE_FN = '/.netlify/functions/realtor-activate';
 
@@ -1652,7 +1657,7 @@ function showTrialExpiredBanner() {
       <span onclick="document.getElementById('lender-match-modal').classList.remove('show')" style="color:rgba(255,255,255,0.5);cursor:pointer;font-size:20px">×</span>
     </div>
     <div class="modal-body" style="padding:20px">
-      <div style="background:rgba(0,212,188,0.05);border:1px solid rgba(0,212,188,0.15);border-radius:8px;padding:12px;margin-bottom:16px;font-size:12px;color:var(--text-3);line-height:1.6"><strong style="color:var(--teal)">How this works:</strong> Your client's anonymized financial profile will be shared with participating lenders for a preliminary compatibility review. Not a loan application, creates no obligation for any party.</div>
+      <div style="background:rgba(0,212,188,0.05);border:1px solid rgba(0,212,188,0.15);border-radius:8px;padding:12px;margin-bottom:16px;font-size:12px;color:var(--text-3);line-height:1.6"><strong style="color:var(--teal)">How this works:</strong> Your client's financial profile and contact details will be shared with participating lenders for a preliminary compatibility review. Not a loan application, creates no obligation for any party.</div>
       <div id="lm-error" style="display:none;font-size:12px;color:#ef4444;background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.15);border-radius:6px;padding:10px;margin-bottom:12px"></div>
       <div style="margin-bottom:12px"><label style="font-size:11px;color:var(--text-4);display:block;margin-bottom:4px">CLIENT FULL NAME *</label><input class="input" id="lm-name" type="text" placeholder="Jane Smith"></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px">
