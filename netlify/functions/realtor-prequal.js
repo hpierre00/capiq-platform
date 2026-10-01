@@ -23,6 +23,25 @@ export default async (req) => {
     const REALTOR_PRICE_ID = 'price_1TcCwDRAfobZUNrFwqUxc1hM';
     const STRIPE_SECRET = Netlify.env.get("STRIPE_SECRET_KEY") || "";
 
+    // Lender forwarding is off unless platform_config.realtor_lender_match_enabled is exactly "true".
+    // Fails closed: a missing row, a missing service key, or any fetch error all read as disabled.
+    const isLenderMatchEnabled = async () => {
+      if (!SVC_KEY) return false;
+      try {
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/platform_config?key=eq.realtor_lender_match_enabled&select=value`, {
+          headers: { "apikey": SVC_KEY, "Authorization": `Bearer ${SVC_KEY}` },
+        });
+        if (!r.ok) return false;
+        const rows = await r.json();
+        return rows?.[0]?.value === "true";
+      } catch (_) { return false; }
+    };
+
+    // The portal asks this on load to decide whether to show the lender match button.
+    if (action === "match_status") {
+      return new Response(JSON.stringify({ enabled: await isLenderMatchEnabled() }), { status: 200, headers: cors });
+    }
+
     // ── CHAT: conversational prequal intake ──────────────────────────────────
     if (action === "chat") {
       if (!ANTHROPIC_KEY) throw new Error("ANTHROPIC_API_KEY not configured");
@@ -204,11 +223,6 @@ COMBINED STRATEGY PATHS — always model multiple paths when not qualifying:
 Format as: "Path 1: [action] = [outcome]. Path 2: [action] = [outcome]. Path 3: [combined actions] = [outcome]."
 Rank by lowest cost/effort first.
 
-PARTNER LENDER NETWORK — include on every result, qualifying or not:
-"Working with lenders in the Underlytix network can help expedite your client's financing process.
-Our partner lenders are already familiar with profiles like this and can move quickly.
-Your client's anonymized details have been forwarded to our network for preliminary review."
-
 When you have enough information to make a determination, respond with a JSON block at the end of your message in this exact format:
 <PREQUAL_RESULT>
 {
@@ -243,13 +257,11 @@ When you have enough information to make a determination, respond with a JSON bl
   "qualifyingDownPayment": 0,
   "coborrowerIncomeNeeded": 0,
   "creditScoreTarget": 0,
-  "autoSubmitted": true,
   "nextSteps": "What the realtor should do next",
   "disclaimer": "This prequalification is based solely on the information provided and is not a commitment to lend. All loan approvals are subject to full lender underwriting, credit review, income verification, appraisal, and final lender decision."
 }
 </PREQUAL_RESULT>
 
-Set autoSubmitted: true on every result — details are always forwarded to the lender network.
 When result is "borderline" or "unlikely", you MUST include detailed remediation strategies.
 For each barrier to qualification, provide 2-3 specific paths with exact numbers.
 
@@ -497,6 +509,10 @@ If you don't have enough information yet, set "ready": false and omit the other 
 
     // ── CAPITAL MATCH REQUEST ─────────────────────────────────────────────────
     if (action === "request_capital_match") {
+      // Runs before auth and before any write or email, so a disabled flag has no side effects.
+      if (!(await isLenderMatchEnabled())) {
+        return new Response(JSON.stringify({ error: "Lender matching is temporarily unavailable.", disabled: true }), { status: 503, headers: cors });
+      }
       if (!token) return new Response(JSON.stringify({ error: "Token required" }), { status: 401, headers: cors });
       const authRes = await fetch(REALTOR_AUTH_FN, {
         method: "POST", headers: { "Content-Type": "application/json" },
