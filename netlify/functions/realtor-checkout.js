@@ -81,7 +81,7 @@ exports.handler = async (event) => {
           recurring: { interval: 'month' },
           product_data: {
             name: 'Underlytix Realtor Pro',
-            description: 'Unlimited client pre-qualifications · Capital Readiness Scoring · 24/7 access',
+            description: 'Unlimited client screens · Capital Readiness Scoring · 24/7 access',
           },
         },
       }],

@@ -13,15 +13,15 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <!-- End Google Tag Manager -->
 
 <!-- PRIMARY SEO -->
-<title>AI Client Prequalification Tool for Realtors | Underlytix</title>
-<meta name="description" content="Prequalify residential, commercial, and investor clients in minutes, Friday at midnight, Saturday at 8pm, any time. Full PITIA, DTI analysis, conventional, FHA, VA, DSCR and more." />
+<title>Capital Readiness Screen for Realtors | Underlytix</title>
+<meta name="description" content="Know if your client's financing fits before you schedule the showing. Describe your client in plain English and get a Capital Readiness Screen with PITIA and DTI across conventional, FHA, VA, DSCR and more." />
 <meta name="robots" content="index, follow" />
 <link rel="canonical" href="https://underlytix.com/realtor" />
 <meta name="author" content="Underlytix LLC" />
 
 <!-- OPEN GRAPH -->
-<meta property="og:title" content="AI Client Prequalification for Realtors | Underlytix" />
-<meta property="og:description" content="Run a full client prequalification in 60 seconds. Capital Readiness Score, PITIA calculation, and lender matching, free 14-day trial." />
+<meta property="og:title" content="Capital Readiness Screen for Realtors | Underlytix" />
+<meta property="og:description" content="Describe your client in plain English. Get a Capital Readiness Screen with PITIA and DTI in minutes. Free 14-day trial." />
 <meta property="og:image" content="https://underlytix.com/og-image-realtor.png" />
 <meta property="og:url" content="https://underlytix.com/realtor" />
 <meta property="og:type" content="website" />
@@ -175,14 +175,14 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <div id="rs-login-view" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:56px 24px 40px">
     <div style="max-width:640px;text-align:center">
       <h1 style="font-family:'Inter','Segoe UI Emoji','Segoe UI Symbol','Noto Color Emoji',sans-serif;font-size:clamp(28px,4vw,40px);font-weight:800;line-height:1.15;letter-spacing:-.5px;color:var(--text);margin-bottom:16px">
-        Prequalify any client in <span style="color:var(--teal)">60 seconds</span>
+        Know if your client's financing fits <span style="color:var(--teal)">before you schedule the showing</span>
       </h1>
       <p style="font-size:16px;color:var(--text-3);line-height:1.6;max-width:520px;margin:0 auto 24px">
-        Full PITIA and DTI analysis across conventional, FHA, VA, DSCR, and more, so you know a client qualifies before you ever schedule a showing.
+        Describe your client in plain English. Get a Capital Readiness Screen with PITIA and DTI across conventional, FHA, VA, DSCR, and more.<br><span style="display:block;margin-top:10px;font-size:12px;color:var(--text-4)">Screening estimate only, not a credit decision or loan commitment. Underlytix is not a lender, broker, or mortgage originator.</span>
       </p>
       <div style="display:flex;gap:24px;justify-content:center;flex-wrap:wrap;margin-bottom:32px">
         <div style="font-size:13px;color:var(--text-2)"><span style="color:var(--teal);font-weight:700">✓</span> Capital Readiness Score</div>
-        <div style="font-size:13px;color:var(--text-2)"><span style="color:var(--teal);font-weight:700">✓</span> Automatic lender matching</div>
+        <div style="font-size:13px;color:var(--text-2)"><span style="color:var(--teal);font-weight:700">✓</span> PITIA and DTI breakdown</div>
         <div style="font-size:13px;color:var(--text-2)"><span style="color:var(--teal);font-weight:700">✓</span> 14-day free trial, $49/mo after</div>
       </div>
       <button class="btn btn-primary" onclick="showSignupView()" style="font-size:15px;padding:12px 28px">Start 14-day free trial →</button>
@@ -199,7 +199,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         <div style="background:var(--navy);padding:32px;border-radius:10px 10px 0 0;text-align:center">
           <div style="font-size:32px;margin-bottom:10px">🏠</div>
           <div style="font-size:20px;font-weight:700;color:white;margin-bottom:6px">Realtor Portal</div>
-          <div style="font-size:12px;color:rgba(255,255,255,0.4)">Client prequalification, available anytime</div>
+          <div style="font-size:12px;color:rgba(255,255,255,0.4)">Capital Readiness Screen, available anytime</div>
         </div>
         <div class="card-body">
           <div id="rs-login-error" style="display:none;font-size:12px;color:var(--red);background:var(--red-dim);border:1px solid rgba(220,38,38,0.15);border-radius:6px;padding:10px;margin-bottom:16px"></div>
@@ -262,27 +262,27 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     <!-- Admin panel injected here by showAdminPanel() if user is admin -->
     <div style="max-width:900px;width:100%;margin:0 auto;padding:32px 24px">
       <div class="stats-grid">
-        <div class="stat-card"><div class="stat-top"><span class="stat-label">Prequals This Month</span></div><div class="stat-value teal" id="rs-prequal-count">0</div><div class="stat-sub">Client assessments</div></div>
+        <div class="stat-card"><div class="stat-top"><span class="stat-label">Screens This Month</span></div><div class="stat-value teal" id="rs-prequal-count">0</div><div class="stat-sub">Client assessments</div></div>
         <div class="stat-card"><div class="stat-top"><span class="stat-label">Plan</span></div><div class="stat-value teal" id="rs-plan-badge">Trial</div><div class="stat-sub" id="rs-plan-sub">14-day free trial</div></div>
-        <div class="stat-card" style="cursor:pointer" onclick="startNewPrequal()"><div class="stat-top"><span class="stat-label">AI Prequals</span></div><div class="stat-value teal" id="rs-limit-display">...</div><div class="stat-sub" style="color:var(--teal)">Click to run a prequal →</div></div>
+        <div class="stat-card" style="cursor:pointer" onclick="startNewPrequal()"><div class="stat-top"><span class="stat-label">Capital Readiness Screens</span></div><div class="stat-value teal" id="rs-limit-display">...</div><div class="stat-sub" style="color:var(--teal)">Click to run a screen →</div></div>
       </div>
       <div class="card">
         <div class="card-body">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
             <div>
-              <div style="font-size:15px;font-weight:700;color:var(--text)">Client Prequalifications</div>
+              <div style="font-size:15px;font-weight:700;color:var(--text)">Capital Readiness Screens</div>
               <div style="font-size:12px;color:var(--text-4);margin-top:2px">Describe your client, the AI handles the rest</div>
             </div>
             <button class="btn btn-primary" onclick="startNewPrequal()" style="gap:6px">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              New Prequal
+              New Screen
             </button>
           </div>
           <div style="display:flex;gap:10px;align-items:center;margin-bottom:14px">
             <input id="rs-search-input" type="text" placeholder="Search clients..." oninput="filterHistory()" style="flex:1;background:var(--bg-3);border:1px solid var(--border);border-radius:7px;padding:8px 12px;color:var(--text);font-size:13px;font-family:inherit">
             <button onclick="exportHistoryCSV()" class="btn btn-ghost" style="font-size:12px;padding:7px 14px;white-space:nowrap">⬇ Export CSV</button>
           </div>
-          <div id="rs-history-list"><div style="text-align:center;padding:40px;color:var(--text-4);font-size:13px">No prequalifications yet. Click "New Prequal" to get started.</div></div>
+          <div id="rs-history-list"><div style="text-align:center;padding:40px;color:var(--text-4);font-size:13px">No screens yet. Click "New Screen" to get started.</div></div>
         </div>
       </div>
     </div>
@@ -294,7 +294,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   <div class="modal-box" style="max-width:680px;max-height:85vh;display:flex;flex-direction:column">
     <div style="background:var(--navy);padding:18px 24px;border-radius:14px 14px 0 0;display:flex;justify-content:space-between;align-items:center;flex-shrink:0">
       <div>
-        <div style="color:white;font-size:15px;font-weight:700">Client Prequalification</div>
+        <div style="color:white;font-size:15px;font-weight:700">Capital Readiness Screen</div>
         <div style="font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px">Describe your client's situation naturally</div>
       </div>
       <div style="display:flex;align-items:center;gap:10px">
@@ -620,7 +620,7 @@ function renderPrequalBanner(p) {
   const banner = document.getElementById('prequal-result-banner');
   if (!banner) return;
   banner.style.display = 'block';
-  banner.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="font-size:13px;font-weight:700;color:${resultColors[p.result]||'var(--teal)'};margin-bottom:6px">${resultLabels[p.result]||p.result}</div><div style="font-size:12px;color:var(--text-3);margin-bottom:4px">${p.loanType?.toUpperCase()||', '} · Max Loan $${p.maxLoanAmount?.toLocaleString()||', '} · Back-end DTI ${p.backEndDTI||', '}% · Front-end DTI ${p.frontEndDTI||', '}%</div>${p.monthlyPITIA?`<div style="font-size:11px;color:var(--text-4);margin-bottom:4px">P&amp;I $${p.monthlyPI?.toLocaleString()||', '} + Taxes $${p.monthlyTaxes?.toLocaleString()||', '} + Insurance $${p.monthlyInsurance?.toLocaleString()||', '} + HOA $${p.monthlyHOA?.toLocaleString()||'0'} = <strong style="color:var(--text-2)">PITIA $${p.monthlyPITIA?.toLocaleString()}/mo</strong></div>`:''} ${p.riskFlags?.length?`<div style="font-size:11px;color:var(--red);margin-top:2px">⚠ ${p.riskFlags.join(' · ')}</div>`:''}<div style="font-size:10px;color:var(--text-4);margin-top:6px;font-style:italic">Not a commitment to lend. Subject to full lender underwriting and approval.</div></div><div style="font-size:10px;color:var(--text-4);text-align:right;line-height:1.4">Based on<br>provided data</div></div>`;
+  banner.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:flex-start"><div><div style="font-size:13px;font-weight:700;color:${resultColors[p.result]||'var(--teal)'};margin-bottom:6px">${resultLabels[p.result]||p.result}</div><div style="font-size:12px;color:var(--text-3);margin-bottom:4px">${p.loanType?.toUpperCase()||', '} · Max Loan $${p.maxLoanAmount?.toLocaleString()||', '} · Back-end DTI ${p.backEndDTI||', '}% · Front-end DTI ${p.frontEndDTI||', '}%</div>${p.monthlyPITIA?`<div style="font-size:11px;color:var(--text-4);margin-bottom:4px">P&amp;I $${p.monthlyPI?.toLocaleString()||', '} + Taxes $${p.monthlyTaxes?.toLocaleString()||', '} + Insurance $${p.monthlyInsurance?.toLocaleString()||', '} + HOA $${p.monthlyHOA?.toLocaleString()||'0'} = <strong style="color:var(--text-2)">PITIA $${p.monthlyPITIA?.toLocaleString()}/mo</strong></div>`:''} ${p.riskFlags?.length?`<div style="font-size:11px;color:var(--red);margin-top:2px">⚠ ${p.riskFlags.join(' · ')}</div>`:''}<div style="font-size:10px;color:var(--text-4);margin-top:6px;font-style:italic">Screening estimate only, not a credit decision or loan commitment. Underlytix is not a lender, broker, or mortgage originator. Subject to full lender underwriting and approval.</div></div><div style="font-size:10px;color:var(--text-4);text-align:right;line-height:1.4">Based on<br>provided data</div></div>`;
   const _af = document.getElementById('prequal-action-footer');
   if (_af) _af.style.display = 'flex';
 }
@@ -836,8 +836,8 @@ function realtorCanDelete() {
   return true;                                                          // single-seat = own org admin
 }
 async function realtorDeletePrequal(id) {
-  if (!realtorCanDelete()) { showToast('Only a team admin can delete prequalifications.', 'error'); return; }
-  if (!confirm('Delete this prequalification? This cannot be undone.')) return;
+  if (!realtorCanDelete()) { showToast('Only a team admin can delete screens.', 'error'); return; }
+  if (!confirm('Delete this screen? This cannot be undone.')) return;
   const sess = getRealtorSession();
   try {
     const res = await fetch(REALTOR_PREQUAL_FN, {
@@ -848,7 +848,7 @@ async function realtorDeletePrequal(id) {
     if (data && data.success) {
       _historyData = _historyData.filter(p => String(p.id) !== String(id));
       renderHistory(_historyData);
-      showToast('Prequalification deleted.', 'success');
+      showToast('Screen deleted.', 'success');
     } else {
       showToast((data && data.error) || 'Delete endpoint not enabled yet on the server.', 'error');
     }
@@ -860,7 +860,7 @@ function renderHistory(list) {
   const container = document.getElementById('rs-history-list');
   if (!container) return;
   if (!list.length) {
-    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-4);font-size:13px">No prequalifications yet. Click "New Prequal" to get started.</div>';
+    container.innerHTML = '<div style="text-align:center;padding:40px;color:var(--text-4);font-size:13px">No screens yet. Click "New Screen" to get started.</div>';
     return;
   }
   const canDel = realtorCanDelete();
@@ -877,7 +877,7 @@ function renderHistory(list) {
     <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
       <span class="chip ${resultColors[p.prequal_result] || 'chip-gray'}">${resultLabels[p.prequal_result] || p.prequal_result || ', '}</span>
       <button onclick="viewSavedPrequal('${(p.client_name||'Client').replace(/'/g,"\\'")}','${p.loan_type||''}','${p.state||''}',${p.max_loan_amount||0},'${(p.ai_summary||'').slice(0,200).replace(/'/g,"\\'").replace(/\n/g,' ')}','${p.prequal_result||''}')" style="font-size:11px;padding:4px 10px;border-radius:5px;background:rgba(0,212,188,0.1);border:1px solid rgba(0,212,188,0.25);color:var(--teal);cursor:pointer;white-space:nowrap">View</button>
-      ${canDel ? `<button title="Delete prequalification" onclick="realtorDeletePrequal('${p.id}')" style="font-size:12px;padding:4px 8px;border-radius:5px;background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.2);color:var(--red);cursor:pointer">✕</button>` : ''}
+      ${canDel ? `<button title="Delete screen" onclick="realtorDeletePrequal('${p.id}')" style="font-size:12px;padding:4px 8px;border-radius:5px;background:rgba(220,38,38,0.08);border:1px solid rgba(220,38,38,0.2);color:var(--red);cursor:pointer">✕</button>` : ''}
     </div>
   </div>`).join('');
 }
@@ -918,7 +918,7 @@ function exportHistoryCSV() {
 
 // ── SAVE CLIENT MODAL ────────────────────────────────────────────────────────
 function showSaveClientModal() {
-  if (!currentPrequal) { showToast('Complete a prequalification first.', 'error'); return; }
+  if (!currentPrequal) { showToast('Complete a screen first.', 'error'); return; }
   ['sc-name','sc-email','sc-phone'].forEach(id => { const el = document.getElementById(id); if(el) el.value = ''; });
   const e = document.getElementById('sc-error'); if(e) e.style.display = 'none';
   document.getElementById('save-client-modal').classList.add('show');
@@ -1052,7 +1052,7 @@ async function toggleVoiceInput() {
 
 // ── LENDER MATCH MODAL ───────────────────────────────────────────────────────
 function showLenderMatchModal() {
-  if (!currentPrequal) { showToast('Complete a prequalification first.', 'error'); return; }
+  if (!currentPrequal) { showToast('Complete a screen first.', 'error'); return; }
   const e = document.getElementById('lm-error'); if(e) e.style.display = 'none';
   if (_savedClientInfo) {
     const n = document.getElementById('lm-name'); if(n) n.value = _savedClientInfo.name || '';
@@ -1089,7 +1089,7 @@ async function submitLenderMatch() {
     if (data.success) {
       _savedClientInfo = { name, email, phone };
       document.getElementById('lender-match-modal').classList.remove('show');
-      showToast('Submitted to lenders. They may contact ' + name + ' within 24-48 hours.', 'success');
+      showToast('Request submitted.', 'success');
       document.querySelectorAll('[onclick="showLenderMatchModal()"]').forEach(b => { b.textContent = '✓ Submitted'; b.disabled = true; b.style.opacity = '0.7'; });
       setTimeout(() => { savePrequal(true, _savedClientInfo); closePrequalChat(); }, 1200);
     } else { errEl.textContent = data.error || 'Submission failed.'; errEl.style.display = 'block'; }
@@ -1145,11 +1145,12 @@ function viewSavedPrequal(clientName, loanType, state, maxLoan, summary, result)
   if (messagesEl) {
     messagesEl.innerHTML =
       '<div style="background:var(--bg-3);border-radius:12px;padding:14px 16px;font-size:14px;color:var(--text-2);max-width:90%;line-height:1.6">' +
-        '<strong>' + clientName + '</strong>, saved prequalification' +
+        '<strong>' + clientName + '</strong>, saved screen' +
       '</div>' +
       '<div style="background:rgba(0,191,165,0.08);border:1px solid rgba(0,191,165,0.2);border-radius:12px;padding:14px 16px;font-size:13px;color:var(--text-2);line-height:1.6;margin-top:8px">' +
         '<strong>' + (loanType || ', ') + '</strong> · ' + (state || ', ') + ' · Max Loan: ' + (maxLoan ? '$' + parseInt(maxLoan).toLocaleString() : ', ') + '<br>' +
         '<span style="font-size:12px;color:var(--text-3);margin-top:6px;display:block">' + (summary || 'No summary available.') + '</span>' +
+        '<span style="font-size:10px;color:var(--text-4);margin-top:8px;display:block;font-style:italic">Screening estimate only, not a credit decision or loan commitment. Underlytix is not a lender, broker, or mortgage originator.</span>' +
       '</div>';
   }
 
@@ -1168,7 +1169,7 @@ function viewSavedPrequal(clientName, loanType, state, maxLoan, summary, result)
 
 if (window.location.search.includes('realtor_upgraded=true')) {
   window.history.replaceState({}, '', window.location.pathname);
-  setTimeout(() => showToast('Realtor Pro activated! Unlimited prequalifications unlocked.', 'success'), 800);
+  setTimeout(() => showToast('Realtor Pro activated! Unlimited screens unlocked.', 'success'), 800);
 }
 
 // ── Invite-token handler: show "Set your password" modal ─────────────────────
@@ -1612,7 +1613,7 @@ function showTrialExpiredBanner() {
   const banner = document.createElement('div');
   banner.id = 'trial-expired-banner';
   banner.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:9999;background:#e53e3e;color:#fff;text-align:center;padding:12px 16px;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:12px';
-  banner.innerHTML = '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center"><span style="font-size:14px">⚡ Your 14-day free trial has ended, upgrade to keep running prequalifications.</span><button onclick="realtorCheckout()" style="background:white;color:#c53030;border:none;padding:7px 18px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">Upgrade to Pro, $49/mo →</button></div>';
+  banner.innerHTML = '<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center"><span style="font-size:14px">⚡ Your 14-day free trial has ended, upgrade to keep running screens.</span><button onclick="realtorCheckout()" style="background:white;color:#c53030;border:none;padding:7px 18px;border-radius:6px;font-size:13px;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap">Upgrade to Pro, $49/mo →</button></div>';
   document.body.prepend(banner);
 }
 </script>
@@ -1671,7 +1672,7 @@ function showTrialExpiredBanner() {
         </label>
       </div>
       <button class="btn btn-primary" id="lm-submit-btn" onclick="submitLenderMatch()" style="width:100%;justify-content:center">Find Matching Lenders</button>
-      <p style="font-size:10px;color:var(--text-4);margin-top:10px;text-align:center;line-height:1.5">Lenders will review and may contact your client within 24-48 hours. Preliminary review only.</p>
+      <p style="font-size:10px;color:var(--text-4);margin-top:10px;text-align:center;line-height:1.5">Preliminary review only.</p>
     </div>
   </div>
 </div>
@@ -1735,7 +1736,7 @@ function showTrialExpiredBanner() {
         You're in, <span id="welcome-name">there</span>.
       </div>
       <div style="font-size:14px;color:rgba(255,255,255,0.55);line-height:1.6">
-        Your Realtor Portal is ready. Run your first client prequalification in 60 seconds.
+        Your Realtor Portal is ready. Run your first Capital Readiness Screen.
       </div>
     </div>
     <div style="padding:24px 28px">
@@ -1744,15 +1745,15 @@ function showTrialExpiredBanner() {
         <div style="display:flex;flex-direction:column;gap:10px">
           <div style="display:flex;align-items:flex-start;gap:12px">
             <div style="width:24px;height:24px;border-radius:50%;background:rgba(14,116,144,0.15);border:1px solid rgba(14,116,144,0.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--teal);flex-shrink:0">1</div>
-            <div style="font-size:13px;color:var(--text-2);line-height:1.5;padding-top:3px">Click <strong>New Prequal</strong> and describe your client naturally, income, credit range, purchase price, debts</div>
+            <div style="font-size:13px;color:var(--text-2);line-height:1.5;padding-top:3px">Click <strong>New Screen</strong> and describe your client naturally, income, credit range, purchase price, debts</div>
           </div>
           <div style="display:flex;align-items:flex-start;gap:12px">
             <div style="width:24px;height:24px;border-radius:50%;background:rgba(14,116,144,0.15);border:1px solid rgba(14,116,144,0.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--teal);flex-shrink:0">2</div>
-            <div style="font-size:13px;color:var(--text-2);line-height:1.5;padding-top:3px">Get a <strong>Capital Readiness Score</strong> with full PITIA breakdown and loan type recommendation</div>
+            <div style="font-size:13px;color:var(--text-2);line-height:1.5;padding-top:3px">Get a <strong>Capital Readiness Score</strong> with a full PITIA breakdown and the loan types that fit</div>
           </div>
           <div style="display:flex;align-items:flex-start;gap:12px">
             <div style="width:24px;height:24px;border-radius:50%;background:rgba(14,116,144,0.15);border:1px solid rgba(14,116,144,0.3);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--teal);flex-shrink:0">3</div>
-            <div style="font-size:13px;color:var(--text-2);line-height:1.5;padding-top:3px">If they qualify, <strong>Find Matching Lenders</strong> to connect your client directly to our network</div>
+            <div style="font-size:13px;color:var(--text-2);line-height:1.5;padding-top:3px">Review the risk flags and improvement paths, then <strong>Save Client</strong> to keep the screen in your history</div>
           </div>
         </div>
       </div>
@@ -1761,7 +1762,7 @@ function showTrialExpiredBanner() {
       </div>
       <button onclick="document.getElementById('realtor-welcome-modal').classList.remove('show'); startNewPrequal();"
         style="width:100%;padding:14px;background:var(--teal);color:white;border:none;border-radius:9px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:10px">
-        Run My First Prequal →
+        Run My First Screen →
       </button>
       <button onclick="document.getElementById('realtor-welcome-modal').classList.remove('show')"
         style="width:100%;padding:10px;background:transparent;border:none;color:var(--text-4);font-size:13px;cursor:pointer;font-family:inherit">
@@ -1783,8 +1784,8 @@ function showTrialExpiredBanner() {
         <label style="display:flex;align-items:flex-start;gap:12px;cursor:pointer">
           <input type="checkbox" id="vp-autosave" style="accent-color:var(--teal);margin-top:3px;flex-shrink:0">
           <div>
-            <div style="font-size:14px;color:#0f172a;font-weight:600">Auto-save prequals to pipeline</div>
-            <div style="font-size:12px;color:#475569;margin-top:3px;line-height:1.5">Every completed prequal is automatically saved to your client pipeline. You can still delete them.</div>
+            <div style="font-size:14px;color:#0f172a;font-weight:600">Auto-save screens to pipeline</div>
+            <div style="font-size:12px;color:#475569;margin-top:3px;line-height:1.5">Every completed screen is automatically saved to your client pipeline. You can still delete them.</div>
           </div>
         </label>
       </div>
