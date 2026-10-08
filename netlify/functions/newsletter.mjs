@@ -78,10 +78,13 @@ export default async (req) => {
       console.error("[newsletter] create contact failed:", c.status, await c.text().catch(() => ""));
       return back("error=1");
     }
+    // Prefer the contact id; fall back to the raw email ('@' is valid in a path, '%40' is not matched).
+    let ref = email.replace(/[^A-Za-z0-9@._+-]/g, encodeURIComponent);
+    if (c.ok) { try { ref = (await c.json()).id || ref; } catch {} }
     await sleep(600);
-    const s = await api(`/contacts/${encodeURIComponent(email)}/segments/${CFG.segmentId}`, "POST");
+    const s = await api(`/contacts/${ref}/segments/${CFG.segmentId}`, "POST");
     await sleep(600);
-    const t = await api(`/contacts/${encodeURIComponent(email)}/topics`, "PATCH", {
+    const t = await api(`/contacts/${ref}/topics`, "PATCH", {
       topics: [{ id: CFG.topicId, subscription: "opt_in" }],
     });
     if (!s.ok || !t.ok) {
