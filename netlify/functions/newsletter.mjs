@@ -18,12 +18,21 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const sign = (email) => createHmac("sha256", process.env.SIGNUP_SECRET || "").update(email).digest("hex");
 const back = (q) => Response.redirect(`${PAGE}?${q}`, 303);
-const api = (path, method, body) =>
-  fetch(`https://api.resend.com${path}`, {
-    method,
-    headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
-    body: body ? JSON.stringify(body) : undefined,
-  });
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+// Resend allows ~2 requests/second; retry on 429 so back-to-back calls don't fail.
+const api = async (path, method, body) => {
+  let res;
+  for (let i = 0; i < 4; i++) {
+    res = await fetch(`https://api.resend.com${path}`, {
+      method,
+      headers: { Authorization: `Bearer ${process.env.RESEND_API_KEY}`, "Content-Type": "application/json" },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    if (res.status !== 429) return res;
+    await sleep(700 * (i + 1));
+  }
+  return res;
+};
 
 export default async (req) => {
   if (!process.env.SIGNUP_SECRET || !process.env.RESEND_API_KEY) {
@@ -69,12 +78,14 @@ export default async (req) => {
       console.error("[newsletter] create contact failed:", c.status, await c.text().catch(() => ""));
       return back("error=1");
     }
+    await sleep(600);
     const s = await api(`/contacts/${encodeURIComponent(email)}/segments/${CFG.segmentId}`, "POST");
+    await sleep(600);
     const t = await api(`/contacts/${encodeURIComponent(email)}/topics`, "PATCH", {
       topics: [{ id: CFG.topicId, subscription: "opt_in" }],
     });
     if (!s.ok || !t.ok) {
-      console.error("[newsletter] segment/topic failed:", s.status, t.status);
+      console.error("[newsletter] segment/topic failed:", s.status, t.status, await t.text().catch(() => ""));
       return back("error=1");
     }
     return back("confirmed=1");
