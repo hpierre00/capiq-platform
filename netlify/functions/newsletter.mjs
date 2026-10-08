@@ -72,23 +72,17 @@ export default async (req) => {
     if (!EMAIL_RE.test(email) || sig.length !== good.length || !timingSafeEqual(Buffer.from(sig), Buffer.from(good))) {
       return back("error=1");
     }
-    // Create (or reuse) the contact, then attach segment and topic.
-    const c = await api("/contacts", "POST", { email, first_name: first, unsubscribed: false });
-    if (!c.ok && c.status !== 409) {
-      console.error("[newsletter] create contact failed:", c.status, await c.text().catch(() => ""));
-      return back("error=1");
-    }
-    // Prefer the contact id; fall back to the raw email ('@' is valid in a path, '%40' is not matched).
-    let ref = email.replace(/[^A-Za-z0-9@._+-]/g, encodeURIComponent);
-    if (c.ok) { try { ref = (await c.json()).id || ref; } catch {} }
-    await sleep(600);
-    const s = await api(`/contacts/${ref}/segments/${CFG.segmentId}`, "POST");
-    await sleep(600);
-    const t = await api(`/contacts/${ref}/topics`, "PATCH", {
+    // One request: create (or update) the contact and set segment + topic together.
+    // Avoids extra calls that can be rate-limited or silently dropped.
+    const c = await api("/contacts", "POST", {
+      email,
+      first_name: first,
+      unsubscribed: false,
+      segments: [{ id: CFG.segmentId }],
       topics: [{ id: CFG.topicId, subscription: "opt_in" }],
     });
-    if (!s.ok || !t.ok) {
-      console.error("[newsletter] segment/topic failed:", s.status, t.status, await t.text().catch(() => ""));
+    if (!c.ok && c.status !== 409) {
+      console.error("[newsletter] create contact failed:", c.status, await c.text().catch(() => ""));
       return back("error=1");
     }
     return back("confirmed=1");
