@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The Fundability Brief | Underlytix Newsletter</title>
+<meta name="description" content="Weekly Underlytix email on how real estate lenders underwrite deals: DSCR, leverage and financing fit.">
+<link rel="canonical" href="https://underlytix.com/subscribe.html">
+<style>
+  :root{--bg:#ffffff;--fg:#0f2240;--muted:#4b5b73;--accent:#1d4ed8;--card:#f1f5f9}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--fg);line-height:1.55}
+  main{max-width:520px;margin:0 auto;padding:64px 20px}
+  h1{font-size:2rem;line-height:1.15;margin:0 0 8px}
+  p.lead{color:var(--muted);margin:0 0 28px;font-size:1.05rem}
+  form{background:var(--card);padding:24px;border-radius:12px;display:grid;gap:14px}
+  label{display:grid;gap:6px;font-size:.9rem}
+  input[type=text],input[type=email]{padding:12px;border-radius:8px;border:1px solid #8884;font-size:1rem;background:#fff;color:#111}
+  button{padding:13px;border:0;border-radius:8px;background:var(--accent);color:#fff;font-size:1rem;font-weight:600;cursor:pointer}
+  .note{font-size:.8rem;color:var(--muted)}
+  .msg{padding:14px;border-radius:8px;margin-bottom:16px;background:var(--card)}
+  .hp{position:absolute;left:-9999px}
+  a{color:var(--accent)}
+</style>
+</head>
+<body>
+<main>
+  <h1>The Fundability Brief</h1>
+  <p class="lead">A weekly email on how lenders decide, so your deals get structured to fund before you go under contract.</p>
+  <div id="msg"></div>
+  <form method="POST" action="/.netlify/functions/newsletter" id="f">
+    <label>First name <input type="text" name="first_name" autocomplete="given-name"></label>
+    <label>Email <input type="email" name="email" required autocomplete="email"></label>
+    <input class="hp" type="text" name="company" tabindex="-1" autocomplete="off" aria-hidden="true">
+    <button type="submit">Subscribe, free every week</button>
+    <p class="note">We'll email you a link to confirm. One email a week. Unsubscribe any time. Educational only; not financial or lending advice.</p>
+  </form>
+</main>
+<script>
+  var p = new URLSearchParams(location.search), m = document.getElementById("msg"), f = document.getElementById("f");
+  function show(t){ m.innerHTML = '<div class="msg"></div>'; m.firstChild.textContent = t; }
+  if (p.get("sent")) { show("Check your inbox for a confirmation link."); f.style.display = "none"; }
+  else if (p.get("confirmed")) { show("You're in. Your first issue arrives soon."); f.style.display = "none"; }
+  else if (p.get("error")) show("Something went wrong. Please try again, or email support.");
+</script>
+</body>
+</html>
