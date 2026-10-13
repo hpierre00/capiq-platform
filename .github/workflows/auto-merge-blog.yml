@@ -1,0 +1,29 @@
+name: Auto-merge blog posts
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    branches: [main]
+permissions:
+  contents: write
+  pull-requests: write
+jobs:
+  merge:
+    if: startsWith(github.head_ref, 'blog/') && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: Verify PR only touches blog/ files
+        id: scope
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          files=$(gh api "repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/files" --paginate --jq '.[].filename')
+          if echo "$files" | grep -v '^blog/' | grep -q .; then
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Squash merge
+        if: steps.scope.outputs.ok == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh pr merge ${{ github.event.pull_request.number }} --repo ${{ github.repository }} --squash --delete-branch
