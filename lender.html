@@ -493,10 +493,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
       <!-- Stats -->
       <div class="stats-grid">
-        <div class="stat-card"><div class="stat-top"><span class="stat-label">Matched Deals</span><div class="stat-icon teal"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div></div><div class="stat-value teal" id="lp-stat-total">, </div><div class="stat-sub">In pipeline</div></div>
-        <div class="stat-card"><div class="stat-top"><span class="stat-label">Interested</span><div class="stat-icon green"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div></div><div class="stat-value green" id="lp-stat-interested">, </div><div class="stat-sub">Flagged interested</div></div>
-        <div class="stat-card"><div class="stat-top"><span class="stat-label">Avg Score</span><div class="stat-icon teal"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div></div><div class="stat-value teal" id="lp-stat-avg">, </div><div class="stat-sub">Fundability avg</div></div>
-        <div class="stat-card"><div class="stat-top"><span class="stat-label">Term Sheets</span><div class="stat-icon teal"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div></div><div class="stat-value teal" id="lp-stat-term">, </div><div class="stat-sub">Issued</div></div>
+        <div class="stat-card"><div class="stat-top"><span class="stat-label">Matched Deals</span><div class="stat-icon teal"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg></div></div><div class="stat-value teal" id="lp-stat-total">—</div><div class="stat-sub">In pipeline</div></div>
+        <div class="stat-card"><div class="stat-top"><span class="stat-label">Interested</span><div class="stat-icon green"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--green)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg></div></div><div class="stat-value green" id="lp-stat-interested">—</div><div class="stat-sub">Flagged interested</div></div>
+        <div class="stat-card"><div class="stat-top"><span class="stat-label">Avg Score</span><div class="stat-icon teal"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></div></div><div class="stat-value teal" id="lp-stat-avg">—</div><div class="stat-sub">Fundability avg</div></div>
+        <div class="stat-card"><div class="stat-top"><span class="stat-label">Term Sheets</span><div class="stat-icon teal"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--teal)" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div></div><div class="stat-value teal" id="lp-stat-term">—</div><div class="stat-sub">Issued</div></div>
       </div>
 
       <!-- QM Upgrade CTA (shown only when qm_category !== 'both') -->
@@ -959,7 +959,7 @@ function renderLenderStats() {
   const avg = scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : 0;
   document.getElementById('lp-stat-total').textContent = total;
   document.getElementById('lp-stat-interested').textContent = interested;
-  document.getElementById('lp-stat-avg').textContent = avg || ', ';
+  document.getElementById('lp-stat-avg').textContent = avg || '—';
   document.getElementById('lp-stat-term').textContent = termSheet;
 }
 
@@ -999,14 +999,14 @@ function renderLenderDeals() {
               </div>
               <div style="display:grid;grid-template-columns:repeat(4,auto);gap:20px;margin-bottom:12px">
                 <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase">Loan</div><div style="font-size:13px;font-weight:600;color:var(--text)">$${((d.requested_loan_amount||0)/1000).toFixed(0)}K</div></div>
-                <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase">LTV</div><div style="font-size:13px;font-weight:600;color:var(--text)">${d.requested_ltv||', '}%</div></div>
-                <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase">State</div><div style="font-size:13px;font-weight:600;color:var(--text)">${d.state||', '}</div></div>
-                <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase">Asset</div><div style="font-size:13px;font-weight:600;color:var(--text)">${(d.asset_type||', ').replace('_',' ').toUpperCase()}</div></div>
+                <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase">LTV</div><div style="font-size:13px;font-weight:600;color:var(--text)">${d.requested_ltv||'—'}%</div></div>
+                <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase">State</div><div style="font-size:13px;font-weight:600;color:var(--text)">${d.state||'—'}</div></div>
+                <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase">Asset</div><div style="font-size:13px;font-weight:600;color:var(--text)">${(d.asset_type||'—').replace('_',' ').toUpperCase()}</div></div>
               </div>
               <div style="display:flex;align-items:center;gap:12px">
                 <div style="font-size:12px;color:var(--text-3)">Borrower: <span style="color:var(--text);font-weight:500">${borrower.borrower_name||'Anonymous'}</span></div>
-                <div style="font-size:12px;color:var(--text-3)">FICO: <span style="color:var(--text);font-weight:500">${borrower.fico||', '}</span></div>
-                <div style="font-size:12px;color:var(--text-3)">Experience: <span style="color:var(--text);font-weight:500">${borrower.experience_level||', '}</span></div>
+                <div style="font-size:12px;color:var(--text-3)">FICO: <span style="color:var(--text);font-weight:500">${borrower.fico||'—'}</span></div>
+                <div style="font-size:12px;color:var(--text-3)">Experience: <span style="color:var(--text);font-weight:500">${borrower.experience_level||'—'}</span></div>
               </div>
             </div>
             <div style="text-align:center;min-width:100px">
@@ -1076,15 +1076,15 @@ function openDealModal(matchId) {
   document.getElementById('modal-deal-body').innerHTML = `
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px">
       <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">Loan Amount</div><div style="font-size:16px;font-weight:700;color:var(--text)">$${((d.requested_loan_amount||0)).toLocaleString()}</div></div>
-      <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">Capital Readiness Score</div><div style="font-size:16px;font-weight:700;color:var(--teal)">${s.total_fundability_score||', '} / 100</div></div>
-      <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">LTV</div><div style="font-size:14px;font-weight:600;color:var(--text)">${d.requested_ltv||', '}%</div></div>
-      <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">DSCR</div><div style="font-size:14px;font-weight:600;color:var(--text)">${d.dscr||', '}</div></div>
+      <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">Capital Readiness Score</div><div style="font-size:16px;font-weight:700;color:var(--teal)">${s.total_fundability_score||'—'} / 100</div></div>
+      <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">LTV</div><div style="font-size:14px;font-weight:600;color:var(--text)">${d.requested_ltv||'—'}%</div></div>
+      <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">DSCR</div><div style="font-size:14px;font-weight:600;color:var(--text)">${d.dscr||'—'}</div></div>
       <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">ARV</div><div style="font-size:14px;font-weight:600;color:var(--text)">$${((d.arv||0)).toLocaleString()}</div></div>
       <div><div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:3px">Rehab Budget</div><div style="font-size:14px;font-weight:600;color:var(--text)">$${((d.rehab_budget||0)).toLocaleString()}</div></div>
     </div>
     <div style="margin-bottom:14px;padding:12px;background:var(--bg-3);border-radius:6px">
       <div style="font-size:10px;color:var(--text-4);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:6px">Borrower Profile</div>
-      <div style="font-size:13px;color:var(--text-2)"><strong>${borrower.borrower_name||'Anonymous'}</strong> · FICO ${borrower.fico||', '} · ${borrower.experience_level||', '} experience · ${borrower.experience_count||0} deals completed</div>
+      <div style="font-size:13px;color:var(--text-2)"><strong>${borrower.borrower_name||'Anonymous'}</strong> · FICO ${borrower.fico||'—'} · ${borrower.experience_level||'—'} experience · ${borrower.experience_count||0} deals completed</div>
     </div>
     ${flags.length ? `<div style="margin-bottom:14px"><div style="font-size:10px;color:var(--red);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:6px">Risk Flags</div>${flags.map(f=>`<div style="font-size:12px;color:var(--red);margin-bottom:3px">⚠ ${f.flag?.replace(/_/g,' ')} (${f.severity})</div>`).join('')}</div>` : ''}
     ${summary ? `<div style="margin-bottom:14px"><div style="font-size:10px;color:var(--teal);font-family:'DM Mono',monospace;text-transform:uppercase;margin-bottom:6px">AI Summary</div><div style="font-size:13px;color:var(--text-2);line-height:1.6">${summary}</div></div>` : ''}
@@ -1929,7 +1929,7 @@ function lpaGateRefer() {
       '<div class="lpa-decision-card">' +
         '<div class="lpa-verdict-badge lpa-v-refer">⚑ REFER TO HUMAN</div>' +
         '<div class="lpa-rationale"><h4>Why this was gated</h4><ul>' +
-          '<li>Property classified as <strong>' + (lpaDeal.propertyType || ', ') + '</strong> with a <strong>consumer / owner-occupied</strong> purpose.</li>' +
+          '<li>Property classified as <strong>' + (lpaDeal.propertyType || '—') + '</strong> with a <strong>consumer / owner-occupied</strong> purpose.</li>' +
           '<li>These programs are business-purpose only; consumer-purpose loans trigger TILA / ability-to-repay obligations outside this program.</li>' +
           '<li>A human underwriter must confirm borrower intent and product eligibility before this deal can proceed, the assistant will not auto-decline it.</li>' +
         '</ul></div>' +
@@ -2218,11 +2218,11 @@ async function lpaRenderDecision() {
       var _pdfFSV = Math.round(_pdfFSB * 0.65);
       var pairs = [
         ['Loan Amount',        lpaFormatCurrency(d.loanAmount || metrics.loanAmount || metrics.loan_amount || 0)],
-        ['LTV',                d.ltv ? (d.ltv * 100).toFixed(1) + '%' : (metrics.ltv ? metrics.ltv + '%' : ', ')],
-        ['Loan Type',          rec.loanType || ', '],
-        ['DSCR',               metrics.dscr || (d.dscr ? d.dscr.toFixed(2) + 'x' : ', ')],
+        ['LTV',                d.ltv ? (d.ltv * 100).toFixed(1) + '%' : (metrics.ltv ? metrics.ltv + '%' : '—')],
+        ['Loan Type',          rec.loanType || '—'],
+        ['DSCR',               metrics.dscr || (d.dscr ? d.dscr.toFixed(2) + 'x' : '—')],
         ['ARV',                lpaFormatCurrency(d.arv || d.currentValue || d.purchasePrice || 0)],
-        ['Asset Type',         metrics.assetType || rec.assetType || d.assetType || ', '],
+        ['Asset Type',         metrics.assetType || rec.assetType || d.assetType || '—'],
         ['Risk Score',         _pdfRS + '/100'],
         ['Fire Sale Value',    lpaFormatCurrency(_pdfFSV)],
       ];
@@ -2233,7 +2233,7 @@ async function lpaRenderDecision() {
         doc.setFontSize(8); doc.setFont('helvetica', 'normal'); doc.setTextColor(100,116,139);
         doc.text(pair[0].toUpperCase(), col, ry);
         doc.setFontSize(13); doc.setFont('helvetica', 'bold'); doc.setTextColor(15,23,42);
-        doc.text(String(pair[1] || ', '), col, ry + 14);
+        doc.text(String(pair[1] || '—'), col, ry + 14);
       });
       y += Math.ceil(pairs.length / 2) * 38 + 8;
       doc.setDrawColor(226,232,240); doc.line(M, y, W - M, y); y += 14;
@@ -2258,7 +2258,7 @@ async function lpaRenderDecision() {
         doc.text('ANALYSIS', M, y); y += 13;
         doc.setFont('helvetica', 'normal'); doc.setTextColor(51,65,85);
         rationale.forEach(function(line) {
-          var lines = doc.splitTextToSize(', ' + line, W - M * 2);
+          var lines = doc.splitTextToSize('• ' + line, W - M * 2);
           doc.setFontSize(11); doc.text(lines, M, y);
           y += lines.length * 14 + 4;
         });
@@ -2331,7 +2331,7 @@ async function lpaRenderDecision() {
     var d       = (rec && rec.deal) || {};
     var metrics = (rec && rec.metrics) || {};
     var address = d.address || rec.address || 'Subject Property';
-    var verdict = (rec && rec.verdict) || ', ';
+    var verdict = (rec && rec.verdict) || '—';
     var rationale  = (rec && rec.rationale)  || [];
     var conditions = (rec && rec.conditions) || [];
     var capitalPath = (rec && rec.capitalPath) || [];
@@ -2346,10 +2346,10 @@ async function lpaRenderDecision() {
       '',
       'Property:    ' + address,
       'Verdict:     ' + verdict,
-      'Loan Type:   ' + (rec.loanType || ', '),
+      'Loan Type:   ' + (rec.loanType || '—'),
       'Loan Amount: ' + lpaFormatCurrency(d.loanAmount || metrics.loanAmount || metrics.loan_amount || 0),
-      'LTV:         ' + (d.ltv ? (d.ltv * 100).toFixed(1) + '%' : (metrics.ltv ? metrics.ltv + '%' : ', ')),
-      'DSCR:        ' + (metrics.dscr || (d.dscr ? d.dscr.toFixed(2) + 'x' : ', ')),
+      'LTV:         ' + (d.ltv ? (d.ltv * 100).toFixed(1) + '%' : (metrics.ltv ? metrics.ltv + '%' : '—')),
+      'DSCR:        ' + (metrics.dscr || (d.dscr ? d.dscr.toFixed(2) + 'x' : '—')),
       'ARV:         ' + lpaFormatCurrency(d.arv || d.currentValue || d.purchasePrice || 0),
       'Risk Score:  ' + _emailRS + '/100',
       'Fire Sale:   ' + lpaFormatCurrency(_emailFSV),
@@ -2611,14 +2611,14 @@ async function lpaRenderDecision() {
     var arv         = parseFloat(d.arv || 0);
     var fico        = parseInt((br.fico || ''), 10) || 0;
     var borrower    = br.borrower_name || 'Borrower';
-    var score       = s.total_fundability_score || ', ';
+    var score       = s.total_fundability_score || '—';
 
     var pricing = lpaPricingEngine(dealType, ltv, fico);
     var today   = new Date();
     var expiry  = new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000);
     var fmt     = function(dt) { return dt.toLocaleDateString('en-US', { month:'long', day:'numeric', year:'numeric' }); };
     var fmtCur  = function(n) { return '$' + Math.round(n).toLocaleString(); };
-    var fmtPct  = function(n) { return n > 0 ? n.toFixed(2) + '%' : ', '; };
+    var fmtPct  = function(n) { return n > 0 ? n.toFixed(2) + '%' : '—'; };
     var termLbl = pricing.term === 360 ? '30 Years' : pricing.term === 300 ? '25 Years' : pricing.term + ' Months';
     var amortLbl = pricing.amort > 0 ? (pricing.amort + ' months') : 'Interest Only';
 
@@ -2710,15 +2710,15 @@ async function lpaRenderDecision() {
 
     // BORROWER
     sectionHead('Borrower');
-    row('Borrower Name', borrower, 'FICO Score', fico > 0 ? String(fico) : ', ');
-    row('Experience Level', br.experience_level || ', ', 'Completed Deals', String(br.experience_count || 0));
+    row('Borrower Name', borrower, 'FICO Score', fico > 0 ? String(fico) : '—');
+    row('Experience Level', br.experience_level || '—', 'Completed Deals', String(br.experience_count || 0));
 
     // PROPOSED LOAN TERMS
     sectionHead('Proposed Loan Terms');
     row('Loan Amount', fmtCur(loanAmt), 'Loan Type', dealType);
     row('Interest Rate', fmtPct(pricing.rate) + ' (variable per credit)', 'Origination Points', pricing.points.toFixed(2) + ' pts');
     row('Loan Term', termLbl, 'Amortization', amortLbl);
-    if (ltv > 0) row('LTV', fmtPct(ltv), dscr > 0 ? 'DSCR' : 'ARV', dscr > 0 ? dscr.toFixed(2) + 'x' : (arv > 0 ? fmtCur(arv) : ', '));
+    if (ltv > 0) row('LTV', fmtPct(ltv), dscr > 0 ? 'DSCR' : 'ARV', dscr > 0 ? dscr.toFixed(2) + 'x' : (arv > 0 ? fmtCur(arv) : '—'));
 
     // CONDITIONS PRECEDENT
     sectionHead('Conditions Precedent');
@@ -2804,7 +2804,7 @@ function lpaCapitalPathOptions(d, maxLTV) {
   var targetLoan = Math.round(purPrice * maxLTV);
   var addlDown   = Math.round(loanAmt - targetLoan);
   var newDown    = Math.round(downPmt + addlDown);
-  var newDownPct = purPrice > 0 ? (newDown / purPrice * 100).toFixed(0) : ', ';
+  var newDownPct = purPrice > 0 ? (newDown / purPrice * 100).toFixed(0) : '—';
 
   // Option A: Increase Down Payment
   if (addlDown > 0) {
@@ -2821,7 +2821,7 @@ function lpaCapitalPathOptions(d, maxLTV) {
 
   // Option B: Obtain a Subordinated Second Lien
   var secondAmt  = Math.round(loanAmt - targetLoan);
-  var secondPct  = purPrice > 0 ? (secondAmt / purPrice * 100).toFixed(1) : ', ';
+  var secondPct  = purPrice > 0 ? (secondAmt / purPrice * 100).toFixed(1) : '—';
   var cltvPct    = (ltv * 100).toFixed(1);
   if (secondAmt > 0) {
     paths.push({ rank: 2, label: 'Obtain a Subordinated Second Lien',
@@ -3810,7 +3810,7 @@ function lpaDownloadPDF() {
     doc.setFontSize(10); doc.setFont('helvetica','bold'); doc.setTextColor(90,90,90);
     doc.text(lbl, M+8, y);
     doc.setFont('helvetica','normal'); doc.setTextColor(20,20,20);
-    doc.text(String(val || ', '), M+190, y);
+    doc.text(String(val || '—'), M+190, y);
     y += 15;
   }
 
@@ -4263,7 +4263,7 @@ function lpaLoadRec(id) {
   lpaState = LPA_ST.DECISION;
   lpaChat().innerHTML = '';
   setTimeout(function() {
-    lpaAddAI('Loaded: <strong>' + (rec.address || ', ') + '</strong>'
+    lpaAddAI('Loaded: <strong>' + (rec.address || '—') + '</strong>'
       + (rec.borrower ? ' &middot; ' + rec.borrower : '')
       + (rec.date    ? ' &middot; <em>' + rec.date + '</em>' : ''));
     lpaDisplayDecision(rec);
@@ -4755,7 +4755,7 @@ function lpaToNum(s) {
   return parseFloat(c) || 0;
 }
 function lpaFmt(n) {
-  if (n == null || isNaN(n)) return ', ';
+  if (n == null || isNaN(n)) return '—';
   return '$' + Math.round(n).toLocaleString('en-US');
 }
 function lpaCreditNum(s) {
