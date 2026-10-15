@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400" font-family="Segoe UI,Roboto,Arial,sans-serif" fill="#0f172a"><rect width="800" height="400" fill="#f8fafc"/>
+<text x="20" y="28" font-size="14" font-weight="700">Year-over-year rent change, September 2026</text>
+<line x1="20" y1="250" x2="400" y2="250" stroke="#64748b"/>
+<rect x="45" y="250" width="60" height="20.0" fill="#0f2240"/>
+<text x="75" y="284.0" font-size="13" font-weight="700" text-anchor="middle">-0.4%</text>
+<text x="75" y="300" font-size="11" text-anchor="middle">Apartment List</text>
+<rect x="135" y="245.0" width="60" height="5.0" fill="#0f2240"/>
+<text x="165" y="239.0" font-size="13" font-weight="700" text-anchor="middle">+0.1%</text>
+<text x="165" y="300" font-size="11" text-anchor="middle">Zumper 1BR</text>
+<rect x="225" y="225.0" width="60" height="25.0" fill="#0f2240"/>
+<text x="255" y="219.0" font-size="13" font-weight="700" text-anchor="middle">+0.5%</text>
+<text x="255" y="300" font-size="11" text-anchor="middle">Zumper 2BR</text>
+<rect x="315" y="115.0" width="60" height="135.0" fill="#0e7490"/>
+<text x="345" y="109.0" font-size="13" font-weight="700" text-anchor="middle">+2.7%</text>
+<text x="345" y="300" font-size="11" text-anchor="middle">Zillow ZORI</text>
+<text x="420" y="28" font-size="14" font-weight="700">Zumper 1BR rent change by metro, year over year</text>
+<rect x="640" y="60" width="132.08" height="24" fill="#0e7490"/>
+<text x="777.08" y="77" font-size="12" font-weight="700" text-anchor="start">+25.4%</text>
+<text x="420" y="77" font-size="12">San Francisco</text>
+<rect x="640" y="100" width="85.28" height="24" fill="#0e7490"/>
+<text x="730.28" y="117" font-size="12" font-weight="700" text-anchor="start">+16.4%</text>
+<text x="420" y="117" font-size="12">Virginia Beach</text>
+<rect x="640" y="140" width="59.8" height="24" fill="#0e7490"/>
+<text x="704.8" y="157" font-size="12" font-weight="700" text-anchor="start">+11.5%</text>
+<text x="420" y="157" font-size="12">Boise</text>
+<rect x="583.84" y="180" width="56.16" height="24" fill="#0f2240"/>
+<text x="578.84" y="197" font-size="12" font-weight="700" text-anchor="end">-10.8%</text>
+<text x="420" y="197" font-size="12">Dallas</text>
+<rect x="578.12" y="220" width="61.88" height="24" fill="#0f2240"/>
+<text x="573.12" y="237" font-size="12" font-weight="700" text-anchor="end">-11.9%</text>
+<text x="420" y="237" font-size="12">Nashville</text>
+<rect x="577.08" y="260" width="62.92" height="24" fill="#0f2240"/>
+<text x="572.08" y="277" font-size="12" font-weight="700" text-anchor="end">-12.1%</text>
+<text x="420" y="277" font-size="12">Houston</text>
+<rect x="547.44" y="300" width="92.56" height="24" fill="#0f2240"/>
+<text x="542.44" y="317" font-size="12" font-weight="700" text-anchor="end">-17.8%</text>
+<text x="420" y="317" font-size="12">Austin</text>
+<line x1="640" y1="52" x2="640" y2="345" stroke="#64748b"/>
+<text x="20" y="378" font-size="10">Sources: Apartment List (Sept 29, 2026), Zumper (Sept 28, 2026), Zillow (Oct 6, 2026). Indices use different methods and are not directly comparable.</text></svg>
