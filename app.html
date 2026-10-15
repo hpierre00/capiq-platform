@@ -14,7 +14,10 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <title>Underlytix, Investor Portal</title>
 <link rel="canonical" href="https://underlytix.com/app">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@300;400;500&display=swap"></noscript>
 <style>
 :root {
   --navy: #0f2240;
@@ -1269,11 +1272,10 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
   </main>
 </div>
 
-<script src="/portal-common.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="/portal-common.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
 <script>
-  if (window.pdfjsLib) { pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js'; }
   // Extract text from an uploaded contract PDF, client-side, and drop it into the contract field.
   async function handleContractPdf(input) {
     var file = input && input.files && input.files[0];
@@ -1281,6 +1283,7 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     var status = document.getElementById('contract-status');
     var ta = document.getElementById('f-contract-text');
     if (typeof pdfjsLib === 'undefined') { if (status) status.textContent = 'PDF reader is still loading; try again in a moment, or paste the text.'; return; }
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     if (status) status.textContent = 'Reading ' + file.name + ' ...';
     try {
       var buf = await file.arrayBuffer();
