@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400" font-family="Segoe UI,Roboto,Arial,sans-serif" fill="#0f172a"><rect width="800" height="400" fill="#f8fafc"/>
+<text x="20" y="28" font-size="14" font-weight="700">NAHB builder survey indexes, September 2026</text>
+<line x1="20" y1="300" x2="380" y2="300" stroke="#64748b"/>
+<rect x="35" y="140" width="62" height="160" fill="#0e7490"/>
+<text x="66" y="133" font-size="13" font-weight="700" text-anchor="middle">32</text>
+<text x="66" y="318" font-size="11" text-anchor="middle">Overall HMI</text>
+<rect x="123" y="125" width="62" height="175" fill="#0f2240"/>
+<text x="154" y="118" font-size="13" font-weight="700" text-anchor="middle">35</text>
+<text x="154" y="318" font-size="11" text-anchor="middle">Current sales</text>
+<rect x="211" y="115" width="62" height="185" fill="#0f2240"/>
+<text x="242" y="108" font-size="13" font-weight="700" text-anchor="middle">37</text>
+<text x="242" y="318" font-size="11" text-anchor="middle">Sales outlook</text>
+<rect x="299" y="185" width="62" height="115" fill="#0f2240"/>
+<text x="330" y="178" font-size="13" font-weight="700" text-anchor="middle">23</text>
+<text x="330" y="318" font-size="11" text-anchor="middle">Buyer traffic</text>
+<text x="420" y="28" font-size="14" font-weight="700">Share of builders, August vs September 2026</text>
+<rect x="430" y="181.0" width="62" height="119.0" fill="#0f2240"/>
+<text x="461" y="174.0" font-size="13" font-weight="700" text-anchor="middle">35%</text>
+<text x="461" y="316" font-size="11" text-anchor="middle">Aug</text>
+<rect x="505" y="170.8" width="62" height="129.2" fill="#0e7490"/>
+<text x="536" y="163.8" font-size="13" font-weight="700" text-anchor="middle">38%</text>
+<text x="536" y="316" font-size="11" text-anchor="middle">Sep</text>
+<text x="498" y="336" font-size="12" font-weight="700" text-anchor="middle">Cutting prices</text>
+<rect x="620" y="85.8" width="62" height="214.2" fill="#0f2240"/>
+<text x="651" y="78.8" font-size="13" font-weight="700" text-anchor="middle">63%</text>
+<text x="651" y="316" font-size="11" text-anchor="middle">Aug</text>
+<rect x="695" y="75.6" width="62" height="224.4" fill="#0e7490"/>
+<text x="726" y="68.6" font-size="13" font-weight="700" text-anchor="middle">66%</text>
+<text x="726" y="316" font-size="11" text-anchor="middle">Sep</text>
+<text x="688" y="336" font-size="12" font-weight="700" text-anchor="middle">Using incentives</text>
+<line x1="410" y1="300" x2="780" y2="300" stroke="#64748b"/>
+<text x="20" y="384" font-size="10">Source: NAHB/Wells Fargo Housing Market Index, released September 16, 2026. Average price cut was 6% for the sixth straight month.</text></svg>
