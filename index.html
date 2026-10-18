@@ -43,8 +43,9 @@ j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
 <!-- FONTS -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@600;700;800&display=swap" />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet">
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@600;700;800&display=swap" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Playfair+Display:wght@600;700;800&display=swap" rel="stylesheet"></noscript>
 <style>
 /* ── EXACT DASHBOARD COLOR SPEC ── */
 :root {
@@ -1109,8 +1110,8 @@ function lpLoginForm(label, role) {
   return '<div class="portal-auth-form">'
     + '<div style="font-size:14px;font-weight:600;color:#0f172a;margin-bottom:14px">Sign in, ' + label + '</div>'
     + '<div style="display:flex;flex-direction:column;gap:10px">'
-    + '<input class="lp-input" id="lp-email" type="email" placeholder="Email address" autocomplete="email">'
-    + '<input class="lp-input" id="lp-password" type="password" placeholder="Password" autocomplete="current-password" onkeydown="if(event.key===\'Enter\')lpSubmitLogin()">'
+    + '<input class="lp-input" id="lp-email" type="email" placeholder="Email address" autocomplete="email" aria-label="Email address">'
+    + '<input class="lp-input" id="lp-password" type="password" placeholder="Password" autocomplete="current-password" aria-label="Password" onkeydown="if(event.key===\'Enter\')lpSubmitLogin()">'
     + '</div>'
     + '<div class="lp-err" id="lp-err"></div>'
     + '<button class="lp-btn" id="lp-submit-btn" onclick="lpSubmitLogin()" style="margin-top:14px">Sign In</button>'
@@ -1122,12 +1123,12 @@ function lpSignupForm() {
   return '<div class="portal-auth-form">'
     + '<div style="font-size:14px;font-weight:600;color:#0f172a;margin-bottom:14px">Create Your Free Account</div>'
     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">'
-    + '<input class="lp-input" id="lp-first" type="text" placeholder="First name">'
-    + '<input class="lp-input" id="lp-last" type="text" placeholder="Last name">'
+    + '<input class="lp-input" id="lp-first" type="text" placeholder="First name" aria-label="First name">'
+    + '<input class="lp-input" id="lp-last" type="text" placeholder="Last name" aria-label="Last name">'
     + '</div>'
     + '<div style="display:flex;flex-direction:column;gap:8px">'
-    + '<input class="lp-input" id="lp-email" type="email" placeholder="Email address" autocomplete="email">'
-    + '<input class="lp-input" id="lp-password" type="password" placeholder="Password (8+ chars)" autocomplete="new-password" onkeydown="if(event.key===\'Enter\')lpSubmitSignup()">'
+    + '<input class="lp-input" id="lp-email" type="email" placeholder="Email address" autocomplete="email" aria-label="Email address">'
+    + '<input class="lp-input" id="lp-password" type="password" placeholder="Password (8+ chars)" autocomplete="new-password" aria-label="Password" onkeydown="if(event.key===\'Enter\')lpSubmitSignup()">'
     + '</div>'
     + '<div class="lp-err" id="lp-err"></div>'
     + '<button class="lp-btn" id="lp-submit-btn" onclick="lpSubmitSignup()" style="margin-top:14px">Create Account, Free</button>'
