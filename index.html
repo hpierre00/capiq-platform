@@ -1303,50 +1303,66 @@ document.addEventListener('keydown', function(e) { if (e.key === 'Escape') close
   "mainEntity": [
     {
       "@type": "Question",
-      "name": "What is Underlytix?",
+      "name": "Is Underlytix a lender or mortgage company?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Underlytix is a pre-application intelligence platform for real estate. It analyzes deals against actual lender criteria, scores capital readiness on a 0-100 scale, and matches investors to lenders, before any application is submitted."
+        "text": "No. Underlytix is not a lender, broker, or mortgage originator. We are a pre-application intelligence platform, we analyze deal scenarios against real lending criteria before any lender interaction takes place. We do not originate loans, issue preapprovals, or guarantee financing. All financing decisions are made by lenders through their own underwriting process."
       }
     },
     {
       "@type": "Question",
-      "name": "How is Underlytix different from a mortgage calculator?",
+      "name": "How is this different from a mortgage calculator?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "A mortgage calculator estimates payments. Underlytix runs your deal against real lender underwriting parameters, LTV limits, DSCR thresholds, credit minimums, DTI requirements, and tells you whether your deal will actually qualify, and how to fix it if it won't."
+        "text": "A mortgage calculator estimates a monthly payment. Underlytix analyzes whether a specific buyer or deal scenario is likely to meet actual lender underwriting criteria, including DTI limits, LTV thresholds, credit minimums, reserve requirements, loan type matching, and full PITIA calculation. When a scenario doesn't qualify, we calculate the exact remediation path: which debt to pay off, what co-borrower income is needed, or what price reduction closes the gap."
       }
     },
     {
       "@type": "Question",
-      "name": "What is a capital readiness score?",
+      "name": "What does the Capital Readiness Score mean?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "A capital readiness score is a 0-100 rating that reflects how closely your deal aligns with real lender underwriting criteria. A score above 70 typically indicates strong alignment. Underlytix provides this score instantly, along with specific structuring recommendations."
+        "text": "The Capital Readiness Score reflects how well a deal or buyer scenario aligns with the lending criteria typically required for the most likely loan type. Strong Alignment means the scenario meets standard criteria and is ready to present to lenders. Needs Review means one or more factors require attention before approaching a lender. Low Compatibility means significant changes are needed, and we'll tell you exactly what those are."
       }
     },
     {
       "@type": "Question",
-      "name": "What loan types does Underlytix support?",
+      "name": "How does the realtor Capital Readiness Screen work?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Underlytix supports fix and flip, DSCR, bridge loans, cash-out refinance, new construction, conventional, FHA, VA, and jumbo loan types."
+        "text": "Realtors describe their client's situation in plain language, income, credit range, purchase price, down payment, debts, and property type. The AI asks clarifying questions if anything is missing, calculates full PITIA (principal, interest, taxes, insurance, and HOA), and runs the scenario against underwriting parameters for the most likely loan type. The result is a Capital Readiness Score with a full breakdown, and if the scenario doesn't fit a program, specific paths to adjust it."
       }
     },
     {
       "@type": "Question",
-      "name": "Is Underlytix a lender?",
+      "name": "Is my client's information shared with lenders automatically?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "No. Underlytix is not a lender, a mortgage origination system, or a pre-approval platform. It is the intelligence layer before underwriting, helping investors, realtors, and lenders prepare and evaluate deals before any application is submitted."
+        "text": "No. The realtor portal does not share client information with lenders at this time, and nothing is sent automatically."
       }
     },
     {
       "@type": "Question",
-      "name": "How much does Underlytix cost?",
+      "name": "How do lenders use the platform?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Underlytix offers a free plan with 3 deal analyses per month (no credit card required). Paid plans start at $49/month for realtors, $97/month for investors, and $297/month for lenders."
+        "text": "Lenders in the Underlytix network receive pre-screened deal scenarios that have already been run through the Capital Readiness engine. They can review the scenario details, fundability score, borrower profile, and DTI analysis before deciding whether to pursue the deal. This reduces the time lenders spend reviewing unqualified leads and improves the quality of deals in their pipeline."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does Underlytix guarantee loan approval?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Underlytix results are based solely on the information provided and do not constitute a commitment to lend, a preapproval, or a guarantee of financing. All loan approvals are subject to full lender underwriting, credit review, income verification, appraisal, and final lender decision. Underlytix is a pre-application screening tool, not a lending decision system."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What does the 14-day free trial include?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Realtors get full access to the Capital Readiness Screen for 14 days at no cost, no credit card required. You can run unlimited client scenarios, access the Capital Readiness results, and receive paths to adjust scenarios that do not fit a program. After 14 days, the plan is $49/month."
       }
     }
   ]
